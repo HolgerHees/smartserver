@@ -72,9 +72,9 @@
       - "8507"
       - "2055/udp"
     volumes:
+      - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}system_service/:/opt/system_service:ro,z'
       - "{{global_lib}}system_service/:/var/lib/system_service:rw,z"
-      - '/opt/shared/python:/opt/shared/python:ro,z'
   notify: "restart system_service"
 
 # ***** INFLUXDB DATABASE ****

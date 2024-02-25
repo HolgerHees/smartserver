@@ -16,6 +16,8 @@ for dir in site_packages:
     dest = "{}/smartserver".format(dir)
 
     if not os.path.exists(dest):
+        if os.path.islink(dest):
+            os.unlink(dest)
         os.symlink(src, dest)
         
     break

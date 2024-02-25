@@ -6,13 +6,13 @@
     group: "{{item.group}}"
     mode: "{{item.mode}}"
   with_items:
-    - {mode: "u=rwX,g=rX,o=", owner: "root", group: "root", path: "/opt/shared/" }
+    - {mode: "u=rwX,g=rX,o=", owner: "root", group: "root", path: "{{global_opt}}shared/" }
     - {mode: "u=rwX,g=rX,o=rX", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
 
 - name: synchronize python libs
   synchronize:
     src: "templates/libs/shared"
-    dest: "/opt/"
+    dest: "{{global_opt}}"
     archive: no
     checksum: yes
     group: yes
@@ -26,7 +26,7 @@
 - name: synchronize python libs installer
   synchronize:
     src: "templates/install.py"
-    dest: "/opt/shared/python/"
+    dest: "{{global_opt}}shared/python/"
     archive: no
     checksum: yes
     group: yes
@@ -39,7 +39,7 @@
   register: installer_state
 
 - name: install python libs
-  shell: "/opt/shared/python/install.py"
+  shell: "{{global_opt}}shared/python/install.py"
   when: installer_state.changed
 
 - name: synchronize web libs

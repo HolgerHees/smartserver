@@ -50,10 +50,10 @@
         ipv4_address: "{{docker_camera_service_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}camera_service/:/opt/camera_service:ro,z'
       - "{{global_lib}}camera_service/:/var/lib/camera_service:rw,z"
       - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw,z'
-      - '/opt/shared/python:/opt/shared/python:ro,z'
   notify: "restart camera_service"
 
 - name: allow camera_service service

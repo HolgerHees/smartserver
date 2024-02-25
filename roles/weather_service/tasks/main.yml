@@ -38,9 +38,9 @@
         ipv4_address: "{{docker_weather_service_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}weather_service/:/opt/weather_service:ro,z'
       - "{{global_lib}}weather_service/:/var/lib/weather_service:rw,z"
-      - '/opt/shared/python:/opt/shared/python:ro,z'
   notify: "restart weather_service"
 
 - name: allow weather_service service

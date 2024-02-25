@@ -25,8 +25,9 @@
   pip:
     name:
       - flask==1.0.4
-      - Werkzeug==2.0.3
-      - flask-socketio=={{flask_socketio_version}} # used for daemon services like update_service
+      - jinja2                                     # needed by flask
+      - Werkzeug==2.0.3                            # needed by flask
+      - flask-socketio=={{flask_socketio_version}} # needed by flask-socketio
       - simple-websocket
       - pexpect
       - pyinotify
@@ -36,7 +37,7 @@
   register: installer_state
 
 - name: install python libs
-  shell: "/opt/update_service/env/bin/python3 /opt/shared/python/install.py"
+  shell: "/opt/update_service/env/bin/python3 {{global_opt}}shared/python/install.py"
   when: installer_state.changed
 
 - name: synchronize service

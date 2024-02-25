@@ -3,7 +3,7 @@
 stop()
 {
     echo "Shutting down camera service"
-    PID="$(pidof python3)"
+    PID="$(pidof camera_service)"
     kill -s TERM $PID
     wait
     exit
@@ -22,6 +22,6 @@ trap "stop" SIGTERM SIGINT
 
 # wait forever or until we get SIGTERM or SIGINT
 #while :; do sleep 360 & wait; done
-while pidof python3 > /dev/null; do sleep 5 & wait; done
+while pidof camera_service > /dev/null; do sleep 5 & wait; done
 
 exit 1
