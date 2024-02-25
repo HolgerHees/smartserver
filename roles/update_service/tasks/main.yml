@@ -21,6 +21,12 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service/outdated_roles" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_service/" }
 
+- name: install python3-venv package => is_ubuntu
+  apt:
+    name: "python3-venv"
+    state: present
+  when: is_ubuntu
+
 - name: install needed python packages
   pip:
     name:
