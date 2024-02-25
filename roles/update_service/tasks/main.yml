@@ -6,6 +6,12 @@
     state: present
   when: "(is_rhel or is_fedora) and update_service_system_check_enabled"
   
+- name: install required packages => is_ubuntu
+  apt:
+    name: "python3-venv"
+    state: present
+  when: is_ubuntu
+
 - name: prepare needed folder
   file:
     path: "{{item.path}}"
@@ -20,12 +26,6 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service/outdated_roles" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_service/" }
-
-- name: install python3-venv package => is_ubuntu
-  apt:
-    name: "python3-venv"
-    state: present
-  when: is_ubuntu
 
 - name: install needed python packages
   pip:
