@@ -17,10 +17,7 @@ mx.UNCore = (function( ret ) {
         }
         else
         {
-            if( btn.classList.contains("disabled") )
-            {
-                window.parent.document.querySelector("div.refresh-picker button").click()
-            }
+            if( btn.classList.contains("disabled") ) window.parent.postMessage({ type: 'grafana', content: "reload" }, "*");
 
             btn.classList.remove("disabled")
             btn.innerText = mx.I18N.get("Start speedtest");

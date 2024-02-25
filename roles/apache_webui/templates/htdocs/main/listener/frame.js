@@ -1,6 +1,6 @@
 window.addEventListener("message", function(event)
 {
-    if( typeof event.data != 'object' || !event.data['type'] || ![ 'css' ].includes(event.data['type']) ) return;
+    if( typeof event.data != 'object' || !event.data['type'] || ![ 'css', 'js' ].includes(event.data['type']) ) return;
 
     switch (event.data['type']) {
         case 'css':
@@ -16,6 +16,12 @@ window.addEventListener("message", function(event)
                 node.rel = "stylesheet";
                 node.type = "text/css";
             }
+            document.head.appendChild(node);
+            break;
+        case 'js':
+            var node = document.createElement('script');
+            node.setAttribute('type', 'text/javascript');
+            node.innerHTML = event.data['content'];
             document.head.appendChild(node);
             break;
     }
