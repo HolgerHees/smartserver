@@ -86,7 +86,7 @@ mx.Logfile = (function( ret ) {
             else
             {
                 document.body.classList.remove('sticky');
-                if( goToControlElement.classList.contains("singleButton") && logElement.scrollHeight > document.body.clientHeight )
+                if( goToControlElement.classList.contains("singleButton") && logElement.scrollHeight + logElement.offsetTop > document.body.clientHeight )
                 {
                     goToControlElement.setAttribute("onClick", "mx.Logfile.goToBottom()");
                     goToControlElement.firstChild.classList.add("icon-down-1")
