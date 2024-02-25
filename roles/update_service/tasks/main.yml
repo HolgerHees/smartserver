@@ -24,10 +24,8 @@
 - name: install needed python packages
   pip:
     name:
-      - flask==1.0.4
-      - jinja2                                     # needed by flask
-      - Werkzeug==2.0.3                            # needed by flask
-      - flask-socketio=={{flask_socketio_version}} # needed by flask-socketio
+      - flask
+      - flask-socketio=={{flask_socketio_version}}
       - simple-websocket
       - pexpect
       - pyinotify
