@@ -68,7 +68,7 @@ mx.OnSharedModWebsocketReady.push(function(){
 </script>
 </head>
 <body>
-<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame, "spacer-800", "CI Service" } );</script>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer-800", "CI Service"); } );</script>
 <div id="jobs"></div>
 </body>
 </html>
