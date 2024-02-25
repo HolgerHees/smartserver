@@ -1,3 +1,5 @@
+python_bin = "/opt/update_service/env/bin/python3"
+
 software_check_email = {{ "'" + update_service_software_check_email + "'" if update_service_software_check_email is defined else 'None'}}
 update_check_email = {{ "'" + update_service_system_check_email + "'" if update_service_system_check_email is defined else 'None'}}
 

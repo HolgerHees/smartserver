@@ -15,8 +15,8 @@ class CmdBuilder:
         self.system_update_watcher = system_update_watcher
         self.deployment_state_watcher = deployment_state_watcher
 
-        self.cmd_software_version_check = "/opt/update_service/software_version_check"
-        self.cmd_system_update_check = "/opt/update_service/system_update_check"
+        self.cmd_software_version_check = config.python_bin + " /opt/update_service/software_version_check"
+        self.cmd_system_update_check = config.python_bin + " /opt/update_service/system_update_check"
         self.cmd_service_restart = "systemctl restart"
         self.cmd_request_reboot = "reboot"
         self.cmd_check_reboot = "runlevel | grep \"6\""

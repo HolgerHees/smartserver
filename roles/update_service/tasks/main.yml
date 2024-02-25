@@ -94,7 +94,7 @@
 - name: create version check cron job
   vars:
     name: "Software Version check"
-    cmd: "/opt/update_service/software_version_check > /dev/null"
+    cmd: "/opt/update_service/env/bin/python3 /opt/update_service/software_version_check > /dev/null"
     group: "update_service"
     log: "software_version_check"
     minute: "0"
@@ -106,7 +106,7 @@
 - name: create system check cron job
   vars:
     name: "System update check"
-    cmd: "/opt/update_service/system_update_check > /dev/null"
+    cmd: "/opt/update_service/env/bin/python3 /opt/update_service/system_update_check > /dev/null"
     group: "update_service"
     log: "system_update_check"
     minute: "30"

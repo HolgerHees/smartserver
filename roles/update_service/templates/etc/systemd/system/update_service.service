@@ -7,7 +7,7 @@ Wants=network-online.target
 TimeoutStartSec=0
 TimeoutStopSec=10
 Restart=always
-ExecStart=/opt/update_service/update_service
+ExecStart=/opt/update_service/env/bin/python3 /opt/update_service/update_service
 SyslogIdentifier=update_service
 
 [Install]
