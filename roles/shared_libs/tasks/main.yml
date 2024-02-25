@@ -8,6 +8,7 @@
   with_items:
     - {mode: "u=rwX,g=rX,o=", owner: "root", group: "root", path: "{{global_opt}}shared/" }
     - {mode: "u=rwX,g=rX,o=rX", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
+    - {mode: "u=rwX,g=rX,o=rX", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/font/" }
 
 - name: synchronize python libs
   synchronize:
@@ -57,6 +58,7 @@
       - "--chmod=D755,F644"
   with_items:
     - { src: "htdocs/shared", dest: "" }
-    - { src: "fonts/font", dest: "shared/" }
-    - { src: "fonts/css/animation.css", dest: "shared/css/animation.css" }
-    - { src: "fonts/css/fontello.css", dest: "shared/css/fontello.css" }
+    - { src: "fonts/fontello/font", dest: "shared/" }
+    - { src: "fonts/fontello/css/animation.css", dest: "shared/css/animation.css" }
+    - { src: "fonts/fontello/css/fontello.css", dest: "shared/css/fontello.css" }
+    - { src: "fonts/opensans/OpenSans-VariableFont_wdth,wght.ttf", dest: "shared/font/" }
