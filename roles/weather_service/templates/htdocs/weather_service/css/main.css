@@ -1,6 +1,4 @@
 :root body {
-    --widget-value-weight: 300;
-
     --sub-icon-color: rgba(124,175,215,0.9);
     --active-week-day-bg: var(--menu-active-bg);
 
@@ -75,7 +73,6 @@ body{
     max-width: 1024px;
     margin: 10px auto;
     background-color: var(--bg);
-    font-family: 'Open Sans', sans-serif;
     font-size: 14px;
 }
 * {
@@ -105,7 +102,6 @@ body{
     border-radius: 4px;
     padding: 2px 5px;
     background-color: rgba(68,65,65,0.84);
-    font-weight: 500;
     font-size: 1.14em;
     height: 1.5em;
     line-height: 1.2em;
@@ -230,7 +226,7 @@ body{
 }
 .current .summary .cell .name {
     width: 1%;
-    font-weight: var(--widget-value-weight);
+    font-weight: 300;
     white-space: nowrap;
 }
 .current .summary .cell .value {
@@ -340,7 +336,7 @@ body{
 }
 .forecast .summary .temperature .min {
     font-size: 90%;
-    font-weight: var(--widget-value-weight);
+    font-weight: 300;
     opacity: 0.7;
     margin-left: 5px;
 }
@@ -358,7 +354,7 @@ body{
     flex-grow: 0;
 }
 .forecast .summary .value {
-    font-weight: var(--widget-value-weight);
+    font-weight: 300;
     white-space: nowrap;
 }
 .forecast .summary .cell {
@@ -402,13 +398,13 @@ body{
 .forecast .hour .info .precipitationProbability,
 .forecast .hour .info .sunshineDuration,
 .forecast .hour .info .precipitationAmount {
-    font-weight: var(--widget-value-weight);
+    font-weight: 300;
     font-size: 95%;
 }
 .forecast .hour .time {
     width: 10%;
     padding-left: 1vw;
-    font-weight: var(--widget-value-weight);
+    font-weight: 300;
 }
 .forecast .hour .cloud {
     vertical-align: middle;
@@ -431,7 +427,7 @@ body{
 .forecast .hour .temperature .main .min {
     display: block;
     font-size: 70%;
-    font-weight: var(--widget-value-weight);
+    font-weight: 300;
     opacity: 0.7;
     margin-top: -4px;
 }
@@ -452,7 +448,7 @@ body{
 }
 
 .forecast .hour .info .precipitationProbability {
-    font-weight: var(--widget-value-weight);
+    font-weight: 300;
 }
 .forecast .hour .info .precipitationProbability svg {
     stroke: var(--widget-value-color-weather-info-icon);

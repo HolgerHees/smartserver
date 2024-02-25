@@ -235,13 +235,6 @@ svg g.nodes foreignObject.details > div > div.details div.top {
     margin-bottom: -2px;
 }
 
-#networkList .row .band.c2g,
-svg g.nodes foreignObject.details > div > div.details span.band.c2g {
-}
-#networkList .row .band.c5g,
-svg g.nodes foreignObject.details > div > div.details span.band.c5g {
-    font-weight: 500;
-}
 #networkList .row .signal.signal6,
 svg g.nodes foreignObject.details > div > div.details span.signal.signal6 {
     color: #e80000;

@@ -93,7 +93,7 @@
 @font-face {
   font-family: 'Open Sans';
   src: url('../font/OpenSans-VariableFont_wdth,wght.ttf') format('woff2-variations');
-  font-weight: 200 800;
+  font-weight: 200 800; /** 300, normal (400), 600 and bold(700) are used **/
   font-stretch: 75% 125%;
   font-style: oblique 0deg 20deg;
 }
