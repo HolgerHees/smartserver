@@ -137,9 +137,9 @@ class Server():
                     _run_wsgi(self)
                 except AssertionError as e:
                     # can happen on closed websocket connections
-                    if str(e) == "write() before start_response" and self.connection._closed:
-                        #logging.info(self.connection._closed)
-                        #logging.info(self.environ)
+                    if str(e) == "write() before start_response" and self.environ["QUERY_STRING"].endswith("websocket"):
+                        #if not self.connection._closed:
+                        #    logging.warn("Skipped 'write() before start_response'")
                         return
                     raise e
             WSGIRequestHandler.run_wsgi = run_wsgi
