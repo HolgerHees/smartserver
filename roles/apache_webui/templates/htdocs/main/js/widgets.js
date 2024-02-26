@@ -127,6 +127,7 @@ mx.Widgets.Object = function(service, group, config)
         let data = null;
         var last_msg = {};
         var active = false;
+        var fetched_data = false;
 
         ret.getId = function(index) { return config[index]["id"]; }
         ret.getOrder = function(index) { return config[index]["order"]; }
@@ -139,17 +140,17 @@ mx.Widgets.Object = function(service, group, config)
         ret.isActive = function(){ return active; }
         ret.activate = function(flag){ active=flag; }
 
-        ret._init = function(){ active=true; widget.processData(data); };
+        ret._init = function(){ active=true; if(fetched_data){ widget.processData(data); } };
         ret._destroy = function(){ active=false; };
 
-        ret._processData = function(_data){ data = {...data, ..._data}; if(active){ widget.processData(data); } }
-        ret._processAlert = function(){ data = null; if(active){ widget.processData(data); } }
+        ret._processData = function(_data){ fetched_data = true; data = {...data, ..._data}; if(active){ widget.processData(data); } }
+        ret._processAlert = function(){ fetched_data = true; data = null; if(active){ widget.processData(data); } }
 
         ret.show = function(index, msg)
         {
             let isInitialLoad = last_msg[index] == undefined
 
-            if( isInitialLoad || last_msg[index] != msg )
+            if( last_msg[index] != msg )
             {
                 let div = mx.$("#" + config[index]["id"]);
                 let old_width = div.scrollWidth;
