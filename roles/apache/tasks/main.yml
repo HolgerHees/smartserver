@@ -140,6 +140,7 @@
     enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
     usergroup: "user"
   with_items:
+    - _.ansible.conf.d/default_cache_control.conf
     - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
     - _.ansible.conf.d/ssl.conf
@@ -149,6 +150,7 @@
     - _.ansible.server.conf
     - _.ansible.httpd.conf
   notify: "restart apache2"
+  tags: ['apache_config']
 
 - name: copy auth config
   template:

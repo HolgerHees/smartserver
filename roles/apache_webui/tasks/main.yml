@@ -33,10 +33,16 @@
   with_items:
     - main/manifest.json
 
-- name: copy proxy config
-  vars:
-    config_file: "templates/etc/apache2/_.ansible.d/manifest.conf"
-  include_tasks: roles/apache/shared/add_config.yml
+- name: copy manifest config
+  copy:
+    src: "templates/etc/apache2/{{item}}"
+    dest: "{{global_etc}}apache2/{{item}}"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  with_items:
+    - _.ansible.conf.d/default_manifest.conf
+  notify: "restart apache2"
   tags: ['apache_config']
 
 # POTD FETCHER
