@@ -15,9 +15,13 @@ for dir in site_packages:
     
     dest = "{}/smartserver".format(dir)
 
-    if not os.path.exists(dest):
-        if os.path.islink(dest):
+    if os.path.islink(dest):
+        if os.readlink(dest) != src:
             os.unlink(dest)
+    elif os.path.isdir(dest):
+        os.system("rm -r {}".format(dest))
+
+    if not os.path.exists(dest):
         os.symlink(src, dest)
-        
+
     break
