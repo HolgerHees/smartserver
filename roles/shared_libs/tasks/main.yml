@@ -61,4 +61,9 @@
     - { src: "fonts/fontello/font", dest: "shared/" }
     - { src: "fonts/fontello/css/animation.css", dest: "shared/css/animation.css" }
     - { src: "fonts/fontello/css/fontello.css", dest: "shared/css/fontello.css" }
-    - { src: "fonts/opensans/OpenSans-VariableFont_wdth,wght.ttf", dest: "shared/font/" }
+    - { src: "fonts/opensans/open-sans-v40-latin-300.woff2", dest: "shared/font/" }
+    - { src: "fonts/opensans/open-sans-v40-latin-400.woff2", dest: "shared/font/" }
+    - { src: "fonts/opensans/open-sans-v40-latin-500.woff2", dest: "shared/font/" }
+    - { src: "fonts/opensans/open-sans-v40-latin-600.woff2", dest: "shared/font/" }
+    - { src: "fonts/opensans/open-sans-v40-latin-700.woff2", dest: "shared/font/" }
+    - { src: "fonts/opensans/open-sans-v40-latin-800.woff2", dest: "shared/font/" }

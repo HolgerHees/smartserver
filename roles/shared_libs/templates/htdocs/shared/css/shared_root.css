@@ -90,13 +90,52 @@
   --color-yellow: var(--dark-color-yellow);
   --color-green: var(--dark-color-green);
 }
-@font-face {
+/* https://www.fontsquirrel.com/fonts/open-sans */
+/* 300, normal (400), 600 and bold(700) are used */
+/*@font-face {
   font-family: 'Open Sans';
   src: url('../font/OpenSans-VariableFont_wdth,wght.ttf') format('woff2-variations');
-  font-weight: 200 800; /** 300, normal (400), 600 and bold(700) are used **/
+  font-weight: 200 800;
   font-stretch: 75% 125%;
   font-style: oblique 0deg 20deg;
+}*/
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../font/open-sans-v40-latin-300.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
 }
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../font/open-sans-v40-latin-400.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+/*@font-face {
+    font-family: 'Open Sans';
+    src: url('../font/open-sans-v40-latin-500.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+}*/
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../font/open-sans-v40-latin-600.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../font/open-sans-v40-latin-700.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+}
+/*@font-face {
+    font-family: 'Open Sans';
+    src: url('../font/open-sans-v40-latin-800.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+}*/
+
 html {
     height: 100%;
     box-sizing: border-box;
