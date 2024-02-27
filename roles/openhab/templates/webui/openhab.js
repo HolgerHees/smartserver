@@ -1,5 +1,5 @@
 mx.OpenHAB = (function( ret ) {
-    ret.generateThemeCSS = function(url)
+    ret.applyTheme = function(url)
     {
         var css = `header, header > * { max-height: 56px !important; min-height: 56px !important; }`;
         if( mx.Page.isDarkTheme() ) css += `body { --body-bg: #202124 !important; --header-bg: rgba(25,118,210,0.3) !important; }`;
