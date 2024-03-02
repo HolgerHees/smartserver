@@ -5,7 +5,7 @@
       <username>nobody</username>
       <groupname>dialout</groupname>
       <serial>
-            <tty>/dev/ttyOpenHabHeizung</tty>
+            <tty>/dev/ttyVControlD</tty>
         </serial>
         <net>
             <port>3002</port>

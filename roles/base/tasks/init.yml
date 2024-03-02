@@ -34,6 +34,11 @@
     that: host_ip != ''
     msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), staging ({{ staging_ip if staging_ip else 'disabled' }})"
 
+- name: check for mdraid
+  stat:
+    path: "/etc/mdadm.conf"
+  register: mdraid_enabled
+
 # set environment specific variables [pre]
 - name: set env state vars
   set_fact:

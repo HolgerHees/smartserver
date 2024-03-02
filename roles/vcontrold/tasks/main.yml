@@ -49,7 +49,7 @@
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
       - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
     devices:
-      - "/dev/ttyOpenHabHeizung:/dev/ttyOpenHabHeizung:rwm"
+      - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"
     exposed_ports:
       - "3002"
   notify: "restart vcontrold"
@@ -82,8 +82,13 @@
     - { src: "/etc/vcontrold/mqtt.py", dest: "{{global_etc}}vcontrold/mqtt.py" }
     - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
     - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
-    - { src: "/etc/udev/rules.d/99-vcontrold.rules", dest: "/etc/udev/rules.d/99-vcontrold.rules" }
   notify: "restart vcontrold"
+
+- name: copy udev rules
+  vars:
+    udev_rules_path: "{{config_path}}templates/vcontrold/"
+    udev_rules_trigger: "restart vcontrold"
+  include_tasks: roles/_shared/synchronize_udev_rules.yml
 
 # ***** FINALIZE *****
 - name: create systemd service

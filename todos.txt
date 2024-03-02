@@ -1,0 +1,8 @@
+wwwrun user change (on server reinstall)
+    chown -R nextcloud data
+    chown -R nextcloud logs
+    chown -R htdocs
+
+openhab user change (on server reinstall)
+    chown -R openhab_config
+    chown -R openhab_shared

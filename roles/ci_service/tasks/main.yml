@@ -33,6 +33,8 @@
     - { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}ci_service" }
     - { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}ci_service/config" }
     - { mode: "u=rwx,g=rx,o=", path: "{{global_build}}ci_job" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}ci_service" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}ci_service/VirtualMachines" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}ci_service" }
 
 - name: build docker image
@@ -148,7 +150,7 @@
 - name: create check cron job
   vars:
     name: "Continues integration job"
-    cmd: "docker exec ci_service sh -c \"/dataDisk/opt/ci_service/ci_job_handler start > /dev/null\""
+    cmd: "docker exec ci_service sh -c \"{{global_opt}}ci_service/ci_job_handler start > /dev/null\""
     group: "ci_service"
     log: "job"
     minute: "*/5"

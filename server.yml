@@ -103,7 +103,7 @@
 
     - { import_role: { name: systemd_watcher },                                              tags: [ 'systemd_watcher' ],                                    when: "monitoring_enabled" }                       # checking failed service starts
 
-    - { import_role: { name: hardware_mdadm },                                               tags: [ 'hardware_mdadm' ],                                     when: "monitoring_enabled" }                       # raid weekly check cron job
+    - { import_role: { name: hardware_mdadm },                                               tags: [ 'hardware_mdadm' ],                                     when: "monitoring_enabled and mdraid_enabled" }    # raid weekly check cron job
     - { import_role: { name: hardware_smartd },                                              tags: [ 'hardware_smartd' ],                                    when: "monitoring_enabled" }                       # disk monitoring & checks
     - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ],                                   when: "monitoring_enabled or netdata_enabled" }    # sensors setups
 
