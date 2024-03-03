@@ -37,13 +37,15 @@
 - name: check for mdraid
   stat:
     path: "/etc/mdadm.conf"
-  register: mdraid_enabled
+  register: mdraid_check
 
 # set environment specific variables [pre]
 - name: set env state vars
   set_fact:
     system_users: {}
     system_groups: {}
+
+    mdraid_enabled: "{{mdraid_check.stat.exists}}"
 
     has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
 
