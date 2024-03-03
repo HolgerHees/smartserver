@@ -16,7 +16,7 @@ mx.Alarms = (function( ret ) {
             {status: {state:"active"}, labels: {severity: "error"}, receivers: ["default"]}
         ]*/
 
-        for(alarm of data.data)
+        for(alarm of data)
         {
             if( alarm.status.state != 'active' )
             {
@@ -70,7 +70,7 @@ mx.Alarms = (function( ret ) {
     {
         var id = Math.round( Date.now() / 1000 );
 
-        var url = "//" + mx.Host.getAuthPrefix() + "alertmanager." + mx.Host.getDomain() + "/api/v1/alerts?time=" + Date.now();
+        var url = "//" + mx.Host.getAuthPrefix() + "alertmanager." + mx.Host.getDomain() + "/api/v2/alerts?time=" + Date.now();
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url );

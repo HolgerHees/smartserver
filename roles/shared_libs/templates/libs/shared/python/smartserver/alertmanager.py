@@ -57,23 +57,19 @@ class Alertmanager():
         return False
 
     def triggerAlerts(alertmanager_base_url, alerts):
-        #headers = {
+        headers = {
         #    'Accept': 'application/json',
-        #    'Content-Type': 'text/plain'
-        #}
-        response = requests.post( "{}api/v1/alerts".format(alertmanager_base_url), data = json.dumps(alerts) )
+            'Content-Type': 'application/json'
+        }
+        response = requests.post( "{}api/v2/alerts".format(alertmanager_base_url), json = alerts )
         #response = requests.post( "http://openhab:8080/rest/items/State_Server/state", headers = headers, data = json.dumps(json) )
         if not (200 <= response.status_code < 300):
             response.raise_for_status()
 
     def fetchAlerts(alertmanager_base_url, notifyGroup):
-        response = requests.get("{}api/v1/alerts".format(alertmanager_base_url), timeout=5.0)
+        response = requests.get("{}api/v2/alerts".format(alertmanager_base_url), timeout=5.0)
         response.raise_for_status()
-        _alert_response = json.loads(response.content)
-        if _alert_response["status"] == "success":
-            _alertmanager_alerts = _alert_response["data"]
-        else:
-            _alertmanager_alerts = []
+        _alertmanager_alerts = json.loads(response.content)
 
         alertmanager_alerts = []
         for alertmanager_alert in _alertmanager_alerts:
@@ -130,13 +126,9 @@ class Alertmanager():
             response.raise_for_status()
 
     def fetchSilences(alertmanager_base_url):
-        response = requests.get("{}api/v1/silences".format(alertmanager_base_url), timeout=5.0)
+        response = requests.get("{}api/v2/silences".format(alertmanager_base_url), timeout=5.0)
         response.raise_for_status()
-        _alert_response = json.loads(response.content)
-        if _alert_response["status"] == "success":
-            _alertmanager_silences = _alert_response["data"]
-        else:
-            _alertmanager_silences = []
+        _alertmanager_silences = json.loads(response.content)
 
         alertmanager_silences = []
         for alertmanager_silence in _alertmanager_silences:
