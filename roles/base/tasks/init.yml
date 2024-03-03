@@ -45,7 +45,7 @@
     system_users: {}
     system_groups: {}
 
-    mdraid_enabled: "{{mdraid_check.stat.exists}}"
+    mdraid_exists: "{{mdraid_check.stat.exists}}"
 
     has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
 
