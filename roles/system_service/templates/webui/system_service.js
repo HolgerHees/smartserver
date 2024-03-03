@@ -46,7 +46,7 @@ mx.Widgets.TrafficAlerts = (function( widget ) {
     return widget;
 })( mx.Widgets.Object( "system_service", "admin", [ { id: "wanAlerts", order: 100, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-system_service_wan') } }, { id: "trafficAlerts", order: 102, click: function(event){
     let entry = mx.Menu.getMainGroup('admin').getSubGroup('system').getEntry('system_service_netflow');
-    mx.Actions.openEntry(entry, entry.getUrl() + "&var-Filters=group|!%3D|normal" );
+    mx.Actions.openEntry(entry, entry.getUrl() + "?var-Filters=group|!%3D|normal" );
     //mx.Actions.openEntryById(event,'admin-system-system_service_netflow')
 } } ] ) );
 {% endif %}
