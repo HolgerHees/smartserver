@@ -4,7 +4,7 @@
     dest: "{{htdocs_path}}main/components/{{name}}.js"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0644
+    mode: 0640
   tags: ['apache_webui_config']
 
 - name: "apache_webui : copy i18n file for '{{name}}'"
@@ -13,7 +13,7 @@
     dest: "{{htdocs_path}}main/components/{{name}}.{{item.language}}.json"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0644
+    mode: 0640
   with_items: "{{i18n_files | default([])}}"
   tags: ['apache_webui_config']
 
@@ -29,7 +29,7 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   with_items: "{{icons | default([])}}"
   tags: ['apache_webui_config']
 

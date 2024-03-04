@@ -1,8 +1,0 @@
-- name: restart elasticsearch
-  systemd:
-    name: elasticsearch
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart elasticsearch"

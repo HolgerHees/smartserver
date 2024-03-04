@@ -1,8 +1,0 @@
-- name: restart nfs-server
-  systemd:
-    name: "{{ 'nfsserver' if is_suse|bool else 'nfs-server' }}"
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart nfs-server"

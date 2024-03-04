@@ -1,8 +1,0 @@
-- name: restart elastalert
-  systemd:
-    name: elastalert
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart elastalert"

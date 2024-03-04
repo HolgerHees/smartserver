@@ -19,18 +19,8 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   tags: ['apache_webui_page']
-
-#- name: prepare needed folder
-#  file:
-#    path: "{{item.dir}}"
-#    state: directory
-#    owner: "{{item.owner}}"
-#    group: "{{item.group}}"
-#    mode: 0755
-#  with_items:
-#    - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}guest_wifi/" }
 
 #- name: install SettingsContainerAbstract
 #  unarchive:
@@ -65,7 +55,7 @@
     dest: "{{htdocs_path}}guest_wifi/config.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0644
+    mode: 0640
 
 #- name: copy qrcodes
 #  copy:
@@ -73,7 +63,7 @@
 #    dest: "{{htdocs_path}}guest_wifi/{{item | basename}}"
 #    owner: "{{system_users['www'].name}}"
 #    group: "{{system_groups['www'].name}}"
-#    mode: 0644
+#    mode: 0640
 #  with_items:
 #    - "{{config_path}}vault/sirius-wifi-qrcode.png"
 #  tags: ['apache_webui_page']

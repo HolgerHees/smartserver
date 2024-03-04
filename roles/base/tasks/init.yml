@@ -178,9 +178,12 @@
     default_server_network_ipv6:      "{{( ( ansible_default_ipv6['address'] + '/' + ansible_default_ipv6['prefix'] ) | ipaddr('subnet') )}}"
   when: "ipv6_enabled and 'address' in ansible_default_ipv6"
 
-- name: collect intern_networks
+- name: collect intern_networks & nobody/nogroup user
   set_fact:
-#            {% if default_server_network_ipv6 is defined %}
+    system_users: { 'nobody': { name: "nobody", id: 65534 } }
+    system_groups: { 'nobody': { name: "{{ 'nobody' if is_rhel or is_fedora else 'nogroup'}}", id: 65533 } }
+
+    #            {% if default_server_network_ipv6 is defined %}
 #                "{{default_server_network_ipv6}}",
 #            {% endif %}
     intern_networks: |

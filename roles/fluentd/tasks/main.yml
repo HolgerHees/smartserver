@@ -11,13 +11,21 @@
     owner: "root"
     group: "systemd-journal"
     mode: "u=rwx,g=rx,o=rx,g+s"
-  register: "journald_folder"
 
-- name: restart journald
-  systemd:
-    state: restarted
-    name: systemd-journald
-  when: "journald_folder.changed"
+- name: check journald location
+  shell: "systemctl status systemd-journald | grep 'var/log/journal' > /dev/null && echo 'ok' || echo 'failed'"
+  changed_when: "journald_check.stdout == 'failed'"
+  register: "journald_check"
+
+- name: change journald location
+  shell: "journalctl --flush"
+  when: "journald_check.stdout == 'failed'"
+
+#- name: restart journald
+#  systemd:
+#    state: restarted
+#    name: systemd-journald
+#  when: "journald_check.stdout == 'failed'"
 
 - name: copy config and service
   template:

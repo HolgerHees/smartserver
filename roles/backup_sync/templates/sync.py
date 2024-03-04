@@ -112,7 +112,7 @@ def prepareCommand(is_single_source, index, source_config, job_config, remote_co
         cmd = [config.rclone_cmd, "--links", "--log-level", "INFO", "--one-file-system"]
     else:
         # "--delete-excluded" should not be included, because of multi source support
-        cmd = [config.rsync_cmd, "-avz", source_config["path"], destination, "--delete", "--quiet"]
+        cmd = [config.rsync_cmd, "-avz", source_config["path"], destination, "--one-file-system", "--delete", "--quiet"]
 
         if source_config["options"] and "--local-no-check-updated" in source_config["options"]:
             allowed_return_codes.append(24)

@@ -5,21 +5,20 @@
 
 - name: prepare needed folder
   file:
-    path: '{{item.path}}'
+    path: '{{item}}'
     state: directory
-    owner: "{{item.user}}"
-    group: "{{item.group}}"
+    owner: "{{system_users['nobody'].name}}"
+    group: "{{system_groups['nobody'].name}}"
     mode: 0750
   with_items:
-    - { user: "nobody", group: "{{ 'nobody' if is_rhel or is_fedora else 'nogroup'}}", path: "{{ global_lib }}prometheus" }
-#    - { user: "root", group: "root", path: "{{backup_path}}prometheus" }
+    - "{{ global_lib }}prometheus"
 
 #- name: copy config
 #  template:
 #    src: "templates/etc/prometheus.yml"
 #    dest: "{{ global_etc }}prometheus/prometheus.yml"
-#    owner: nobody
-#    group: "{{ 'nobody' if is_rhel or is_fedora else 'nogroup'}}"
+#    owner: "{{system_users['nobody'].name}}"
+#    group: "{{system_groups['nobody'].name}}"
 #    mode: 0640
 #  notify: "restart prometheus"
 
@@ -31,7 +30,7 @@
     group: "{{item.group}}"
     mode: "{{item.mode}}"
   with_items:
-    - { user: "nobody", group: "{{ 'nobody' if is_rhel or is_fedora else 'nogroup'}}", mode: "u=rw,g=r,o=", path: "prometheus.yml.tpl" }
+    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", path: "prometheus.yml.tpl" }
     - { user: "root", group: "root", mode: "u=rw,g=r,o=r", path: "rules/prometheus.yml" }
     - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "generator" }
   notify: "restart prometheus"

@@ -1,4 +1,4 @@
-- name: check if {{git_clone_name}} git is updateable => ! (directory exists, is not empty and contains not commited or not pushed changes)
+- name: "_shared : check if {{git_clone_name}} git is updateable => ! (directory exists, is not empty and contains not commited or not pushed changes)"
   shell: "[ -d '{{git_clone_path}}' ] && cd {{git_clone_path}} && [ `ls -1A .  | wc -l` -gt 0 ] && ! git diff-index --quiet master"
 #  shell: "[ -d '{{git_clone_path}}' ] && cd {{git_clone_path}} && [ `ls -1A .  | wc -l` -gt 0 ] && ! sudo -u {{ git_owner | default(ansible_user) }} git diff-index --quiet origin/master"
   register: "_git_clone_result"
@@ -13,13 +13,13 @@
 #  debug:
 #    msg: "[ -d '{{git_clone_path}}' ] && cd {{git_clone_path}} && [ `ls -1A .  | wc -l` -gt 0 ] && ! git diff-index --quiet master"
 
-- name: set {{git_clone_name}} git as safe.directory
+- name: "_shared : set {{git_clone_name}} git as safe.directory"
   shell: "[ ! `git config --global --get-all safe.directory | grep \"{{git_clone_path}}\"` ] && git config --global --add safe.directory {{git_clone_path}}"
   register: "_git_config_result"
   changed_when: "_git_config_result.rc == 0"
   failed_when: "_git_config_result.rc > 1"
 
-- name: clone {{git_clone_name}} git
+- name: "_shared : clone {{git_clone_name}} git"
   git:
 #    accept_hostkey: yes
     repo: '{{git_clone_url}}'
@@ -31,7 +31,7 @@
   register: "git_clone_result"
   when: "_git_clone_result.rc == 1"
  
-- name: ensure that right owner is assigned => git_clone_result changed
+- name: "_shared : ensure that right owner is assigned => git_clone_result changed"
   file:
     path: "{{git_clone_path}}"
     owner: "{{git_owner | default(ansible_user)}}"
@@ -41,6 +41,6 @@
   when: "git_clone_result.changed and (git_owner is defined or git_group is defined or git_mode is defined)"
 #  when: "(git_owner is defined or git_group is defined or git_mode is defined)"
 
-- name: register result state
+- name: "_shared : register result state"
   set_fact:
     git_clone_changed: "{{ git_clone_result.changed }}"

@@ -1,8 +1,0 @@
-- name: restart openvpn => mobile
-  systemd:
-    name: "openvpn@mobile"
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart openvpn@mobile"

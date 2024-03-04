@@ -41,7 +41,7 @@
       - alert: Log missing
         expr: |
             absent_over_time(
-              {env="fluentd"}
+              {env="fluentd",group="loki"}
               [15m]
             )
         for: 0s
@@ -50,4 +50,4 @@
             severity: critical
         annotations:
             summary: "No loki logs since 15 minutes."
-            url: "https://smartmarvin.de/?ref=admin|system|grafana_logs"
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"

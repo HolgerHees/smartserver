@@ -1,7 +1,0 @@
-server.name: kibana
-server.host: "0"
-#elasticsearch.url: http://localhost:9200
-#elasticsearch.ssl.verificationMode: none
-#elasticsearch.username: kibanaserver
-#elasticsearch.password: kibanaserver
-#elasticsearch.requestHeadersWhitelist: ["securitytenant","Authorization"]
