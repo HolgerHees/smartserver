@@ -203,7 +203,7 @@ mx.UNCore = (function( ret ) {
             }
         }
 
-        if( workflow_status == "running" || workflow_status == "waiting" )
+        if( workflow_status == "running" || workflow_status == "waiting" || job_is_running )
         {
             mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? null: "kill");
         }
