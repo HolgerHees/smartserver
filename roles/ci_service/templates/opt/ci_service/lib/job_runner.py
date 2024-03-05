@@ -183,7 +183,7 @@ class JobRunner:
 
                     if statuscode == "success":
                         msg = "Command '{}' finished successful after {}.".format(self._fmtCmd(e.getCmd()),timedelta(seconds=duration))
-                        logging.error(msg)
+                        logging.info(msg)
                         self._writeWrapppedLog(lf, msg)
                     else:
                         msg = "Command '{}' stopped unsuccessful ({}) after {}.".format(self._fmtCmd(e.getCmd()),e.getExitCode(),timedelta(seconds=duration))
