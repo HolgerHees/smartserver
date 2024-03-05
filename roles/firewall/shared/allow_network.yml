@@ -4,6 +4,6 @@
     dest: "/etc/ferm/ferm.d/19-trusted-{{network_name}}.ferm"
     owner: root
     group: root
-    mode: 0644
+    mode: 0640
   tags: [ 'firewall_config' ]
   notify: "restart ferm"

@@ -16,7 +16,7 @@
     remote_src: yes
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0755
+    mode: 0750
   when: not phpmyadmin_exists.stat.exists
 
 - name: rename folder => phpmyadmin does not exists

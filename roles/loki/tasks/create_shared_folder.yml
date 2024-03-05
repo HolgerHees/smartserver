@@ -1,11 +1,13 @@
-- name: prepare shared folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: "10001"
-    group: "10001"
-    mode: 0750
-  with_items:
-    - "{{ global_etc }}loki/"
-    - "{{ global_etc }}loki/rules"
-    - "{{ global_etc }}loki/rules/fake"
+- name: ensure user and group exists
+  vars:
+    user: { name: "loki", system: true, home: "{{ global_etc }}loki/" }
+    group: { name: "loki", system: true }
+  include_tasks: roles/user/shared/add_system_user.yml
+
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['loki'].name}}", group: "{{system_groups['loki'].name}}", path: "{{ global_etc }}loki/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['loki'].name}}", group: "{{system_groups['loki'].name}}", path: "{{ global_etc }}loki/rules" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['loki'].name}}", group: "{{system_groups['loki'].name}}", path: "{{ global_etc }}loki/rules/fake" }
+  include_tasks: roles/_shared/create_folder.yml

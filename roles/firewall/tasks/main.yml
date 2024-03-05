@@ -4,16 +4,12 @@
   tags: [ 'update_notifier_config' ]
 
 - name: prepare needed folder
-  file:
-    path:  "{{item}}"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: 0750
-  with_items:
-    - "{{global_build}}ferm"
-    - "/etc/ferm"
-    - "/etc/ferm/ferm.d"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm/ferm.d" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_build}}ferm" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: install required packages => is_suse
   zypper:
@@ -78,14 +74,14 @@
     dest: "{{item.dest}}"
     owner: root
     group: root
-    mode: 0644
+    mode: "{{item.mode}}"
   with_items:
-    - { src: "/etc/systemd/ferm.service", dest: "/usr/lib/systemd/system/ferm.service" }
-    - { src: "/etc/ferm/ferm.conf", dest: "/etc/ferm/ferm.conf" }
-    - { src: "/etc/ferm/ferm.d/00-docker.ferm", dest: "/etc/ferm/ferm.d/00-docker.ferm" }
-    - { src: "/etc/ferm/ferm.d/10-docker.ferm", dest: "/etc/ferm/ferm.d/10-docker.ferm" }
-    - { src: "/etc/ferm/ferm.d/20-in.trusted.ferm", dest: "/etc/ferm/ferm.d/20-in.trusted.ferm" }
-    - { src: "/etc/ferm/ferm.d/99-docker.ferm", dest: "/etc/ferm/ferm.d/99-docker.ferm" }
+    - { mode: "u=rw,g=r,o=r", src: "/etc/systemd/ferm.service", dest: "/usr/lib/systemd/system/ferm.service" }
+    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.conf", dest: "/etc/ferm/ferm.conf" }
+    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/00-docker.ferm", dest: "/etc/ferm/ferm.d/00-docker.ferm" }
+    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/10-docker.ferm", dest: "/etc/ferm/ferm.d/10-docker.ferm" }
+    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/20-in.trusted.ferm", dest: "/etc/ferm/ferm.d/20-in.trusted.ferm" }
+    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/99-docker.ferm", dest: "/etc/ferm/ferm.d/99-docker.ferm" }
   notify: "restart ferm"
 
 # ***** FINALIZE *****

@@ -4,23 +4,10 @@
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: "{{system_users['nobody'].name}}"
-    group: "{{system_groups['nobody'].name}}"
-    mode: 0750
-  with_items:
-    - "{{ global_lib }}prometheus"
-
-#- name: copy config
-#  template:
-#    src: "templates/etc/prometheus.yml"
-#    dest: "{{ global_etc }}prometheus/prometheus.yml"
-#    owner: "{{system_users['nobody'].name}}"
-#    group: "{{system_groups['nobody'].name}}"
-#    mode: 0640
-#  notify: "restart prometheus"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", path: "{{ global_lib }}prometheus" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: copy config
   copy:
@@ -31,8 +18,8 @@
     mode: "{{item.mode}}"
   with_items:
     - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", path: "prometheus.yml.tpl" }
-    - { user: "root", group: "root", mode: "u=rw,g=r,o=r", path: "rules/prometheus.yml" }
-    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "generator" }
+    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", path: "rules/prometheus.yml" }
+    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rwx,g=rx,o=", path: "generator" }
   notify: "restart prometheus"
 
 - name: check custom rules

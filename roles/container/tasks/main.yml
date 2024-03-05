@@ -125,17 +125,17 @@
 
 ##### DOCKER #####
 - name: prepare needed folder
-  file:
-    path: "{{item.path}}"
-    state: directory
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "/etc/docker/" }
-    - { mode: "u=rwx,g=rx,o=", path: "/opt/docker" }
-    - { mode: "u=rwx,g=rx,o=", path: "/opt/docker/config" }
-    - { mode: "u=rwx,g=x,o=", path: "{{global_lib}}docker" }
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/docker/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/docker" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/docker/config" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}docker" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}libpod/storage/" }          # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}containers/storage/" }      # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}libpod/" }                  # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/storage/" }      # podman
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: set docker selinux configuration => is_rhel or is_fedora
   sefcontext:
@@ -157,7 +157,7 @@
     dest: "/etc/docker/daemon.json"
     owner: root
     group: root
-    mode: 0644
+    mode: 0640
   register: docker_config_result
   notify: "restart docker"
 
@@ -188,7 +188,7 @@
     dest: "/opt/docker/config/config.py"
     owner: root
     group: root
-    mode: 0700
+    mode: 0750
 
 #### PODMAN ####
 # !!!!remote deployment does not work
@@ -196,21 +196,7 @@
 #  local_action: command ansible-galaxy collection install containers.podman
 #  register: ag_result
 #  changed_when: "'Installing' in ag_result.stdout"
-    
-- name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-#    - "{{global_build}}podman_dnsname/"
-    - "{{global_lib}}libpod/storage/"
-    - "{{global_tmp}}libpod/"
-    - "{{global_tmp}}containers/storage/"
-    - "{{global_lib}}containers/storage/"
-  
+
 - name: set podman config
   lineinfile:
     path: /etc/containers/{{item.file}}

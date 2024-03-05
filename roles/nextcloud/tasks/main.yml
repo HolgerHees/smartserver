@@ -11,27 +11,11 @@
 
 # ***** PREPARE FOLDER *****
 - name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  with_items:
-    - "{{nextcloud_data_path}}"
-    - "{{global_log}}nextcloud"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_log}}nextcloud" }
+  include_tasks: roles/_shared/create_folder.yml
 
-#- name: check owner and group
-#  file:
-#    path: "{{item}}"
-#    state: directory
-#    owner: "{{system_users['www'].name}}"
-#    group: "{{system_groups['www'].name}}"
-#    recurse: yes
-#  with_items:
-#    - "{{nextcloud_data_path}}"
-#    - "{{global_log}}nextcloud"
-    
 - name: prepare .ocdata file
   copy:
     content: ""
@@ -55,7 +39,7 @@
     remote_src: yes
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0755
+    mode: 0750
   when: not nextcloud_version_exists.stat.exists
 
 - name: rename folder => nextcloud does not exists

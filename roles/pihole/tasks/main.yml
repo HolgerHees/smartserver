@@ -3,17 +3,19 @@
     pihole_version: '2024.02.2'
   tags: [ 'update_notifier_config' ]
 
+- name: ensure user and group exists
+  vars:
+    user: { name: "pihole", system: true, home: "{{ global_etc }}pihole/" }
+    group: { name: "pihole", system: true }
+  include_tasks: roles/user/shared/add_system_user.yml
+
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: "999"
-    group: "1000"
-    mode: 0770
-  with_items:
-    - "{{ global_etc }}pihole/"
-    - "{{ global_etc }}pihole/dnsmasq.d/"
-    - "{{ global_lib }}pihole/"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['pihole'].name}}", group: "{{system_groups['pihole'].name}}", path: "{{ global_etc }}pihole/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['pihole'].name}}", group: "{{system_groups['pihole'].name}}", path: "{{ global_etc }}pihole/dnsmasq.d/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['pihole'].name}}", group: "{{system_groups['pihole'].name}}", path: "{{ global_lib }}pihole/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: generate static-dhcp.conf
   block:
@@ -21,8 +23,9 @@
       template:
         src: templates/etc/pihole/dnsmasq.d/04-pihole-static-dhcp.conf
         dest: "{{global_etc}}pihole/dnsmasq.d/04-pihole-static-dhcp.conf"
-        owner: "999"
-        group: "1000"
+        owner: "{{system_users['pihole'].name}}"
+        group: "{{system_groups['pihole'].name}}"
+        mode: 0640
       register: dhcp_changed
 
     - name: revoke existing leases if dhcpd file changed
@@ -42,8 +45,9 @@
   template:
     src: templates/etc/pihole/custom.list
     dest: "{{global_etc}}pihole/custom.list"
-    owner: "999"
-    group: "1000"
+    owner: "{{system_users['pihole'].name}}"
+    group: "{{system_groups['pihole'].name}}"
+    mode: 0640
   notify: restart pihole
   when: "dns_enabled and dns_type == 'pihole'"
 
@@ -68,6 +72,8 @@
     pihole_env: |
       {
         "TZ": "{{timezone}}",
+        "PIHOLE_UID": "{{system_users['pihole'].id}}",
+        "PIHOLE_GID": "{{system_groups['pihole'].id}}",
         "WEBPASSWORD": "{{pihole_password}}",
         "DNS1": "127.0.0.11",
         "DNS2": "no"
@@ -93,9 +99,9 @@
   copy:
     src: "templates/pihole-FTL.conf"
     dest: "{{ global_etc }}pihole/pihole-FTL.conf"
-    mode: 0644
-    owner: "999"
-    group: "999"
+    owner: "{{system_users['pihole'].name}}"
+    group: "{{system_groups['pihole'].name}}"
+    mode: 0640
 
 - name: create docker container
   docker_container:

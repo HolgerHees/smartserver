@@ -1,15 +1,11 @@
 - name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: 0700
-  with_items:
-    - "{{global_etc}}wireguard_cloud"
-    - "{{global_etc}}wireguard_cloud/keys"
-    - "{{global_etc}}wireguard_cloud/util"
-    - "{{config_path}}vault/wireguard_cloud/"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{global_etc}}wireguard_cloud" }
+      - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{global_etc}}wireguard_cloud/keys" }
+      - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{global_etc}}wireguard_cloud/util" }
+      - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{config_path}}vault/wireguard_cloud/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: check for vault keys
   find:

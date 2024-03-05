@@ -2,9 +2,9 @@
   template:
     src: "{{config_file}}"
     dest: "{{global_etc}}apache2/_.ansible.conf.d/custom_{{ config_name + '.conf' if config_name is defined else ( config_file | basename ) }}"
-    owner: root
-    group: root
-    mode: 0644
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
   notify: "restart apache2"
   tags: ['apache_config']
 

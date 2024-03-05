@@ -26,3 +26,6 @@ with open("{}/prometheus.yml.tpl".format(dir_path)) as f:
 with open("{}/prometheus.yml".format(dir_path), "w") as f:
     f.write(prometheus_yml)
     f.close()
+
+st = os.stat("{}/prometheus.yml.tpl".format(dir_path))
+os.chown("{}/prometheus.yml".format(dir_path), st.st_uid, st.st_gid)

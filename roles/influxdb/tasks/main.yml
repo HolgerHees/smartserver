@@ -4,31 +4,39 @@
     influxdb_version: '2.7.5'
   tags: [ 'update_notifier_config' ]    
 
-- name: prepare needed folder
-  file:
-    path: '{{item.path}}'
-    state: directory
-    owner: "{{item.user}}"
-    group: "{{item.group}}"
-    mode: "{{item.mode}}"
-  with_items:
-    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "{{ global_build }}influxdb" }
-    - { user: "1000", group: "1000", mode: "u=rwx,g=,o=", path: "{{ global_lib }}influxdb" }
-    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "{{database_backup_path}}influxdb" }
+- name: ensure user and group exists
+  vars:
+    user: { name: "influxdb", system: true, home: "{{ global_lib }}influxdb" }
+    group: { name: "influxdb", system: true }
+  include_tasks: roles/user/shared/add_system_user.yml
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rwx,o=rw", owner: "{{system_users['influxdb'].name}}", group: "{{system_groups['influxdb'].name}}", path: "{{ global_etc }}influxdb" } # mode sync with influxdb entrypoint.sh
+      - { mode: "u=rwx,g=,o=", owner: "{{system_users['influxdb'].name}}", group: "{{system_groups['influxdb'].name}}", path: "{{ global_lib }}influxdb" }      # mode sync with influxdb entrypoint.sh
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_build }}influxdb" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{database_backup_path}}influxdb" }
+  include_tasks: roles/_shared/create_folder.yml
+
+- name: build docker image
+  vars:
+    name: "influxdb"
+    image_name: "custom_influxdb"
+    image_version: "{{influxdb_version}}"
+    files:
+      - roles/influxdb/templates/container/Dockerfile
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
     name: influxdb
-    image: "influxdb:{{influxdb_version}}-alpine"
+    image: "custom_influxdb:{{influxdb_version}}"
     state: present
 #    recreate: true
     entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
     command_handling: "compatibility"
+    user: "{{system_users['influxdb'].name}}:{{system_groups['influxdb'].name}}"
     env:
       DOCKER_INFLUXDB_INIT_MODE: "setup"
       DOCKER_INFLUXDB_INIT_USERNAME: "{{influxdb_admin_username}}"
@@ -51,6 +59,7 @@
         ipv4_address: "{{docker_influxdb_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{ global_etc }}influxdb:/etc/influxdb2:z'
       - '{{ global_lib }}influxdb:/var/lib/influxdb2:z'
       - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup:z'
     exposed_ports:

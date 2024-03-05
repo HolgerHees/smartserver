@@ -1,13 +1,9 @@
-- name: prepare config folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  with_items:
-    - "{{global_etc}}minidlna"
-    - "{{global_lib}}minidlna"
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}minidlna" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_lib}}minidlna" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: prepare dlna folder
   file:
@@ -15,7 +11,7 @@
     state: directory
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0755
+    mode: 0750
   with_items: "{{dlna_volumes}}"
 
 - name: copy config
@@ -24,7 +20,7 @@
     dest: "{{global_etc}}minidlna/minidlna.conf"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0755
+    mode: 0750
   notify: "restart minidlna"
 
 - name: build docker image

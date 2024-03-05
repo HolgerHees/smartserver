@@ -5,16 +5,12 @@
   tags: [ 'update_notifier_config' ]
   
 #- name: prepare needed folder
-#  file:
-#    path: "{{item.path}}"
-#    state: directory
-#    owner: "109" # user id from docker container
-#    group: "112" # group id from docker container
-#    mode: "{{item.mode}}"
-#  with_items:
-#    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}libreoffice" }
-#    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}libreoffice" }
-#    - { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}libreoffice" }
+#  vars:
+#    needed_folder:
+#      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_log}}libreoffice" }
+#      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_lib}}libreoffice" }
+#      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_etc}}libreoffice" }
+#  include_tasks: roles/_shared/create_folder.yml
 
 #- name: build docker image
 #  vars:

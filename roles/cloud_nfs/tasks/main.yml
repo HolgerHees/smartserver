@@ -1,13 +1,9 @@
 - name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: 0700
-  with_items:
-    - "{{global_etc}}cloud_nfs"
-    - "{{global_etc}}cloud_nfs/util"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_nfs/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_nfs//util/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: prepare cloud folder
   file:
@@ -69,14 +65,14 @@
     dest: "{{global_etc}}cloud_nfs/util/startup.sh"
     owner: root
     group: root
-    mode: 0700
+    mode: 0750
   notify: "restart cloud_nfs"
   
 - name: copy server config
   template:
     src: "templates/{{item}}"
     dest: "{{ global_etc }}cloud_nfs/{{item}}"
-    mode: 0600
+    mode: 0640
   notify: "restart cloud_nfs"
   with_items:
     - "peers"

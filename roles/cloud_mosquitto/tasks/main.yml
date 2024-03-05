@@ -3,21 +3,19 @@
     mosquitto_version: "2.0.18"
   tags: [ 'update_notifier_config' ]
   
-- name: prepare config folder
-  file:
-    path: "{{global_etc}}cloud_mosquitto"
-    state: directory
-    owner: "1883"
-    group: "1883"
-    mode: 0755
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", path: "{{global_etc}}cloud_mosquitto/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: copy config
   template:
     src: "templates/mosquitto.conf"
     dest: "{{global_etc}}cloud_mosquitto/mosquitto.conf"
-    owner: "1883"
-    group: "1883"
-    mode: 0755
+    owner: "{{system_users['nobody'].name}}"
+    group: "{{system_groups['nobody'].name}}"
+    mode: 0750
   notify: "restart cloud_mosquitto"
   
 - name: check started docker
@@ -31,6 +29,7 @@
     image: "eclipse-mosquitto:{{mosquitto_version}}"
     state: present
 #    recreate: true
+    user: "{{system_users['nobody'].name}}:{{system_groups['nobody'].name}}"
     env:
       TZ: "{{timezone}}"
     log_driver: journald

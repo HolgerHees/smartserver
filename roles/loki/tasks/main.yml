@@ -4,38 +4,39 @@
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: "10001"
-    group: "10001"
-    mode: 0750
-  with_items:
-    - "{{ global_lib }}loki/"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['loki'].name}}", group: "{{system_groups['loki'].name}}", path: "{{ global_lib }}loki/" }
+  include_tasks: roles/_shared/create_folder.yml
   
 - name: copy config
   template:
     src: "templates/etc/{{item}}"
     dest: "{{ global_etc }}/{{item}}"
-    owner: "10001"
-    group: "10001"
+    owner: "{{system_users['loki'].name}}"
+    group: "{{system_groups['loki'].name}}"
     mode: 0640
   with_items:
     - "loki/local-config.yaml"
   notify: "restart loki"
   
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
+- name: build docker image
+  vars:
+    name: "loki"
+    image_name: "custom_loki"
+    image_version: "{{loki_version}}"
+    files:
+      - roles/loki/templates/container/Dockerfile
+  include_tasks: roles/container/shared/build_docker_image.yml
     
 - name: create docker container
   docker_container:
     name: loki
-    image: "grafana/loki:{{loki_version}}"
+    image: "custom_loki:{{loki_version}}"
     state: present
 #    user: "root:root"
 #    recreate: true
+    user: "{{system_users['loki'].name}}:{{system_groups['loki'].name}}"
     env:
       TZ: "{{timezone}}"
 #    entrypoint:

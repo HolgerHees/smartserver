@@ -1,14 +1,10 @@
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "{{ global_etc }}samba"
-    - "{{ global_lib }}samba"
-    - "{{ global_lib }}samba/private"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}samba" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}samba" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}samba/private" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: copy config
   template:

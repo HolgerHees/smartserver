@@ -5,18 +5,16 @@
   
 # FOLDER
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    mode: 0750
-  with_items:
-    - "/opt/backup_sync"
-    - "/opt/backup_sync/bin"
-    - "/opt/backup_sync/config"
-    - "/opt/backup_sync/config/jobs"
-    - "/opt/backup_sync/config/rclone"
-    - "{{global_log}}backup_sync"
-    - "{{config_path}}backup/"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync/bin" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync/config" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync/config/jobs" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync/config/rclone" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_log}}backup_sync" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{config_path}}backup/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 # RCLONE
 - name: install archive

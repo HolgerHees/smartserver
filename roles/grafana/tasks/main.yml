@@ -5,34 +5,14 @@
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "{{ global_lib }}grafana/plugins/"
-    - "{{ global_etc }}grafana/"
-    - "{{ global_etc }}grafana/provisioning/dashboards/"
-    - "{{ global_etc }}grafana/provisioning/notifiers/"
-    - "{{ global_etc }}grafana/provisioning/plugins/"
-    - "{{ global_etc }}grafana/provisioning/alerting/"
-
-#- name: synchronize shared grafana dashboards
-#  synchronize:
-#    src: "templates/dashboards/"
-#    dest: "{{ global_lib }}grafana/dashboards/"
-#    archive: no
-#    checksum: yes
-#    group: yes
-#    owner: yes
-#    perms: yes
-#    recursive: yes
-#    rsync_opts:
-#      - "--chown=root:root"
-#      - "--chmod=D750,F640"
-#  notify: "restart grafana"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}grafana/plugins/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/dashboards/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/notifiers/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/plugins/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/alerting/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: check individual grafana dashboards
   shell: "ls {{config_path}}templates/grafana/dashboards/"
@@ -62,17 +42,11 @@
   template:
     src: "templates/{{item}}"
     dest: "{{ global_etc }}grafana/{{item}}"
-    owner: root
-    group: root
+    owner: "root"
+    group: "root"
     mode: 0640
   notify: "restart grafana"
   with_items:
-#    - "provisioning/datasources/opentsdb_influxdb.yaml"
-#    - "provisioning/datasources/system_info_influxdb.yaml"
-#    - "provisioning/datasources/openhab_influxdb.yaml"
-#    - "provisioning/datasources/openhab_mysql.yaml"
-#    - "provisioning/datasources/prometheus.yaml"
-#    - "provisioning/datasources/loki.yaml"
     - "provisioning/dashboards/provider.yaml"
     
 - name: install natel-discrete-panel archive

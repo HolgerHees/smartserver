@@ -4,15 +4,11 @@
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: "{{system_users['nobody'].name}}"
-    group: "{{system_groups['nobody'].name}}"
-    mode: 0750
-  with_items:
-    - "{{ global_etc }}alertmanager"
-    - "{{ global_lib }}alertmanager"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", path: "{{ global_etc }}alertmanager" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", path: "{{ global_lib }}alertmanager" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: copy config
   template:

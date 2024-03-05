@@ -2,29 +2,26 @@
   set_fact:
     adminer_version: '4.7.7'
   tags: [ 'update_notifier_config' ]
+
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}" }
+  include_tasks: roles/_shared/create_folder.yml
   
 - name: check installation
   stat:
     path: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}"
   register: adminer_exists
   changed_when: not adminer_exists.stat.exists
-  
-- name: prepare needed folder => adminer does not exists
-  file:
-    path: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0755
-  when: not adminer_exists.stat.exists
-    
+
 - name: install archive => adminer does not exists
   get_url:
     url: "https://github.com/vrana/adminer/releases/download/v{{adminer_version}}/adminer-{{adminer_version}}.php"
     dest: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}/adminer.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0755
+    mode: 0750
   when: not adminer_exists.stat.exists
 
 - name: set symbolic link

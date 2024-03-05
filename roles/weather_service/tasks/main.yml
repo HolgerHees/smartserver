@@ -1,14 +1,10 @@
 - name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "{{global_opt}}weather_service/"
-    - "{{global_opt}}weather_service/config/"
-    - "{{global_lib}}weather_service/"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}weather_service/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}weather_service/config/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}weather_service/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: build docker image
   vars:
@@ -132,7 +128,7 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   
 - name: register webui
   vars:

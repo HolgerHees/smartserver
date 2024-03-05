@@ -1,12 +1,8 @@
 - name: prepare shared folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0755
-  with_items:
-    - "{{htdocs_path}}main/"
-    - "{{htdocs_path}}main/components/"
-    - "{{htdocs_path}}main/listener/"
-    - "{{htdocs_path}}main/icons/"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}main/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}main/components/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}main/listener/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}main/icons/" }
+  include_tasks: roles/_shared/create_folder.yml

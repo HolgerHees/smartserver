@@ -1,26 +1,17 @@
 - name: prepare needed folder
-  file:
-    path: "{{item.path}}"
-    state: directory
-    owner: "{{item.owner}}"
-    group: "{{item.group}}"
-    mode: "{{item.mode}}"
-  with_items:
-    -  { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}camera_service/", owner: "root", group: "root" }
-    -  { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}camera_service/config/", owner: "root", group: "root" }
-    -  { mode: "u=rwx,g=rx,o=", path: "{{global_lib}}camera_service/", owner: "root", group: "root" }
-    -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
-    -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/cache/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
-
-- name: prepare camera cache folder
-  file:
-    path: "{{htdocs_path}}/camera_service/cache/{{item['ftp_upload_name']}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0755
-  when: "'ftp_upload_name' in item"
-  with_items: "{{camera_devices}}"
+  vars:
+    needed_folder: |
+      [
+        { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{global_opt}}camera_service/" },
+        { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{global_opt}}camera_service/config/" },
+        { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{global_lib}}camera_service/" },
+        { "mode": "u=rwx,g=rx,o=", "owner": "{{system_users['www'].name}}", "group": "{{system_groups['www'].name}}", "path": "{{htdocs_path}}camera_service/" },
+        { "mode": "u=rwx,g=rx,o=", "owner": "{{system_users['www'].name}}", "group": "{{system_groups['www'].name}}", "path": "{{htdocs_path}}camera_service/cache/" },
+        {% for item in camera_devices %}{% if 'ftp_upload_name' in item %}
+          { "mode": "u=rwx,g=rx,o=", "owner": "{{system_users['www'].name}}", "group": "{{system_groups['www'].name}}", "path": "{{htdocs_path}}camera_service/cache/{{item['ftp_upload_name']}}/" },
+        {% endif %}{% endfor %}
+      ]
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: build docker image
   vars:
@@ -111,7 +102,7 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   
 - name: copy proxy config
   vars:

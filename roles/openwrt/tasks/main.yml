@@ -5,15 +5,11 @@
     device_files: {}
 
 - name: prepare needed folder
-  file:
-    path: '{{item.path}}'
-    state: directory
-    owner: "{{item.user}}"
-    group: "{{item.group}}"
-    mode: "{{item.mode}}"
-  with_items:
-    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt" }
-    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt/ap/" }
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}openwrt" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}openwrt/ap/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 # **** PREPARE & BUILD CONFIGS ****
 - name: prepare used services

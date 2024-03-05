@@ -1,3 +1,14 @@
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}ci_service" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}ci_service/config" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_build}}ci_job" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}ci_service" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}ci_service/VirtualMachines" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_log}}ci_service" }
+  include_tasks: roles/_shared/create_folder.yml
+
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: virtualbox
@@ -22,21 +33,6 @@
   when: is_suse
   notify: "restart virtualbox" 
   
-- name: prepare needed folder
-  file:
-    path: "{{item.path}}"
-    state: directory
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}ci_service" }
-    - { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}ci_service/config" }
-    - { mode: "u=rwx,g=rx,o=", path: "{{global_build}}ci_job" }
-    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}ci_service" }
-    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}ci_service/VirtualMachines" }
-    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}ci_service" }
-
 - name: build docker image
   vars:
     name: "ci_service"
@@ -135,7 +131,7 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   tags: ['apache_webui_page']
 
 - name: register webui

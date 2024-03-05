@@ -2,8 +2,8 @@
   template:
     src: "{{item}}"
     dest: "{{ global_etc }}grafana/provisioning/datasources/{{item | basename}}"
-    owner: root
-    group: root
+    owner: "{{system_users['grafana'].name}}"
+    group: "{{system_groups['grafana'].name}}"
     mode: 0640
   with_items: "{{datasources | default([]) }}"
 #  notify: "restart grafana"
@@ -13,8 +13,8 @@
   copy:
     src: "{{item}}"
     dest: "{{ global_lib }}grafana/dashboards/{{item | basename}}"
-    owner: root
-    group: root
+    owner: "{{system_users['grafana'].name}}"
+    group: "{{system_groups['grafana'].name}}"
     mode: 0640
   with_items: "{{dashboards | default([]) }}"
 #  notify: "restart grafana"

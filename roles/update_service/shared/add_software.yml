@@ -4,5 +4,5 @@
     dest: "{{global_etc}}update_service/software/{{name}}.conf"
     owner: root
     group: root
-    mode: 0644
+    mode: 0640
   tags: ['update_notifier_config']

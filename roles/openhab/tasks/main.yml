@@ -1,53 +1,29 @@
+- name: set openhab version
+  set_fact:
+    openhab_version: "4.1.1"
+  tags: [ 'update_notifier_config' ]
+
 - name: ensure user and group exists
   vars:
     user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
     group: { name: "openhab", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
 
-- name: set openhab version
-  set_fact:
-    openhab_version: "4.1.1"
-    openhab_uid: "{{system_users['openhab'].id}}"
-    openhab_user: "{{system_users['openhab'].name}}"
-    openhab_gid: "{{system_groups['openhab'].id}}"
-    openhab_group: "{{system_groups['openhab'].name}}"
-#    openhab_user: "root"
-#    openhab_group: "root"
-  tags: [ 'update_notifier_config' ]
-
-# temporary during upgrade from 3.3.0 => 3.4.0
-- stat:
-    path: "{{global_etc}}openhab/conf/icons"
-  register: icons_link
-
-# temporary during upgrade from 3.3.0 => 3.4.0
-- name: remove symlink
-  file:
-    path: "{{global_etc}}openhab/conf/icons"
-    state: absent
-  when: "icons_link.stat.islnk is defined and icons_link.stat.islnk"
-
-- name: prepare needed config folder
-  file:
-    path:  "{{item.path}}"
-    state: directory
-    owner: "{{item.user}}"
-    group: "{{item.group}}"
-    mode: 0750
-  with_items:
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/addons" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/html" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/icons" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/python" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/jsondb" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/persistance" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_log}}openhab" }
-    - { user: "root", group: "root", path: "{{database_backup_path}}openhab" }
-#    - "{{global_lib}}openhab/jsondb" # => for homeconnect oauth => 
-# userdata/config/SymmetricKeyCipher.config
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/addons" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/html" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/icons" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/python" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/jsondb" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/persistance" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_log}}openhab" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{database_backup_path}}openhab" }
+  include_tasks: roles/_shared/create_folder.yml
 
 # ****** GITHUB SHARED PROJECT ******
 - name: clone shared git
@@ -55,8 +31,8 @@
     git_clone_name: "shared"
     git_clone_path: "{{projects_path}}openhab_shared"
     git_clone_url: "https://github.com/HolgerHees/openhab_shared.git"
-    git_owner:  "{{openhab_user}}"
-    git_group:  "{{openhab_group}}"
+    git_owner:  "{{system_users['openhab'].name}}"
+    git_group:  "{{system_groups['openhab'].name}}"
     git_mode:  "u=rwX,g=rX,o="
   include_tasks: roles/_shared/git_clone.yml
 
@@ -66,8 +42,8 @@
     dest: "{{global_etc}}/openhab/{{item}}"
     state: link
     follow: no
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"  
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
   with_items:
     - "python/shared"
     - "conf/html/shared"
@@ -80,8 +56,8 @@
     git_clone_name: "config"
     git_clone_path: "{{projects_path}}openhab_config"
     git_clone_url: "{{openhab_config_git}}"
-    git_owner:  "{{openhab_user}}"
-    git_group:  "{{openhab_group}}"
+    git_owner:  "{{system_users['openhab'].name}}"
+    git_group:  "{{system_groups['openhab'].name}}"
     git_mode:  "u=rwX,g=rX,o="
   include_tasks: roles/_shared/git_clone.yml
 
@@ -92,8 +68,8 @@
     dest: "{{global_etc}}openhab/python/custom"
     state: link
     follow: no
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
   notify: "restart openhab"
 
 # conf folder
@@ -108,8 +84,8 @@
     dest: "{{global_etc}}openhab/conf/{{item}}"
     state: link
     follow: no
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
   with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
   notify: "restart openhab"
 
@@ -119,8 +95,8 @@
     dest: "{{global_etc}}openhab/conf/{{item}}"
     state: link
     follow: no
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
   with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
   notify: "restart openhab"
 
@@ -153,8 +129,8 @@
     dest: "{{global_etc}}openhab/conf/{{item}}"
     state: link
     follow: no
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
   with_items: "{{config_sub_folders}}"
   notify: "restart openhab"
 
@@ -163,8 +139,8 @@
   file:
     path:  "{{global_etc}}openhab{{item}}"
     state: directory
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
     mode: 0750
   with_items:
     - /conf/automation
@@ -199,8 +175,8 @@
     perms: yes
     recursive: yes
     rsync_opts:
-      - "--chown={{openhab_user}}:{{openhab_group}}"
-      - "--chmod=F644"
+      - "--chown={{system_users['openhab'].name}}:{{system_groups['openhab'].name}}"
+      - "--chmod=F640"
   when: "habpanel_result.rc == 0"
 
 # addons folder
@@ -214,8 +190,8 @@
     src: "{{projects_path}}openhab_config/addons/{{item}}"
     dest: "{{global_etc}}openhab/addons/{{item}}"
     remote_src: yes
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
     mode: 0640
   with_items: "{{addons_result.stdout_lines}}"
   
@@ -247,8 +223,8 @@
   template:
     src: "/tmp/ansible/openhab/services/{{item}}"
     dest: "{{ global_etc }}openhab/conf/services/{{item}}"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
     mode: 0640
   with_items: "{{services_result.stdout_lines}}"
   notify: "restart openhab"
@@ -269,7 +245,7 @@
     checksum: yes
     rsync_opts:
       - "--chown=root:root"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
 #    group: yes
 #    owner: yes
 #    perms: yes
@@ -281,8 +257,8 @@
   template:
     src: "/tmp/ansible/openhab/things/{{item}}"
     dest: "{{ global_etc }}openhab/conf/things/{{item}}"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
     mode: 0640
   with_items: "{{things_result.stdout_lines}}"
   notify: "restart openhab"
@@ -305,8 +281,8 @@
   template:
     src: "templates/python/configuration.py"
     dest: "{{global_etc}}openhab/python/configuration.py"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
     mode: 0640
   notify: "restart openhab"
   
@@ -385,8 +361,8 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-      USER_ID: "{{openhab_uid}}"
-      GROUP_ID: "{{openhab_gid}}"
+      USER_ID: "{{system_users['openhab'].id}}"
+      GROUP_ID: "{{system_groups['openhab'].id}}"
       #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
       EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script

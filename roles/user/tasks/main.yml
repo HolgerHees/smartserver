@@ -16,16 +16,14 @@
   with_items: "{{userdata}}"
   
 - name: prepare user folder
-  file:
-    path: "/home/{{item}}/"
-    state: directory
-    owner: "{{item}}"
-    group: users
-    mode: 0750
-  when: "'user' in userdata[item].groups"
-  loop_control:
-    label: "{{item}}"
-  with_items: "{{userdata}}"
+  vars:
+    needed_folder: |
+      [
+        {% for username in userdata %}{% if 'user' in userdata[username].groups %}
+          { "mode": "u=rwx,g=rx,o=", "owner": "{{username}}", "group": "users", "path": "/home/{{username}}/" },
+        {% endif %}{% endfor %}
+      ]
+  include_tasks: roles/_shared/create_folder.yml
 
 # refresh samba container, otherwise changes on /etc/passwd are not visible inside the container
 - name: refresh samba

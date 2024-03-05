@@ -1,3 +1,9 @@
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}dnsmasq" }
+  include_tasks: roles/_shared/create_folder.yml
+
 - name: check named service
   stat:
     path: "{{ global_etc }}named/"
@@ -26,16 +32,6 @@
         content: "nameserver 8.8.8.8"
         dest: "/etc/resolv.conf"
   when: "named_service.stat.exists"
-
-- name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "{{ global_etc }}dnsmasq"
 
 - name: copy config
   template:

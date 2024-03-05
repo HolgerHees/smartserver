@@ -1,9 +1,5 @@
-- name: prepare shared folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  with_items:
-    - "{{nextcloud_data_path}}"
+- name: prepare needed folder
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{nextcloud_data_path}}" }
+  include_tasks: roles/_shared/create_folder.yml

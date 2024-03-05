@@ -1,13 +1,9 @@
 - name: prepare needed folder
-  file:
-    path: "{{item.dir}}"
-    state: directory
-    owner: "{{item.owner}}"
-    group: "{{item.group}}"
-    mode: 0755
-  with_items:
-    - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}img/" }
-    - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}img/potd" }
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}img/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}img/potd" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: synchronize htdocs
   synchronize:
@@ -21,7 +17,7 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   
 - name: copy htdocs (template)
   template:
@@ -37,9 +33,9 @@
   copy:
     src: "templates/etc/apache2/{{item}}"
     dest: "{{global_etc}}apache2/{{item}}"
-    owner: "root"
-    group: "root"
-    mode: 0644
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
   with_items:
     - _.ansible.conf.d/default_manifest.conf
   notify: "restart apache2"

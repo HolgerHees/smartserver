@@ -3,15 +3,11 @@
     cloud_smb_path: "{{data_path}}cloud_smb/"
   
 - name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: 0700
-  with_items:
-    - "{{global_etc}}cloud_samba"
-    - "{{global_etc}}cloud_samba/util"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_samba/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_samba//util/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: prepare cloud folder
   file:
@@ -53,14 +49,14 @@
     dest: "{{global_etc}}cloud_samba/util/startup.sh"
     owner: root
     group: root
-    mode: 0700
+    mode: 0750
   notify: "restart cloud_samba"
   
 - name: copy server config
   template:
     src: "templates/{{item}}"
     dest: "{{ global_etc }}cloud_samba/{{item}}"
-    mode: 0600
+    mode: 0640
   notify: "restart cloud_samba"
   with_items:
     - "peers"

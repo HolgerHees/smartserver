@@ -34,5 +34,5 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   when: "environment_result.rc == 0"

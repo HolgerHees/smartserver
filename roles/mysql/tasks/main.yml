@@ -3,17 +3,19 @@
     mysql_version: "10.11.7"
   tags: [ 'update_notifier_config' ]
   
+- name: ensure user and group exists
+  vars:
+    user: { name: "mysql", system: true, home: "{{ global_etc }}mysql" }
+    group: { name: "mysql", system: true }
+  include_tasks: roles/user/shared/add_system_user.yml
+
 - name: prepare needed folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: "999" # 999 is mysql user inside the container
-    group: root
-    mode: 0750
-  with_items:
-    - '{{ global_etc }}mysql'
-    - '{{ global_lib }}mysql'
-    - '{{database_backup_path}}mysql'
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['mysql'].name}}", group: "{{system_groups['mysql'].name}}", path: "{{ global_etc }}mysql" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['mysql'].name}}", group: "{{system_groups['mysql'].name}}", path: "{{ global_lib }}mysql" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{database_backup_path}}mysql" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: synchronize config
   synchronize:
@@ -26,22 +28,27 @@
     perms: yes
     recursive: yes
     rsync_opts:
-      - "--chown=999:root"
+      - "--chown={{system_users['mysql'].name}}:{{system_groups['mysql'].name}}"
       - "--chmod=D750,F640"
   notify: "restart mysql"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
+- name: build docker image
+  vars:
+    name: "mysql"
+    image_name: "custom_mysql"
+    image_version: "{{mysql_version}}"
+    files:
+      - roles/mysql/templates/container/Dockerfile
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
     name: mysql
-    image: "mariadb:{{mysql_version}}"
+    image: "custom_mysql:{{mysql_version}}"
     state: present
 #    recreate: true
 #    command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
+    user: "{{system_users['mysql'].name}}:{{system_groups['mysql'].name}}"
     env:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""

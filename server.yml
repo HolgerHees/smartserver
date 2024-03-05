@@ -57,9 +57,6 @@
     # creates /etc/fluent/_.ansible.d
     - { import_role: { name: fluentd, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'fluentd' ],                                         when: "monitoring_enabled" }
 
-    # is creating and fetching wwwrun uid and gid to make them available globaly for all roles
-    - { import_role: { name: apache, tasks_from: ensure_www_user_exists, handlers_from: empty }, tags: [ 'always' ] }
-
     # needed by all roles which needs to register their own vhost
     # search for "include_tasks: roles/apache/shared/add_vhost.yml" to see which ones
     # creates {{global_etc}}apache2/(_.ansible.conf.d & _.ansible.vhost.d)
@@ -163,8 +160,8 @@
     - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mysql_enabled" }                            # phpMyAdmin
     #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mysql_enabled" }                           # Adminer
 
-    - { import_role: { name: camera_ftp },                                                   tags: [ 'camera_ftp', 'alpine' ],                               when: "camera_enabled" }                           # ftp file server
     - { import_role: { name: camera_service },                                               tags: [ 'camera_service', 'alpine' ],                           when: "camera_enabled" }                           # camera image gallery
+    - { import_role: { name: camera_ftp },                                                   tags: [ 'camera_ftp', 'alpine' ],                               when: "camera_enabled" }                           # ftp file server
 
     - { import_role: { name: nextcloud },                                                    tags: [ 'nextcloud' ],                                          when: "nextcloud_enabled" }                        # private cloud
     - { import_role: { name: nextcloud_libreoffice },                                        tags: [ 'nextcloud_libreoffice' ],                              when: "nextcloud_enabled" }                        # office editor

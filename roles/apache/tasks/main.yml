@@ -103,39 +103,24 @@
   
 # APACHE
 - name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  with_items:
-    - "{{htdocs_path}}_public"
-    - "{{htdocs_path}}_public/.well-known"
-    - "{{htdocs_path}}_fallback"
-    - "{{htdocs_path}}_fallback/domain"
-    - "{{global_log}}apache2/"
-    - "{{global_etc}}apache2/_.ansible.auth/"
-    - "{{global_etc}}apache2/_.ansible.vhost.d/auth/"
-
-- name: check owner and group
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    #recurse: yes
-  with_items:
-    - "{{htdocs_path}}"
-    - "{{global_log}}apache2/"
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}_public" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}_public/.well-known" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}_fallback" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}_fallback/domain" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_log}}apache2/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}apache2/_.ansible.auth/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}apache2/_.ansible.vhost.d/auth/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: copy config
   template:
     src: "templates/etc/apache2/{{item}}"
     dest: "{{global_etc}}apache2/{{item}}"
-    owner: "root"
-    group: "root"
-    mode: 0644
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
   vars:
     enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
     usergroup: "user"
@@ -156,9 +141,9 @@
   template:
     src: "templates/etc/apache2/{{item}}"
     dest: "{{global_etc}}apache2/{{item}}"
-    owner: "root"
-    group: "root"
-    mode: 0644
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
   vars:
     enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
   with_items:
@@ -173,9 +158,9 @@
   template:
     src: "templates/etc/apache2/_.ansible.auth/required.inc"
     dest: "{{global_etc}}apache2/_.ansible.auth/required_{{item}}.inc"
-    owner: "root"
-    group: "root"
-    mode: 0644
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
   with_items:
     - "admin"
     - "user"
@@ -194,7 +179,7 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
 
 - name: copy domain fallback
   template:
@@ -202,7 +187,7 @@
     dest: "{{htdocs_path}}_fallback/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0644
+    mode: 0640
   with_items:
     - error.php
     - domain/index.html
@@ -214,7 +199,7 @@
     dest: "{{htdocs_path}}_public/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0644
+    mode: 0640
   with_items:
    - state
    - robots.txt

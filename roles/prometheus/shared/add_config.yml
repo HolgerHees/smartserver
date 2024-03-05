@@ -2,9 +2,9 @@
   template:
     src: "{{rules_file}}"
     dest: "{{global_etc}}prometheus/rules/{{name}}.yml"
-    owner: root
-    group: root
-    mode: 0644
+    owner: "{{system_users['nobody'].name}}"
+    group: "{{system_groups['nobody'].name}}"
+    mode: 0640
   notify: "refresh prometheus"
   when: "rules_file is defined"
   tags: ['prometheus_config']
@@ -13,9 +13,9 @@
   template:
     src: "{{scrape_file}}"
     dest: "{{global_etc}}prometheus/scrapes/{{name}}.yml"
-    owner: root
-    group: root
-    mode: 0644
+    owner: "{{system_users['nobody'].name}}"
+    group: "{{system_groups['nobody'].name}}"
+    mode: 0640
   notify: "refresh prometheus"
   when: "scrape_file is defined"
   tags: ['prometheus_config']

@@ -8,7 +8,7 @@
     dest: "/etc/ferm/ferm.d/{{ferm_prefix}}-{{name}}.ferm"
     owner: root
     group: root
-    mode: 0644
+    mode: 0640
   register: "firewall_allow_service_result"
   tags: [ 'firewall_config' ]
   notify: "restart ferm"

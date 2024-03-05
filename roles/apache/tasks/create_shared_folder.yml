@@ -1,12 +1,19 @@
+# suse user: wwwrun:x:474:474:WWW daemon apache:/var/lib/wwwrun:/sbin/nologin
+# suse group: www:x:475:wwwrun
+# suse group: wwwrun:!:474:
+# fedora user: apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin
+# fedora group: apache:x:48:
+- name: "apache : ensure user and group exists"
+  vars:
+    user: { key: "www", name: "{{'wwwrun' if is_suse else 'apache'}}", system: true, home: "{{htdocs_path}}" }
+    group: { key: "www", name: "{{'www' if is_suse else 'apache'}}", system: true }
+  include_tasks: roles/user/shared/add_system_user.yml
+
 - name: prepare shared folder
-  file:
-    path: "{{item.path}}"
-    state: directory
-    owner: "{{item.owner}}"
-    group: "{{item.group}}"
-    mode: 0755
-  with_items:
-    - {owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}" }
-    - {owner: "root", group: "root", path: "{{global_etc}}apache2/" }
-    - {owner: "root", group: "root", path: "{{global_etc}}apache2/_.ansible.conf.d/" }
-    - {owner: "root", group: "root", path: "{{global_etc}}apache2/_.ansible.vhost.d/" }
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}apache2/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}apache2/_.ansible.conf.d/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}apache2/_.ansible.vhost.d/" }
+  include_tasks: roles/_shared/create_folder.yml

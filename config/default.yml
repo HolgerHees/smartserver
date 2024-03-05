@@ -777,4 +777,11 @@ librenms_devices: "{{network_devices | default([]) | selectattr('snmp_method', '
 openwrt_devices: "{{network_devices | default([]) | selectattr('type', 'defined') | selectattr('type','==','openwrt') | list}}"
 fritzbox_devices: "{{network_devices | default([]) | selectattr('type', 'defined') | selectattr('type','==','fritzbox') | list}}"
 
+user_key_maps: {
+  "wwwrun": "www",
+  "apache": "www"
+}
 
+group_key_maps: {
+  "nogroup": "nobody"
+}

@@ -1,14 +1,10 @@
 - name: prepare needed folder
-  file:
-    path: "{{item.path}}"
-    state: directory
-    owner: "{{item.owner}}"
-    group: "{{item.group}}"
-    mode: "{{item.mode}}"
-  with_items:
-    - {mode: "u=rwX,g=rX,o=", owner: "root", group: "root", path: "{{global_opt}}shared/" }
-    - {mode: "u=rwX,g=rX,o=rX", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
-    - {mode: "u=rwX,g=rX,o=rX", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/font/" }
+  vars:
+    needed_folder:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}shared/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/font/" }
+  include_tasks: roles/_shared/create_folder.yml
 
 - name: synchronize python libs
   synchronize:
@@ -55,7 +51,7 @@
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
   with_items:
     - { src: "htdocs/shared", dest: "" }
     - { src: "fonts/fontello/font", dest: "shared/" }

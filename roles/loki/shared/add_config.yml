@@ -2,8 +2,8 @@
   template:
     src: "{{rules_file}}"
     dest: "{{global_etc}}loki/rules/fake/{{name}}.yaml"
-    owner: "10001"
-    group: "10001"
+    owner: "{{system_users['loki'].name}}"
+    group: "{{system_groups['loki'].name}}"
     mode: 0640
   notify: "restart loki"
   tags: ['loki_config']
