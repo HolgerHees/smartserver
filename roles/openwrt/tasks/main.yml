@@ -4,12 +4,12 @@
     default_features: [ "rpcd", "snmpd" ]
     device_files: {}
 
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}openwrt" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}openwrt/ap/" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 # **** PREPARE & BUILD CONFIGS ****
 - name: prepare used services

@@ -3,11 +3,11 @@
     prometheus_version: '2.50.1'
   tags: [ 'update_notifier_config' ]    
 
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", path: "{{ global_lib }}prometheus" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: copy config
   copy:

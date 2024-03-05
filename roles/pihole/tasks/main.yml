@@ -9,13 +9,13 @@
     group: { name: "pihole", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
 
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['pihole'].name}}", group: "{{system_groups['pihole'].name}}", path: "{{ global_etc }}pihole/" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['pihole'].name}}", group: "{{system_groups['pihole'].name}}", path: "{{ global_etc }}pihole/dnsmasq.d/" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['pihole'].name}}", group: "{{system_groups['pihole'].name}}", path: "{{ global_lib }}pihole/" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: generate static-dhcp.conf
   block:

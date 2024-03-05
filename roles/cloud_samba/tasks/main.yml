@@ -2,12 +2,12 @@
   set_fact:
     cloud_smb_path: "{{data_path}}cloud_smb/"
   
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_samba/" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_samba//util/" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: prepare cloud folder
   file:

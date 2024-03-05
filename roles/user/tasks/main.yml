@@ -17,13 +17,13 @@
   
 - name: prepare user folder
   vars:
-    needed_folder: |
+    directories: |
       [
         {% for username in userdata %}{% if 'user' in userdata[username].groups %}
           { "mode": "u=rwx,g=rx,o=", "owner": "{{username}}", "group": "users", "path": "/home/{{username}}/" },
         {% endif %}{% endfor %}
       ]
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 # refresh samba container, otherwise changes on /etc/passwd are not visible inside the container
 - name: refresh samba

@@ -36,7 +36,7 @@
   register: certificate_files
   changed_when: not certificate_files.stat.exists
 
-- name: prepare needed folder => certificate_files not exists
+- name: prepare needed directories => certificate_files not exists
   file:
     path: "{{global_etc}}{{item}}"
     state: directory
@@ -102,9 +102,9 @@
   when: not certificate_files.stat.exists
   
 # APACHE
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}_public" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}_public/.well-known" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}_fallback" }
@@ -112,7 +112,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_log}}apache2/" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}apache2/_.ansible.auth/" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_etc}}apache2/_.ansible.vhost.d/auth/" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: copy config
   template:

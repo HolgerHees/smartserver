@@ -4,15 +4,15 @@
     natel_discrete_plugin_version: "0.1.1"
   tags: [ 'update_notifier_config' ]    
 
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}grafana/plugins/" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/dashboards/" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/notifiers/" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/plugins/" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}grafana/provisioning/alerting/" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: check individual grafana dashboards
   shell: "ls {{config_path}}templates/grafana/dashboards/"

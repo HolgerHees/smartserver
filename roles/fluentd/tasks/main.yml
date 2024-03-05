@@ -4,7 +4,7 @@
   tags: [ 'update_notifier_config' ]    
   
 # force /var/log/journal as log target, instead of /run/log/journal
-- name: prepare needed folder
+- name: prepare needed directories
   file:
     path: "/var/log/journal"
     state: directory

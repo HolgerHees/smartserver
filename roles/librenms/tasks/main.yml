@@ -9,9 +9,9 @@
     group: { name: "librenms", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
 
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/nginx" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_log}}librenms" }
@@ -21,7 +21,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/plugins" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/rrd" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/weathermap" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: copy config
   template:

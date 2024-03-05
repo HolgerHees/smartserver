@@ -4,9 +4,9 @@
   tags: [ 'update_notifier_config' ]
   
 # FOLDER
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync/bin" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync/config" }
@@ -14,7 +14,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/backup_sync/config/rclone" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_log}}backup_sync" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{config_path}}backup/" }
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 # RCLONE
 - name: install archive

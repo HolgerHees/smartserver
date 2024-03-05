@@ -1,4 +1,4 @@
-- name: prepare needed folder
+- name: prepare needed directories
   file:
     path:  "{{item.path}}"
     state: directory

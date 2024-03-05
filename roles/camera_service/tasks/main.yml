@@ -1,6 +1,6 @@
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder: |
+    directories: |
       [
         { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{global_opt}}camera_service/" },
         { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{global_opt}}camera_service/config/" },
@@ -11,7 +11,7 @@
           { "mode": "u=rwx,g=rx,o=", "owner": "{{system_users['www'].name}}", "group": "{{system_groups['www'].name}}", "path": "{{htdocs_path}}camera_service/cache/{{item['ftp_upload_name']}}/" },
         {% endif %}{% endfor %}
       ]
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: build docker image
   vars:

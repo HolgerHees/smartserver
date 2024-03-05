@@ -4,13 +4,13 @@
     libreoffice_changelog_version: "23-05"
   tags: [ 'update_notifier_config' ]
   
-#- name: prepare needed folder
+#- name: prepare needed directories
 #  vars:
-#    needed_folder:
+#    directories:
 #      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_log}}libreoffice" }
 #      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_lib}}libreoffice" }
 #      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_etc}}libreoffice" }
-#  include_tasks: roles/_shared/create_folder.yml
+#  include_tasks: roles/_shared/create_directories.yml
 
 #- name: build docker image
 #  vars:

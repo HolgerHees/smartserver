@@ -1,0 +1,24 @@
+- name: "_shared : create directory"
+  file:
+    path: '{{item.path}}'
+    state: directory
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
+    mode: "{{item.mode}}"
+  register: "directory_result"
+  with_items: "{{directories}}"
+
+#- name: debug
+#  debug:
+#    msg: "{{directory_result}}"
+
+- name: "_shared : check recursive owner and group => needed folder changed"
+  file:
+    path: '{{item.1.path}}'
+    state: directory
+    owner: "{{item.1.owner}}"
+    group: "{{item.1.group}}"
+    recurse: yes
+  when: "directory_result.results[item.0].changed and ( 'owner' in directory_result.results[item.0].diff.before.keys() or 'group' in directory_result.results[item.0].diff.before.keys() )"
+  with_indexed_items: "{{directories}}"
+

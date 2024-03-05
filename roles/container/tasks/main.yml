@@ -124,9 +124,9 @@
   when: is_suse
 
 ##### DOCKER #####
-- name: prepare needed folder
+- name: prepare needed directories
   vars:
-    needed_folder:
+    directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/docker/" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/docker" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/docker/config" }
@@ -135,7 +135,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}containers/storage/" }      # podman
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}libpod/" }                  # podman
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/storage/" }      # podman
-  include_tasks: roles/_shared/create_folder.yml
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: set docker selinux configuration => is_rhel or is_fedora
   sefcontext:
