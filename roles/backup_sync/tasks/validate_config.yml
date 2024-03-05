@@ -1,4 +1,4 @@
-- name: "validate backup_sync: process config"
+- name: "backup_sync : validate_config : process config"
   vars:
     mandatory_base_fields: "{{ ['name', 'type', 'schedule', 'destination', 'sources'] }}"
     config_result: |

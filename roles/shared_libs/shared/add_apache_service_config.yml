@@ -1,4 +1,4 @@
-- name: copy apache config
+- name: "shared_libs : add apache service config"
   vars:
     config_name: "{{service_name}}"
     config_file: "roles/shared_libs/templates/etc/apache2/_.ansible.conf.d/service.conf"

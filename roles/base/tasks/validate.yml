@@ -1,13 +1,13 @@
-- name: validate user
+- name: "user : validate_config"
   include_tasks: "roles/user/tasks/validate_config.yml"
   tags: ["all", "user"]
 
-- name: validate dhcp_reservations
+- name: "dnsmasq : validate_config"
   include_tasks: "roles/dnsmasq/tasks/validate_config.yml"
   tags: ["all", "dnsmasq", "pihole" ]
   when: "dhcp_enabled"
 
-- name: validate backup_sync
+- name: "backup_sync : validate_config"
   include_tasks: "roles/backup_sync/tasks/validate_config.yml"
   tags: ["all", "backup_sync"]
   when: "backup_sync_enabled"

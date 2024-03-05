@@ -1,17 +1,17 @@
-- name: "pihole : check if running"
+- name: "pihole : wait_until_ready : check if running"
   command: "systemctl is-active --quiet pihole"
   register: "service_result"
   changed_when: no
   failed_when: no
   
-- name: "pihole : start service"
+- name: "pihole : wait_until_ready : start service"
   systemd:
     name: pihole
     state: started
     daemon_reload: yes
   when: "service_result.rc != 0"
   
-- name: "pihole : wait for to become ready"
+- name: "pihole : wait_until_ready : wait for to become ready"
   command: "docker exec pihole sh -c \"echo 'hello' > /dev/null\""
   register: check_result
   until: not check_result.rc  # or check_result.rc == 0 if you prefer

@@ -1,17 +1,17 @@
-- name: "apache : check if running"
+- name: "apache : wait_until_ready : check if running"
   command: "systemctl is-active --quiet apache2"
   register: "service_result"
   changed_when: no
   failed_when: no
   
-- name: "apache : start service"
+- name: "apache : wait_until_ready : start service"
   systemd:
     name: apache2
     state: started
     daemon_reload: yes
   when: "service_result.rc != 0"
 
-- name: "apache : wait for to become ready"
+- name: "apache : wait_until_ready : wait for to become ready"
   command: "docker exec apache2 sh -c \"echo 'hello' > /dev/null\""
   register: check_result
   until: not check_result.rc  # or check_result.rc == 0 if you prefer

@@ -1,17 +1,17 @@
-- name: "influxdb : check if running"
+- name: "influxdb : wait_until_ready : check if running"
   command: "systemctl is-active --quiet influxdb"
   register: "service_result"
   changed_when: no
   failed_when: no
 
-- name: "influxdb : start service"
+- name: "influxdb : wait_until_ready : start service"
   systemd:
     name: influxdb
     state: started
     daemon_reload: yes
   when: "service_result.rc != 0"
   
-- name: "influxdb : wait to become ready"
+- name: "influxdb : wait_until_ready : wait to become ready"
   uri:
     url: "http://influxdb:8086/ping"
     status_code: 204

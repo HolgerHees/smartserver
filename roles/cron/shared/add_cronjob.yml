@@ -1,4 +1,4 @@
-- name: "cron : create cron job '{{name}}'"
+- name: "cron : add_cronjob : create cron job '{{name}}'"
   vars:
     cron_name: "{{name}}"
     cron_cmd: "{{cmd}}"

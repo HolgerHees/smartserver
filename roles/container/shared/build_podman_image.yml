@@ -1,4 +1,4 @@
-- name: "container : prepare build folder"
+- name: "container : build_podman_image : prepare build folder"
   file:
     path: "{{global_build}}{{name}}/"
     state: directory
@@ -6,12 +6,12 @@
     group: root
     mode: 0750
 
-- name: "container : check podman image exists"
+- name: "container : build_podman_image : check podman image exists"
   shell: "podman images {{image_name}}:{{image_version}}"
   register: image_exists
   changed_when: "image_name not in image_exists.stdout"
  
-- name: "container : copy dockerfiles"
+- name: "container : build_podman_image : copy dockerfiles"
   template:
     src: "{{item}}"
     dest: "{{global_build}}{{name}}/{{item | basename}}"
@@ -22,14 +22,14 @@
   with_items: "{{files}}"
   
 # async podman build is used to show progress and prevent travisci killing our job because of inactivity
-- name: "container : compose podman image => image does not exists"
+- name: "container : build_podman_image : compose podman image => image does not exists"
   shell: "podman build --no-cache -t {{image_name}}:{{image_version}} {{global_build}}{{name}}/"
   async: 1800
   poll: 0
   register: podman_build
   when: "image_name not in image_exists.stdout or file_status.changed"
 
-- name: "container : wait for podman image => image does not exists"
+- name: "container : build_podman_image : wait for podman image => image does not exists"
   async_status: jid={{ podman_build.ansible_job_id }}
   register: job_result
   until: job_result.finished

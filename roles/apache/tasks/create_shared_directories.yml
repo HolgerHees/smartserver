@@ -3,13 +3,13 @@
 # suse group: wwwrun:!:474:
 # fedora user: apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin
 # fedora group: apache:x:48:
-- name: "apache : ensure user and group exists"
+- name: "ensure user and group exists"
   vars:
     user: { key: "www", name: "{{'wwwrun' if is_suse else 'apache'}}", system: true, home: "{{htdocs_path}}" }
     group: { key: "www", name: "{{'www' if is_suse else 'apache'}}", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
 
-- name: prepare shared directories
+- name: "prepare shared directories"
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}" }

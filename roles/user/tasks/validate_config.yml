@@ -1,4 +1,4 @@
-- name: "validate user: process config"
+- name: "user : validate_config : process config"
   vars:
     mandatory_base_fields: "{{ ['name', 'email', 'groups', 'password'] }}"
     allowed_groups: "{{ ['admin', 'user'] }}"

@@ -1,11 +1,11 @@
-- name: "user : add user \"{{username}}\" to apache .htpasswd"
+- name: "user : add_web_user : add user \"{{username}}\" to apache .htpasswd"
   htpasswd:
     path: "{{global_etc}}apache2/_.ansible.auth/.htpasswd"
     name: "{{username}}"
     password: "{{password}}"
   tags: [ 'user' ]
 
-- name: "user : add fullname of \"{{username}}\" to apache auth_user_fullnames.txt"
+- name: "user : add_web_user : add fullname of \"{{username}}\" to apache auth_user_fullnames.txt"
   lineinfile:
     path: "{{global_etc}}apache2/_.ansible.auth/auth_user_fullnames.txt"
     regexp: '^{{username}}:'
@@ -13,7 +13,7 @@
   tags: [ 'user' ]
   when: "usergroups is defined"
 
-- name: "user : add groups of \"{{username}}\" to apache auth_user_groups.txt"
+- name: "user : add_web_user : add groups of \"{{username}}\" to apache auth_user_groups.txt"
   lineinfile:
     path: "{{global_etc}}apache2/_.ansible.auth/auth_user_groups.txt"
     regexp: '^{{username}}:'
@@ -21,7 +21,7 @@
   tags: [ 'user' ]
   when: "usergroups is defined"
 
-- name: "user : add user \"{{username}}\" to apache auth_openidc_users.txt"
+- name: "user : add_web_user : add user \"{{username}}\" to apache auth_openidc_users.txt"
   lineinfile:
     path: "{{global_etc}}apache2/_.ansible.auth/auth_openidc_users.txt"
     regexp: '^{{email}}:'
@@ -29,7 +29,7 @@
   tags: [ 'user' ]
   when: "usergroups is defined and email is defined"
   
-- name: "user : add user \"{{username}}\" to apache auth_openidc_user_fullnames.txt"
+- name: "user : add_web_user : add user \"{{username}}\" to apache auth_openidc_user_fullnames.txt"
   lineinfile:
     path: "{{global_etc}}apache2/_.ansible.auth/auth_openidc_user_fullnames.txt"
     regexp: '^{{email}}:'
@@ -37,7 +37,7 @@
   tags: [ 'user' ]
   when: "usergroups is defined and email is defined"
 
-- name: "user : add user \"{{username}}\" to apache auth_openidc_user_groups.txt"
+- name: "user : add_web_user : add user \"{{username}}\" to apache auth_openidc_user_groups.txt"
   lineinfile:
     path: "{{global_etc}}apache2/_.ansible.auth/auth_openidc_user_groups.txt"
     regexp: '^{{email}}:'

@@ -1,4 +1,4 @@
-- name: "validate dhcp_reservations: basic preflight duplicate checks"
+- name: "dnsmasq : validate_config : dhcp_reservations: basic preflight duplicate checks"
   block:
 #    - name: debug
 #      debug:

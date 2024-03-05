@@ -245,7 +245,7 @@
     checksum: yes
     rsync_opts:
       - "--chown=root:root"
-      - "--chmod=D750,F640"
+      - "--chmod=D755,F644"
 #    group: yes
 #    owner: yes
 #    perms: yes

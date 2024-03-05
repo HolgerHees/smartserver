@@ -1,4 +1,4 @@
-- name: "fluentd : copy config '{{ config_name + '.conf' if config_name is defined else ( config_file | basename ) }}'"
+- name: "fluentd : add_config : copy config '{{ config_name + '.conf' if config_name is defined else ( config_file | basename ) }}'"
   template:
     src: "{{config_file}}"
     dest: "{{global_etc}}fluentd/_.ansible.d/{{ config_name + '.conf' if config_name is defined else ( config_file | basename ) }}"

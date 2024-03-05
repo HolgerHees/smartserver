@@ -1,4 +1,4 @@
-- name: "container : create network {{network_name}}"
+- name: "container : create_docker_network : create network {{network_name}}"
   docker_network:
     name: "{{network_name}}"
     internal: "{{network_internal}}"
@@ -9,7 +9,7 @@
     appends: no
   register: network_result
  
-- name: "container : allow network {{network_name}}"
+- name: "container : create_docker_network : allow network {{network_name}}"
   vars:
 #    network_saddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
     network_saddr: "{{network_firewall_subnet | default(network_ip)}}"

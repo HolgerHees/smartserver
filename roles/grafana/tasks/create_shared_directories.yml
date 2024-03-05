@@ -1,10 +1,10 @@
-- name: ensure user and group exists
+- name: "ensure user and group exists"
   vars:
     user: { name: "grafana", system: true, home: "{{global_etc}}grafana" }
     group: { name: "grafana", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
 
-- name: prepare shared directories
+- name: "prepare shared directories"
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}grafana/" }

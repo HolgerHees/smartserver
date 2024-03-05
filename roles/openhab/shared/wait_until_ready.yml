@@ -1,17 +1,17 @@
-- name: "openhab : check if running"
+- name: "openhab : wait_until_ready : check if running"
   command: "systemctl is-active --quiet openhab"
   register: "service_result"
   changed_when: no
   failed_when: no
   
-- name: "openhab : start service"
+- name: "openhab : wait_until_ready : start service"
   systemd:
     name: openhab
     state: started
     daemon_reload: yes
   when: "service_result.rc != 0"
 
-- name: "openhab : wait to become ready"
+- name: "openhab : wait_until_ready : wait to become ready"
   command: "sshpass -p \"habopen\" ssh -o \"StrictHostKeyChecking no\" -p 8101 openhab@openhab \"users list\""
   register: check_result
   until: "'Password authentication' in check_result.stderr and check_result.rc == 0"

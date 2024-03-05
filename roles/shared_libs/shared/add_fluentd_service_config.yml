@@ -1,4 +1,4 @@
-- name: copy fluentd config
+- name: "shared_libs : add fluentd service config"
   vars:
     config_name: "{{service_name}}"
     config_file: "roles/shared_libs/templates/etc/fluent/_.ansible.d/service.conf"

@@ -1,4 +1,4 @@
-- name: prepare shared directories
+- name: "prepare shared directories"
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}main/" }

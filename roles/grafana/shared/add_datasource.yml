@@ -1,4 +1,4 @@
-- name: "grafana : copy datasource files for '{{name}}'"
+- name: "grafana : add_datasource : copy datasource files for '{{name}}'"
   template:
     src: "{{item}}"
     dest: "{{ global_etc }}grafana/provisioning/datasources/{{item | basename}}"
@@ -9,7 +9,7 @@
 #  notify: "restart grafana"
   tags: ['grafana_config']
 
-- name: "grafana : copy dashboard files for '{{name}}'"
+- name: "grafana : add_datasource : copy dashboard files for '{{name}}'"
   copy:
     src: "{{item}}"
     dest: "{{ global_lib }}grafana/dashboards/{{item | basename}}"

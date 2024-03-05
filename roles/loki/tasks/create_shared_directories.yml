@@ -1,10 +1,10 @@
-- name: ensure user and group exists
+- name: "ensure user and group exists"
   vars:
     user: { name: "loki", system: true, home: "{{ global_etc }}loki/" }
     group: { name: "loki", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
 
-- name: prepare shared directories
+- name: "prepare shared directories"
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['loki'].name}}", group: "{{system_groups['loki'].name}}", path: "{{ global_etc }}loki/" }

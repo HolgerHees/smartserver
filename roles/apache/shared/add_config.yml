@@ -1,4 +1,4 @@
-- name: "apache : copy config '{{ config_name + '.conf' if config_name is defined else ( config_file | basename ) }}'"
+- name: "apache : add_config : copy config '{{ config_name + '.conf' if config_name is defined else ( config_file | basename ) }}'"
   template:
     src: "{{config_file}}"
     dest: "{{global_etc}}apache2/_.ansible.conf.d/custom_{{ config_name + '.conf' if config_name is defined else ( config_file | basename ) }}"

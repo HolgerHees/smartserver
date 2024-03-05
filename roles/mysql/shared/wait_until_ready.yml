@@ -1,10 +1,10 @@
-- name: "mysql : check if running"
+- name: "mysql : wait_until_ready : check if running"
   command: "systemctl is-active --quiet mysql"
   register: "service_result"
   changed_when: no
   failed_when: no
 
-- name: "mysql : start service"
+- name: "mysql : wait_until_ready : start service"
   systemd:
     name: mysql
     state: started
@@ -12,7 +12,7 @@
   when: "service_result.rc != 0"
   
 # retries needs to increased from 120 to 240 to give mysql on travisci more time to start
-- name: "mysql : wait for to become ready"
+- name: "mysql : wait_until_ready : wait for to become ready"
   command: "docker exec mysql sh -c \"mysqladmin ping -h 127.0.0.1 --silent\""
   register: check_result
   until: not check_result.rc  # or check_result.rc == 0 if you prefer

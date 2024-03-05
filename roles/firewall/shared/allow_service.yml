@@ -1,4 +1,4 @@
-- name: "firewall : {{'deny' if is_drop is defined else 'allow'}} service '{{name}}{{' ' if source is defined else ''}}{{source|default('')}}'"
+- name: "firewall : allow_service : {{'deny' if is_drop is defined else 'allow'}} service '{{name}}{{' ' if source is defined else ''}}{{source|default('')}}'"
   vars:
     ferm_rules: "{{ rules }}"
     ferm_type: "{{ 'DROP' if is_drop is defined else 'ACCEPT' }}"
@@ -13,7 +13,7 @@
   tags: [ 'firewall_config' ]
   notify: "restart ferm"
 
-- name: "firewall : apply ferm changes => instant_activation"
+- name: "firewall : allow_service : apply ferm changes => instant_activation"
   systemd:
     state: restarted
     daemon_reload: yes

@@ -1,4 +1,4 @@
-- name: "update_service : copy software check config '{{name}}'"
+- name: "update_service : add_software : copy software check config '{{name}}'"
   copy:
     content: "{{ lookup('template', 'roles/update_service/templates/update_software_config.json') }}"
     dest: "{{global_etc}}update_service/software/{{name}}.conf"

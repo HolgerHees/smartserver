@@ -1,4 +1,4 @@
-- name: prepare shared directories
+- name: "prepare shared directories"
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", path: "{{ global_etc }}prometheus" }
