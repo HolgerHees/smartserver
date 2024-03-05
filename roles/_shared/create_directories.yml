@@ -12,7 +12,7 @@
 #  debug:
 #    msg: "{{directory_result}}"
 
-- name: "_shared : check recursive owner and group => needed folder changed"
+- name: "_shared : check recursive owner => directory changed"
   file:
     path: '{{item.1.path}}'
     state: directory
