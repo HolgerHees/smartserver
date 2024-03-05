@@ -55,35 +55,35 @@
     # needed by all roles which needs to register their own fluentd handler
     # search for "include_tasks: roles/fluentd/shared/add_config.yml" to see which ones
     # creates /etc/fluent/_.ansible.d
-    - { import_role: { name: fluentd, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'fluentd' ],                                         when: "monitoring_enabled" }
+    - { import_role: { name: fluentd, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'fluentd' ],                                         when: "monitoring_enabled" }
 
     # needed by all roles which needs to register their own vhost
     # search for "include_tasks: roles/apache/shared/add_vhost.yml" to see which ones
     # creates {{global_etc}}apache2/(_.ansible.conf.d & _.ansible.vhost.d)
-    - { import_role: { name: apache, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache', "apache_config" ] }
+    - { import_role: { name: apache, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'apache', "apache_config" ] }
 
     # needed by all roles which needs to register menu entries in the web ui like
     # search for "include_tasks: roles/apache_webui/shared/add_webui.yml" to see which ones
     # creates {{htdocs_path}}main/components
-    - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui', "apache_webui_config", ] }
+    - { import_role: { name: apache_webui, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'apache_webui', "apache_webui_config", ] }
 
     # needed by all roles which needs to register their own prometheus endpoints and rules
     # creates {{ global_etc }}prometheus/rules/ & {{ global_etc }}prometheus/scrapes/
-    - { import_role: { name: prometheus, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'prometheus', "prometheus_config" ],              when: "monitoring_enabled" }
+    - { import_role: { name: prometheus, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'prometheus', "prometheus_config" ],              when: "monitoring_enabled" }
     # creates {{ global_etc }}loki/rules/fake
-    - { import_role: { name: loki, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'loki', "loki_config" ],                                when: "monitoring_enabled" }
+    - { import_role: { name: loki, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'loki', "loki_config" ],                                when: "monitoring_enabled" }
 
     # needed by all roles which needs to register their own datasources or dashboards
     # creates {{ global_etc }}grafana/provisioning/datasources/ & {{ global_lib }}grafana/dashboards/
-    - { import_role: { name: grafana, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'grafana', "grafana_config" ],                       when: "grafana_enabled" }
+    - { import_role: { name: grafana, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'grafana', "grafana_config" ],                       when: "grafana_enabled" }
 
-    - { import_role: { name: nextcloud, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'nextcloud', 'php' ],                              when: "nextcloud_enabled" }
+    - { import_role: { name: nextcloud, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'nextcloud', 'php' ],                              when: "nextcloud_enabled" }
 
-    - { import_role: { name: openhab_toolbox, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_toolbox', 'php', 'apache' ],        when: "openhab_enabled" }
+    - { import_role: { name: openhab_toolbox, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'openhab_toolbox', 'php', 'apache' ],        when: "openhab_enabled" }
 
-    - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher', "systemd_watcher_config" ], when: "monitoring_enabled" }
+    - { import_role: { name: systemd_watcher, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'systemd_watcher', "systemd_watcher_config" ], when: "monitoring_enabled" }
     
-    - { import_role: { name: update_service, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_service', "update_system_config", "update_notifier_config" ], when: "update_service_enabled" }
+    - { import_role: { name: update_service, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'update_service', "update_system_config", "update_notifier_config" ], when: "update_service_enabled" }
 
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                                                                                                                               # basic setup like global folders and tools
