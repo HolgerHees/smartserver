@@ -14,12 +14,12 @@
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/nginx" }
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_log}}librenms" }
+      - { mode: "u=rwx,g=rwx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_log}}librenms" }                     # mode sync with librenms entrypoint
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/alert-templates" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/monitoring-plugins" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/plugins" }
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/rrd" }
+      - { mode: "u=rwx,g=rwx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/rrd" }                 # mode sync with librenms entrypoint
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/weathermap" }
   include_tasks: roles/_shared/create_directories.yml
 
