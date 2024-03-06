@@ -8,6 +8,7 @@
     user: { name: "pihole", system: true, home: "{{ global_etc }}pihole/" }
     group: { name: "pihole", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
+  when: "'pihole' not in system_users or 'pihole' not in system_groups"
 
 - name: prepare needed directories
   vars:

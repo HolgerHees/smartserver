@@ -1,8 +1,9 @@
-- name: "ensure user and group exists"
-  vars:
-    user: { name: "grafana", system: true, home: "{{global_etc}}grafana" }
-    group: { name: "grafana", system: true }
-  include_tasks: roles/user/shared/add_system_user.yml
+#- name: "ensure user and group exists"
+#  vars:
+#    user: { name: "grafana", system: true, home: "{{global_etc}}grafana" }
+#    group: { name: "grafana", system: true }
+#  include_tasks: roles/user/shared/add_system_user.yml
+#  when: "'grafana' not in system_users or 'grafana' not in system_groups"
 
 - name: "prepare shared directories"
   vars:

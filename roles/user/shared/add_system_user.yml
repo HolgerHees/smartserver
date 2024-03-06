@@ -5,12 +5,12 @@
     system: "{{group.system | default(omit)}}"
     state: present
   register: group_result
-  when: "group.name not in system_groups"
+  when: "(group.key | default(group.name)) not in system_groups"
 
 - name: "user : add_system_user : register gid"
   set_fact:
     system_groups: "{{ system_groups | combine( { group.key | default(group.name): { 'name': group.name, 'id': group_result['gid'] } } ) }}"
-  when: "group.name not in system_groups"
+  when: "(group.key | default(group.name)) not in system_groups"
 
 - name: "user : add_system_user : ensure user \"{{user.name}}\" exists"
   user:
@@ -22,9 +22,9 @@
     shell: "/bin/false"
     create_home: no
   register: user_result
-  when: "user.name not in system_users"
+  when: "(user.key | default(user.name)) not in system_users"
 
 - name: "user : add_system_user : register uid"
   set_fact:
     system_users: "{{ system_users | combine( { user.key | default(user.name): { 'name': user.name, 'id': user_result['uid'] } } ) }}"
-  when: "user.name not in system_users"
+  when: "(user.key | default(user.name)) not in system_users"

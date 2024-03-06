@@ -8,6 +8,7 @@
     user: { name: "librenms", system: true, home: "{{global_etc}}librenms" }
     group: { name: "librenms", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
+  when: "'librenms' not in system_users or 'librenms' not in system_groups"
 
 - name: prepare needed directories
   vars:

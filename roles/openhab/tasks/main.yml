@@ -8,6 +8,7 @@
     user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
     group: { name: "openhab", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
+  when: "'openhab' not in system_users or 'openhab' not in system_groups"
 
 - name: prepare needed directories
   vars:

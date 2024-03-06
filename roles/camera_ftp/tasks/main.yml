@@ -7,6 +7,7 @@
     user: { name: "ftp", system: true, home: "{{global_lib}}camera_service/upload/" }
     group: { name: "ftp", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
+  when: "'ftp' not in system_users or 'ftp' not in system_groups"
 
 - name: prepare needed directories
   vars:

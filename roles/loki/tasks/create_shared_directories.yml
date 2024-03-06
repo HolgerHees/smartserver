@@ -3,6 +3,7 @@
     user: { name: "loki", system: true, home: "{{ global_etc }}loki/" }
     group: { name: "loki", system: true }
   include_tasks: roles/user/shared/add_system_user.yml
+  when: "'loki' not in system_users or 'loki' not in system_groups"
 
 - name: "prepare shared directories"
   vars:
