@@ -3,7 +3,7 @@
     librenms_version: '24.2.0'
   tags: [ 'update_notifier_config' ]    
 
-- name: ensure user and group exists
+- name: "create user and group => user or group does not exists"
   vars:
     user: { name: "librenms", system: true, home: "{{global_etc}}librenms" }
     group: { name: "librenms", system: true }

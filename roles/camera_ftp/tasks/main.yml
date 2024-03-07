@@ -2,7 +2,7 @@
 # suse group: ftp:!:476:
 # fedora user: ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
 # fedora group: ftp:x:50:
-- name: ensure user and group exists
+- name: "create user and group => user or group does not exists"
   vars:
     user: { name: "ftp", system: true, home: "{{global_lib}}camera_service/upload/" }
     group: { name: "ftp", system: true }

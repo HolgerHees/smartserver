@@ -4,7 +4,7 @@
     influxdb_version: '2.7.5'
   tags: [ 'update_notifier_config' ]    
 
-- name: ensure user and group exists
+- name: "create user and group => user or group does not exists"
   vars:
     user: { name: "influxdb", system: true, home: "{{ global_lib }}influxdb" }
     group: { name: "influxdb", system: true }

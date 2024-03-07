@@ -3,7 +3,7 @@
     openhab_version: "4.1.1"
   tags: [ 'update_notifier_config' ]
 
-- name: ensure user and group exists
+- name: "create user and group => user or group does not exists"
   vars:
     user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
     group: { name: "openhab", system: true }

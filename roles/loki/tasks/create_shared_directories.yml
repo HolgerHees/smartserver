@@ -1,4 +1,4 @@
-- name: "ensure user and group exists"
+- name: "create user and group => user or group does not exists"
   vars:
     user: { name: "loki", system: true, home: "{{ global_etc }}loki/" }
     group: { name: "loki", system: true }

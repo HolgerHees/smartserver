@@ -3,7 +3,7 @@
     mysql_version: "10.11.7"
   tags: [ 'update_notifier_config' ]
   
-- name: ensure user and group exists
+- name: "create user and group => user or group does not exists"
   vars:
     user: { name: "mysql", system: true, home: "{{ global_etc }}mysql" }
     group: { name: "mysql", system: true }

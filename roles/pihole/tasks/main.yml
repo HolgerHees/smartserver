@@ -3,7 +3,7 @@
     pihole_version: '2024.02.2'
   tags: [ 'update_notifier_config' ]
 
-- name: ensure user and group exists
+- name: "create user and group => user or group does not exists"
   vars:
     user: { name: "pihole", system: true, home: "{{ global_etc }}pihole/" }
     group: { name: "pihole", system: true }
