@@ -120,7 +120,7 @@ class CmdBuilder:
             cmd_deploy_system = "{} server.yml".format(cmd_deploy_system)
 
             cmds = []
-            cmds.append( self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.deployment_directory,env={"ANSIBLE_FORCE_COLOR": "1"}) )
+            cmds.append( self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.deployment_directory,env={"ANSIBLE_FORCE_COLOR": "1","ANSIBLE_CONFIG": "ansible_us.cfg"}) )
             cmds.append( self.buildSystemUpdateCheckCmd("deployment_update") )
             cmds.append( self.buildCmd(config.cmd_container_cleanup, interaction=None,cwd=None,env=None) )
             return self.buildCmdBlock(username, "deployment_update", cmds)

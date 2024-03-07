@@ -4,6 +4,5 @@ config/*
 config/demo/backup/*
 !config/demo/
 !config/default.yml
-/ansible.cfg
 /*.retry
 */__pycache__/*

@@ -1,14 +1,22 @@
-from ansible.plugins.callback.default import CallbackModule as DefaultCallbackModule
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
+
+from ansible.plugins.callback import default
+
 from ansible.playbook.task_include import TaskInclude
+from ansible import constants as C
 
+import os
 
-class CallbackModule(DefaultCallbackModule):
+deployment_path = os.path.dirname(os.path.abspath(__file__)).rsplit('/',1)[0] + '/'
+
+class CallbackModule(default.CallbackModule):
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'stdout'
     CALLBACK_NAME = 'default'
 
-    def __init__(self):
-        super(CallbackModule, self).__init__()
+    '''def __init__(self):
+        super(CallbackModule, self).__init__()'''
 
     def set_options(self, task_keys=None, var_options=None, direct=None):
         self._plugin_options = {
@@ -25,14 +33,12 @@ class CallbackModule(DefaultCallbackModule):
         for option, value in self._plugin_options.items():
             setattr(self, option, value)
 
-    #def v2_playbook_on_task_start(self, task, is_conditional):
-    #    #if isinstance(task, TaskInclude):
-    #    #    return
-
-    #    self._display.v(">>>>>>>>>>>>>>>>>>>>>>>>>>")
-    #    self._display.v(str(task.__class__))
-    #    super(CallbackModule, self).v2_playbook_on_task_start(task, is_conditional)
-    #    self._display.v("<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
     def v2_playbook_on_include(self, included_file):
-        pass
+        self._display.display('included: [%s] => %s' % (", ".join([h.name for h in included_file._hosts]), included_file._filename.replace(deployment_path,"")))
+
+    def v2_runner_on_skipped(self, result):
+        if isinstance(result._task, TaskInclude):
+            msg = "skipping: [%s] => %s" % ( result._host.get_name(), result._task.args['_raw_params'])
+            self._display.display(msg, color=C.COLOR_SKIP)
+        else:
+            super(CallbackModule, self).v2_runner_on_skipped(result)
