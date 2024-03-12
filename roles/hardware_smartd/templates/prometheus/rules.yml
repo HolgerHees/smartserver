@@ -7,7 +7,7 @@ groups:
     labels:
       severity: info
     annotations:
-      summary: "Reallocated sectors on disk is {{ $value }}"
+      summary: "Reallocated sectors on disk is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk current pending sector count
     expr: 'netdata_smartd_log_current_pending_sector_count_sectors_average{chart=~"smartd_log.*",job="netdata"} > 0'
@@ -15,7 +15,7 @@ groups:
     labels:
       severity: warning
     annotations:
-      summary: "Disk current pending sector is {{ $value }}"
+      summary: "Disk current pending sector is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk offline uncorrectable sector count increased
     expr: 'increase(netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average{chart=~"smartd_log.*",job="netdata"}[1h]) > 0'
@@ -23,7 +23,7 @@ groups:
     labels:
       severity: warning
     annotations:
-      summary: "Reported uncorrectable disk sector count is {{ $value }}"
+      summary: "Reported uncorrectable disk sector count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk read error rate increased
     expr: 'increase(netdata_smartd_log_read_error_rate_value_average{chart=~"smartd_log.*",job="netdata"}[1h]) > 0'
@@ -32,7 +32,7 @@ groups:
       notifyGroup: "custom"
       severity: critical
     annotations:
-      summary: "Disk read error rate is {{$value}}"
+      summary: "Disk read error rate is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk interface errors occurs
     expr: '{chart=~"smartd_log.*",family="external failure",job="netdata"} > 0'
@@ -41,7 +41,7 @@ groups:
       notifyGroup: "custom"
       severity: critical
     annotations:
-      summary: "Disk interface error count is {{$value}}"
+      summary: "Disk interface error count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk temperature is too high
     expr: '{chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
@@ -50,7 +50,7 @@ groups:
       notifyGroup: "custom"
       severity: critical
     annotations:
-      summary: "Disk temperature is {{$value}} °C"
+      summary: "Disk temperature is {{'{{'}}$value{{'}}'}} °C"
 
 #  - alert: Smartd CRC error count
 #    expr: 'netdata_smartd_log_udma_crc_error_count_errors_average{job="netdata"} > 0'
