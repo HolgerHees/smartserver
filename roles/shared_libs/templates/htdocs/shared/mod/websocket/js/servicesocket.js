@@ -19,6 +19,7 @@ mx.ServiceSocket = (function( ret ) {
         var error_triggered = false;
         var onError = null;
         var listener = [];
+        var namespaces = new Set([]);
 
         var wrapper = {
             'triggerClose': function(msg)
@@ -62,6 +63,7 @@ mx.ServiceSocket = (function( ret ) {
             },
             'emit': function()
             {
+                if( arguments[0] == "join" ) namespaces.add(arguments[1]);
                 socket["socket"].emit(...arguments);
             },
             'close': function()
@@ -97,7 +99,7 @@ mx.ServiceSocket = (function( ret ) {
             if( window == context ) return;
 
             for( callback of listener ){ socket["socket"].offAny(callback); }
-            wrapper.emit('leave', namespace);
+            for( namespace of namespaces ){ wrapper.emit('leave', namespace); }
 
             let index = socket["wrapper"].indexOf(wrapper);
             socket["wrapper"].splice(index, 1);
