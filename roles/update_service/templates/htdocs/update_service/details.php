@@ -112,7 +112,7 @@ mx.OnSharedModWebsocketReady.push(function(){
 </script>
 </head>
 <body>
-<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, mx.I18N.get("Job details") + " - <?php echo $cmd; ?>"); } );</script>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, mx.I18N.get("Job details") + mx.CICore.log_cmd); } );</script>
 <div class ="header form table logfileBox">
     <div class="row" onClick="mx.CICore.openOverview(event)">
         <div class="state"></div>
