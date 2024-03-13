@@ -12,6 +12,10 @@ from smartserver import command
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %z %Z'
 
+is_quite = None
+if len(sys.argv) >= 2:
+    is_quite = sys.argv[1] == "-q"
+
 class Container:
     def __init__(self,id,name,image,is_stopped_since):
         self.id = id
@@ -43,63 +47,10 @@ class Image:
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
   
-is_quite = None
-if len(sys.argv) >= 2:
-    is_quite = sys.argv[1] == "-q"
-
-# Collect Images used in Dockerfiles
-build_images = {}
-result = command.exec(["grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(config.GLOBAL_BUILD) ] , shell=True)
-lines = result.stdout.decode("utf-8").split("\n")
-for line in lines[0:-1]:
-    columns = line.split()
-    build_images[columns[-1]] = True
-
-# Collect Images used in Containers
-containers = {}
-result = command.exec(["docker", "ps", "-a", "--format", "'{{json .}}'"])
-lines = result.stdout.decode("utf-8").split("\n")
-for line in lines[0:-1]:
-    obj = json.loads(line[1:-1])
-    
-    is_stopped_since = None
-    if obj["State"] == "exited":
-        result = command.exec(["docker", "inspect", obj["ID"]])
-        _obj = json.loads(result.stdout.decode("utf-8"))
-        state = _obj[0]["State"]
-        finished_at = state["FinishedAt"].split('.')[0]
-        finished_at = datetime.strptime("{}Z".format(finished_at), '%Y-%m-%dT%H:%M:%SZ')
-        is_stopped_since = (datetime.utcnow() - finished_at)
-    #else:
-    #    started_at = obj["CreatedAt"]
-    #    started_at = datetime.strptime(started_at, '%Y-%m-%d %H:%M:%S %z %Z')
-    #    time_diff = (datetime.now().astimezone() - started_at).total_seconds()
-
-    container = Container(obj["ID"],obj["Names"],obj["Image"],is_stopped_since)  
-    
-    if container.image not in containers:
-        containers[container.image] = []
-    containers[container.image].append(container)
-
-# Collect all Images
-images = {}
-result = command.exec(["docker", "image", "list", "--format", "'{{json .}}'"])
-lines = result.stdout.decode("utf-8").split("\n")
-for line in lines[0:-1]:
-    obj = json.loads(line[1:-1])
-    
-    created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
-    image = Image(obj["ID"],obj["Repository"] if obj["Repository"] != "<none>" else None,obj["Tag"] if obj["Tag"] != "<none>" else None,created)
-    if image.repository not in images:
-        images[image.repository] = []
-    images[image.repository].append(image)
-    
-cleaned = False
-
-def custom_sorted(item1, item2):
+def sortImages(item1, item2):
     item1_is_custom = item1 is not None and item1.startswith("custom")
     item2_is_custom = item2 is not None and item2.startswith("custom")
-    
+
     if item1_is_custom and not item2_is_custom:
         return -1
     if item2_is_custom and not item1_is_custom:
@@ -113,50 +64,103 @@ def custom_sorted(item1, item2):
 
     if item1 < item2:
         return -1
-    
+
     if item1 > item2:
         return 1
-    
+
     return 0
 
-#for name in sorted(images):
-for name in sorted(images,key=cmp_to_key(custom_sorted)):
+def collectImages():
+    # Collect all images
+    images = {}
+    result = command.exec(["docker", "image", "list", "--format", "'{{json .}}'"])
+    lines = result.stdout.decode("utf-8").split("\n")
+    for line in lines[0:-1]:
+        obj = json.loads(line[1:-1])
+
+        created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
+        image = Image(obj["ID"],obj["Repository"] if obj["Repository"] != "<none>" else None,obj["Tag"] if obj["Tag"] != "<none>" else None,created)
+        if image.repository not in images:
+            images[image.repository] = []
+        images[image.repository].append(image)
+
+    return images
+
+def collectContainers():
+    # Collect all containers
+    containers = []
+    result = command.exec(["docker", "ps", "-a", "--format", "'{{json .}}'"])
+    lines = result.stdout.decode("utf-8").split("\n")
+    for line in lines[0:-1]:
+        obj = json.loads(line[1:-1])
+
+        is_stopped_since = None
+        if obj["State"] == "exited":
+            result = command.exec(["docker", "inspect", obj["ID"]])
+            _obj = json.loads(result.stdout.decode("utf-8"))
+            state = _obj[0]["State"]
+            finished_at = state["FinishedAt"].split('.')[0]
+            finished_at = datetime.strptime("{}Z".format(finished_at), '%Y-%m-%dT%H:%M:%SZ')
+            is_stopped_since = (datetime.utcnow() - finished_at)
+        containers.append(Container(obj["ID"],obj["Names"],obj["Image"],is_stopped_since)  )
+
+    return containers
+
+def collectUsedImages(images, containers):
+    # Collect Image ID's used in dockerfiles or containers
+    used_images = {}
+    result = command.exec(["grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(config.GLOBAL_BUILD) ] , shell=True)
+    lines = result.stdout.decode("utf-8").split("\n")
+    for line in lines[0:-1]:
+        columns = line.split()
+        #build_images[columns[-1]] = True
+        for _images in images.values():
+            for _image in _images:
+                if columns[-1] == _image.name:
+                    used_images[_image.id] = "referenced"
+
+    for container in containers:
+        for _images in images.values():
+            for _image in _images:
+                if container.image == _image.name:
+                    used_images[_image.id] = "used"
+
+    return used_images
+
+images = collectImages()
+containers = collectContainers()
+
+# Clean stopped container
+_containers = []
+for container in containers:
+    if container.is_stopped_since is not None:
+        # remove containers, stopped more then 1 week ago
+        if container.is_stopped_since.total_seconds() < 60 * 60 * 24 * 7:
+            if not is_quite:
+                stopped_since = str(container.is_stopped_since).split(".")[0]
+                print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}' stopped since {}".format(container.id, container.name, container.image, stopped_since))
+        else:
+            print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}'".format(container.id, container.name, container.image))
+            command.exec(["docker", "rm", "{}".format(container.id)])
+            continue
+    _containers.append(container)
+containers = _containers
+
+used_images = collectUsedImages(images, containers)
+
+cleaned = False
+for name in sorted(images,key=cmp_to_key(sortImages)):
     
     image_versions = sorted(images[name], reverse=True)
 
     for image_version in image_versions:
-        if image_version.name in containers:
-            container_image_ref = image_version.name
-        elif image_version.id in containers:
-            container_image_ref = image_version.id
-        else:
-            container_image_ref = None
 
-        if container_image_ref in containers:
-            container_used = False
-            for container in containers[container_image_ref]:
-                if container.is_stopped_since is not None:
-                    # remove containers, stopped more then 1 week ago
-                    if container.is_stopped_since.total_seconds() < 60 * 60 * 24 * 7:
-                        if not is_quite:
-                            stopped_since = str(container.is_stopped_since).split(".")[0]
-                            print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}' stopped since {}".format(container.id,container.name, image_version.id, image_version.name, stopped_since))
-                        container_used = True
-                    else:
-                        print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}'".format(container.id, container.name, image_version.id, image_version.name))
-                        command.exec(["docker", "rm", "{}".format(container.id)])
-                        
-                else:
-                    container_used = True
-               
-            if container_used:
-                if not is_quite:
-                    print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image_version.id,image_version.name))
-                continue
-
-        if image_version.name in build_images:
+        if image_version.id in used_images:
             if not is_quite:
-                print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image_version.id,image_version.name))
+                if used_images[image_version.id] == "referenced":
+                    print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image_version.id,image_version.name))
+                else:
+                    print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image_version.id,image_version.name))
             continue
 
         print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image_version.id,image_version.name))
