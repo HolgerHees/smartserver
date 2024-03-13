@@ -104,7 +104,7 @@ class Handler(Server):
 
     def _fillWidgetAttention(self, result = {}):
         workflow_state = self.cmd_workflow.getWorkflowState()
-        result["needs_attention"] = ( workflow_state is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in workflow_state ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
+        result["needs_attention"] = ( workflow_state is not None and ( CmdWorkflow.STATE_CHECK_WRONG_SYSTEM_UPDATE_STATE in workflow_state or CmdWorkflow.STATE_CHECK_WRONG_SMARTSERVER_UPDATE_STATE in workflow_state ) ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
         return result
 
     def _fillWidgetActions(self, result = {}):

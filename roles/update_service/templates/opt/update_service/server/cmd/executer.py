@@ -72,7 +72,7 @@ class CmdExecuter(watcher.Watcher):
             job["duration"] = data[1];
             job["state"] = data[2];
             job["type"] = data[3];
-            job["user"] = data[4].split(".")[0]
+            job["user"] = data[4][:-4];
             _jobs.append(job)
             
         self.jobs = _jobs;

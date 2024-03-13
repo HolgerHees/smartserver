@@ -32,6 +32,9 @@ class CmdWorkflow:
     STATE_KILLED = "killed"
     STATE_STOPPED = "stopped"
 
+    STATE_CHECK_WRONG_SYSTEM_UPDATE_STATE = "wrong_system_update_hash"
+    STATE_CHECK_WRONG_SMARTSERVER_UPDATE_STATE = "wrong_smartserver_update_hash"
+
     def __init__(self,handler, cmd_executer, cmd_builder ):
         self.handler = handler
         self.cmd_executer = cmd_executer
@@ -125,6 +128,7 @@ class CmdWorkflow:
         last_seen_time = waiting_start
         last_log_time = waiting_start
         last_cmd_type = None
+        pre_workflow_state = self.workflow_state
         self.workflow_state = CmdWorkflow.STATE_WAITING
         while self.workflow_state == CmdWorkflow.STATE_WAITING:
             now = datetime.now().timestamp()
@@ -144,7 +148,6 @@ class CmdWorkflow:
                 msg = "Not able to proceed due still running '{}'".format(last_cmd_type)
                 logging.info(msg)
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
-                self.workflow_state = CmdWorkflow.STATE_STOPPED
                 break
                 
             if round(now - last_log_time) >= 15:
@@ -159,9 +162,7 @@ class CmdWorkflow:
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
                 
             time.sleep(2)
-
-        if can_proceed:
-            self.workflow_state == CmdWorkflow.STATE_RUNNING
+        self.workflow_state = pre_workflow_state
 
         return can_proceed
 
@@ -176,12 +177,9 @@ class CmdWorkflow:
         self.handler.notifyWorkflowState()
 
     def _resumeWorkflow(self,workflow, log_details, log_file):
-        start_time_str = log_details["date"]
-
         exit_code = self._preWorkflow(workflow)
 
-        start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT)
-
+        start_time = datetime.strptime(log_details["date"], CmdExecuter.START_TIME_STR_FORMAT)
         with self._initLog( log_file, 'a', log_details["date"], log_details["cmd"], log_details["username"], "running") as lf:
             cmd_block = workflow.pop(0)
             self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,os.path.basename(log_file))
@@ -199,15 +197,15 @@ class CmdWorkflow:
             
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
                 exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if has_cmds else 0
-                 
+            else:
+                exit_code = -1
+
         self.cmd_executer.finishRun(log_file,exit_code,start_time,cmd_block["cmd_type"],cmd_block["username"])
                       
-        if exit_code == 0:
-            if len(workflow) > 0:
-                self._runWorkflow( workflow )
-                return
-
-        self._pastWorkflow(exit_code)
+        if exit_code == 0 and len(workflow) > 0:
+            self._runWorkflow(workflow)
+        else:
+            self._pastWorkflow(exit_code)
 
     def _runWorkflow(self, workflow):
         exit_code = self._preWorkflow(workflow)

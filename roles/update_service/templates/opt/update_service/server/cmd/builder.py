@@ -3,10 +3,6 @@ import logging
 
 
 class CmdBuilder: 
-    CHECK_WRONG_UPDATE_STATE_SUFFIX = "update_hash"
-    CHECK_WRONG_SYSTEM_UPDATE_STATE = "wrong_system_update_hash"
-    CHECK_WRONG_SMARTSERVER_UPDATE_STATE = "wrong_smartserver_update_hash"
-
     def __init__(self,dependency_watcher,process_watcher,system_update_watcher,deployment_state_watcher, operating_system):
         self.system_update_cmds = operating_system.getSystemUpdateCmds()
         
@@ -143,13 +139,13 @@ class CmdBuilder:
             #logging.info(params["system_updates_hash"])
             #logging.info(self.system_update_watcher.getSystemUpdatesHash())
             if params["system_updates_hash"] != self.system_update_watcher.getSystemUpdatesHash():
-                checks.append(CmdBuilder.CHECK_WRONG_SYSTEM_UPDATE_STATE)
+                checks.append(CmdWorkflow.STATE_CHECK_WRONG_SYSTEM_UPDATE_STATE)
 
         if params["smartserver_changes_hash"]:
             #logging.info(params["smartserver_changes_hash"])
             #logging.info(self.system_update_watcher.getSmartserverChangesHash())
             if params["smartserver_changes_hash"] != self.system_update_watcher.getSmartserverChangesHash():
-                checks.append(CmdBuilder.CHECK_WRONG_SMARTSERVER_UPDATE_STATE)
+                checks.append(CmdWorkflow.STATE_CHECK_WRONG_SMARTSERVER_UPDATE_STATE)
                 
         if len(checks) > 0:
             return ",".join(checks)
