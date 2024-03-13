@@ -162,7 +162,8 @@ class CmdWorkflow:
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
                 
             time.sleep(2)
-        self.workflow_state = pre_workflow_state
+        if self.workflow_state == CmdWorkflow.STATE_WAITING:
+            self.workflow_state = pre_workflow_state
 
         return can_proceed
 
