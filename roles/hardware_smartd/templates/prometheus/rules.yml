@@ -1,89 +1,97 @@
 groups:
 - name: smartd
   rules:
-  - alert: Disk reallocated sector count
-    expr: 'increase(netdata_smartd_log_reallocated_sectors_count_sectors_average{chart=~"smartd_log.*",job="netdata"}[1h]) > 0'
-    for: 0m
-    labels:
-      severity: info
-    annotations:
-      summary: "Reallocated sectors on disk is {{'{{'}}$value{{'}}'}}"
-
-  - alert: Disk current pending sector count
-    expr: 'netdata_smartd_log_current_pending_sector_count_sectors_average{chart=~"smartd_log.*",job="netdata"} > 0'
-    for: 0m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Disk current pending sector is {{'{{'}}$value{{'}}'}}"
-
-  - alert: Disk offline uncorrectable sector count increased
-    expr: 'increase(netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average{chart=~"smartd_log.*",job="netdata"}[1h]) > 0'
-    for: 0m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Reported uncorrectable disk sector count is {{'{{'}}$value{{'}}'}}"
-
-  - alert: Disk read error rate increased
-    expr: 'increase(netdata_smartd_log_read_error_rate_value_average{chart=~"smartd_log.*",job="netdata"}[1h]) > 0'
-    for: 0m
-    labels:
-      notifyGroup: "custom"
-      severity: critical
-    annotations:
-      summary: "Disk read error rate is {{'{{'}}$value{{'}}'}}"
-
-  - alert: Disk interface errors occurs
-    expr: '{chart=~"smartd_log.*",family="external failure",job="netdata"} > 0'
-    for: 0m
-    labels:
-      notifyGroup: "custom"
-      severity: critical
-    annotations:
-      summary: "Disk interface error count is {{'{{'}}$value{{'}}'}}"
-
-  - alert: Disk temperature is too high
+  - alert: Smartd temperature is too high (HDD/SSD)
     expr: '{chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
     for: 0m
     labels:
       notifyGroup: "custom"
       severity: critical
     annotations:
-      summary: "Disk temperature is {{'{{'}}$value{{'}}'}} °C"
+      summary: "Smartd temperature is {{'{{'}}$value{{'}}'}} °C"
 
-#  - alert: Smartd CRC error count
-#    expr: 'netdata_smartd_log_udma_crc_error_count_errors_average{job="netdata"} > 0'
+  - alert: Smartd reallocated sector count increased (HDD/SSD)
+    expr: 'increase(netdata_smartd_log_reallocated_sectors_count_sectors_average[1h]) > 0'
+    for: 0m
+    labels:
+      severity: info
+    annotations:
+      summary: "Smartd reallocated sectors on disk is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Smartd UDMA CRC error count increased (HDD/SSD)
+    expr: 'increase(netdata_smartd_log_udma_crc_error_count_errors_average[1h]) > 0'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Smartd UDMA CRC error count is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Smartd interface errors increased (HDD/SSD)
+    expr: 'increase({chart=~"smartd_log.*",family="external failure",job="netdata"}[1h]) > 0'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Smartd interface error count is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Smartd read error rate increased (HDD)
+    expr: 'increase(netdata_smartd_log_read_error_rate_value_average[1h]) > 0'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Smartd read error rate is {{'{{'}}$value{{'}}'}}"
+
+#  - alert: Smartd seek error rate increased (HDD)
+#    expr: 'increase(netdata_smartd_log_seek_error_rate_value_average[1h]) > 0'
 #    for: 0m
 #    labels:
 #      notifyGroup: "custom"
 #      severity: critical
 #    annotations:
-#      summary: "Smartd CRC error count is {{'{{'}}$value{{'}}'}}"
+#      summary: "Smartd seek error rate is {{'{{'}}$value{{'}}'}}"
 
-#  - alert: Smartd SATA downshift events
-#    expr: 'netdata_smartd_log_sata_interface_downshift_events_average{job="netdata"} > 0'
-#    for: 0m
-#    labels:
-#      notifyGroup: "custom"
-#      severity: critical
-#    annotations:
-#      summary: "Smartd SATA downshift events is {{'{{'}}$value{{'}}'}}"
+  - alert: Smartd current pending sector count increased (HDD)
+    expr: 'increase(netdata_smartd_log_current_pending_sector_count_sectors_average[1h]) > 0'
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Smartd current pending sector is {{'{{'}}$value{{'}}'}}"
 
-#  - alert: Smartd reallocation event count
-#    expr: 'netdata_smartd_log_reallocation_event_count_events_average{job="netdata"} > 0'
-#    for: 0m
-#    labels:
-#      notifyGroup: "custom"
-#      severity: critical
-#    annotations:
-#      summary: "Smartd reallocation event count is {{'{{'}}$value{{'}}'}}"
+  - alert: Smartd offline uncorrectable sector count increased (HDD)
+    expr: 'increase(netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average[1h]) > 0'
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Smartd offline uncorrectable disk sector count is {{'{{'}}$value{{'}}'}}"
 
-#  - alert: Smartd uncorrectable error count
-#    expr: 'netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average{job="netdata"} > 0'
-#    for: 0m
-#    labels:
-#      notifyGroup: "custom"
-#      severity: critical
-#    annotations:
-#      summary: "Smartd uncorrectable error count is {{'{{'}}$value{{'}}'}}"
+  - alert: Smartd spin up retries is above 5 (HDD)
+    expr: 'netdata_smartd_log_spin_up_retries_retries_average > 5'
+    for: 0m
+    labels:
+      severity: info
+    annotations:
+      summary: "Smartd spin up retries is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Smartd program fail count increased (SSD)
+    expr: 'increase(netdata_smartd_log_program_fail_count_errors_average[1h]) > 0'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Smartd program fail count is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Smartd erase fail count increased (SSD)
+    expr: 'increase(netdata_smartd_log_erase_fail_count_failures_average[1h]) > 0'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Smartd erase fail count is {{'{{'}}$value{{'}}'}}"
