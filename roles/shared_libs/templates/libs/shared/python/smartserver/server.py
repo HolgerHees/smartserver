@@ -253,10 +253,13 @@ class Server():
 
     def _onSocketRoomLeave(self, sid, room):
         logging.info("Websocket: leave '{}' - '{}'".format(room, sid))
-        self.socket_rooms[room].remove(sid)
-        if len(self.socket_rooms[room]) == 0:
-            logging.info("Websocket: close room '{}'".format(room))
-            del self.socket_rooms[room]
+        try:
+            self.socket_rooms[room].remove(sid)
+            if len(self.socket_rooms[room]) == 0:
+                logging.info("Websocket: close room '{}'".format(room))
+                del self.socket_rooms[room]
+        except KeyError:
+            logging.error("Websocket: room '{}' not registered".format(room))
         leave_room(room)
 
     def getSocketClients(self, room = None):

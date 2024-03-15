@@ -1,6 +1,8 @@
 from config import config
 import logging
 
+from server.cmd.workflow import CmdWorkflow
+
 
 class CmdBuilder: 
     def __init__(self,dependency_watcher,process_watcher,system_update_watcher,deployment_state_watcher, operating_system):
