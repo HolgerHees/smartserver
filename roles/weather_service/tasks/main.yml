@@ -142,7 +142,7 @@
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
   vars:
-    name: "weatcher_service"
+    name: "weather_service"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   include_tasks: roles/prometheus/shared/add_config.yml

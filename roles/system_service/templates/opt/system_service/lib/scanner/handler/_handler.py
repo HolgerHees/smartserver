@@ -58,10 +58,11 @@ class Handler:
         try:
             logging.info("{} started".format(self.__class__.__name__.lower().title()))
             self._run()
-            logging.info("{} stopped".format(self.__class__.__name__.lower().title()))
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("{} stopped".format(self.__class__.__name__.lower().title()))
 
     def terminate(self):
         if self.event is not None:

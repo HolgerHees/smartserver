@@ -64,20 +64,24 @@ class ProcessWatcher(watcher.Watcher):
     def _checkProcesses(self):
         logging.info("ProcessWatcher started")
 
-        force_refresh = False
-        while self.is_running:
-            if force_refresh or ( time.time() - self.last_refresh ) >= 900:
-                self.refresh()
-            else:
-                self.cleanup()
+        try:
+            force_refresh = False
+            while self.is_running:
+                if force_refresh or ( time.time() - self.last_refresh ) >= 900:
+                    self.refresh()
+                else:
+                    self.cleanup()
 
-            timeout = 15 if self.forced_reboot_state_refresh_after_reboot is not None or len(self.outdated_processes) > 0 else 900
-            self.event.wait(timeout)
+                timeout = 15 if self.forced_reboot_state_refresh_after_reboot is not None or len(self.outdated_processes) > 0 else 900
+                self.event.wait(timeout)
 
-            force_refresh = self.event.is_set()
-            self.event.clear()
-
-        logging.info("ProcessWatcher stopped")
+                force_refresh = self.event.is_set()
+                self.event.clear()
+        except Exception as e:
+            self.is_running = False
+            raise e
+        finally:
+            logging.info("ProcessWatcher stopped")
 
     def refresh(self):
         with self.lock:
@@ -224,3 +228,8 @@ class ProcessWatcher(watcher.Watcher):
       
     def getLastRefreshAsTimestamp(self):
         return round(self.last_refresh,3)
+
+    def getStateMetrics(self):
+        return [
+            "update_service_process{{type=\"process_watcher\"}} {}".format("1" if self.is_running else "0")
+        ]

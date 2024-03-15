@@ -97,12 +97,12 @@ class Scanner(threading.Thread):
     #    self.event.set()
             
     def run(self):
-        logging.info("Scanner started")
-
-        for handler in self.registered_handler:
-            handler.start()
-
         try:
+            logging.info("Scanner started")
+
+            for handler in self.registered_handler:
+                handler.start()
+
             while self.is_running:
                 _source_handler = None
                 _events = []
@@ -121,12 +121,11 @@ class Scanner(threading.Thread):
 
                 self.cache.getEventTrigger().wait()
                 self.cache.getEventTrigger().clear()
-
-            logging.info("Scanner stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
-
+            raise e
+        finally:
+            logging.info("Scanner stopped")
 
     #def dispatch(self, source_handler, events):
     def _dispatch(self, source_handler, events):

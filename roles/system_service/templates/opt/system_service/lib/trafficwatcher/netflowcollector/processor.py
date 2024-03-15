@@ -426,15 +426,15 @@ class Processor(threading.Thread):
         if self.config.netflow_bind_ip is None:
             return
 
-        logging.info("Netflow processor started")
-
-        #collectorLogger.setLevel(logging.DEBUG)
-        #collectorCS.setLevel(logging.DEBUG)
-
-        self.listener = ThreadedNetFlowListener(self.config.netflow_bind_ip, self.config.netflow_bind_port)
-        self.listener.start()
-
         try:
+            logging.info("Netflow processor started")
+
+            #collectorLogger.setLevel(logging.DEBUG)
+            #collectorCS.setLevel(logging.DEBUG)
+
+            self.listener = ThreadedNetFlowListener(self.config.netflow_bind_ip, self.config.netflow_bind_port)
+            self.listener.start()
+
             pending = {}
             last_cleanup = time.time()
 
@@ -558,14 +558,13 @@ class Processor(threading.Thread):
                     last_cleanup = now
 
                 self.watcher.addConnections(connections)
-
-            logging.info("Netflow processor stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
         finally:
             self.listener.stop()
             self.listener.join()
+            logging.info("Netflow processor stopped")
 
     def getStateMetrics(self):
         return [

@@ -1,0 +1,11 @@
+groups:
+- name: update_service
+  rules:
+  - alert: Update service process crashed
+    expr: 'update_service_process{job="update_service"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "update_service"
+      severity: critical
+    annotations:
+      summary: "Update service process '{{'{{'}} $labels.type {{'}}'}}' crashed"

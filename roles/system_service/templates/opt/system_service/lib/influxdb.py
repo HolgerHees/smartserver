@@ -55,21 +55,25 @@ class InfluxDB(threading.Thread):
         self.join()
 
     def run(self):
-        logging.info("Influxdb started")
-        while self.is_running:
-            messurements = []
-            try:
-                for callback in self.callbacks:
-                    messurements += callback()
-                self.state_metrics = self.submit(messurements)
-            except Exception as e:
-                logging.error("Got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
-                logging.error(traceback.format_exc())
-                self.state_metrics = -1
+        try:
+            logging.info("Influxdb started")
+            while self.is_running:
+                messurements = []
+                try:
+                    for callback in self.callbacks:
+                        messurements += callback()
+                    self.state_metrics = self.submit(messurements)
+                except Exception as e:
+                    logging.error("Got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
+                    logging.error(traceback.format_exc())
+                    self.state_metrics = -1
 
-            self.event.wait(self.config.influxdb_publish_interval)
-
-        logging.info("Influxdb stopped")
+                self.event.wait(self.config.influxdb_publish_interval)
+        except Exception as e:
+            self.is_running = False
+            raise e
+        finally:
+            logging.info("Influxdb stopped")
 
     def register(self, callback):
         self.callbacks.append(callback)

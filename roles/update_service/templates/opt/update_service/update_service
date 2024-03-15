@@ -311,6 +311,12 @@ class Handler(Server):
     def isHightAccuracy(self):
         return self.high_accuracy
 
+    def getStateMetrics(self):
+        metrics = []
+        metrics += self.process_watcher.getStateMetrics()
+        metrics += self.cmd_executer.getStateMetrics()
+        return "{}\n".format( "\n".join(metrics) )
+
 
 @serverSocket.on('refreshSoftwareVersionCheck')
 def refreshSoftwareVersionCheck():

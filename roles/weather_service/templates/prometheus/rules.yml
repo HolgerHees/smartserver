@@ -1,6 +1,15 @@
 groups:
 - name: weather_service
   rules:
+  - alert: Weather service process crashed
+    expr: 'weather_service_process{job="weather_service"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather service process '{{'{{'}} $labels.type {{'}}'}}' crashed"
+
   - alert: Weather mqtt availability
     expr: 'weather_service_state{job="weather_service", type="mqtt"} == 0'
     for: 0m

@@ -84,8 +84,8 @@ class IPCache(threading.Thread):
         self.join()
 
     def run(self):
-        logging.info("IP cache started")
         try:
+            logging.info("IP cache started")
             while self.is_running:
                 try:
                     type, ip = self.queue.get(timeout=0.5)
@@ -95,10 +95,11 @@ class IPCache(threading.Thread):
                         self._resolveHostnameData(ip)
                 except queue.Empty:
                     pass
-            logging.info("IP cache stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("IP cache stopped")
 
     def _restore(self):
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )

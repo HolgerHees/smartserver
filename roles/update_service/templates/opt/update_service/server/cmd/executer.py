@@ -269,12 +269,16 @@ class CmdExecuter(watcher.Watcher):
     def _checkExternalCmdTypes(self):
         logging.info("CmdExecuter started")
 
-        while self.is_running:
-            self._refreshExternalCmdType()
-            self.event.wait( 1 if self.handler.isHightAccuracy() else 60)
-            self.event.clear()
-
-        logging.info("CmdExecuter stopped")
+        try:
+            while self.is_running:
+                self._refreshExternalCmdType()
+                self.event.wait( 1 if self.handler.isHightAccuracy() else 60)
+                self.event.clear()
+        except Exception as e:
+            self.is_running = False
+            raise e
+        finally:
+            logging.info("CmdExecuter stopped")
 
     def _refreshExternalCmdType(self):
         with self.extern_cmd_lock:
@@ -322,3 +326,8 @@ class CmdExecuter(watcher.Watcher):
             "username": data[4][:-4],
             "timestamp": timestamp
         }
+
+    def getStateMetrics(self):
+        return [
+            "update_service_process{{type=\"cmd_executer\"}} {}".format("1" if self.is_running else "0")
+        ]

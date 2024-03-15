@@ -25,10 +25,11 @@ class Scheduler(threading.Thread):
             while self.is_running:
                 schedule.run_pending()
                 self.event.wait(1)
-            logging.info("Scheduler stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("Scheduler stopped")
 
     def getStateMetrics(self):
         return [

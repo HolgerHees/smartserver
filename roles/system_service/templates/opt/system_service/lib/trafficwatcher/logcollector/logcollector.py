@@ -143,8 +143,8 @@ class LogCollector(threading.Thread):
             self.join()
 
     def run(self):
-        logging.info("Log collector started")
         try:
+            logging.info("Log collector started")
             while self.is_running:
                 self.timer = threading.Timer(60 * 60 * 24, self._force_reconnect)
                 self.timer.start()
@@ -156,11 +156,10 @@ class LogCollector(threading.Thread):
 
                 self.event.wait(15)
         except Exception as e:
-            #logging.error(e)
-            logging.error(traceback.format_exc())
             self.is_running = False
-
-        logging.info("Log collector stopped")
+            raise e
+        finally:
+            logging.info("Log collector stopped")
 
     def _force_reconnect(self):
         if self.ws is not None:

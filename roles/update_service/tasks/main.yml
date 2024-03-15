@@ -93,6 +93,15 @@
   include_tasks: roles/apache_webui/shared/add_webui.yml
   tags: ['apache_webui_config']
 
+- name: register prometheus rules & metrics
+  vars:
+    name: "update_service"
+    rules_file: "templates/prometheus/rules.yml"
+    scrape_file: "templates/prometheus/scrape.yml"
+  include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
+  when: "monitoring_enabled"
+
 - name: create version check cron job
   vars:
     name: "Software Version check"
@@ -132,6 +141,11 @@
   vars:
     service_name: "update_service"
     service_host: "127.0.0.1:8505"
+    service_additional_config: |
+        <Location /update_service/metrics/>
+          ProxyPass http://127.0.0.1:8505/metrics/
+          ProxyPassReverse http://127.0.0.1:8505/metrics/
+        </Location>
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
   tags: ['apache_config']
 

@@ -156,34 +156,35 @@ class TrafficWatcher(threading.Thread):
         self.join()
 
     def run(self):
-        logging.info("Init traffic state")
-        while self.is_running:
-            if self._initTrafficEvents():
-                break
-            else:
-                self.event.wait(15)
-                self.event.clear()
-
-        if self.is_running:
-            # must stay here, because it depends from initialized traffic state
-            self.logcollector.start()
-
-        self._calculateTrafficStateSummery()
-
-        self.is_initialized = True
-
-        logging.info("IP traffic watcher started")
         try:
+            logging.info("Init traffic state")
+            while self.is_running:
+                if self._initTrafficEvents():
+                    break
+                else:
+                    self.event.wait(15)
+                    self.event.clear()
+
+            if self.is_running:
+                # must stay here, because it depends from initialized traffic state
+                self.logcollector.start()
+
+            self._calculateTrafficStateSummery()
+
+            self.is_initialized = True
+
+            logging.info("IP traffic watcher started")
+
             while self.is_running:
                 self._processConnections()
 
                 self.event.wait()
                 self.event.clear()
-
-            logging.info("IP traffic watcher stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("IP traffic watcher stopped")
 
     def addConnections(self, connections):
         #logging.info("add {} {}".format(connection.connection_type, connection.src))

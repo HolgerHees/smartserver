@@ -61,15 +61,15 @@ class Blocklists(threading.Thread):
         self.event.set()
 
     def run(self):
-        logging.info("IP blocklist handler started")
         try:
+            logging.info("IP blocklist handler started")
             while self.is_running:
                 self.event.wait(60)
-
-            logging.info("IP blocklist handler  stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("IP blocklist handler  stopped")
 
     def _restore(self):
         for name, config in self.configs.items():

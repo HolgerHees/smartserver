@@ -70,8 +70,8 @@ class Info(threading.Thread):
         return self.is_running
 
     def run(self):
-        logging.info("Info started")
         try:
+            logging.info("Info started")
             while self._isRunning():
                 #logging.info("CHECK")
                 default_isp_connection_active = self.checkIP(self.active_service)
@@ -94,11 +94,11 @@ class Info(threading.Thread):
                 self.wan_active = wan_active
 
                 self.event.wait(60)
-
-            logging.info("Info stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("Info stopped")
 
     def _restore(self):
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )

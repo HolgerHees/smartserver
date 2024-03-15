@@ -40,8 +40,8 @@ class FPing(threading.Thread):
         return self.is_running
 
     def run(self):
-        logging.info("FPing started")
         try:
+            logging.info("FPing started")
             while self._isRunning():
                 returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1" ] + self.config.fping_test_hosts, isRunningCallback=self._isRunning)
 
@@ -69,11 +69,11 @@ class FPing(threading.Thread):
                 self.messurements = messurements
 
                 self.event.wait(60)
-
-            logging.info("FPing stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("FPing stopped")
 
     def getMessurements(self):
         return self.messurements

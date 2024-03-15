@@ -1,5 +1,5 @@
 groups:
-- name: cache_service
+- name: camera_service
   rules:
   - alert: Camera service process crashed
     expr: 'camera_service_process{job="cache_service"} == 0'

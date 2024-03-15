@@ -51,13 +51,14 @@ class CacheHandler(threading.Thread):
         self.join()
 
     def run(self):
-        logging.info("Init cache map")
-        self.initCacheMap()
-
-        self.is_initialized = True;
-
-        logging.info("Cache handler started")
         try:
+            logging.info("Init cache map")
+            self.initCacheMap()
+
+            self.is_initialized = True;
+
+            logging.info("Cache handler started")
+
             changes = {};
             while self.is_running:
                 try:
@@ -89,11 +90,11 @@ class CacheHandler(threading.Thread):
                     changes = {};
                     self.event.wait()
                     self.event.clear()
-
-            logging.info("Cache handler stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("Cache handler stopped")
 
     def compareItems(self, item1, item2):
         if item1["timestamp"] > item2["timestamp"]:

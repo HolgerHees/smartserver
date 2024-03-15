@@ -29,7 +29,7 @@ class Handler(Server):
         super().__init__("weatcher_service", "0.0.0.0", "80" )
 
         self.db = DB(config)
-        self.scheduler = Scheduler("weatcher_service")
+        self.scheduler = Scheduler("weather_service")
 
         self.mqtt = DummyBroker(config) if config.mosquitto_host == "dummy" else MQTTBroker(config)
 

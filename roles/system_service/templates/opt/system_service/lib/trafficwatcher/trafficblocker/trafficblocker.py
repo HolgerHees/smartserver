@@ -65,8 +65,9 @@ class TrafficBlocker(threading.Thread):
             self.join()
 
     def run(self):
-        logging.info("IP traffic blocker started")
         try:
+            logging.info("IP traffic blocker started")
+
             self.blocked_ips = Helper.getBlockedIps()
 
             HIERARCHY = {
@@ -177,11 +178,11 @@ class TrafficBlocker(threading.Thread):
 
                 self.event.wait()
                 self.event.clear()
-
-            logging.info("IP traffic blocker stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
+        except Exception as e:
             self.is_running = False
+            raise e
+        finally:
+            logging.info("IP traffic blocker stopped")
 
     def _unblock_and_restore(self):
         changed = False
