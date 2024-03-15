@@ -53,7 +53,7 @@
     - news
     - deck
     - tasks
-    - passman
+    - keeweb
 
 - name: install additional_apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item.app}}\""
@@ -162,68 +162,40 @@
   tags: ['cron_job']
 
 # ***** FINALIZE NEWS INSTALLATION *****
-- name: prepare news config folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  with_items:
-    - "{{nextcloud_data_path}}news"
-    - "{{nextcloud_data_path}}news/config"
-
-- name: synchronize news config
-  synchronize:
-    src: "templates/apps/news.ini"
-    dest: "{{nextcloud_data_path}}news/config/config.ini"
-    archive: no
-    checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
-    recursive: yes
-    rsync_opts:
-      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=F640"
+#- name: prepare news config folder
+#  file:
+#    path: "{{item}}"
+#    state: directory
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+#    mode: 0750
+#  with_items:
+#    - "{{nextcloud_data_path}}news"
+#    - "{{nextcloud_data_path}}news/config"
 
 # ***** INSTALL KEEWEB *****
-- name: check for outdated keeweb version
-  shell: "grep --invert \"<version>{{nextcloud_keeweb_version}}<\\/version>\" {{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml | grep \"<version>.*<\\/version>\""
-  register: keeweb_result
-  changed_when: "keeweb_result.rc == 0"
-  failed_when: False
+#- name: check for outdated keeweb version
+#  shell: "grep --invert \"<version>{{nextcloud_keeweb_version}}<\\/version>\" {{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml | grep \"<version>.*<\\/version>\""
+#  register: keeweb_result
+#  changed_when: "keeweb_result.rc == 0"
+#  failed_when: False
   
-- name: uninstall outdated keeweb version => old version was detected
-  file:
-    state: absent
-    path: "{{htdocs_path}}nextcloud/apps/keeweb/"
-  when: "keeweb_result.rc == 0"
+#- name: uninstall outdated keeweb version => old version was detected
+#  file:
+#    state: absent
+#    path: "{{htdocs_path}}nextcloud/apps/keeweb/"
+#  when: "keeweb_result.rc == 0"
   
-- name: install keeweb app => app does not exists
-  unarchive:
-    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v{{nextcloud_keeweb_version}}/keeweb-{{nextcloud_keeweb_version}}.tar.gz"
-    dest: "{{htdocs_path}}nextcloud/apps/"
-    remote_src: yes
-    creates: "{{htdocs_path}}nextcloud/apps/keeweb/"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-  register: keeweb_installation
+#- name: install keeweb app => app does not exists
+#  unarchive:
+#    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v{{nextcloud_keeweb_version}}/keeweb-{{nextcloud_keeweb_version}}.tar.gz"
+#    dest: "{{htdocs_path}}nextcloud/apps/"
+#    remote_src: yes
+#    creates: "{{htdocs_path}}nextcloud/apps/keeweb/"
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+#  register: keeweb_installation
   
-- name: synchronize patched service-worker.js
-  synchronize:
-    src: "templates/apps/service-worker.js"
-    dest: "{{htdocs_path}}nextcloud/apps/keeweb/templates/"
-    archive: no
-    checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
-    recursive: yes
-    rsync_opts:
-      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
-      - "--chmod=F644"
-
 #- name: check keeweb max version
 #  lineinfile:
 #    path: "{{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml"
@@ -232,9 +204,9 @@
 #    backrefs: yes
 #  when: keeweb_installation.changed
     
-- name: upgrade existing database => keeweb version changed
-  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
-  when: "keeweb_installation.changed"
+#- name: upgrade existing database => keeweb version changed
+#  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
+#  when: "keeweb_installation.changed"
   
 # maybe cleanup
 # UPDATE `oc_jobs` SET `reserved_at` = 0 WHERE `class` = 'OCA\\News\\Cron\\Updater'
@@ -256,11 +228,10 @@
 #    - collectives
 #    - jsloader
     - previewgenerator
-    - keeweb
     - news
     - notes
     - tasks
-    - passman
+    - keeweb
 
 - name: enable disabled additional_apps apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item.app}} --force\""
@@ -302,17 +273,16 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-#- name: apply patches
-#  copy:
-#    src: "templates/patches/{{item}}"
-#    dest: "{{htdocs_path}}nextcloud/{{item}}"
-#    owner: "{{system_users['www'].name}}"
-#    group: "{{system_groups['www'].name}}"
-#    mode: 0640
-#  with_items:
-#    - "apps/passman/js/passman.min.js" # https://github.com/nextcloud/passman/pull/781
-#    - "apps/passman/lib/Db/CredentialMapper.php" # https://github.com/nextcloud/passman/pull/781
-#    - "apps/passman/lib/Service/IconService.php" # https://github.com/nextcloud/passman/pull/785
+- name: apply patches
+  copy:
+    src: "templates/patches/{{item}}"
+    dest: "{{htdocs_path}}nextcloud/{{item}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
+  with_items:
+#     - "apps/keeweb/templates/service-worker.js"    # needed by keepweb
+     - "apps/news/css/custom.css"              # needed by nextcloud news <= 24.0.0
 
 # APP cleanups
 #    Disable and remove news app
