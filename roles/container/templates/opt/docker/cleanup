@@ -122,7 +122,7 @@ def collectUsedImages(images, containers):
     for container in containers:
         for _images in images.values():
             for _image in _images:
-                if container.image == _image.name:
+                if container.image == _image.name or container.image == _image.id:
                     used_images[_image.id] = "used"
 
     return used_images
