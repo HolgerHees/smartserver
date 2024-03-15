@@ -10,16 +10,16 @@ groups:
     annotations:
       summary: "Smartd temperature is {{'{{'}}$value{{'}}'}} °C"
 
-  - alert: Smartd reallocated sector count increased (HDD/SSD)
-    expr: 'increase(netdata_smartd_log_reallocated_sectors_count_sectors_average[1h]) > 0'
+  - alert: Smartd reallocated sector count changed (HDD/SSD)
+    expr: 'changes(netdata_smartd_log_reallocated_sectors_count_sectors_average[1h]) > 0'
     for: 0m
     labels:
       severity: info
     annotations:
       summary: "Smartd reallocated sectors on disk is {{'{{'}}$value{{'}}'}}"
 
-  - alert: Smartd UDMA CRC error count increased (HDD/SSD)
-    expr: 'increase(netdata_smartd_log_udma_crc_error_count_errors_average[1h]) > 0'
+  - alert: Smartd UDMA CRC error count changed (HDD/SSD)
+    expr: 'changes(netdata_smartd_log_udma_crc_error_count_errors_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -27,8 +27,8 @@ groups:
     annotations:
       summary: "Smartd UDMA CRC error count is {{'{{'}}$value{{'}}'}}"
 
-  - alert: Smartd interface errors increased (HDD/SSD)
-    expr: 'increase({chart=~"smartd_log.*",family="external failure",job="netdata"}[1h]) > 0'
+  - alert: Smartd interface errors changed (HDD/SSD)
+    expr: 'changes({chart=~"smartd_log.*",family="external failure",job="netdata"}[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -36,8 +36,8 @@ groups:
     annotations:
       summary: "Smartd interface error count is {{'{{'}}$value{{'}}'}}"
 
-  - alert: Smartd read error rate increased (HDD)
-    expr: 'increase(netdata_smartd_log_read_error_rate_value_average[1h]) > 0'
+  - alert: Smartd read error rate changed (HDD)
+    expr: 'changes(netdata_smartd_log_read_error_rate_value_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -45,8 +45,8 @@ groups:
     annotations:
       summary: "Smartd read error rate is {{'{{'}}$value{{'}}'}}"
 
-#  - alert: Smartd seek error rate increased (HDD)
-#    expr: 'increase(netdata_smartd_log_seek_error_rate_value_average[1h]) > 0'
+#  - alert: Smartd seek error rate changed (HDD)
+#    expr: 'changes(netdata_smartd_log_seek_error_rate_value_average[1h]) > 0'
 #    for: 0m
 #    labels:
 #      notifyGroup: "custom"
@@ -54,21 +54,29 @@ groups:
 #    annotations:
 #      summary: "Smartd seek error rate is {{'{{'}}$value{{'}}'}}"
 
-  - alert: Smartd current pending sector count increased (HDD)
-    expr: 'increase(netdata_smartd_log_current_pending_sector_count_sectors_average[1h]) > 0'
+  - alert: Smartd current pending sector count changed (HDD)
+    expr: 'changes(netdata_smartd_log_current_pending_sector_count_sectors_average[1h]) > 0'
     for: 0m
     labels:
       severity: warning
     annotations:
       summary: "Smartd current pending sector is {{'{{'}}$value{{'}}'}}"
 
-  - alert: Smartd offline uncorrectable sector count increased (HDD)
-    expr: 'increase(netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average[1h]) > 0'
+  - alert: Smartd offline uncorrectable sector count changed (HDD)
+    expr: 'changes(netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average[1h]) > 0'
     for: 0m
     labels:
       severity: warning
     annotations:
       summary: "Smartd offline uncorrectable disk sector count is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Smartd unexpected power loss changed (HDD)
+    expr: 'changes(netdata_smartd_log_unexpected_power_loss_events_average[1h]) > 0'
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Smartd unexpected power loss is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd spin up retries is above 5 (HDD)
     expr: 'netdata_smartd_log_spin_up_retries_retries_average > 5'
@@ -78,8 +86,8 @@ groups:
     annotations:
       summary: "Smartd spin up retries is {{'{{'}}$value{{'}}'}}"
 
-  - alert: Smartd program fail count increased (SSD)
-    expr: 'increase(netdata_smartd_log_program_fail_count_errors_average[1h]) > 0'
+  - alert: Smartd program fail count changed (SSD)
+    expr: 'changes(netdata_smartd_log_program_fail_count_errors_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -87,8 +95,8 @@ groups:
     annotations:
       summary: "Smartd program fail count is {{'{{'}}$value{{'}}'}}"
 
-  - alert: Smartd erase fail count increased (SSD)
-    expr: 'increase(netdata_smartd_log_erase_fail_count_failures_average[1h]) > 0'
+  - alert: Smartd erase fail count changed (SSD)
+    expr: 'changes(netdata_smartd_log_erase_fail_count_failures_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
