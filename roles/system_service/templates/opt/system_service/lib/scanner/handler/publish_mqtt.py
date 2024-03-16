@@ -50,7 +50,11 @@ class MQTTPublisher(_handler.Handler):
                                     timeout = _timeout
                                     
                         if len(_to_publish) > 0:
-                            Helper.logInfo("REPUBLISH {} of {}".format(list(_to_publish.keys()), _device))
+                            _msg = []
+                            for detail,topic,value in _to_publish.values():
+                                _msg.append("{} => {}".format(detail,value))
+                            Helper.logInfo("REPUBLISH {} of {}".format(_msg, _device))
+
                             for [detail, topic, value] in _to_publish.values():
                                 self._publishValue(mac, detail, topic, value, now)
                 except Exception as e:
@@ -106,7 +110,10 @@ class MQTTPublisher(_handler.Handler):
         if len(_to_publish.values()) == 0:
             return False
 
-        Helper.logInfo("PUBLISH {} of {}".format(list(_to_publish.keys()), device))
+        _msg = []
+        for detail,topic,value in _to_publish.values():
+            _msg.append("{} => {}".format(detail,value))
+        Helper.logInfo("PUBLISH {} of {}".format(_msg, device))
 
         now = datetime.now()
         for [detail, topic, value] in _to_publish.values():
