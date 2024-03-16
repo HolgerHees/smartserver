@@ -3,21 +3,50 @@
     --color-primary-element: #1976D2 !important;
     --image-background: None !important;
 }
-#body-user #header
-{
-	background-color: var(--color-primary) !important;
-}
 body {
     background-image: none !important;
     background-color: white !important;
+    background: white !important;
 }
+/*#body-user #header
+{
+	background-color: var(--color-primary) !important;
+}*/
 #header {
     height: 56px !important;
     background-image: none !important;
+	background-color: var(--color-primary) !important;
 }
-#content {
+/*#header .logo-icon {
+    height: 56px !important;
+}*/
+#content, #content-vue {
     margin-top: 56px !important;
 }
-#header .logo-icon {
-    height: 56px !important;
+
+/* PASSWORDS APP */
+:root * {
+    --pw-image-login-background: None !important;
+}
+body.pw-auth-visible #app-content {
+    background: white !important;
+}
+body.pw-auth-visible #header * {
+    background-color: var(--color-primary) !important;
+}
+body.pw-auth-visible #app-content input[type=password] {
+    border-radius: 5px;
+    border: 2px solid var(--color-border-maxcontrast);
+    box-shadow: 0 0 0 2px var(--color-main-background);
+}
+body.pw-auth-visible #app-content input[type=submit] {
+    border-radius: var(--border-radius-pill);
+    border: 1px solid var(--color-border-dark);
+    font-weight: bold;
+    color: var(--color-main-text);
+    background-color: var(--color-primary-element-light);
+}
+body.pw-auth-visible #app-content input[type=submit]:hover {
+    color: var(--color-primary-element-light-text);
+    background-color: var(--color-primary-element-light-hover);
 }
