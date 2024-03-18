@@ -53,6 +53,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -66,6 +67,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -97,24 +99,76 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "trafficflow.sum {direction: incoming}"
+              "options": "Incoming (Count)"
             },
             "properties": [
               {
-                "id": "displayName",
-                "value": "Incoming"
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "trafficflow.sum {direction: outgoing}"
+              "options": "Outgoing (Count)"
             },
             "properties": [
               {
-                "id": "displayName",
-                "value": "Outgoing"
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Incoming (Size)"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Outgoing (Size)"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
               }
             ]
           }
@@ -183,6 +237,65 @@
               {
                 "params": [],
                 "type": "sum"
+              },
+              {
+                "params": [
+                  "count"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "direction::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "trafficflow",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "traffic_size"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              },
+              {
+                "params": [
+                  "size"
+                ],
+                "type": "alias"
               }
             ]
           ],
@@ -190,7 +303,69 @@
         }
       ],
       "title": "Traffic",
-      "transformations": [],
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "",
+            "binary": {
+              "left": "trafficflow.count { direction: incoming }",
+              "operator": "*",
+              "right": "-1"
+            },
+            "mode": "binary",
+            "reduce": {
+              "include": [],
+              "reducer": "allValues"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "binary": {
+              "left": "trafficflow.size { direction: incoming }",
+              "operator": "*",
+              "right": "-1"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "trafficflow.count { direction: incoming }": true,
+              "trafficflow.size { direction: incoming }": true,
+              "trafficflow.sum { direction: incoming }": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "trafficflow.count { direction: incoming }": 1,
+              "trafficflow.count { direction: incoming } * -1": 5,
+              "trafficflow.count { direction: outgoing }": 6,
+              "trafficflow.size { direction: incoming }": 2,
+              "trafficflow.size { direction: incoming } * -1": 3,
+              "trafficflow.size { direction: outgoing }": 4
+            },
+            "renameByName": {
+              "Time": "",
+              "trafficflow.count { direction: incoming }": "",
+              "trafficflow.count { direction: incoming } * -1": "Incoming (Count)",
+              "trafficflow.count { direction: outgoing }": "Outgoing (Count)",
+              "trafficflow.size { direction: incoming }": "",
+              "trafficflow.size { direction: incoming } * -1": "Incoming (Size)",
+              "trafficflow.size { direction: outgoing }": "Outgoing (Size)",
+              "trafficflow.sum { direction: incoming } * -1": "Incoming",
+              "trafficflow.sum { direction: outgoing }": "Outgoing"
+            }
+          }
+        }
+      ],
       "type": "timeseries"
     },
     {
@@ -297,7 +472,6 @@
       ],
       "timeShift": "2m",
       "title": "Country",
-      "transformations": [],
       "type": "piechart"
     },
     {
@@ -415,7 +589,6 @@
       ],
       "timeShift": "2m",
       "title": "Service",
-      "transformations": [],
       "type": "piechart"
     },
     {
@@ -484,9 +657,11 @@
           "fields": "",
           "values": true
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -650,7 +825,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -850,7 +1025,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -1125,7 +1300,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -1266,7 +1441,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -1414,7 +1589,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -1585,7 +1760,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -1743,7 +1918,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -1886,7 +2061,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -1946,8 +2121,7 @@
   ],
   "refresh": "1m",
   "revision": 1,
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [
     "netflow"
   ],
@@ -1974,6 +2148,6 @@
   "timezone": "",
   "title": "Overview",
   "uid": "system-service-netflow-overview",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }
