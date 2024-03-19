@@ -235,20 +235,18 @@ class Server():
 
     def onSocketRoomJoin(self, sid, room, data = None):
         with self.socketio_client_lock:
-            logging.info("Websocket: join '{}' - '{}'".format(room, sid))
             if room not in self.socket_rooms:
                 logging.info("Websocket: create room '{}'".format(room))
                 self.socket_rooms[room] = []
-            self.socket_rooms[room].append(sid)
+            if sid not in self.socket_rooms[room]:
+                logging.info("Websocket: join '{}' - '{}'".format(room, sid))
+                self.socket_rooms[room].append(sid)
         join_room(room)
         self._socketWatcherNotifier()
 
     def onSocketRoomLeave(self, sid, room):
         with self.socketio_client_lock:
             self._onSocketRoomLeave(sid, room)
-            #if sid in self.socket_rooms[room]:
-            #else:
-            #    logging.warn("Websocket: Unknown client can't leave '{}' - '{}'".format(room, sid))
         self._socketWatcherNotifier()
 
     def _onSocketRoomLeave(self, sid, room):
