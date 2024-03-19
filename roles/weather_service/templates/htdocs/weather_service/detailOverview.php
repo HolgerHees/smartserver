@@ -313,21 +313,24 @@ mx.OnSharedModWebsocketReady.push(function(){
 </head>
 <body>
 <script>
+var theme = null;
 try{
-    var theme = null;
     var current = window;
     while( current )
     {
-        if( current.location.pathname.includes("habpanel") )
+        current.location.host; // trigger exception on different (openhab) domain
+        /*if( current.location.pathname.includes("habpanel") )
         {
-            theme = 'dark';
-            document.querySelector("body").classList.add("black");
             break;
-        }
+        }*/
         current = current != current.parent ? current.parent : null;
     }
 }
-catch(e){}
+catch(e){
+    // habpanel with different (openhab) domain
+    theme = 'dark';
+    document.querySelector("body").classList.add("black");
+}
 </script>
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Weather"), theme); } );</script>
 <div class="current">
