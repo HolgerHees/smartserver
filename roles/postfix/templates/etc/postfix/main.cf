@@ -18,8 +18,8 @@ smtp_sasl_auth_enable = yes
 smtp_sasl_password_maps = static:{{mailserver_username}}:{{mailserver_password}}
 smtp_sasl_security_options = noanonymous
 smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
-#smtp_tls_security_level = may
-smtp_enforce_tls = yes
+smtp_tls_security_level = encrypt
+#smtp_enforce_tls = yes
 smtp_use_tls = yes
 
 # some tweaks
