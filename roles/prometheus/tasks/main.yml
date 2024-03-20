@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    prometheus_version: '2.50.1'
+    prometheus_version: '2.51.0'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed directories
