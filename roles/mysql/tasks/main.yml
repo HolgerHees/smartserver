@@ -151,3 +151,19 @@
   include_tasks: roles/mysql/shared/add_database.yml
   tags: ['cron_job','backup_restore']
   
+- name: "check healthcheck user"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SELECT User FROM mysql.user'\""
+  register: mysql_user_exists
+  changed_when: "system_users['mysql'].name not in mysql_user_exists.stdout"
+
+- name: "create healthcheck user => user does not exists"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{system_users['mysql'].name}}'@'%'\\\"\""
+  when: "system_users['mysql'].name not in mysql_user_exists.stdout"
+
+- name: "refresh privileges => user does not exists"
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
+  when: "system_users['mysql'].name not in mysql_user_exists.stdout"
+
+#- name: "grant healthcheck user permissions => user does not exists"
+#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT USAGE TO '{{system_users['mysql'].name}}'@'%';\\\"\""
+#  when: "system_users['mysql'].name not in mysql_user_exists.stdout"
