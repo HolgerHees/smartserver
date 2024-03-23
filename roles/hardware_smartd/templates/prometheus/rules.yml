@@ -2,7 +2,7 @@ groups:
 - name: smartd
   rules:
   - alert: Smartd temperature is too high (HDD/SSD)
-    expr: '{chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
+    expr: 'netdata_smartd_log_temperature_celsius_celsius_average > 50'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -26,15 +26,6 @@ groups:
       severity: critical
     annotations:
       summary: "Smartd UDMA CRC error count is {{'{{'}}$value{{'}}'}}"
-
-  - alert: Smartd interface errors changed (HDD/SSD)
-    expr: 'changes({chart=~"smartd_log.*",family="external failure",job="netdata"}[1h]) > 0'
-    for: 0m
-    labels:
-      notifyGroup: "custom"
-      severity: critical
-    annotations:
-      summary: "Smartd interface error count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd read error rate changed (HDD)
     expr: 'changes(netdata_smartd_log_read_error_rate_value_average[1h]) > 0'
