@@ -22,7 +22,7 @@ default_variables: {
     language:                                 {},                                                                   # "en", "de" ...
     country:                                  {},                                                                   # "EN", "DE" ...
     region:                                   {},                                                                   # "bb" => berlin / brandenburg => https://www.openhab.org/docs/configuration/actions.html#ephemeris
-    
+
     root_email:                               {},                                                                   # "testadmin@test.com" => gets all admin / alert / warning emails from your server
 
     server_name:                              {},                                                                   # "test"
@@ -40,7 +40,7 @@ default_variables: {
     base_path:                                { default: "/smartserver/" },                                         # path for smartserver related service data
     data_path:                                { default: "{{base_path}}data/" },                                    # path for smartserver related user data
     backup_path:                              { default: "{{data_path}}backups/" },                                 # path for local backup data
-    
+
     userdata:                                 {},
     # *** EXAMPLE for userdata ***
     # userdata: {
@@ -164,7 +164,7 @@ default_variables: {
     # Roles:
     # - 'librenms'
     librenms_enabled:                         { default: "{{librenms_devices | length > 0}}",
-                                                requirement: "mysql_enabled,redis_enabled" },                        # enabled if there are network_devices with attribute 'snmp_method'
+                                                requirement: "mysql_enabled,redis_enabled" },                       # enabled if there are network_devices with attribute 'snmp_method'
     librenms_poller_interval:                 { default: 5,                                                         # interval in minutes
                                                 dependency: "{{librenms_enabled}}" },
     librenms_mysql_username:                  { default: "librenms",
@@ -223,10 +223,10 @@ default_variables: {
     pihole_ipv6:                              { optional: yes,                                                      # pihole ipv6 address from same network as your server ip
                                                 dependency: "{{pihole_enabled}}" },
     pihole_whitelist_domains:                 { default: [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ],
-                                                dependency: "{{pihole_enabled}}" },                               # domains are needed to use google search results
+                                                dependency: "{{pihole_enabled}}" },                                 # domains are needed to use google search results
     pihole_addlist_urls:                      { default: [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ],
                                                 dependency: "{{pihole_enabled}}" },
-    pihole_password:                          { dependency: "{{pihole_enabled}}" },                               # used to login into pihole
+    pihole_password:                          { dependency: "{{pihole_enabled}}" },                                 # used to login into pihole
     # *** END DNS SERVER                                                               ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -238,8 +238,8 @@ default_variables: {
     # - 'wireguard_mobile'
     mobile_vpn_enabled:                       { default: "yes" },                                                   # enabled by default
     mobile_vpn_internal_port:                 { default: "51828",
-                                                dependency: "{{mobile_vpn_enabled}}" },                           # the port, used on your server
-    mobile_vpn_public_port:                   { dependency: "{{mobile_vpn_enabled}}" },                           # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+                                                dependency: "{{mobile_vpn_enabled}}" },                             # the port, used on your server
+    mobile_vpn_public_port:                   { dependency: "{{mobile_vpn_enabled}}" },                             # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     # *** END VPN                                                                      ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -253,7 +253,7 @@ default_variables: {
     influxdb_admin_username:                  { default: "admin",                                                   # used to login into influxdb webui
                                                 dependency: "{{influxdb_enabled}}" },
     influxdb_admin_password:                  { dependency: "{{influxdb_enabled}}" },
-    influxdb_admin_token:                     { dependency: "{{influxdb_enabled}}" },                             # "lkjfdh7123kjas" => token used for internal command line operations
+    influxdb_admin_token:                     { dependency: "{{influxdb_enabled}}" },                               # "lkjfdh7123kjas" => token used for internal command line operations
 
     # Roles:
     # - 'mysql'
@@ -292,9 +292,9 @@ default_variables: {
     # - 'nextcloud_libreoffice'
     nextcloud_enabled:                        { default: yes,                                                       # enabled by default
                                                 requirement: "mysql_enabled,redis_enabled" },
-    nextcloud_instance_id:                    { dependency: "{{nextcloud_enabled}}" },                            # "234sdgzw87399443s" => used internally
-    nextcloud_password_salt:                  { dependency: "{{nextcloud_enabled}}" },                            # "9ad9aus92z4ij20j20idj928912hd1jd0"
-    nextcloud_secret:                         { dependency: "{{nextcloud_enabled}}" },                            # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
+    nextcloud_instance_id:                    { dependency: "{{nextcloud_enabled}}" },                              # "234sdgzw87399443s" => used internally
+    nextcloud_password_salt:                  { dependency: "{{nextcloud_enabled}}" },                              # "9ad9aus92z4ij20j20idj928912hd1jd0"
+    nextcloud_secret:                         { dependency: "{{nextcloud_enabled}}" },                              # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
     nextcloud_mysql_username:                 { default: "nextcloud",                                               # used for nextcloud data
                                                 dependency: "{{nextcloud_enabled}}" },
     nextcloud_mysql_password:                 { dependency: "{{nextcloud_enabled}}" },
@@ -326,7 +326,7 @@ default_variables: {
     # - 'openhab_toolbox'
     openhab_enabled:                          { default: yes,                                                       # enabled by default
                                                 requirement: "mysql_enabled,influxdb_enabled,mosquitto_enabled" },
-    openhab_config_git:                       { dependency: "{{openhab_enabled}}" },                              # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
+    openhab_config_git:                       { dependency: "{{openhab_enabled}}" },                                # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     openhab_mysql_username:                   { default: "openhab",                                                 # used for openhab data
                                                 dependency: "{{openhab_enabled}}" },
     openhab_mysql_password:                   { dependency: "{{openhab_enabled}}" },
@@ -353,7 +353,7 @@ default_variables: {
     #         snapshot_password: { optional: yes }                                                                  # password to authenticate external url
     #     }
     # ]
-    camera_ftp_username:                      { dependency: "{{camera_enabled}}" },                               # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
+    camera_ftp_username:                      { dependency: "{{camera_enabled}}" },                                 # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
     camera_ftp_password:                      { dependency: "{{camera_enabled}}" },
     camera_ftp_max_file_age:                  { default: "{{2 * 24 * 60}}",                                         # images, older then 2 days are discarded
                                                 dependency: "{{camera_enabled}}" },
@@ -538,11 +538,8 @@ default_variables: {
                                                 dependency: "{{weather_service_enabled}}" },
     weather_mqtt_server:                      { default: "{{'mosquitto' if mosquitto_enabled else 'dummy'}}",       # 'mosquitto', 'cloud_mosquitto' or 'dummy'
                                                 dependency: "{{weather_service_enabled}}" },
-    weather_mqtt_publish_provider_topic:      { default: "{{server_name}}",                                         # the main topic prefix where you publish weather data
-                                                dependency: "{{weather_service_enabled and weather_api_provider != 'listener'}}" },
-
-    weather_mqtt_station_consumer_topic:      { optional: yes,                                                      # the topic prefix of a local weather station. If not provided, values are comming from weather_api_provider
-                                                dependency: "{{weather_service_enabled and weather_mqtt_server != 'dummy'}}" },
+    weather_mqtt_publish_topic:               { default: "{{server_name}}",
+                                                dependency: "{{weather_service_enabled and weather_api_provider != 'listener'}}" }, # the main topic prefix where you publish weather data
     weather_api_username:                     { dependency: "{{weather_service_enabled and weather_api_provider == 'meteogroup'}}" },
     weather_api_password:                     { dependency: "{{weather_service_enabled and weather_api_provider == 'meteogroup'}}" },
     # *** END WEATHER SERVICE                                                          ***
