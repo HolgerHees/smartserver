@@ -11,6 +11,8 @@ class StationConsumer():
     def __init__(self, config, mqtt, provider_consumer):
         self.mqtt = mqtt
 
+        self.config = config
+
         self.is_running = False
 
         self.dump_path = "{}consumer_station.json".format(config.lib_path)
@@ -27,7 +29,7 @@ class StationConsumer():
         self._restore()
         if not os.path.exists(self.dump_path):
             self._dump()
-        self.mqtt.subscribe('+/weather/station/#', self.on_message)
+        self.mqtt.subscribe( '{}/weather/station/#'.format(self.config.station_consumer_topic), self.on_message)
         self.is_running = True
 
     def terminate(self):

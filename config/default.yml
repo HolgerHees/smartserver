@@ -538,8 +538,11 @@ default_variables: {
                                                 dependency: "{{weather_service_enabled}}" },
     weather_mqtt_server:                      { default: "{{'mosquitto' if mosquitto_enabled else 'dummy'}}",       # 'mosquitto', 'cloud_mosquitto' or 'dummy'
                                                 dependency: "{{weather_service_enabled}}" },
-    weather_mqtt_publish_topic:               { default: "{{server_name}}",
-                                                dependency: "{{weather_service_enabled and weather_api_provider != 'listener'}}" }, # the main topic prefix where you publish weather data
+    weather_mqtt_publish_provider_topic:      { default: "{{server_name}}",                                         # the main topic prefix where you publish weather data
+                                                dependency: "{{weather_service_enabled and weather_api_provider != 'listener'}}" },
+
+    weather_mqtt_station_consumer_topic:      { optional: yes,                                                      # the topic prefix of a local weather station. If not provided, values are comming from weather_api_provider
+                                                dependency: "{{weather_service_enabled and weather_mqtt_server != 'dummy'}}" },
     weather_api_username:                     { dependency: "{{weather_service_enabled and weather_api_provider == 'meteogroup'}}" },
     weather_api_password:                     { dependency: "{{weather_service_enabled and weather_api_provider == 'meteogroup'}}" },
     # *** END WEATHER SERVICE                                                          ***

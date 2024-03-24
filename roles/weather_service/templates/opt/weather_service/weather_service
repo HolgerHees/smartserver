@@ -47,7 +47,7 @@ class Handler(Server):
         self.astro_consumer = AstroConsumer(config, self)
         self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self)
 
-        if config.mosquitto_host != "dummy":
+        if config.station_consumer_topic:
             self.station_consumer = StationConsumer(config, self.mqtt, self.provider_consumer)
         else:
             self.station_consumer = None

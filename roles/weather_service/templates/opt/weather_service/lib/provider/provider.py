@@ -103,15 +103,15 @@ class Provider:
                 for field in summeryFields:
                     tmp[field][2] = tmp[field][2] / len(result)
 
-                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"min"), payload=str(tmp[field][0]).encode("utf-8"), qos=0, retain=False)
-                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"max"), payload=str(tmp[field][1]).encode("utf-8"), qos=0, retain=False)
-                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"avg"), payload=str(tmp[field][2]).encode("utf-8"), qos=0, retain=False)
+                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,"min"), payload=str(tmp[field][0]).encode("utf-8"), qos=0, retain=False)
+                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,"max"), payload=str(tmp[field][1]).encode("utf-8"), qos=0, retain=False)
+                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,"avg"), payload=str(tmp[field][2]).encode("utf-8"), qos=0, retain=False)
 
                 for offset in summeryOffsets:
                     data = db.getOffset(offset)
                     for field, value in data.items():
-                        mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,offset), payload=str(value).encode("utf-8"), qos=0, retain=False)
-                mqtt.publish("{}/weather/provider/items/refreshed".format(self.config.publish_topic), payload="1", qos=0, retain=False)
+                        mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,offset), payload=str(value).encode("utf-8"), qos=0, retain=False)
+                mqtt.publish("{}/weather/provider/items/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
 
                 logging.info("Summery data published")
             else:

@@ -3,10 +3,13 @@ api_username    = {% if weather_api_username is defined %}"{{weather_api_usernam
 
 api_password    = {% if weather_api_password is defined %}"{{weather_api_password}}"{% else %}False{% endif %}
 
-publish_topic   = {% if weather_mqtt_publish_topic is defined %}"{{weather_mqtt_publish_topic}}"{% else %}False{% endif %}
-
-
 mosquitto_host  = "{{weather_mqtt_server}}"
+
+publish_provider_topic   = {% if weather_mqtt_publish_provider_topic is defined %}"{{weather_mqtt_publish_provider_topic}}"{% else %}False{% endif %}
+
+
+station_consumer_topic   = {% if weather_mqtt_station_consumer_topic is defined %}"{{weather_mqtt_station_consumer_topic}}"{% else %}False{% endif %}
+
 
 db_host         = "mysql"
 db_name         = "shared"
