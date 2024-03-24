@@ -15,6 +15,10 @@ from lib.scanner.helper import Helper
 
 
 class LibreNMS(_handler.Handler): 
+    DEFAULT_VLAN_ID = 0
+    DEFAULT_VLAN_VLAN = 1
+
+
     def __init__(self, config, cache ):
         super().__init__(config,cache)
         
@@ -156,7 +160,7 @@ class LibreNMS(_handler.Handler):
         self.next_run["vlan"] = datetime.now() + timedelta(seconds=self.config.librenms_vlan_interval)
 
         start = datetime.now()
-        _vlan_json = self._get("resources/vlans")
+        _vlan_json = self._get("resources/vlans", { 404: [ { 'vlans': [ {'vlan_id': LibreNMS.DEFAULT_VLAN_ID, 'vlan_vlan': LibreNMS.DEFAULT_VLAN_VLAN} ] } ] })
         Helper.logProfiler(self, start, "VLANs fetched")
 
         _vlans = _vlan_json["vlans"]
@@ -253,6 +257,9 @@ class LibreNMS(_handler.Handler):
         _connected_arps = _connected_arps_json["ports_fdb"]
         
         for _connected_arp in _connected_arps:
+            if "vlan_id" not in _connected_arp:
+                _connected_arp["vlan_id"] = LibreNMS.DEFAULT_VLAN_ID
+
             if _connected_arp["vlan_id"] not in self.vlan_id_map:
                 self._processVLANs()
                 for __connected_arp in _connected_arps:
@@ -308,13 +315,15 @@ class LibreNMS(_handler.Handler):
     def _isInitialized(self):
         return len(self.devices.values()) > 0
     
-    def _get(self,call):
+    def _get(self, call, additional_codes = {} ):
         headers = {'X-Auth-Token': self.config.librenms_token}
-        
+
         try:
             #print("{}{}".format(self.config.librenms_rest,call))
             r = self.request_session.get( "{}{}".format(self.config.librenms_rest,call), headers=headers)
             if r.status_code != 200:
+                if r.status_code in additional_codes:
+                    return additional_codes[r.status_code]
                 raise NetworkException("Got wrong response status code: {}".format(r.status_code), self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout)
 
             data = json.loads(r.text)
