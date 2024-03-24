@@ -2,7 +2,7 @@ groups:
 - name: smartd
   rules:
   - alert: Smartd temperature is too high (HDD/SSD)
-    expr: '{chart="smartd_log.temperature_celsius",family="temperature",job="netdata"} > 50'
+    expr: '{__name__=~"netdata.*",chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
     for: 0m
     labels:
       notifyGroup: "custom"
