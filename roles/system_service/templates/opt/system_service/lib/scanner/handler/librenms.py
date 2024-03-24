@@ -160,7 +160,7 @@ class LibreNMS(_handler.Handler):
         self.next_run["vlan"] = datetime.now() + timedelta(seconds=self.config.librenms_vlan_interval)
 
         start = datetime.now()
-        _vlan_json = self._get("resources/vlans", { 404: [ { 'vlans': [ {'vlan_id': LibreNMS.DEFAULT_VLAN_ID, 'vlan_vlan': LibreNMS.DEFAULT_VLAN_VLAN} ] } ] })
+        _vlan_json = self._get("resources/vlans", { 404: { 'vlans': [ {'vlan_id': LibreNMS.DEFAULT_VLAN_ID, 'vlan_vlan': LibreNMS.DEFAULT_VLAN_VLAN} ] } })
         Helper.logProfiler(self, start, "VLANs fetched")
 
         _vlans = _vlan_json["vlans"]
