@@ -152,7 +152,7 @@ class Fetcher(object):
             raise CurrentDataException("Failed processing current data. Missing fields: {}, Content: {}".format(_data["missing_fields"], _data["observation"]))
         else:
             for field, _field in current_fields.items():
-                mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_topic,field), payload=_data["observation"][_field], qos=0, retain=False)
+                mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_provider_topic,field), payload=_data["observation"][_field], qos=0, retain=False)
 
             #if "observedFrom" in _data["observation"]:
             #    observedFrom = _data["observation"]["observedFrom"]
@@ -163,7 +163,7 @@ class Fetcher(object):
             observedFrom = observedFrom.strftime("%Y-%m-%dT%H:%M:%S%z")
 
             #logging.info(observedFrom)
-            mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_topic), payload=observedFrom, qos=0, retain=False)
+            mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_provider_topic), payload=observedFrom, qos=0, retain=False)
 
         logging.info("Current data published")
 
@@ -264,9 +264,9 @@ class Fetcher(object):
             for field in forecast:
                 if field.startswith("valid"):
                     continue
-                mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_topic,field,date), payload=forecast[field], qos=0, retain=False)
-            #mqtt.publish("{}/weather/forecast/refreshed/{}".format(self.config.publish_topic,date), payload="1", qos=0, retain=False)
-        mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_topic), payload="1", qos=0, retain=False)
+                mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic,field,date), payload=forecast[field], qos=0, retain=False)
+            #mqtt.publish("{}/weather/forecast/refreshed/{}".format(self.config.publish_provider_topic,date), payload="1", qos=0, retain=False)
+        mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
 
         logging.info("Forecast data published • Total: {}".format(len(forecast_values)))
 

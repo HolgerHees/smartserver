@@ -135,12 +135,12 @@ class Fetcher(object):
                 current_fields[messurementName] = mapping[1](self,fetched_values)
 
         for field, value in current_fields.items():
-            msg = "{}/weather/provider/current/{}".format(self.config.publish_topic,field)
+            msg = "{}/weather/provider/current/{}".format(self.config.publish_provider_topic,field)
             #logging.info("Publish: {} = {}".format(msg, value))
             mqtt.publish(msg, payload=value, qos=0, retain=False)
 
         observedFrom = datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).strftime("%Y-%m-%dT%H:%M:%S%z")
-        msg = "{}/weather/provider/current/refreshed".format(self.config.publish_topic)
+        msg = "{}/weather/provider/current/refreshed".format(self.config.publish_provider_topic)
 
         #logging.info("Publish: {} = {}".format(msg, observedFrom))
         mqtt.publish(msg, payload=observedFrom, qos=0, retain=False)
@@ -187,10 +187,10 @@ class Fetcher(object):
             for field, value in forcastSlot.items():
                 if field.startswith("index"):
                     continue
-                msg = "{}/weather/provider/forecast/{}/{}".format(self.config.publish_topic,field,date)
+                msg = "{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic,field,date)
                 #logging.info("Publish: {} = {}".format(msg, value))
                 mqtt.publish(msg, payload=value, qos=0, retain=False)
-        msg = "{}/weather/provider/forecast/refreshed".format(self.config.publish_topic)
+        msg = "{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic)
         #logging.info("Publish: {} = {}".format(msg, value))
         mqtt.publish(msg, payload="1", qos=0, retain=False)
 
