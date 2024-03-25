@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    fluentd_version: '1.16.3-debian-1.0'
+    fluentd_version: '1.16.4-debian-1.0'
   tags: [ 'update_notifier_config' ]    
   
 # force /var/log/journal as log target, instead of /run/log/journal
@@ -57,6 +57,7 @@
     user: "root:root"
     env:
       TZ: "{{timezone}}"
+      LD_PRELOAD: "" # fix SEGFAULT => https://github.com/fluent/fluentd-docker-image/issues/378
     log_driver: journald
     log_options:
       tag: fluentd
