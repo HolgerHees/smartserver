@@ -167,7 +167,7 @@ for name in sorted(images,key=cmp_to_key(sortImages)):
         
         cleaned = True
 
-        command.exec(["docker", "image", "rm", "{}".format(image_version.id)])
+        command.exec(["docker", "image", "rm", "-f", "{}".format(image_version.id)])
       
 if is_quite and not cleaned:
     print(u"No images deleted")
