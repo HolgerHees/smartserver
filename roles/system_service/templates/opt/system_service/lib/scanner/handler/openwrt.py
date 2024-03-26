@@ -404,7 +404,7 @@ class OpenWRT(_handler.Handler):
 
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
                     stat_data = stat.getData(connection_details)
-                    if not details["assoc"]: 
+                    if not details["assoc"] or "bytes" not in details or "rate" not in details or "signal" not in details:
                         stat_data.reset()
                     else:
                         if uid in self.wifi_associations[openwrt_ip]:
