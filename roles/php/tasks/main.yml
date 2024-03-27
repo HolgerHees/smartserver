@@ -40,6 +40,7 @@
     volumes:
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
+      - '{{global_log}}nextcloud:{{global_log}}nextcloud:z'       # needed by nextcloud role
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
     exposed_ports:
       - "9000"
