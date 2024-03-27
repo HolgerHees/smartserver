@@ -33,16 +33,19 @@ class Handler(Server):
 
         self.mqtt = DummyBroker(config) if config.mosquitto_host == "dummy" else MQTTBroker(config)
 
-        if config.api_provider == 'meteogroup':
-            self.provider = MeteoGroup(config, self.db, self.mqtt)
-        elif config.api_provider == 'openmeteo':
-            self.provider = OpenMeteo(config, self.db, self.mqtt)
-        elif config.api_provider == 'listener':
+        self.provider = None
+        if config.api_provider == 'listener':
             logging.info("Publishing disabled")
-            self.provider = None
         else:
-            logging.error("Unknown provider '{}'. Publishing disabled".format(config.api_provider))
-            self.provider = None
+            if config.publish_provider_topic:
+                if config.api_provider == 'meteogroup':
+                    self.provider = MeteoGroup(config, self.db, self.mqtt)
+                elif config.api_provider == 'openmeteo':
+                    self.provider = OpenMeteo(config, self.db, self.mqtt)
+                else:
+                    logging.error("Unknown provider '{}'. Publishing disabled".format(config.api_provider))
+            else:
+                logging.error("Missing publish topic. Publishing disabled")
 
         self.astro_consumer = AstroConsumer(config, self)
         self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self)
