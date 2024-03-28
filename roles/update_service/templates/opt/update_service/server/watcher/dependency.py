@@ -20,6 +20,9 @@ class DependencyWatcher(watcher.Watcher):
         self.initOutdatedRoles()
         
     def notifyChange(self, event):
+        if not ( event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_DELETE ) ):
+            return
+
         name = os.path.basename(event["pathname"])
         if event["mask"] & pyinotify.IN_CREATE:
             self.outdated_roles[name] = True
