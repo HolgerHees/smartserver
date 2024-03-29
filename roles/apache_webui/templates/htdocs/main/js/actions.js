@@ -149,7 +149,7 @@ mx.Actions = (function( ret ) {
 
             // is needed to show iframe content in case of a loading error.
             // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
-            iframeLoadingTimer = setTimeout(function(){ showError("loading"); },2000);
+            iframeLoadingTimer = setTimeout(function(){ showError("loading"); },5000);
         }
         else
         {
