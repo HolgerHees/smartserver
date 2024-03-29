@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    fluentd_version: '1.16.4-debian-1.0'
+    fluentd_version: '1.16.5-debian-1.0'
   tags: [ 'update_notifier_config' ]    
   
 # force /var/log/journal as log target, instead of /run/log/journal
