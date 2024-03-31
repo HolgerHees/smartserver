@@ -3,23 +3,30 @@
     fluentd_version: '1.16.5-debian-1.0'
   tags: [ 'update_notifier_config' ]    
   
-# force /var/log/journal as log target, instead of /run/log/journal
-- name: prepare needed directories
-  file:
-    path: "/var/log/journal"
-    state: directory
-    owner: "root"
-    group: "systemd-journal"
-    mode: "u=rwx,g=rx,o=rx,g+s"
-
-- name: check journald location
-  shell: "systemctl status systemd-journald | grep 'var/log/journal' > /dev/null && echo 'ok' || echo 'failed'"
-  changed_when: "journald_check.stdout == 'failed'"
+- name: set journald volatile mode
+  lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: '^#{0,1}Storage='
+    line: 'Storage=volatile'
   register: "journald_check"
 
+# force /var/log/journal as log target, instead of /run/log/journal
+#- name: prepare needed directories
+#  file:
+#    path: "/var/log/journal"
+#    state: directory
+#    owner: "root"
+#    group: "systemd-journal"
+#    mode: "u=rwx,g=rx,o=rx,g+s"
+
+#- name: check journald location
+#  shell: "systemctl status systemd-journald | grep 'var/log/journal' > /dev/null && echo 'ok' || echo 'failed'"
+#  changed_when: "journald_check.stdout == 'failed'"
+#  register: "journald_check"
+
 - name: change journald location
-  shell: "journalctl --flush"
-  when: "journald_check.stdout == 'failed'"
+  shell: "systemctl restart systemd-journald"
+  when: "journald_check.changed"
 
 #- name: restart journald
 #  systemd:
@@ -70,7 +77,7 @@
     volumes:
       - '{{ global_etc }}fluentd:/fluentd/etc/:z'
       - '{{ global_log }}:{{ global_log }}:z'
-      - '/var/log/journal:/var/log/journal:z'
+      - '/run/log/journal:/run/log/journal:z'
   notify: "restart fluentd"
     
 - name: allow fluentd service
