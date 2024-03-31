@@ -131,8 +131,15 @@ class Handler(Server):
             astro_data = self.astro_consumer.getValues()
             self.emitSocketData('details:data', current_data | week_data | astro_data, room)
 
-    def getTodayData(self):
-        return json.dumps(self.provider_consumer.getTodayOverviewValues())
+    def getWidgetData(self):
+        mode = self.getRequestValue("mode")
+        if mode == "mobile":
+            data = {}
+            data["current"] = self.provider_consumer.getCurrentValues()
+            data["forecast"] = self.provider_consumer.getTodayOverviewValues()
+            return json.dumps(data)
+        elif mode == "habpanel":
+            return json.dumps(self.provider_consumer.getTodayOverviewValues())
 
     def getStateMetrics(self):
         metrics = []
@@ -151,9 +158,9 @@ class Handler(Server):
 def getWeekData(day):
     handler.emitWeekData(handler.getSocketClient(), day)
 
-@serverWeb.route('/todayData/', methods = ['POST'])
+@serverWeb.route('/widgetData/', methods = ['POST'])
 def data():
-    return handler.getTodayData()
+    return handler.getWidgetData()
 
 handler = Handler()
 handler.start()

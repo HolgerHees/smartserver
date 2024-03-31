@@ -1,9 +1,9 @@
 <?php
 $ch = curl_init();
 
-curl_setopt($ch, CURLOPT_URL, $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["SERVER_NAME"]  . "/weather_service/api/todayData/");
+curl_setopt($ch, CURLOPT_URL, $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["SERVER_NAME"]  . "/weather_service/api/widgetData/");
 curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_POSTFIELDS, "type=today");
+curl_setopt($ch, CURLOPT_POSTFIELDS, "mode=habpanel");
 
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
