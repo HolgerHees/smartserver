@@ -7,17 +7,18 @@ import os
 from os import listdir, system
 from os.path import isfile, join, basename, normpath
 import xml.etree.ElementTree as ET
+from copy import deepcopy
 
 from smartserver.svg import fileGetContents, isForbiddenTag, cleanStyles, cleanGrayscaled
 
 base_src_path = "./"
-base_svg_target_path = "../etc/weather_service/icons/svg/"
-base_png_target_path = "../etc/weather_service/icons/png/"
-base_service_target_path = "../etc/weather_service/icons/"
+base_svg_target_path = "../opt/weather_service/icons/svg/"
+base_png_target_path = "../opt/weather_service/icons/png/"
+base_service_target_path = "../opt/weather_service/icons/"
 base_htdocs_target_path = "../htdocs/weather_service/icons/"
 
-base_service_live_target_path = "/dataDisk/etc/weather_service/icons/"
-base_htdocs_live_target_path = "/dataDisk/htdocs/weather_service/icons/"
+base_service_live_target_path = "/smartserver/opt/weather_service/icons/"
+base_htdocs_live_target_path = "/smartserver/htdocs/weather_service/icons/"
 
 main_icons = {
     "day": [],
@@ -42,14 +43,14 @@ rain_icons = {
     "snowflake4": { "cloudy": [ 0.5, 30, 65 ], "cloudy-day-0": [ 0.4, 72, 90 ], "cloudy-day-1": [ 0.5, 40, 65 ], "cloudy-day-2": [ 0.5, 30, 65 ], "cloudy-night-0": [ 0.4, 22, 90 ], "cloudy-night-1": [ 0.5, 15, 70 ], "cloudy-night-2": [ 0.5, 30, 65 ] },
 }
 rain_clipping = {
-    "raindrop1": { "cloudy": [ 24, 16 ], "cloudy-day-0": [ 34, 14 ], "cloudy-day-1": [ 27, 16 ], "cloudy-day-2": [ 22, 16 ], "cloudy-night-0": [ 14, 16 ], "cloudy-night-1": [ 15, 16 ], "cloudy-night-2": [ 23, 16 ] },
-    "raindrop2": { "cloudy": [ 21, 20 ], "cloudy-day-0": [ 31, 19 ], "cloudy-day-1": [ 25, 21 ], "cloudy-day-2": [ 19, 22 ], "cloudy-night-0": [ 11, 20 ], "cloudy-night-1": [ 12, 21 ], "cloudy-night-2": [ 19, 22 ] },
-    "raindrop3": { "cloudy": [ 18, 31 ], "cloudy-day-0": [ 30, 25 ], "cloudy-day-1": [ 22, 30 ], "cloudy-day-2": [ 17, 30 ], "cloudy-night-0": [ 10, 25 ], "cloudy-night-1": [ 10, 30 ], "cloudy-night-2": [ 17, 30 ] },
-    "raindrop4": { "cloudy": [ 17, 30 ], "cloudy-day-0": [ 30, 24 ], "cloudy-day-1": [ 22, 29 ], "cloudy-day-2": [ 16, 29 ], "cloudy-night-0": [ 10, 24 ], "cloudy-night-1": [ 9, 29 ], "cloudy-night-2": [ 16, 29 ] },
-    "snowflake1": { "cloudy": [ 22, 17 ], "cloudy-day-0": [ 34, 14 ], "cloudy-day-1": [ 27, 17 ], "cloudy-day-2": [ 22, 17 ], "cloudy-night-0": [ 14, 14 ], "cloudy-night-1": [ 16, 17 ], "cloudy-night-2": [ 23, 17 ] },
-    "snowflake2": { "cloudy": [ 19, 24 ], "cloudy-day-0": [ 31, 20 ], "cloudy-day-1": [ 24, 24 ], "cloudy-day-2": [ 19, 24 ], "cloudy-night-0": [ 12, 20 ], "cloudy-night-1": [ 12, 24 ], "cloudy-night-2": [ 19, 24 ] },
-    "snowflake3": { "cloudy": [ 15, 31 ], "cloudy-day-0": [ 30, 26 ], "cloudy-day-1": [ 21, 31 ], "cloudy-day-2": [ 16, 31 ], "cloudy-night-0": [ 10, 26 ], "cloudy-night-1": [ 9, 31 ], "cloudy-night-2": [ 16, 31 ] },
-    "snowflake4": { "cloudy": [ 16, 30 ], "cloudy-day-0": [ 29, 25 ], "cloudy-day-1": [ 21, 29 ], "cloudy-day-2": [ 15, 29 ], "cloudy-night-0": [ 9, 24 ], "cloudy-night-1": [ 8, 29 ], "cloudy-night-2": [ 16, 29 ] },
+    "raindrop1": { "cloudy": [ 24, 51, 16 ], "cloudy-day-0": [ 34, 51, 14 ], "cloudy-day-1": [ 27, 51, 16 ], "cloudy-day-2": [ 22, 51, 16 ], "cloudy-night-0": [ 14, 51, 16 ], "cloudy-night-1": [ 15, 51, 16 ], "cloudy-night-2": [ 23, 51, 16 ] },
+    "raindrop2": { "cloudy": [ 21, 51, 20 ], "cloudy-day-0": [ 31, 51, 19 ], "cloudy-day-1": [ 25, 51, 21 ], "cloudy-day-2": [ 19, 51, 22 ], "cloudy-night-0": [ 11, 51, 20 ], "cloudy-night-1": [ 12, 51, 21 ], "cloudy-night-2": [ 19, 51, 22 ] },
+    "raindrop3": { "cloudy": [ 18, 51, 31 ], "cloudy-day-0": [ 30, 51, 25 ], "cloudy-day-1": [ 22, 51, 30 ], "cloudy-day-2": [ 17, 51, 30 ], "cloudy-night-0": [ 10, 51, 25 ], "cloudy-night-1": [ 10, 51, 30 ], "cloudy-night-2": [ 17, 51, 30 ] },
+    "raindrop4": { "cloudy": [ 17, 51, 30 ], "cloudy-day-0": [ 30, 51, 24 ], "cloudy-day-1": [ 22, 51, 29 ], "cloudy-day-2": [ 16, 51, 29 ], "cloudy-night-0": [ 10, 51, 24 ], "cloudy-night-1": [ 9, 51, 29 ], "cloudy-night-2": [ 16, 51, 29 ] },
+    "snowflake1": { "cloudy": [ 22, 51, 17 ], "cloudy-day-0": [ 34, 51, 14 ], "cloudy-day-1": [ 27, 51, 17 ], "cloudy-day-2": [ 22, 51, 17 ], "cloudy-night-0": [ 14, 51, 14 ], "cloudy-night-1": [ 16, 51, 17 ], "cloudy-night-2": [ 23, 51, 17 ] },
+    "snowflake2": { "cloudy": [ 19, 51, 24 ], "cloudy-day-0": [ 31, 51, 20 ], "cloudy-day-1": [ 24, 51, 24 ], "cloudy-day-2": [ 19, 51, 24 ], "cloudy-night-0": [ 12, 51, 20 ], "cloudy-night-1": [ 12, 51, 24 ], "cloudy-night-2": [ 19, 51, 24 ] },
+    "snowflake3": { "cloudy": [ 15, 51, 31 ], "cloudy-day-0": [ 30, 51, 26 ], "cloudy-day-1": [ 21, 51, 31 ], "cloudy-day-2": [ 16, 51, 31 ], "cloudy-night-0": [ 10, 51, 26 ], "cloudy-night-1": [ 9, 51, 31 ], "cloudy-night-2": [ 16, 51, 31 ] },
+    "snowflake4": { "cloudy": [ 16, 51, 30 ], "cloudy-day-0": [ 29, 51, 25 ], "cloudy-day-1": [ 21, 51, 29 ], "cloudy-day-2": [ 15, 51, 33 ], "cloudy-night-0": [ 9, 51, 24 ], "cloudy-night-1": [ 8, 51, 29 ], "cloudy-night-2": [ 16, 51, 33 ] },
 }
 
 effect_icons = {
@@ -62,7 +63,7 @@ effect_icons = {
 
 style_config = {
     'grayscaled': [
-        'snowflake1','snowflake2','snowflake3','snowflake4','wind','temperature','rain','compass_circle','compass_needle','sun'
+        'snowflake1','snowflake2','snowflake3','snowflake4','wind','temperature','rain','raindrop','compass_circle','compass_needle','sun'
     ],
     'clean_grayscaled': [
         'raindrop1','raindrop2','raindrop3','raindrop4','thunder',
@@ -70,7 +71,7 @@ style_config = {
     ]
 }
 
-additionals = ["compass_circle","compass_needle","rain","temperature","wind","sun"]
+additionals = ["compass_circle","compass_needle","rain","raindrop","temperature","wind","sun"]
 
 ET.register_namespace("","http://www.w3.org/2000/svg")
 top = ET.Element('svg', attrib = { 'version':'1.1', 'xmlns:xlink':'http://www.w3.org/1999/xlink', 'x':"0px", 'y':"0px", 'viewBox':"0 0 64 64", 'enable-background':"new 0 0 64 64", 'xml:space':"preserve"})
@@ -139,6 +140,7 @@ def processFile(top, main, main_settings, rain, rain_settings, effect, effect_se
         main_content = fileGetContents( "{}{}.svg".format(base_src_path, main))
         appendChild(main_group, main_content, color_type, main)
         top_group.append(main_group)
+
         top.append(top_group)
 
         if rain is not None:
@@ -152,23 +154,34 @@ def processFile(top, main, main_settings, rain, rain_settings, effect, effect_se
             rain_xml = appendChild(rain_group, rain_content, color_type, rain)
             top_group.append(rain_group)
 
-            #defs = ET.Element('defs')
-            #top_group.append(defs)
             mask = ET.Element('mask', attrib = { 'id': "mask_{}".format(name) })
             rect = ET.Element('rect', attrib = { "x": "0", "y": "0", "width": "64", "height": "64", "fill": "white" })
             mask.append(rect)
 
-            #rect = ET.Element('rect', attrib = { "x": "0", "y": "0", "width": "100%", "height": "100%", "fill": "black" })
-            #rain_group.append(rect)
-
             clipping = rain_clipping[rain][main]
-            rect = ET.Element('rect', attrib = { "x": str(clipping[0] ), "y": "48", "width": str(clipping[1]), "height": "9", "fill": "var(--svg-weather-mask-fill)" })
-            #applyTransform(mask_rect, settings)
+            rect = ET.Element('rect', attrib = { "x": str(clipping[0] ), "y": str(clipping[1]), "width": str(clipping[2]), "height": "4", "fill": "black" })
             mask.append(rect)
-
             top.append(mask)
 
-            main_group.attrib["mask"] = "url(#mask_{})".format(name)
+            parent_map = {c: p for p in main_group.iter() for c in p}
+
+            tmp = main_group.findall(".//*[@id='clouds']")
+            if len(tmp) > 0:
+                _tmp = deepcopy(tmp[0])
+                _tmp.attrib["id"] = "clouds_mask"
+                for key in list(_tmp.attrib.keys()):
+                    if key[:6] == "stroke":
+                        del _tmp.attrib[key]
+                #print(parent_map[tmp[0]])
+                parent_map[tmp[0]].insert(0, _tmp)
+
+                tmp[0].attrib["fill"] = "transparent"
+                tmp[0].attrib["mask"] = "url(#mask_{})".format(name)
+            #else:
+            #    main_group.attrib["mask"] = "url(#mask_{})".format(name)
+
+            #rect = ET.Element('rect', attrib = { "x": str(clipping[0] ), "y": str(clipping[1] - 5), "width": str(clipping[2]), "height": "7", "fill": "var(--svg-weather-clouds-fill)" })
+            #top_group.append(rect)
 
 
         if effect is not None:
@@ -187,7 +200,7 @@ def processFile(top, main, main_settings, rain, rain_settings, effect, effect_se
         data = ET.tostring(top,encoding='utf8', method='xml').decode("utf-8")
         save(data,base_svg_target_path,filename)
 
-        all_files.append("{}#{}".format(filename,name))
+        all_files.append([filename,name,data])
 
 	#xml = ET.fromstring(content)
 
@@ -223,26 +236,57 @@ for name in additionals:
         data = ET.tostring(top,encoding='utf8', method='xml').decode("utf-8")
         save(data,base_svg_target_path,filename)
 
-        all_files.append("{}#{}".format(filename,name))
+        all_files.append([filename,name,data])
 
 system('mogrify -background "#00000000" -path {} -format png {}*colored.svg'.format(base_png_target_path, base_svg_target_path))
 
 html = """
-<html class='lightTheme'><head>
-<link rel="stylesheet" href="/weather/css/main.css">
-<link rel="stylesheet" href="/weather/css/page.css">
+<html><head>
 <style>
+body {
+    background-color: black;
+}
+svg {
+    --svg-weather-clouds-stroke: blue;
+    --svg-weather-clouds-stroke-width: 1px;
+    --svg-weather-clouds-fill: red;
+    --svg-weather-sun-stroke: rgba(255, 165, 0, 0.5);
+    --svg-weather-sun-stroke-width: 1px;
+    --svg-weather-sun-fill: yellow;
+    --svg-weather-moon-stroke: white;
+    --svg-weather-moon-stroke-width: 1px;
+    --svg-weather-moon-fill: white;
+    --svg-weather-stars-stroke: gray;
+    --svg-weather-stars-stroke-width: 0.5px;
+    --svg-weather-stars-fill: white;
+    --svg-weather-thunder-stroke: rgba(255, 165, 0, 1.0);
+    --svg-weather-thunder-stroke-width: 1px;
+    --svg-weather-thunder-fill: rgba(255, 165, 0, 0.2);
+    --svg-weather-raindrop-stroke: #0055ff;
+    --svg-weather-raindrop-stroke-width: 4px;
+    --svg-weather-raindrop-fill: #0055ff;
+    --svg-weather-snowflake-stroke: #0055ff;
+    --svg-weather-snowflake-stroke-width: 1px;
+    --svg-weather-snowflake-fill: #0055ff;
+}
 svg {
     border: 1px solid red;
+    width: 64px;
+    height: 64px;
 }
 </style>
 </head><body><div class='mvWidget'><div class='weatherForecast'><div class='cloud'>"""
-for filename in all_files:
+for filename, name, svg in all_files:
     if "grayscaled" not in filename:
         continue
-    html = '{}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="height:64px;width:65px;padding:10px;">'.format(html)
-    html = '{}<use ShadowRootMode="open" href="/weather/icons/svg/{}">'.format(html,filename)
-    html = '{}</svg>'.format(html)
+
+    #print(filename)
+
+    html = '{}{}'.format(html,svg)
+
+    #html = '{}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="height:64px;width:65px;padding:10px;">'.format(html)
+    #html = '{}<use ShadowRootMode="open" href="./svg/{}">'.format(html,filename)
+    #html = '{}</svg>'.format(html)
 
 html = "{}</div></div></div></body></html>".format(html)
 

@@ -318,6 +318,10 @@ class ProviderConsumer():
             self.station_cloud_svg = self._buildCloudSVG()
 
         result["currentCloudsAsSVG"] = self.station_cloud_svg
+
+        is_raining = result["currentRainLast15MinInMillimeter"] > 0 or result["currentRainLastHourInMillimeter"] > 0 or result["currentRainLevel"] > 0
+        result["currentRainProbabilityInPercent"] = 0 if self.current_values is None or not is_raining else self.current_values["precipitationProbabilityInPercent"]
+        result["currentSunshineDurationInMinutes"] = 0 if self.current_values is None else self.current_values["sunshineDurationInMinutes"]
         return result
 
     def _convertToDictList(self, blockList):

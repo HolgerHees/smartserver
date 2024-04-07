@@ -17,6 +17,7 @@ class WeatherBlock():
         self.precipitationProbabilityInPercent= 0
         self.precipitationAmountInMillimeter= 0
         self.airTemperatureInCelsius = -100
+        self.feelsLikeTemperatureInCelsius = -100
         self.windSpeedInKilometerPerHour= 0
         self.windDirectionInDegree= 0
 
@@ -93,6 +94,9 @@ class WeatherBlock():
 
         if self.airTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
             self.airTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+
+        if self.feelsLikeTemperatureInCelsius < hourlyData['feelsLikeTemperatureInCelsius']:
+            self.feelsLikeTemperatureInCelsius = hourlyData['feelsLikeTemperatureInCelsius']
 
         if self.windSpeedInKilometerPerHour < hourlyData['windSpeedInKilometerPerHour']:
             self.windSpeedInKilometerPerHour = hourlyData['windSpeedInKilometerPerHour']

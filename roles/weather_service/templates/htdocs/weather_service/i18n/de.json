@@ -15,6 +15,10 @@
     "Rain": "Regen",
     "Sunrise": "Sonnenaufgang",
     "Sunset": "Sonnenuntergang",
-    "UV Index": "UV Index"
+    "UV Index": "UV Index",
+    "Night": "Nacht",
+    "Evening": "Abend",
+    "Lunch": "Mittag",
+    "Morning": "Morgen"
   }
 }
