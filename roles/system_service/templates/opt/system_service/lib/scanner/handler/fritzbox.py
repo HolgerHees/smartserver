@@ -358,10 +358,11 @@ class Fritzbox(_handler.Handler):
             now = datetime.now()
             for device in devices:
                 mac = device.getMAC()
-                if mac not in self.dhcp_clients[fritzbox_ip]:
-                    new_clients[mac] = device
-                elif (now - self.dhcp_clients[fritzbox_ip][mac]).total_seconds() >= self.config.fritzbox_network_interval:
-                    outdated_clients[mac] = device
+                if mac is not None:
+                    if mac not in self.dhcp_clients[fritzbox_ip]:
+                        new_clients[mac] = device
+                    elif (now - self.dhcp_clients[fritzbox_ip][mac]).total_seconds() >= self.config.fritzbox_network_interval:
+                        outdated_clients[mac] = device
                 else:
                     continue
                 
