@@ -24,7 +24,7 @@ curl_close($ch);
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php echo Ressources::getModules(["/weather_service/"]); ?>
+<?php echo Ressources::getModules(["/weather_service/"], types: ["js"] ); ?>
 <script>
 var json_data = <?php echo json_encode($result); ?>;
 var data = JSON.parse(json_data);
@@ -41,9 +41,6 @@ mx.WeatherCore = (function( ret ) {
 
     ret.init = function()
     {
-
-        console.log(data);
-
         mx.I18N.process(document);
 
         mx.$(".summary .cloud").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["currentCloudsAsSVG"]);
