@@ -18,64 +18,26 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $result = curl_exec($ch);
 curl_close($ch);
 
-//print_r($values);
+$data = json_decode($result, true);
 
+$i18n = Ressources::getI18NContentAsObject([__DIR__]);
+
+/*$block_title = array(
+	'21' => 'Night',
+	'16' => 'Evening',
+	'11' => 'Lunch',
+	'6' => 'Morning',
+	'1' => 'Night'
+};*/
+
+function getI18N($string, $i18n)
+{
+    return array_key_exists($string, $i18n["index"] ) ?  $i18n["index"][$string] : $string;
+}
 ?>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php echo Ressources::getModules(["/weather_service/"], types: ["js"] ); ?>
-<script>
-var json_data = <?php echo json_encode($result); ?>;
-var data = JSON.parse(json_data);
-
-var block_title = {
-	'21': 'Night',
-	'16': 'Evening',
-	'11': 'Lunch',
-	'6': 'Morning',
-	'1': 'Night'
-};
-
-mx.WeatherCore = (function( ret ) {
-
-    ret.init = function()
-    {
-        mx.I18N.process(document);
-
-        mx.$(".summary .cloud").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["currentCloudsAsSVG"]);
-
-        mx.$(".summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["currentAirTemperatureInCelsius"]) + ' °';
-        mx.$(".summary .perceived .value").innerHTML = mx.I18N.get("Perceived") + " " + mx.WeatherHelper.formatNumber(data["current"]["currentPerceivedTemperatureInCelsius"]) + ' °';
-
-        mx.$(".summary .rain_probability .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["currentRainProbabilityInPercent"]) + ' %';
-        mx.$(".summary .rain_ammount .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["currentRainLastHourInMillimeter"]) + ' mm';
-
-        mx.$(".summary .sunshine .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["currentSunshineDurationInMinutes"]) + ' min';
-        mx.$(".summary .wind .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["currentWindSpeedInKilometerPerHour"]) + ' km/h';
-
-        var blockNode = mx.$(".details .block");
-        data["forecast"]["dayList"].forEach(function(data)
-        {
-            var start = new Date(data["start"]);
-            var _blockNode = blockNode.cloneNode(true);
-            mx._$(".name", _blockNode).innerHTML = mx.WeatherHelper.formatHour(start);// + " - " + mx.I18N.get(block_title[start.getHours()]);
-            mx._$(".cloud", _blockNode).innerHTML = data["svg"];
-            mx._$(".temperature .real", _blockNode).innerHTML = Number((data["airTemperatureInCelsius"]).toFixed(0)) + "°";
-            mx._$(".temperature .perceived", _blockNode).innerHTML = Number((data["minAirTemperatureInCelsius"]).toFixed(0)) + "°";
-
-            blockNode.parentNode.appendChild(_blockNode);
-            //console.log(_blockNode.innerHTML);
-        });
-        blockNode.parentNode.removeChild(blockNode);
-    }
-
-    return ret;
-})( mx.WeatherCore || {} );
-
-mx.OnDocReady.push( mx.WeatherCore.init );
-
-</script>
 <style>
 .cloud svg {
     --svg-weather-clouds-stroke: gray;
@@ -156,26 +118,28 @@ body {
 <body style="background-color:transparent">
 <div class="content">
     <div class="summary">
-        <div class="block cloud"></div>
+        <div class="block cloud"><?php echo $data["current"]["currentCloudsAsSVG"]; ?></div>
         <div class="block">
-            <div class="temperature"><div class="value"></div></div>
-            <div class="perceived"><div class="value"></div></div>
+            <div class="temperature"><div class="value"><?php echo round($data["current"]["currentAirTemperatureInCelsius"], 1); ?>°</div></div>
+            <div class="perceived"><div class="value"><?php echo getI18N("Perceived", $i18n) . " " . round($data["current"]["currentPerceivedTemperatureInCelsius"], 1); ?>°</div></div>
         </div>
         <div class="block">
-            <div class="rain_probability"><div class="icon"><?php echo getSVG('wind', 'rain_grayscaled'); ?></div><div class="value"></div></div>
-            <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"></div></div>
+            <div class="rain_probability"><div class="icon"><?php echo getSVG('wind', 'rain_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentRainProbabilityInPercent"], 0); ?> %</div></div>
+            <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentRainLastHourInMillimeter"], 1); ?> min</div></div>
         </div>
         <div class="block">
-            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"></div></div>
-            <div class="wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"></div></div>
+            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentSunshineDurationInMinutes"], 0); ?> mm</div></div>
+            <div class="wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentWindSpeedInKilometerPerHour"], 1); ?> km/h</div></div>
         </div>
     </div>
     <div class="details">
+<?php foreach( $data["forecast"]["dayList"] as $day ) {?>
         <div class="block">
-            <div class="name"></div>
-            <div class="cloud"></div>
-            <div class="temperature"><div class="real"></div><div class="perceived"></div></div>
+            <div class="name"><?php echo date_create($day["start"])->format("H:i"); ?></div>
+            <div class="cloud"><?php echo $day["svg"]; ?></div>
+            <div class="temperature"><div class="real"><?php echo round($day["airTemperatureInCelsius"], 0); ?>°</div><div class="perceived"><?php echo round($day["minAirTemperatureInCelsius"], 0); ?>°</div></div>
         </div>
+<?php } ?>
     </div>
 </div>
 </body>

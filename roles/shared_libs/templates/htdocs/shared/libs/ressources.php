@@ -26,6 +26,24 @@ class Ressources
         return $content;
     }
 
+    public static function getI18NContentAsObject($directories)
+    {
+        $lang = Ressources::getLang();
+        $i18n_result = array();
+        foreach ($directories as $dir)
+        {
+            $i18n_file = $dir . '/i18n/' . $lang . '.json';
+            if( !is_file( $i18n_file ) ) continue;
+
+            $stream = fopen($i18n_file, 'r');
+            $_content = stream_get_contents($stream);
+            $data = json_decode($_content, true);
+            $i18n_result = array_merge($i18n_result, $data);
+            fclose($stream);
+        }
+        return $i18n_result;
+    }
+
     private static function getContent($path,$suffix)
     {
         $len = strlen($suffix);
