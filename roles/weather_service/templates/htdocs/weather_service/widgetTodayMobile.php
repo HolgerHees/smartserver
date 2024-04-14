@@ -29,11 +29,6 @@ $i18n = Ressources::getI18NContentAsObject([__DIR__]);
 	'6' => 'Morning',
 	'1' => 'Night'
 };*/
-
-function getI18N($string, $i18n)
-{
-    return array_key_exists($string, $i18n["index"] ) ?  $i18n["index"][$string] : $string;
-}
 ?>
 <html>
 <head>
@@ -121,14 +116,14 @@ body {
         <div class="block cloud"><?php echo $data["current"]["currentCloudsAsSVG"]; ?></div>
         <div class="block">
             <div class="temperature"><div class="value"><?php echo round($data["current"]["currentAirTemperatureInCelsius"], 1); ?>°</div></div>
-            <div class="perceived"><div class="value"><?php echo getI18N("Perceived", $i18n) . " " . round($data["current"]["currentPerceivedTemperatureInCelsius"], 1); ?>°</div></div>
+            <div class="perceived"><div class="value"><?php echo Ressources::getI18NString("Perceived", $i18n) . " " . round($data["current"]["currentPerceivedTemperatureInCelsius"], 1); ?>°</div></div>
         </div>
         <div class="block">
             <div class="rain_probability"><div class="icon"><?php echo getSVG('wind', 'rain_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentRainProbabilityInPercent"], 0); ?> %</div></div>
-            <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentRainLastHourInMillimeter"], 1); ?> min</div></div>
+            <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentSunshineDurationInMinutes"], 1); ?> min</div></div>
         </div>
         <div class="block">
-            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentSunshineDurationInMinutes"], 0); ?> mm</div></div>
+            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentRainLastHourInMillimeter"], 0); ?> mm</div></div>
             <div class="wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentWindSpeedInKilometerPerHour"], 1); ?> km/h</div></div>
         </div>
     </div>
