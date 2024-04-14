@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 import os
 import threading
+import schedule
 
 import time
 
@@ -52,6 +53,8 @@ class ProviderConsumer():
         self.station_values = {}
         self.station_values_last_modified = 0
 
+        self.is_night = False;
+
         with self.db.open() as db:
             self.field_names = db.getFields()
             self.current_values = db.getOffset(0)
@@ -62,6 +65,9 @@ class ProviderConsumer():
             self._dump()
 
         self.mqtt.subscribe('+/weather/provider/#', self.on_message)
+
+        self.checkSunriseSunset()
+        schedule.every(5).minutes.do(self.checkSunriseSunset)
 
         self.is_running = True
 
@@ -245,7 +251,7 @@ class ProviderConsumer():
         if self.current_values is None:
             return None
 
-        block = WeatherBlock(self.current_values['datetime'])
+        block = WeatherBlock(datetime.now())
         block.apply(self.current_values)
 
         currentRain = 0
@@ -286,14 +292,6 @@ class ProviderConsumer():
                 self.station_fallback_data = None
             self.notifyCurrentValue(field, value)
 
-    def _notifyCloudValue(self):
-        self.station_cloud_timer = None
-
-        currentCloudsAsSVG = self._buildCloudSVG()
-        if self.station_cloud_svg != currentCloudsAsSVG:
-            self.handler.notifyChangedCurrentData("currentCloudsAsSVG", currentCloudsAsSVG)
-            self.station_cloud_svg = currentCloudsAsSVG
-
     def notifyCurrentValue(self, field, value):
         self.handler.notifyChangedCurrentData(field, value)
 
@@ -302,6 +300,21 @@ class ProviderConsumer():
                 self.station_cloud_timer.cancel()
             self.station_cloud_timer = threading.Timer(15, self._notifyCloudValue)
             self.station_cloud_timer.start()
+
+    def checkSunriseSunset(self):
+        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude)
+        now = datetime.now()
+        is_night = ( now < sunrise or now > sunset )
+        if is_night != self.is_night:
+            self.is_night = is_night
+            self._notifyCloudValue()
+
+    def _notifyCloudValue(self):
+        self.station_cloud_timer = None
+        currentCloudsAsSVG = self._buildCloudSVG()
+        if self.station_cloud_svg != currentCloudsAsSVG:
+            self.handler.notifyChangedCurrentData("currentCloudsAsSVG", currentCloudsAsSVG)
+            self.station_cloud_svg = currentCloudsAsSVG
 
     def getCurrentValues(self):
         result = {}
