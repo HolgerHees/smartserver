@@ -96,7 +96,7 @@ function getData($url, $age, $auth)
 
 function fetchUrl( $url, $auth )
 {
-    apcu_store( $url . ":fetch", 1 );
+    apcu_store( $url . ":fetch", 1, 120 );
 
     $c = initCurl($url, $auth);
 

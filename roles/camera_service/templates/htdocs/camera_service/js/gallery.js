@@ -305,7 +305,7 @@ mx.Gallery = (function( ret ) {
 
             if( values.length > 0 )
             {
-                slotDIV.dataset.formattedtime = String(currenttime.getDate()).padStart(2, '0') + "." + String(currenttime.getMonth()).padStart(2, '0') + ". " + String(currenttime.getHours() + 1).padStart(2, '0') + ":00";
+                slotDIV.dataset.formattedtime = String(currenttime.getDate()).padStart(2, '0') + "." + String(currenttime.getMonth() + 1).padStart(2, '0') + ". " + String(currenttime.getHours() + 1).padStart(2, '0') + ":00";
                 slotDIV.dataset.count = values.length;
             }
 
@@ -351,7 +351,7 @@ mx.Gallery = (function( ret ) {
         container.setAttribute("onclick", "mx.Gallery.openDetails(this)" );
         container.dataset.name = element_data["name"];
         var datetime = new Date(element_data["timestamp"] * 1000);
-        container.dataset.formatted = String(datetime.getDate()).padStart(2, '0') + "." + String(datetime.getMonth()).padStart(2, '0') + ". " + String(datetime.getHours()).padStart(2, '0') + ":" + String(datetime.getMinutes()).padStart(2, '0') + ":" + String(datetime.getSeconds()).padStart(2, '0');
+        container.dataset.formatted = String(datetime.getDate()).padStart(2, '0') + "." + String(datetime.getMonth() + 1).padStart(2, '0') + ". " + String(datetime.getHours()).padStart(2, '0') + ":" + String(datetime.getMinutes()).padStart(2, '0') + ":" + String(datetime.getSeconds()).padStart(2, '0');
         container.dataset.src = element_data["name"] + ".jpg";
         container.dataset.small_src = element_data["name"] + "_small.jpg";
         container.dataset.medium_src = element_data["name"] + "_medium.jpg";
