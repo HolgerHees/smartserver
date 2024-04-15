@@ -44,6 +44,11 @@ class Ressources
         return $i18n_result;
     }
 
+    public static function getI18NString($key, $i18n)
+    {
+        return in_array($key, $i18n ) ? $i18n[$key] : $key;
+    }
+
     private static function getContent($path,$suffix)
     {
         $len = strlen($suffix);
