@@ -126,14 +126,15 @@ body {
     display: none;
 }
 .timerow .timeslot {
-    height: 10px;
-    width: 5px;
-    background-color: white;
+    height: 8px;
+    width: 3px;
+    background-color: #ffffffBB;
+    border: 1px solid gray;
     display: none;
 }
 .timerow:nth-child(2) .timeslot {
     display: block;
-    margin-top: 3%;
+    margin-top: 2px;
     margin-left: <?php echo $margin; ?>%;
 }
 </style>

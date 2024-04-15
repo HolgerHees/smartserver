@@ -44,9 +44,9 @@ class Ressources
         return $i18n_result;
     }
 
-    public static function getI18NString($key, $i18n)
+    public static function getI18NString($key, $i18n, $group = "index" )
     {
-        return in_array($key, $i18n ) ? $i18n[$key] : $key;
+        return array_key_exists($group, $i18n ) && array_key_exists($key, $i18n[$group] ) ? $i18n[$group][$key] : $key;
     }
 
     private static function getContent($path,$suffix)
