@@ -67,8 +67,6 @@ class ProviderConsumer():
         self.mqtt.subscribe('+/weather/provider/#', self.on_message)
 
         self.checkSunriseSunset()
-        schedule.every(5).minutes.do(self.checkSunriseSunset)
-
         self.is_running = True
 
     def terminate(self):
@@ -304,10 +302,21 @@ class ProviderConsumer():
     def checkSunriseSunset(self):
         sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude)
         now = datetime.now()
-        is_night = ( now < sunrise or now > sunset )
+        is_night = ( now <= sunrise or now >= sunset )
         if is_night != self.is_night:
             self.is_night = is_night
             self._notifyCloudValue()
+
+        logging.info("TRIGGER: checkSunriseSunset => " + str(self.is_night))
+
+        if now < sunrise or now > sunset:
+            logging.info("SCHEDULE SUNRISE: " + sunrise.strftime("%H:%M:%S"))
+            schedule.every().day.at(sunrise.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
+        else:
+            logging.info("SCHEDULE SUNSET: " + sunset.strftime("%H:%M:%S"))
+            schedule.every().day.at(sunset.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
+
+        return schedule.CancelJob
 
     def _notifyCloudValue(self):
         self.station_cloud_timer = None
@@ -335,6 +344,8 @@ class ProviderConsumer():
         is_raining = result["currentRainLast15MinInMillimeter"] > 0 or result["currentRainLastHourInMillimeter"] > 0 or result["currentRainLevel"] > 0
         result["currentRainProbabilityInPercent"] = 0 if self.current_values is None or not is_raining else self.current_values["precipitationProbabilityInPercent"]
         result["currentSunshineDurationInMinutes"] = 0 if self.current_values is None else self.current_values["sunshineDurationInMinutes"]
+
+        result["currentTime"] = datetime.now().isoformat()
         return result
 
     def _convertToDictList(self, blockList):

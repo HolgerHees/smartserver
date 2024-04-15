@@ -29,6 +29,15 @@ $i18n = Ressources::getI18NContentAsObject([__DIR__]);
 	'6' => 'Morning',
 	'1' => 'Night'
 };*/
+
+$starttime = date_create($data["forecast"]["dayList"][0]["start"])->getTimestamp();
+$endtime = date_create($data["forecast"]["dayList"][1]["start"])->getTimestamp();
+$currenttime = date_create($data["current"]["currentTime"])->getTimestamp();
+
+$total_diff = $endtime - $starttime;
+$current_diff = $currenttime - $starttime;
+
+$margin = round($current_diff * 100 / $total_diff);
 ?>
 <html>
 <head>
@@ -108,6 +117,25 @@ body {
     margin-right: 3px;
     font-weight: bold;
 }
+.timerow {
+    flex-grow: 1;
+    flex-basis: 0;
+    padding: 0 5px;
+}
+.timerow:last-of-type {
+    display: none;
+}
+.timerow .timeslot {
+    height: 10px;
+    width: 5px;
+    background-color: white;
+    display: none;
+}
+.timerow:nth-child(2) .timeslot {
+    display: block;
+    margin-top: 3%;
+    margin-left: <?php echo $margin; ?>%;
+}
 </style>
 </head>
 <body style="background-color:transparent">
@@ -134,6 +162,7 @@ body {
             <div class="cloud"><?php echo $day["svg"]; ?></div>
             <div class="temperature"><div class="real"><?php echo round($day["airTemperatureInCelsius"], 0); ?>°</div><div class="perceived"><?php echo round($day["minAirTemperatureInCelsius"], 0); ?>°</div></div>
         </div>
+        <div class="timerow"><div class="timeslot"></div></div>
 <?php } ?>
     </div>
 </div>
