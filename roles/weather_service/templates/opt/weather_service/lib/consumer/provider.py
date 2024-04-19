@@ -344,8 +344,6 @@ class ProviderConsumer():
         is_raining = result["currentRainLast15MinInMillimeter"] > 0 or result["currentRainLastHourInMillimeter"] > 0 or result["currentRainLevel"] > 0
         result["currentRainProbabilityInPercent"] = 0 if self.current_values is None or not is_raining else self.current_values["precipitationProbabilityInPercent"]
         result["currentSunshineDurationInMinutes"] = 0 if self.current_values is None else self.current_values["sunshineDurationInMinutes"]
-
-        result["currentTime"] = datetime.now().isoformat()
         return result
 
     def _convertToDictList(self, blockList):
@@ -441,19 +439,7 @@ class ProviderConsumer():
     def getTodayOverviewValues(self):
         with self.db.open() as db:
             start = datetime.now()
-            if start.hour >= 21:
-                start = start.replace(hour=21, minute=0, second=0, microsecond=0)
-            elif start.hour >= 16:
-                start = start.replace(hour=16, minute=0, second=0, microsecond=0)
-            elif start.hour >= 11:
-                start = start.replace(hour=11, minute=0, second=0, microsecond=0)
-            elif start.hour >= 6:
-                start = start.replace(hour=6, minute=0, second=0, microsecond=0)
-            elif start.hour >= 1:
-                start = start.replace(hour=1, minute=0, second=0, microsecond=0)
-            else:
-                start = start.replace(hour=21, minute=0, second=0, microsecond=0)
-
+            start = start.replace(minute=0, second=0, microsecond=0)
             end = start + timedelta(hours=24)
 
             dayList = db.getRangeList(start, end)
@@ -461,24 +447,28 @@ class ProviderConsumer():
             if len(dayList) > 0:
                 todayValues = [];
 
-                blockConfigs = [ 21, 16, 11, 6, 1 ]
+                blockConfigs = []
 
                 current_value = None;
+                hour_count = 0
                 for hourlyData in dayList:
                     hour = hourlyData['datetime'].hour;
+                    if hour_count >= 5:
+                        current_value.setEnd(hourlyData['datetime'])
+                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                        current_value.setSVG(self.getCachedIcon(icon_name))
+                        todayValues.append(current_value)
+                        current_value = None
+                        hour_count = 0
 
-                    if hour in blockConfigs:
-                        if current_value is not None:
-                            current_value.setEnd(hourlyData['datetime'])
-                            icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                            current_value.setSVG(self.getCachedIcon(icon_name))
-                            todayValues.append(current_value)
+                    if current_value is None:
                         current_value = WeatherBlock( hourlyData['datetime'] )
 
                     current_value.apply(hourlyData)
-
                     if len(todayValues) == 4:
                         break
+
+                    hour_count += 1
 
                 minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
             else:
