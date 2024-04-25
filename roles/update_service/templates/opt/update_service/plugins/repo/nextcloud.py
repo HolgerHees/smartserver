@@ -33,12 +33,14 @@ class Repository(object):
             #print(current_versions)
 
             result = command.exec([ "docker","exec", "php", "sh", "-c", "php {}nextcloud/occ app:update --showonly".format(self.htdocs_dir) ] )
-            lines = result.stdout.decode("utf-8").split("\n")
-            for line in lines:
-                columns = line.split()
-                if len(columns) == 0:
-                    continue
-                apps.append(Application(columns[0], columns[-1], current_versions[columns[0]], self.job_config['url']))
+            stdout = result.stdout.decode("utf-8")
+            if 'no updates' not in stdout:
+                lines = result.stdout.decode("utf-8").split("\n")
+                for line in lines:
+                    columns = line.split()
+                    if len(columns) == 0:
+                        continue
+                    apps.append(Application(columns[0], columns[-1], current_versions[columns[0]], self.job_config['url']))
             return apps
         else:
             return None
