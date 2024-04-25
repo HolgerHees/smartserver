@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '28.0.4' # patches in "enable_apps" beim nächsten Update überprüfen
+    nextcloud_version: '29.0.0' # patches in "enable_apps" beim nächsten Update überprüfen
 
     # 1. check for news update (blocker)
     # 2. upgrade keeweb at the same time
@@ -245,7 +245,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
     group: "nextcloud"
     log: "cron"
     minute: "*/5"

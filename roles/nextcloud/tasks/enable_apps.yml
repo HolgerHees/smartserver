@@ -79,6 +79,7 @@
   register: app_update_process_result
   changed_when: "'updated' in app_update_process_result.stdout"
   with_items: "{{app_update_available_result.stdout_lines}}"
+  when: "'no updates' not in app_update_available_result.stdout"
 
 #- name: show available app updates
 #  debug:
