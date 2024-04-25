@@ -159,7 +159,7 @@
     
 # habpanel if exists
 - name: check habpanel config
-  shell: "ls {{projects_path}}openhab_config/habpanel_panelconfig.json"
+  shell: "ls {{projects_path}}openhab_config/jsondb/uicomponents_habpanel_panelconfig.json"
   register: habpanel_result
   changed_when: no
   failed_when: no
@@ -167,7 +167,7 @@
    
 - name: synchronize habpanel config => habpanel_result.rc == 0
   synchronize:
-    src: "{{projects_path}}openhab_config/habpanel_panelconfig.json"
+    src: "{{projects_path}}openhab_config/jsondb/uicomponents_habpanel_panelconfig.json"
     dest: "{{global_lib}}openhab/jsondb/uicomponents_habpanel_panelconfig.json"
     archive: no
     checksum: yes
