@@ -114,9 +114,9 @@ mx.WeatherCore = (function( ret ) {
             }
         });
     }
+
     function refreshWeek(day)
     {
-        console.log("emit");
         mx.WeatherCore.socket.emit('getWeekData', day);
     }
 

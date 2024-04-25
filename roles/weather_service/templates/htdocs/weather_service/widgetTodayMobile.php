@@ -115,6 +115,13 @@ body {
 .details .block > div {
     justify-content: center;
 }
+
+.state {
+    margin-top: 5px;
+    font-size: 12px;
+    color: white;
+    opacity: 0.7;
+}
 </style>
 </head>
 <body style="background-color:transparent">
@@ -139,11 +146,16 @@ body {
         <div class="block">
             <div class="name"><div><?php echo date_create($day["start"])->format("H:i"); ?></div></div>
             <div class="cloud"><?php echo $day["svg"]; ?></div>
-            <div class="temperature"><div class="real"><?php echo round($day["airTemperatureInCelsius"], 0); ?>°</div><?php if( round($day["airTemperatureInCelsius"], 0) != round($day["minAirTemperatureInCelsius"], 0) ) { ?><div class="perceived"><?php echo round($day["minAirTemperatureInCelsius"], 0); ?>°</div><?php } ?></div>
+            <div class="temperature"><div class="real"><?php echo round($day["minAirTemperatureInCelsius"], 0); ?>°</div><?php if( round($day["minAirTemperatureInCelsius"], 0) != round($day["maxAirTemperatureInCelsius"], 0) ) { ?><div class="perceived"><?php echo round($day["maxAirTemperatureInCelsius"], 0); ?>°</div><?php } ?></div>
             <div class="rain"><div class="perceived"><?php echo round($day["precipitationProbabilityInPercent"], 0); ?>%</div><div class="amount">, <?php echo round($day["precipitationAmountInMillimeter"], 1); ?>mm</div></div>
         </div>
 <?php } ?>
     </div>
+    <div class="state"><?php
+        $date = new DateTime();
+        $date->setTimezone(new DateTimeZone($_SERVER['TZ']));
+        echo $date->format('d.m H:i:s');
+    ?></div>
 </div>
 </body>
 </html>
