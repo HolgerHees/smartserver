@@ -10,8 +10,8 @@ server:
   http_listen_port: 3100
   http_server_read_timeout: 300s # allow longer time span queries
   http_server_write_timeout: 300s # allow longer time span queries
-  grpc_server_max_recv_msg_size: 8388608
-  grpc_server_max_send_msg_size: 8388608
+  grpc_server_max_recv_msg_size: 33554432
+  grpc_server_max_send_msg_size: 33554432
   grpc_server_max_concurrent_streams: 200
 
 # will fix a lot of "context canceled" log messages
