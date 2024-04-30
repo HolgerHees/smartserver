@@ -9,7 +9,7 @@ import schedule
 from functools import cmp_to_key
 
 from wand.image import Image, COMPRESSION_TYPES
-from wand.exceptions import MissingDelegateError
+from wand.exceptions import MissingDelegateError, CorruptImageError
 
 class CacheJob(threading.Thread):
     def __init__(self, job_time, job_path, job_is_new):
@@ -234,7 +234,10 @@ class CacheHandler(threading.Thread):
 
             return False
 
-        except wand.exceptions.MissingDelegateError:
+        except CorruptImageError:
+            logging.error("Corrupt image '{}'".format(picture_org_path))
+            return False
+        except MissingDelegateError:
             logging.error("Unsupported file '{}'".format(picture_org_path))
             return False
 
