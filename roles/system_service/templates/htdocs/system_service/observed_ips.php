@@ -8,7 +8,7 @@ require "../shared/libs/ressources.php";
 <?php echo Ressources::getModules(["/system_service/"]); ?>
 <script>
 mx.UNCore = (function( ret ) {
-    var daemonApiUrl = mx.Host.getBase() + '../api/';
+    var daemonApiUrl = "/system_service/api/observed_ips/";
     var refreshDaemonStateTimer = 0;
 
     let type = null
@@ -137,16 +137,13 @@ mx.UNCore = (function( ret ) {
 
         buildTable("", 'last', true, result["changed_data"]["observed_ips"]);
 
-        //console.log(state);
-
-        refreshDaemonStateTimer = window.setTimeout(function(){ refreshIPListe(state["last_data_modified"], null) }, 60000);
+        refreshDaemonStateTimer = window.setTimeout(function(){ refreshIPListe() }, 60000);
     }
 
-    function refreshIPListe(last_data_modified,callback)
+    function refreshIPListe()
     {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl + "observed_ips/" );
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.open("GET", daemonApiUrl );
 
         //application/x-www-form-urlencoded
 
@@ -162,8 +159,6 @@ mx.UNCore = (function( ret ) {
                     mx.Error.confirmSuccess();
 
                     handleIPList(response);
-
-                    if( callback ) callback();
                 }
                 else
                 {
@@ -181,11 +176,11 @@ mx.UNCore = (function( ret ) {
                     if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
                 }
 
-                refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, 60000);
+                refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState() }, 60000);
             }
         };
 
-        xhr.send(mx.Core.encodeDict( { "last_data_modified": last_data_modified } ));
+        xhr.send();
     }
 
     ret.init = function()

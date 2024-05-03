@@ -181,7 +181,7 @@ def speedtest():
     return "ok"
 
 # needed for grafana wan dashboard
-@serverWeb.route('/observed_ips/', methods = ['POST'])
+@serverWeb.route('/observed_ips/', methods = ['GET'])
 def observed_ips():
     return handler.getObservedIPData()
 
