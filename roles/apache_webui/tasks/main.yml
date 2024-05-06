@@ -45,6 +45,14 @@
 - name: install required packages for fetchPOTD => is_rhel or is_fedora
   yum:
     name: 
+      - https://rpms.remirepo.net/enterprise/9/remi/x86_64/LibRaw20-0.20.2-1.el9.remi.x86_64.rpm # fixes missing dependency for ImageMagick
+    disable_gpg_check: yes
+    state: present
+  when: is_rhel or is_fedora
+
+- name: install required packages for fetchPOTD => is_rhel or is_fedora
+  yum:
+    name:
       - ImageMagick
       - perl-Image-ExifTool
     state: present
