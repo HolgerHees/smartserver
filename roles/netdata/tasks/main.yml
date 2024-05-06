@@ -176,7 +176,7 @@
     type: "docker"
     url: "https://github.com/netdata/netdata/releases"
     config: {
-      repository: "netdata",
+      repository: "netdata/netdata",
       pattern: "^v([0-9\\.]+)$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
