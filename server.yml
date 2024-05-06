@@ -149,7 +149,6 @@
     - { import_role: { name: apache_webui },                                                 tags: [ 'apache_webui' ] }                                                                                         # responsive web ui
 
     - { import_role: { name: netdata },                                                      tags: [ 'netdata' ],                                            when: "netdata_enabled" }                          # server monitoring
-#    - { import_role: { name: netdata, tasks_from: main_container, handlers_from: empty }, tags: [ 'netdata_container' ] }
 
     - { import_role: { name: librenms },                                                     tags: [ 'librenms' ],                                           when: "librenms_enabled" }                         # network monitoring
     
