@@ -1,104 +1,22 @@
+- name: set version
+  set_fact:
+    netdata_version: "1.45.3"
+  tags: [ 'update_notifier_config' ]
+
 - name: prepare needed directories
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}netdata" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}netdata/cache" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/netdata/custom-plugins.d" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/netdata/health.d" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}netdata" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}netdata/custom-plugins.d" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}netdata/health.d" }
   include_tasks: roles/_shared/create_directories.yml
-
-- name: add netdata repository => is_rhel or is_fedora
-  yum_repository:
-    name: netdata
-    description: Netdata repository
-    priority: "50"
-    baseurl: https://packagecloud.io/netdata/netdata/{{'el' if is_rhel else 'fedora'}}/{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}/$basearch/
-  when: is_rhel or is_fedora
-
-- name: install required packages => is_rhel or is_fedora
-  yum:
-    name: [
-      "netdata"
-      , lm_sensors
-    ]
-    state: present
-    disable_gpg_check: true
-  notify: "restart netdata"
-  when: is_rhel or is_fedora
-
-- name: add netdata gpg key => is_ubuntu
-  apt_key:
-    url: https://packagecloud.io/netdata/netdata/gpgkey
-    state: present
-  when: is_ubuntu
-
-- name: install netdata repository => is_ubuntu
-  apt_repository:
-    repo: "deb [arch=amd64] https://packagecloud.io/netdata/netdata/ubuntu/ {{ansible_distribution_release}} main"
-    state: present
-  when: is_ubuntu
-
-- name: install required packages => is_ubuntu
-  apt:
-    name: [
-      "netdata"
-      , lm-sensors
-    ]
-    state: present
-  notify: "restart netdata"
-  when: is_ubuntu
-
-- name: add zypper repository => is_suse
-  zypper_repository:
-    name: "Netdata"
-    repo: "https://packagecloud.io/netdata/netdata/opensuse/{{ansible_distribution_version}}/x86_64/"
-    auto_import_keys: yes
-    priority: "50"
-    state: present
-  register: netdata_repo
-  when: is_suse
-
-- name: import zypper gpg key => is_suse
-  shell: "zypper --gpg-auto-import-keys ref"
-  when: "is_suse and netdata_repo.changed"
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-      "netdata"
-      , sensors
-      # needed to rebuild rpm package
-      #, rpm-build
-      #, cups-devel
-      #, judy-devel
-      #, libcap-devel
-      #, liblz4-devel
-      #, libmnl-devel
-      #, libnetfilter_acct-devel
-      #, libuv-devel
-      #, freeipmi-devel
-    ]
-    state: present
-  notify: "restart netdata"
-  when: is_suse
-
-- name: prepare missing folder => is_rhel or is_fedora
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "/var/run/netdata"
-    - "/usr/lib64/netdata/"
-    - "/usr/lib64/netdata/conf.d/"
-  when: is_rhel or is_fedora
 
 - name: synchronize config
   synchronize:
     src: "templates/etc/netdata/"
-    dest: "/etc/netdata/"
+    dest: "{{ global_etc }}netdata/"
     archive: no
     checksum: yes
     group: yes
@@ -109,19 +27,87 @@
       - "--chown=root:root"
       - "--chmod=D750,F640"
   notify: "restart netdata"
-      
+
 - name: copy config
   vars:
-    netdata_container: no
+    netdata_container: yes
   template:
     src: "templates/{{item}}"
-    dest: "/etc/netdata/{{item}}"
+    dest: "{{ global_etc }}netdata/{{item}}"
     owner: root
     group: root
     mode: 0640
   with_items:
     - "netdata.conf"
   notify: "restart netdata"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: netdata
+    image: "netdata/netdata:v{{netdata_version}}"
+    state: present
+    env:
+      TZ: "{{timezone}}"
+#      PGID: "473"
+    #  NETDATA_PORT: "29999"
+#      NETDATA_PORT: "19999"
+    #  DOCKER_USR: "root"
+    #  VIRTUALIZATION: "kvm"
+      DOCKER_USR: "root"
+      DOCKER_GRP: "root"
+      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors"
+    log_driver: journald
+    log_options:
+      tag: netdata
+    capabilities:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opts:
+      - "apparmor:unconfined"
+    pid_mode: "host"
+    privileged: yes
+    container_default_behavior: "compatibility"
+    network_mode: "host"
+    volumes:
+      - '/etc/passwd:/host/etc/passwd:ro'
+      - '/etc/group:/host/etc/group:ro'
+      - '/etc/localtime:/etc/localtime:ro'
+      - '/etc/os-release:/host/etc/os-release:ro'
+
+      - '/proc:/host/proc:ro'
+      - '/sys:/host/sys:ro'
+      - '/run/dbus:/run/dbus:ro'
+      - '/var/lib/smartmontools/:/var/lib/smartmontools/:ro'
+
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - '/var/log:/host/var/log:ro'
+
+      - '{{ global_lib }}netdata:/var/lib/netdata:z'
+      - '{{ global_lib }}netdata/cache:/var/cache/netdata:z'
+
+      - "{{ global_etc }}netdata/.environment:/etc/netdata/.environment:ro,z"
+      - "{{ global_etc }}netdata/netdata.conf:/etc/netdata/netdata.conf:ro,z"
+      - "{{ global_etc }}netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro,z"
+      - "{{ global_etc }}netdata/python.d.conf:/etc/netdata/python.d.conf:ro,z"
+      - "{{ global_etc }}netdata/go.d.conf:/etc/netdata/go.d.conf:ro,z"
+
+      - "{{ global_etc }}netdata/health.d/disks.conf:/etc/netdata/health.d/disks.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/net.conf:/etc/netdata/health.d/net.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro,z"
+
+      - "{{ global_etc }}netdata/cloud.d/cloud.conf:/etc/netdata/cloud.d/cloud.conf:ro,z"
+    #exposed_ports:
+    # - "19999"
+    # - "127.0.0.1:19999:19999"  
+#  notify: "restart netdata"
+
+# https://github.com/Tecnativa/docker-socket-proxy
 
 - name: copy helper
   template:
@@ -133,45 +119,6 @@
   with_items:
     - "/opt/scripts/netdata_to_alertmanager"
   when: "monitoring_enabled"
-
-- name: change service config
-  lineinfile:
-    path: /usr/lib/systemd/system/netdata.service
-    insertafter: '^\[Service\]'
-    regexp: '^{{item.field}}'
-    line: '{{item.value}}'
-  with_items:
-    - { field: "User\\s*=", value: "User=root" }
-    #- { field: "ReadWriteDirectories\\s*=\\s*{{ global_lib }}netdata", value: "ReadWriteDirectories={{ global_lib }}netdata" }
-    #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
-    #- { field: "Nice", value: "0" } # was "#Nice=0" before
-  notify: "restart netdata"
-
-# ***** INFLUXDB DATABASE ****
-#- name: create database
-#  vars:
-#    database: "opentsdb"
-#    retentions:
-#      - { retention: "14d" }
-#      - { retention: "90d", name: "090d", interval: "5m", every: "6h" }
-#      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
-#      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
-#    backup: yes
-#  include_tasks: roles/influxdb/shared/add_bucket.yml
-#  tags: ["cron_job", "backup_restore"]
-#  when: "influxdb_enabled"
-  
-# ***** OTHER *****
-#- name: register grafana configs
-#  vars:
-#    name: "netdata"
-#    datasources:
-#      - "templates/grafana/datasources/opentsdb_influxdb.yaml"
-#    dashboards:
-#      - "templates/grafana/dashboards/Server Health.json"
-#  include_tasks: roles/grafana/shared/add_datasource.yml
-#  tags: ['grafana_config']
-#  when: "grafana_enabled"
 
 - name: register webui
   vars:
@@ -217,24 +164,20 @@
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
-- name: register system package dependency
+- name: create systemd service
   vars:
-    tag: "netdata"
-    packages: [ "netdata" ]
-  include_tasks: roles/update_service/shared/add_dependency.yml
-  tags: ['update_system_config']
-  when: "update_service_system_check_enabled"
+    container_name: "netdata"
+  include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: register update notifier
   vars:
     name: "netdata"
-    type: "github"
+    type: "docker"
     url: "https://github.com/netdata/netdata/releases"
     config: {
-      project: "netdata/netdata",
-      pattern: "^v([0-9\\.]+)$",
-      #version: "v{{netdata_version}}"
-      version: "package:netdata"
+      repository: "netdata",
+      pattern: "^v([0-9\\.]+)$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']

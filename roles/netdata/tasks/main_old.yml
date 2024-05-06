@@ -1,0 +1,221 @@
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}netdata" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}netdata/cache" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/netdata/custom-plugins.d" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/netdata/health.d" }
+  include_tasks: roles/_shared/create_directories.yml
+
+- name: add netdata repository => is_rhel or is_fedora
+  yum_repository:
+    name: netdata
+    description: Netdata repository
+    priority: "50"
+    baseurl: https://packagecloud.io/netdata/netdata/{{'el' if is_rhel else 'fedora'}}/{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}/$basearch/
+  when: is_rhel or is_fedora
+
+- name: install required packages => is_rhel or is_fedora
+  yum:
+    name: [
+      "netdata"
+      , lm_sensors
+    ]
+    state: present
+    disable_gpg_check: true
+  notify: "restart netdata"
+  when: is_rhel or is_fedora
+
+- name: add netdata gpg key => is_ubuntu
+  apt_key:
+    url: https://packagecloud.io/netdata/netdata/gpgkey
+    state: present
+  when: is_ubuntu
+
+- name: install netdata repository => is_ubuntu
+  apt_repository:
+    repo: "deb [arch=amd64] https://packagecloud.io/netdata/netdata/ubuntu/ {{ansible_distribution_release}} main"
+    state: present
+  when: is_ubuntu
+
+- name: install required packages => is_ubuntu
+  apt:
+    name: [
+      "netdata"
+      , lm-sensors
+    ]
+    state: present
+  notify: "restart netdata"
+  when: is_ubuntu
+
+- name: add zypper repository => is_suse
+  zypper_repository:
+    name: "Netdata"
+    repo: "https://packagecloud.io/netdata/netdata/opensuse/{{ansible_distribution_version}}/x86_64/"
+    auto_import_keys: yes
+    priority: "50"
+    state: present
+  register: netdata_repo
+  when: is_suse
+
+- name: import zypper gpg key => is_suse
+  shell: "zypper --gpg-auto-import-keys ref"
+  when: "is_suse and netdata_repo.changed"
+
+- name: install required packages => is_suse
+  zypper:
+    name: [
+      "netdata"
+      , sensors
+      # needed to rebuild rpm package
+      #, rpm-build
+      #, cups-devel
+      #, judy-devel
+      #, libcap-devel
+      #, liblz4-devel
+      #, libmnl-devel
+      #, libnetfilter_acct-devel
+      #, libuv-devel
+      #, freeipmi-devel
+    ]
+    state: present
+  notify: "restart netdata"
+  when: is_suse
+
+- name: prepare missing folder => is_rhel or is_fedora
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/var/run/netdata"
+    - "/usr/lib64/netdata/"
+    - "/usr/lib64/netdata/conf.d/"
+  when: is_rhel or is_fedora
+
+- name: synchronize config
+  synchronize:
+    src: "templates/etc/netdata/"
+    dest: "/etc/netdata/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
+  notify: "restart netdata"
+      
+- name: copy config
+  vars:
+    netdata_container: no
+  template:
+    src: "templates/{{item}}"
+    dest: "/etc/netdata/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "netdata.conf"
+  notify: "restart netdata"
+
+- name: copy helper
+  template:
+    src: "templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/opt/scripts/netdata_to_alertmanager"
+  when: "monitoring_enabled"
+
+- name: change service config
+  lineinfile:
+    path: /usr/lib/systemd/system/netdata.service
+    insertafter: '^\[Service\]'
+    regexp: '^{{item.field}}'
+    line: '{{item.value}}'
+  with_items:
+    - { field: "User\\s*=", value: "User=root" }
+    #- { field: "ReadWriteDirectories\\s*=\\s*{{ global_lib }}netdata", value: "ReadWriteDirectories={{ global_lib }}netdata" }
+    #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
+    #- { field: "Nice", value: "0" } # was "#Nice=0" before
+  notify: "restart netdata"
+
+- name: register webui
+  vars:
+    name: "netdata"
+    js_file: "templates/webui/netdata.js"
+    i18n_files: [ { language: "de", file: "templates/webui/netdata.de.json" } ]
+    icons: [ 'templates/webui/icons/netdata_logo.svg' ]
+  include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "netdata"
+    usergroup: "admin"
+    include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
+
+- name: create cron job
+  vars:
+    name: "Netdata error check"
+    cmd: "/opt/scripts/netdata_to_alertmanager"
+    group: "netdata"
+    log: "alertmanager"
+    minute: "*/5"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
+  when: "monitoring_enabled"
+
+# ***** FINALIZE *****
+- name: register prometheus metrics
+  vars:
+    name: "netdata"
+    scrape_file: "templates/prometheus/scrape.yml"
+  include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
+  when: "monitoring_enabled"
+
+- name: register systemd service watcher
+  vars:
+    name: "netdata"
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
+  when: "monitoring_enabled"
+
+- name: register system package dependency
+  vars:
+    tag: "netdata"
+    packages: [ "netdata" ]
+  include_tasks: roles/update_service/shared/add_dependency.yml
+  tags: ['update_system_config']
+  when: "update_service_system_check_enabled"
+
+- name: register update notifier
+  vars:
+    name: "netdata"
+    type: "github"
+    url: "https://github.com/netdata/netdata/releases"
+    config: {
+      project: "netdata/netdata",
+      pattern: "^v([0-9\\.]+)$",
+      #version: "v{{netdata_version}}"
+      version: "package:netdata"
+    }
+  include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
+  when: "update_service_software_check_enabled"
+
+- name: trigger netdata handler
+  vars:
+    notify: "restart netdata"
+    service: "netdata.service"
+  include_tasks: roles/_shared/service_check.yml
