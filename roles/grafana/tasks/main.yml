@@ -1,7 +1,6 @@
 - name: set version
   set_fact:
     grafana_version: '10.4.2'
-    natel_discrete_plugin_version: "0.1.1"
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed directories
@@ -49,16 +48,6 @@
   with_items:
     - "provisioning/dashboards/provider.yaml"
     
-- name: install natel-discrete-panel archive
-  unarchive:
-    src: "https://grafana.com/api/plugins/natel-discrete-panel/versions/{{natel_discrete_plugin_version}}/download"
-    dest: "{{ global_lib }}grafana/plugins/"
-    creates: "{{ global_lib }}grafana/plugins/natel-discrete-panel/"
-    remote_src: yes
-    owner: "root"
-    group: "root"
-  notify: "restart grafana"
-
 - name: build docker image
   vars:
     name: "grafana"
