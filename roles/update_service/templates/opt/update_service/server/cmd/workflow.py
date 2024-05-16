@@ -223,9 +223,11 @@ class CmdWorkflow:
                 _cmd_block = function(cmd_block["username"], cmd_block["params"])
                 if _cmd_block is None:
                     logging.info("Skip workflow function '{}'".format(cmd_block["function"]))
+                    exit_code = 0
                     continue
                 elif type(_cmd_block) == bool:
                     if _cmd_block:
+                        exit_code = 0
                         continue
                     else:
                         self.workflow_state = CmdWorkflow.STATE_STOPPED
