@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mysql_version: "10.11.7"
+    mysql_version: "10.11.8"
   tags: [ 'update_notifier_config' ]
   
 - name: "create user and group => user or group does not exists"
