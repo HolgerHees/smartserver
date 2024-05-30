@@ -60,6 +60,9 @@ class Handler(Server):
         self.initWatchedFiles( [config.icon_path], self.iconChangeTriggered )
 
     def iconChangeTriggered(self, event):
+        if event["type"] not in [ FileWatcher.EVENT_TYPE_WRITTEN, FileWatcher.EVENT_TYPE_MOVED_TO, FileWatcher.EVENT_TYPE_MOVED_FROM, FileWatcher.EVENT_TYPE_DELETED ]:
+            return
+
         self.provider_consumer.resetIconCache()
 
     def start(self):

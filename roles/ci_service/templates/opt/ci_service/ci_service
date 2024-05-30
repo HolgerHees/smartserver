@@ -44,7 +44,7 @@ class Handler(Server):
         self.has_leftovers = False
 
     def fileChangeTriggered(self, event):
-        if event["type"] not in [ FileWatcher.EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_DELETED ]:
+        if event["type"] not in [ FileWatcher.EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_MOVED_TO, FileWatcher.EVENT_TYPE_MOVED_FROM, FileWatcher.EVENT_TYPE_DELETED ]:
             return
 
         self.job_watcher.changedJobs(event)

@@ -32,14 +32,14 @@ class Handler(Server):
         self.initWatchedFiles( watched_directories, self.fileChangeTriggered )
 
     def fileChangeTriggered(self, event):
-        if event["type"] not in [ FileWatcher.EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_DELETED ]:
+        if event["type"] not in [ FileWatcher.EVENT_TYPE_WRITTEN, FileWatcher.EVENT_TYPE_MOVED_TO, FileWatcher.EVENT_TYPE_MOVED_FROM, FileWatcher.EVENT_TYPE_DELETED ]:
             return
 
         #logging.info(event);
         if event["path"][:len(config.upload_path)] == config.upload_path:
-            self.cache_handler.uploadChangeTriggered(event["path"], event["time"], event["type"] == FileWatcher.EVENT_TYPE_CREATED )
+            self.cache_handler.uploadChangeTriggered(event["path"], event["time"], event["type"] in [ FileWatcher.EVENT_TYPE_WRITTEN, FileWatcher.EVENT_TYPE_MOVED_TO ] )
         elif event["path"][:len(config.cache_path)] == config.cache_path:
-            self.cache_handler.cacheChangeTriggered(event["path"], event["time"], event["type"] == FileWatcher.EVENT_TYPE_CREATED )
+            self.cache_handler.cacheChangeTriggered(event["path"], event["time"], event["type"] in [ FileWatcher.EVENT_TYPE_WRITTEN, FileWatcher.EVENT_TYPE_MOVED_TO ] )
 
     def start(self):
         self.scheduler.start()
