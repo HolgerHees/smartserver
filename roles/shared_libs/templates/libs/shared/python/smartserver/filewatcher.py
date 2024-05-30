@@ -37,9 +37,9 @@ class FileWatcher():
 
     def inotifyDummyEvent(self, event):
         with self.inotify_lock:
-            if event.path not in self.inotify_in_progress or self.inotify_in_progress[event.path] is None:
+            if event.path not in self.inotify_in_progress:
                 return
-            self.inotify_in_progress[event.path] = None
+            del self.inotify_in_progress[event.path]
 
         self.inotifyEvent(inotify.INotifyEvent(event.wd, ( event.mask | inotify.Constants.IN_CLOSE_WRITE ) ^ inotify.Constants.IN_CREATE, event.cookie, event.name, event.wd_path))
 
@@ -79,16 +79,12 @@ class FileWatcher():
 
         elif event.mask & inotify.Constants.IN_OPEN:
             with self.inotify_lock:
-                if event.path not in self.inotify_in_progress or self.inotify_in_progress[event.path] is None:
+                if event.path not in self.inotify_in_progress:
                     return
                 self.inotify_in_progress[event.path].cancel()
-                self.inotify_in_progress[event.path] = None
+                del self.inotify_in_progress[event.path]
 
         elif event.mask & inotify.Constants.IN_CLOSE_WRITE:
-            with self.inotify_lock:
-                if event.path not in self.inotify_in_progress or self.inotify_in_progress[event.path] is not None:
-                    return
-                del self.inotify_in_progress[event.path]
             #logging.info("Closed path '{}'".format(event.path))
             if event.path in self.modified_time:
                 self.modified_time[event.path] = datetime.now().timestamp()

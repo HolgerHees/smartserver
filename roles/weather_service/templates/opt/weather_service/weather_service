@@ -19,6 +19,7 @@ from lib.helper.forecast import WeatherBlock
 
 from smartserver.scheduler import Scheduler
 from smartserver.server import Server, serverWeb, serverSocket
+from smartserver.filewatcher import FileWatcher
 
 from config import config
 

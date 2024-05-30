@@ -19,6 +19,7 @@ from server.watcher.software_version import SoftwareVersionWatcher
 
 from smartserver.server import Server, serverWeb, serverSocket
 from smartserver import logfile
+from smartserver.filewatcher import FileWatcher
 
 from config import config
 
