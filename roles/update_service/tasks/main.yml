@@ -30,7 +30,6 @@
       - flask-socketio=={{flask_socketio_version}}
       - simple-websocket
       - pexpect
-      - pyinotify
       - requests
     virtualenv: /opt/update_service/env
     virtualenv_command: "python3 -m venv"

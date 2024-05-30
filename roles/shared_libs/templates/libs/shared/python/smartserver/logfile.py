@@ -196,15 +196,15 @@ class LogFormatter:
         result = ['<div>']
 
         # format datetime
-        if re.match("^[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}.*$", line):
+        if re.match(r"^[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}.*$", line):
             result.append('<span style="color:#5a595c">{}</span>'.format(line[0:12]))
             line = line[12:]
 
         # force whitespaces
-        line = re.sub("\s\s+", LogFormatter._whitespace,line)
+        line = re.sub(r"\s\s+", LogFormatter._whitespace,line)
 
         # convert color codes
-        line = re.sub("\x1b\[([;0-9]+?)m", LogFormatter._color, line)
+        line = re.sub(r"\x1b\[([;0-9]+?)m", LogFormatter._color, line)
 
         # print final line
         result.append(line)

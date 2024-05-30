@@ -1,96 +1,133 @@
-import pyinotify
 import os
 import threading
 import logging
+import sys
 
 from datetime import datetime
 
-class FileWatcher(pyinotify.ProcessEvent):
-    def __init__(self, callback = None):
-        super().__init__(pyinotify.Stats())
-        
-        self.is_running = True
+from smartserver import inotify
 
+
+class FileWatcher():
+    EVENT_TYPE_DELETED = "deleted"
+    EVENT_TYPE_CREATED = "created"
+
+    def __init__(self, callback = None):
+        super().__init__()
+        
         self.callback = callback
 
-        wm = pyinotify.WatchManager()
-        self.notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self)
-        #self.notifier.daemon = True
-        self.notifier.start()
-
-        self.wm = wm
-        
         self.modified_time = {}
 
-        self.watched_files = {}
         self.watched_parents = {}
-        
-        self.watched_directories = {}
-        
+
+        self.inotify = inotify.INotify(self.inotifyEvent)
+        self.inotify.start()
+
+        self.inotify_lock = threading.Lock()
+        self.inotify_in_progress = {}
+
     def notifyListener(self, event):
         if self.callback:
-            #logging.info("Notify listener of '{}' - '{}'".format(event["path"],event["maskname"]))
-            self.callback(event)
+            logging.info("Notify listener of '{}'".format(event))
+            #self.callback(event)
 
-    def process_default(self, event):
-        #logging.info(event)
+    def inotifyDummyEvent(self, event):
+        with self.inotify_lock:
+            if event.path not in self.inotify_in_progress or self.inotify_in_progress[event.path] is None:
+                return
+            self.inotify_in_progress[event.path] = None
 
-        if event.path in self.watched_parents:
-            if event.mask & pyinotify.IN_DELETE:
-                pass
-            elif event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM ):
-                if event.pathname in self.modified_time:
-                    logging.info("New path '{}' watched".format(event.pathname))
-                    self.addPath(event.pathname)
-                    if not event.dir:
-                        self.notifyListener({"path": event.pathname, "pathname": event.pathname, "mask": pyinotify.IN_CLOSE_WRITE, "maskname": "IN_CLOSE_WRITE", "time": datetime.now().timestamp(), "cookie": event.cookie if hasattr(event,"cookie") else None })
+        self.inotifyEvent(inotify.INotifyEvent(event.wd, ( event.mask | inotify.Constants.IN_CLOSE_NOWRITE ) ^ inotify.Constants.IN_CREATE, event.cookie, event.name, event.wd_path))
 
-        elif event.path in self.watched_directories:
-            now = datetime.now().timestamp()
-            self.modified_time[event.path] = now
-            notifier_event = {"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname, "time": now, "cookie": event.cookie if hasattr(event,"cookie") else None }
-            self.notifyListener(notifier_event)
-        elif event.path in self.watched_files:
-            if event.mask & ( pyinotify.IN_DELETE_SELF | pyinotify.IN_IGNORED ):
-                pass
-            elif event.mask & pyinotify.IN_CLOSE_WRITE:
-                now = datetime.now().timestamp()
-                self.modified_time[event.path] = now
-                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname, "time": now, "cookie": event.cookie if hasattr(event,"cookie") else None })
+    def inotifyEvent(self, event):
+        #logging.info("{}".format(event))
+
+        if event.path not in self.modified_time and event.wd_path not in self.modified_time:
+            #logging.info("Skipped unrelated parent watch")
+            return
+
+        if event.mask & inotify.Constants.IN_MOVED_FROM:
+            if event.path in self.modified_time:
+                #logging.info("Deleted path '{}'".format(event.path))
+                self.removePath(event.path)
+            self.notifyListener({"path": event.path, "type": FileWatcher.EVENT_TYPE_DELETED, "time": datetime.now().timestamp()})
+
+        elif event.mask & inotify.Constants.IN_MOVED_TO:
+            if event.path in self.modified_time:
+                #logging.info("New path '{}'".format(event.path))
+                self.addPath(event.path)
+            self.notifyListener({"path": event.path, "type": FileWatcher.EVENT_TYPE_CREATED, "time": datetime.now().timestamp()})
+
+        elif event.mask & inotify.Constants.IN_CREATE:
+            #logging.info("New path '{}'".format(event.path))
+            if event.path in self.modified_time:
+                self.addPath(event.path)
+
+            if event.mask & inotify.Constants.IN_ISDIR:
+                self.notifyListener({"path": event.path, "type": FileWatcher.EVENT_TYPE_CREATED, "time": datetime.now().timestamp()})
             else:
-                logging.error("Ignored event {}".format(event))
-                pass
-        
+                self.inotify_in_progress[event.path] = threading.Timer(5, self.inotifyDummyEvent, [event, ] )
+                self.inotify_in_progress[event.path].start()
+
+        elif event.mask & inotify.Constants.IN_OPEN:
+            with self.inotify_lock:
+                if event.path not in self.inotify_in_progress or self.inotify_in_progress[event.path] is None:
+                    return
+                self.inotify_in_progress[event.path].cancel()
+                self.inotify_in_progress[event.path] = None
+
+        elif event.mask & inotify.Constants.IN_CLOSE_WRITE or event.mask & inotify.Constants.IN_CLOSE_NOWRITE:
+            with self.inotify_lock:
+                if event.path not in self.inotify_in_progress or self.inotify_in_progress[event.path] is not None:
+                    return
+                del self.inotify_in_progress[event.path]
+            #logging.info("Closed path '{}'".format(event.path))
+            if event.path in self.modified_time:
+                self.modified_time[event.path] = datetime.now().timestamp()
+            self.notifyListener({"path": event.path, "type": FileWatcher.EVENT_TYPE_CREATED, "time": datetime.now().timestamp()})
+
+        elif event.mask & inotify.Constants.IN_DELETE:
+            #logging.info("Deleted path '{}'".format(event.path))
+            if event.path in self.modified_time:
+                self.removePath(event.path)
+            self.notifyListener({"path": event.path, "type": FileWatcher.EVENT_TYPE_DELETED, "time": datetime.now().timestamp()})
+
+        else:
+            logging.error("Ignored event {}".format(event))
+
     def addWatcher(self,path):
         path = path.rstrip("/")
 
         parent = os.path.dirname(path)
         if parent not in self.watched_parents:
             self.watched_parents[parent] = True
-            self.wm.add_watch(parent, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM, rec=False, auto_add=False)
-            
+            self.inotify.add_watch(parent, inotify.Constants.IN_OPEN | inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CLOSE_NOWRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
+
         if os.path.exists(path):
             self.addPath(path)
         else:
             self.modified_time[path] = 0
             
     def addPath(self, path):
-        #print("addPath " + path)
+        #logging.info("addPath " + path)
 
-        file_stat = os.stat(path)
-        self.modified_time[path] = file_stat.st_mtime
+        self.modified_time[path] = os.stat(path).st_mtime
 
-        isfile = os.path.isfile(path)
-        if isfile:
-            self.watched_files[path] = True
-            self.wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE, rec=False, auto_add=False)
-        else:
-            self.watched_directories[path] = True
-            self.wm.add_watch(path, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM, rec=False, auto_add=False)
+        if os.path.isdir(path):
+            self.inotify.add_watch(path, inotify.Constants.IN_OPEN | inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CLOSE_NOWRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
+
+    def removePath(self, path):
+        #logging.info("removePath " + path)
+
+        self.modified_time[path] = 0
+
+        if os.path.isdir(path):
+            self.inotify.rm_watch(path)
 
     def getModifiedTime(self,path):
         return self.modified_time[path.rstrip("/")]
       
     def terminate(self):
-        self.is_running = False
-        self.notifier.stop()
+        self.inotify.stop()
+        self.inotify.join()

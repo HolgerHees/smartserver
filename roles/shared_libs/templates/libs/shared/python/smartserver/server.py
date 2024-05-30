@@ -1,5 +1,4 @@
 import socket
-import pyinotify
 import os
 import sys
 import signal

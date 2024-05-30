@@ -4,10 +4,9 @@ import logging
 import json
 from datetime import datetime
 
-import pyinotify
-
 from smartserver.server import Server, serverWeb
 from smartserver.github import GitHub
+from smartserver.filewatcher import FileWatcher
 from smartserver import info
 
 from lib import job_watcher
@@ -45,7 +44,7 @@ class Handler(Server):
         self.has_leftovers = False
 
     def fileChangeTriggered(self, event):
-        if not ( event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_DELETE ) ):
+        if event["type"] not in [ FileWatcher.EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_DELETED ]:
             return
 
         self.job_watcher.changedJobs(event)
