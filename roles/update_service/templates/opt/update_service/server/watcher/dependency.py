@@ -1,13 +1,14 @@
 import glob
 import os
 import json
-import pyinotify
 
 from pathlib import Path
 
 from config import config
 
 from server.watcher import watcher
+
+from smartserver.filewatcher import FileWatcher
 
 
 class DependencyWatcher(watcher.Watcher): 
@@ -20,11 +21,11 @@ class DependencyWatcher(watcher.Watcher):
         self.initOutdatedRoles()
         
     def notifyChange(self, event):
-        if not ( event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_DELETE ) ):
+        if event["type"] not in  [FileWatcher.EVENT_TYPE_EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_MOVED_TO, FileWatcher.EVENT_TYPE_MOVED_FROM, FileWatcher.EVENT_TYPE_DELETED] ):
             return
 
         name = os.path.basename(event["pathname"])
-        if event["mask"] & pyinotify.IN_CREATE:
+        if event["type"] in  [FileWatcher.EVENT_TYPE_EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_MOVED_TO]:
             self.outdated_roles[name] = True
         else:
             del self.outdated_roles[name]
