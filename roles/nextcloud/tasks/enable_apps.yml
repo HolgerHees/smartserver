@@ -98,6 +98,8 @@
       - { app: "user_saml", name: "general-uid_mapping", value: "REMOTE_USERNAME" }
       - { app: "user_saml", name: "saml-attribute-mapping-displayName_mapping", value: "REMOTE_USERFULLNAME" }
 
+      - { app: "updatenotification", name: "notify_groups", value: "[]" }
+
       - { app: "richdocuments", name: "disable_certificate_verification", value: "" }
       - { app: "richdocuments", name: "enabled", value: "yes" }
 #      - { app: "richdocuments", name: "installed_version", value: "" }
