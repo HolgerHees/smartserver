@@ -239,10 +239,15 @@ class ProviderConsumer():
             end = datetime.now()
             start = end.replace(hour=0, minute=0, second=0, microsecond=0)
 
+            result["currentRainLast15MinInMillimeter"] = 0
+            result["currentRainLastHourInMillimeter"] = 0
+            result["currentRainLevel"] = 0
+
             with self.db.open() as db:
                 values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
-
             result["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
+
+
         return result
 
     def _buildCloudSVG(self):
