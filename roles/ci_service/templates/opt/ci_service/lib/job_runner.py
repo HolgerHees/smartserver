@@ -248,8 +248,8 @@ class JobRunner:
         diff = set(registered_machines.keys()) - set(self.registered_machines.keys())
         if len(diff) > 0:
             self.job_state.setVID(diff.pop())
-        # max 3 min. Long startup time is possible after an image upgrade.
-        elif duration > 180:
+        # max 10 min. Long startup time is possible after an image upgrade.
+        elif duration > 600:
             self.max_starttime_exceeded = True
             self.job.terminate()
         else:
