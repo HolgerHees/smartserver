@@ -3,6 +3,12 @@
     fluentd_version: '1.17.0-debian-1.0'
   tags: [ 'update_notifier_config' ]    
   
+- name: copy missing journald.conf # => was missing on opensuse leap15.6
+  copy:
+    src: templates//etc/systemd/journald.conf
+    dest: /etc/systemd/journald.conf
+    force: no
+
 - name: set journald volatile mode
   lineinfile:
     path: /etc/systemd/journald.conf

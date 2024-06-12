@@ -179,6 +179,13 @@
   shell: sysctl -p
   when: sysctlchanged.changed
 
+- name: copy missing logind.conf # => was missing on opensuse leap15.6
+  copy:
+    src: templates//etc/systemd/logind.conf
+    dest: /etc/systemd/logind.conf
+    force: no
+  notify: "restart logind"
+
 - name: disable suspend action on logind
   lineinfile:
     path: /etc/systemd/logind.conf
