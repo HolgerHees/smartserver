@@ -71,7 +71,7 @@ class Helper():
         for row in cmd_result.split("\n"):
             if "endpoint" not in row:
                 continue
-            match = re.match("^\s*endpoint: ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}):.*",row)
+            match = re.match(r"^\s*endpoint: ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}):.*",row)
             if match:
                 result.append(match[1])
 
@@ -519,7 +519,7 @@ class TrafficWatcher(threading.Thread):
             base_tags["extern_ip"] = extern_ip
             base_tags["extern_host"] = pc["extern_hostname"]
             extern_group = pc["extern_hostname"]
-            m = re.search('^.*?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|[a-z0-9-]+\.[a-z0-9]+)$', extern_group)
+            m = re.search(r"^.*?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|[a-z0-9-]+\.[a-z0-9]+)$", extern_group)
             if m and m.group(1) != extern_group:
                 extern_group = "*.{}".format(m.group(1))
             base_tags["extern_group"] = extern_group

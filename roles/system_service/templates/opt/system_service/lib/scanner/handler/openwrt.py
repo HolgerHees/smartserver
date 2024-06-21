@@ -171,7 +171,7 @@ class OpenWRT(_handler.Handler):
             _device = device_result[device_name]
 
             if is_gateway:
-                if device_name[0:3] == "br-" and not re.match(".*\.[0-9]+$", device_name) and "speed" in _device:
+                if device_name[0:3] == "br-" and not re.match(r".*\.[0-9]+$", device_name) and "speed" in _device:
                     #logging.info("LANCHECK {}".format(device_name))
 
                     is_wan = True if device_name == "br-wan" else False

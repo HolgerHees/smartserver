@@ -141,7 +141,7 @@ class Blocklists(threading.Thread):
                     map_modified = datetime.timestamp(datetime.strptime(datetime_str, '%a, %d %b %Y %H:%M:%S %z' ))
                 continue
 
-            columns = re.split("\s+", line)
+            columns = re.split(r"\s+", line)
             if len(columns) != 2:
                 logging.warning("Skip invalid list entry. Invalid format. '{}'".format(line))
                 map_with_errors = True

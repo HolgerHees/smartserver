@@ -92,8 +92,8 @@ class JobRunner:
         #if args != None:
         #    argsStr = u" --args={}".format(args)
 
-        author = re.sub('\\W+|\\s+', "_", self.commit['author'] );
-        subject = re.sub('\\W+|\\s+', "_", self.commit['subject'] );
+        author = re.sub(r'\W+|\s+', "_", self.commit['author'] );
+        subject = re.sub(r'\W+|\s+', "_", self.commit['subject'] );
         if len(subject) > max_subject_length:
             subject = subject[0:max_subject_length]
             pos = subject.rfind("_")

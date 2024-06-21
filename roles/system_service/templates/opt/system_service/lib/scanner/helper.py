@@ -72,7 +72,7 @@ class Helper():
             
     def _nmap_parser(result, services):
         for row in result.split("\n"):
-            match = re.match("([0-9]*)/([a-z]*)\s*([a-z|]*)\s*(.*)",row)
+            match = re.match(r"([0-9]*)/([a-z]*)\s*([a-z|]*)\s*(.*)",row)
             if not match:
                 continue
 

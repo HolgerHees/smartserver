@@ -215,7 +215,7 @@ class LogCollector(threading.Thread):
                     #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
                     # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
                     #                            IP         USER     DOMAIN   REQUEST
-                    match = re.match("^remoteIP=([^\s]+).*?vhost=(.*?) request=(.*?) status=",row[1])
+                    match = re.match(r"^remoteIP=([^\s]+).*?vhost=(.*?) request=(.*?) status=",row[1])
                     if not match:
                         logging.error("Invalid regex for message: '{}'".format(row[1]))
                         continue

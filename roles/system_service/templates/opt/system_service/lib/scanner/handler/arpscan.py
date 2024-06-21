@@ -203,7 +203,7 @@ class DHCPListener(threading.Thread):
                     client_ip = None
                 else:
                     if line.startswith("Client-Ethernet-Address"):
-                        match = re.search(r"^Client-Ethernet-Address ({})$".format("[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), line)
+                        match = re.search("^Client-Ethernet-Address ({})$".format("[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), line)
                         if match:
                             client_mac = match[1]
                         else:
@@ -211,7 +211,7 @@ class DHCPListener(threading.Thread):
                             client_mac = None
 
                     elif line.startswith("Requested-IP") and client_mac is not None:
-                        match = re.search(r"^Requested-IP.*?({})$".format("[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"), line)
+                        match = re.search("^Requested-IP.*?({})$".format("[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"), line)
                         if match:
                             client_ip = match[1]
                         else:
@@ -264,7 +264,7 @@ class ArpScanner(_handler.Handler):
         self.registered_devices = {}
 
         self.dhcp_listener = DHCPListener(self, self.cache, self.config.main_interface)
-        
+
     def start(self):
         self.dhcp_listener.start()
         
@@ -306,7 +306,7 @@ class ArpScanner(_handler.Handler):
                     for [ip, mac, dns, info] in collected_arps:
                         if mac not in processed_macs:
                             if ip not in processed_ips:
-                                info = re.sub("\s\\(DUP: [0-9]+\\)", "", info) # eleminate dublicate marker
+                                info = re.sub(r"\s\(DUP: [0-9]+\)", "", info) # eleminate dublicate marker
                                 if info == "(Unknown)":
                                     info = None
                                 processed_macs[mac] = {"mac": mac, "ip": ip, "dns": dns, "info": info}

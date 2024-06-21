@@ -24,8 +24,8 @@ class Helper():
     @staticmethod
     def getBlockedIps():
         result = []
-        Helper._fetchBlockedIps(result, ["/sbin/iptables", "-S", "INPUT"], "([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\/32")
-        Helper._fetchBlockedIps(result, ["/sbin/ip6tables", "-S", "INPUT"], "([0-9a-z:]*)\/128")
+        Helper._fetchBlockedIps(result, ["/sbin/iptables", "-S", "INPUT"], r"([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/32")
+        Helper._fetchBlockedIps(result, ["/sbin/ip6tables", "-S", "INPUT"], r"([0-9a-z:]*)/128")
         return result
 
     @staticmethod
