@@ -99,7 +99,7 @@
 - name: add zypper repository => is_suse
   zypper_repository:
     name: Mail (msmtp)
-    repo: "https://download.opensuse.org/repositories/server:/mail/{{'' if ansible_distribution_version == '15.5' else 'openSUSE_Leap_'}}{{ansible_distribution_version}}/"
+    repo: "https://download.opensuse.org/repositories/server:/mail/{{'' if ansible_distribution_version == '15.5' else 'openSUSE_Leap_'}}$releasever/"
 #    repo: "https://download.opensuse.org/repositories/server:/mail/$releasever/"
     auto_import_keys: yes
     priority: "100"
