@@ -57,10 +57,10 @@
     pid_mode: "host"
     privileged: "true"
     container_default_behavior: "compatibility"
-    network_mode: "host"
-    #networks:
-    #  - name: "isolated"
-    #    ipv4_address: "{{docker_ci_service_ip}}"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_ci_service_ip}}"
     networks_cli_compatible: yes
     volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
@@ -71,15 +71,15 @@
       - "{{global_log}}ci_service/:{{global_log}}ci_service/:rw,z"
   notify: "restart ci_service"
 
-#- name: allow ci service
-#  vars:
-#    name: "ci_service"
-#    rules:
-#      - "saddr {{docker_prometheus_ip}} daddr {{docker_ci_service_ip}}"
-#      - "saddr {{docker_ci_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
+- name: allow ci service
+  vars:
+    name: "ci_service"
+    rules:
+      - "saddr {{docker_prometheus_ip}} daddr {{docker_ci_service_ip}}"
+      - "saddr {{docker_ci_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
 #      - "saddr {{docker_ci_service_ip}} proto tcp dport 443 daddr {{docker_ci_service_ip}}"
-#  include_tasks: roles/firewall/shared/allow_service.yml
-#  tags: ['firewall_config']
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
 
 - name: install vagrant binary
   unarchive:
@@ -178,12 +178,7 @@
 - name: copy service apache config
   vars:
     service_name: "ci_service"
-    service_host: "127.0.0.1:8506"
-    service_additional_config: |
-        <Location /ci_service/metrics/>
-          ProxyPass http://127.0.0.1:8506/metrics/
-          ProxyPassReverse http://127.0.0.1:8506/metrics/
-        </Location>
+    service_host: "{{docker_ci_service_ip}}"
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
   tags: ['apache_config']
 

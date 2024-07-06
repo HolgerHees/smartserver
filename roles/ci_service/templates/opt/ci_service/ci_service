@@ -30,7 +30,7 @@ watched_data_files = [
 class Handler(Server):
     def __init__(self):
 
-        super().__init__("ci_service", config.service_ip, config.service_port )
+        super().__init__("ci_service", "0.0.0.0", "80")
         
         self.startup_timestamp = round(datetime.now().timestamp(),3)
         

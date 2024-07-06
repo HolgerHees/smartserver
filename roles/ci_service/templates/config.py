@@ -11,7 +11,4 @@ auth_token = "{{github_auth_token if github_auth_token is defined else ''}}"
 
 branch = "master"
 
-service_ip = "127.0.0.1"
-service_port = "8506"
-
 deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "alma" }, { "config": "demo", "os": "ubuntu" } ]
