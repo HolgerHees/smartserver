@@ -165,12 +165,14 @@ Vagrant.configure(2) do |config|
         setup.vm.provision "shell", inline: <<-SHELL
         sudo zypper --non-interactive install python3-netaddr python3-pip system-user-nobody
         sudo pip install ansible==4.10.0
+        sudo cd /vagrant/ && ansible-galaxy install -r ./requirements.yml
         SHELL
     elsif setup_os == 'ubuntu' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update
         sudo apt-get -y install python3-netaddr python3-pip
         sudo pip install ansible==4.10.0
+        sudo cd /vagrant/ && ansible-galaxy install -r ./requirements.yml
         SHELL
     elsif setup_os == 'alma' then
         #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
@@ -180,6 +182,7 @@ Vagrant.configure(2) do |config|
         sudo pip install --prefix=/usr/ ansible==4.10.0
         # is needed to avoid that 'dnf-makecache.timer' is running during deployemnt. Could result in failed 'dnf-makecache.service' because of restarted named container
         sudo systemctl stop dnf-makecache.timer
+        sudo cd /vagrant/ && ansible-galaxy install -r ./requirements.yml
         SHELL
     else
         print "*** not supported ***"
