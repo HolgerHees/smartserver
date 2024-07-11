@@ -2,7 +2,7 @@ cmd_software_version_check = "/opt/update_service/env/bin/python3 /opt/update_se
 cmd_system_update_check = "/opt/update_service/env/bin/python3 /opt/update_service/system_update_check"
 cmd_service_restart = "systemctl restart"
 cmd_request_reboot = "reboot"
-cmd_container_cleanup = "/opt/container/cleanup -q"
+cmd_container_cleanup = "/opt/container/clean_images -q"
 
 software_check_email = {{ "'" + update_service_software_check_email + "'" if update_service_software_check_email is defined else 'None'}}
 update_check_email = {{ "'" + update_service_system_check_email + "'" if update_service_system_check_email is defined else 'None'}}

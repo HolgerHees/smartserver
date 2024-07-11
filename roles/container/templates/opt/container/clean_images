@@ -73,13 +73,12 @@ def sortImages(item1, item2):
 def collectImages():
     # Collect all images
     images = {}
-    result = command.exec(["docker", "image", "list", "--format", "'{{json .}}'"])
+    result = command.exec(["podman", "image", "list", "--format", "'{{json .}}'"])
     lines = result.stdout.decode("utf-8").split("\n")
     for line in lines[0:-1]:
         obj = json.loads(line[1:-1])
-
-        created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
-        image = Image(obj["ID"],obj["Repository"] if obj["Repository"] != "<none>" else None,obj["Tag"] if obj["Tag"] != "<none>" else None,created)
+        created = datetime.fromtimestamp(obj["Created"])
+        image = Image(obj["Id"],obj["repository"] if obj["repository"] != "<none>" else None,obj["tag"] if obj["tag"] != "<none>" else None,created)
         if image.repository not in images:
             images[image.repository] = []
         images[image.repository].append(image)
@@ -89,20 +88,20 @@ def collectImages():
 def collectContainers():
     # Collect all containers
     containers = []
-    result = command.exec(["docker", "ps", "-a", "--format", "'{{json .}}'"])
+    result = command.exec(["podman", "ps", "-a", "--format", "'{{json .}}'"])
     lines = result.stdout.decode("utf-8").split("\n")
     for line in lines[0:-1]:
         obj = json.loads(line[1:-1])
 
         is_stopped_since = None
         if obj["State"] == "exited":
-            result = command.exec(["docker", "inspect", obj["ID"]])
+            result = command.exec(["podman", "inspect", obj["Id"]])
             _obj = json.loads(result.stdout.decode("utf-8"))
             state = _obj[0]["State"]
-            finished_at = state["FinishedAt"].split('.')[0]
+            finished_at = state["Finished"].split('.')[0]
             finished_at = datetime.strptime("{}Z".format(finished_at), '%Y-%m-%dT%H:%M:%SZ')
             is_stopped_since = (datetime.utcnow() - finished_at)
-        containers.append(Container(obj["ID"],obj["Names"],obj["Image"],is_stopped_since)  )
+        containers.append(Container(obj["Id"],obj["Names"],obj["Image"],is_stopped_since)  )
 
     return containers
 
@@ -116,12 +115,13 @@ def collectUsedImages(images, containers):
         #build_images[columns[-1]] = True
         for _images in images.values():
             for _image in _images:
-                if columns[-1] == _image.name:
+                if columns[-1] == _image.name.split("/", 1)[1]:
                     used_images[_image.id] = "referenced"
 
     for container in containers:
         for _images in images.values():
             for _image in _images:
+                #print(container.image,_image.name, container.image, _image.id)
                 if container.image == _image.name or container.image == _image.id:
                     used_images[_image.id] = "used"
 
@@ -141,7 +141,7 @@ for container in containers:
                 print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}' stopped since {}".format(container.id, container.name, container.image, stopped_since))
         else:
             print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}'".format(container.id, container.name, container.image))
-            command.exec(["docker", "rm", "{}".format(container.id)])
+            ############################command.exec(["podman", "rm", "{}".format(container.id)])
             continue
     _containers.append(container)
 containers = _containers
@@ -167,7 +167,7 @@ for name in sorted(images,key=cmp_to_key(sortImages)):
         
         cleaned = True
 
-        command.exec(["docker", "image", "rm", "-f", "{}".format(image_version.id)])
+        #########################command.exec(["podman", "image", "rm", "-f", "{}".format(image_version.id)])
       
 if is_quite and not cleaned:
     print(u"No images deleted")

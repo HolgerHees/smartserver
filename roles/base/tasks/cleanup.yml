@@ -6,10 +6,11 @@
   shell:
     cmd: "docker ps -a --format '{{ '{{' }}.Names {{ '}}' }}'"
   changed_when: no
+  failed_when: no
   register: obsolete_container
 
 - name: process obsolete docker
   vars:
     container_names: "{{obsolete_container.stdout_lines}}"
   include_tasks: cleanup_container.yml
-  when: "obsolete_container.stdout_lines | len > 0"
+  when: "obsolete_container.stdout_lines | length > 0"
