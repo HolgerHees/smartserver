@@ -3,7 +3,7 @@
     speedtest_version: '0.5.3'
   tags: [ 'update_notifier_config' ]    
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "speedtest"
     image_name: "custom_speedtest"
@@ -13,25 +13,21 @@
       - roles/speedtest/templates/container/entrypoint.sh
       - roles/speedtest/templates/container/patches/ipInfo.js
       - roles/speedtest/templates/container/patches/gzip.js
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: speedtest
     image: "custom_speedtest:v{{speedtest_version}}"
     state: present
-#    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: speedtest
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_speedtest_ip}}"
-    networks_cli_compatible: yes
+#    ipc: "private" # needed to avoid ansible change flag
+    network: "isolated"
+    ip: "{{podman_speedtest_ip}}"
     exposed_ports:
      - "80"
     published_ports:
@@ -42,14 +38,14 @@
 - name: add container name
   vars:
     host_name: "speedtest"
-    host_ip_address: "{{docker_speedtest_ip}}"
+    host_ip_address: "{{podman_speedtest_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 #- name: allow speedtest to connect ipinfo service
 #  vars:
 #    name: "postfix"
-#    rules: [ "saddr {{docker_speedtest_ip}} daddr 34.117.59.81 proto tcp dport 443 outerface {{default_network_interface}}" ]
+#    rules: [ "saddr {{podman_speedtest_ip}} daddr 34.117.59.81 proto tcp dport 443 outerface {{default_network_interface}}" ]
 #  include_tasks: roles/firewall/shared/allow_service.yml
 #  tags: ['firewall_config']
 
@@ -80,7 +76,7 @@
 - name: create systemd service
   vars:
     container_name: "speedtest"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
   
 - name: register update notifier

@@ -13,7 +13,7 @@
   
 # retries needs to increased from 120 to 240 to give mysql on travisci more time to start
 - name: "mysql : wait_until_ready : wait for to become ready"
-  command: "docker exec mysql sh -c \"mysqladmin ping -h 127.0.0.1 --silent\""
+  command: "podman exec mysql sh -c \"mysqladmin ping -h 127.0.0.1 --silent\""
   register: check_result
   until: not check_result.rc  # or check_result.rc == 0 if you prefer
   retries: 300

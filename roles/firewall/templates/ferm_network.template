@@ -1,5 +1,5 @@
 domain (ip ip6) {
-    table filter chain DOCKER-USER saddr {{network_saddr}} daddr {{network_daddr}} ACCEPT;
+    table filter chain SMARTSERVER_FORWARD saddr {{network_saddr}} daddr {{network_daddr}} ACCEPT;
 } 
 
 

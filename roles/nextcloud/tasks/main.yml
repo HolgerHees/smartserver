@@ -53,7 +53,7 @@
     username: "{{nextcloud_mysql_username}}"
     password: "{{nextcloud_mysql_password}}"
     backup: yes
-    backup_cleanup: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
+    backup_cleanup: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
   include_tasks: roles/mysql/shared/add_database.yml
   tags: ['cron_job','backup_restore']
   when: "mysql_enabled"
@@ -85,11 +85,11 @@
   when: "database_added"
 
 - name: initialise nextcloud => database does not exists
-  shell: "docker exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mysql' --database-name 'nextcloud'  --database-user '{{nextcloud_mysql_username}}' --database-pass '{{nextcloud_mysql_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'\""
+  shell: "podman exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mysql' --database-name 'nextcloud'  --database-user '{{nextcloud_mysql_username}}' --database-pass '{{nextcloud_mysql_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'\""
   when: "database_added"
 
 - name: disable password policy => database does not exists
-  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ app:disable password_policy\""
+  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ app:disable password_policy\""
   when: "database_added"
 
 - name: backup old user folder => database does not exists
@@ -100,7 +100,7 @@
   when: "database_added"
 
 - name: enable cron as background job handler => database does not exists
-  shell: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ background:cron\""
+  shell: "podman exec php sh -c \"php -f {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ background:cron\""
   when: "database_added"
   
 - name: read new nextcloud config => database does not exists
@@ -185,7 +185,7 @@
 
 # ***** INITIALIZE OLD - POST *****
 - name: upgrade existing database => database exists and nextcloud version changed
-  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
+  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
   when: "current_nextcloud_version != installed_nextcloud_version"
 
 #occ db:add-missing-indices
@@ -195,7 +195,7 @@
   
 # ***** UPDATE USERS *****
 - name: check for existing users
-  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ user:list\" | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
+  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ user:list\" | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
   register: nextcloud_user_result
   changed_when: False
   #when: "database_added"
@@ -207,7 +207,7 @@
 # basic auth for non dav requests does not work, because the saml code to handle REMOTE_USER needs cookies
 # one possible way to fix is changing "/apps/user_saml/lib/UserBackend.php->getCurrentUserId"
 - name: add new user
-  shell: "docker exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  shell: "podman exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   when: "'user' in userdata[item].groups"
@@ -216,7 +216,7 @@
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
 #- name: update existing user
-#  shell: "docker exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{item}}\""
+#  shell: "podman exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{item}}\""
 #  register: result
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
@@ -226,7 +226,7 @@
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
 #- name: update admin user
-#  shell: "docker exec php sh -c \"export OC_PASS={{nextcloud_admin_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{nextcloud_admin_username}}\""
+#  shell: "podman exec php sh -c \"export OC_PASS={{nextcloud_admin_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{nextcloud_admin_username}}\""
 #  register: result
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
@@ -245,7 +245,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock podman exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
     group: "nextcloud"
     log: "cron"
     minute: "*/5"
@@ -255,7 +255,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Fileindex"
-    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
+    cmd: "podman exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
     group: "nextcloud"
     log: "file_scan"
     hour: "1"

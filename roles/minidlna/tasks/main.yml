@@ -23,7 +23,7 @@
     mode: 0750
   notify: "restart minidlna"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "minidlna"
     image_name: "custom_minidlna"
@@ -31,7 +31,7 @@
     files:
       - roles/minidlna/templates/container/Dockerfile
       - roles/minidlna/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: prepare volumes
   set_fact:
@@ -44,19 +44,8 @@
       {% endfor %}
       ]
 
-- name: prepare pihole networks
-  set_fact:
-    dlna_networks: |
-      {
-        "name": "macvlan",
-        "ipv4_address": "{{dlna_ip}}"
-        {% if dlna_ipv6 is defined %}
-            , "ipv6_address": "{{dlna_ipv6}}"
-        {% endif %}
-      }
-
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: minidlna
     image: "custom_minidlna:{{alpine_version}}"
     state: present
@@ -68,11 +57,9 @@
     log_driver: journald
     log_options:
       tag: minidlna
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - "{{dlna_networks}}"
-    networks_cli_compatible: yes
+    network: "macvlan"
+    ip: "{{dlna_ip}}"
+    ip6: "{{dlna_ipv6 if dlna_ipv6 is defined else ''}}"
     volumes: "{{minidlna_volumes}}"
     exposed_ports:
      - "8200/tcp"  
@@ -83,7 +70,7 @@
 - name: create systemd service
   vars:
     container_name: "minidlna"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: trigger minidlna handler

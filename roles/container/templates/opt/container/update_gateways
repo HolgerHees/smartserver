@@ -20,10 +20,7 @@ if args_values["container"] is None:
 
 container = args_values["container"]
 
-result = exec(["docker", "inspect", "--format", "{{.State.Pid}}", container], exitstatus_check=False)
-if result.returncode == 1:
-    print("container not exist")
-    exit(0)
+result = exec(["podman", "inspect", "--format", "{{.State.Pid}}", container], exitstatus_check=False)
 
 container_id = result.stdout.decode("utf-8").strip()
 if container_id == "0":
@@ -32,13 +29,13 @@ if container_id == "0":
 
 for gateway in args_values["gateway"]:
     if gateway == "default":
-        result = exec(["docker", "inspect", container])
+        result = exec(["podman", "inspect", container])
         json_result = result.stdout.decode("utf-8")
         data = json.loads(json_result)
 
         for network in data[0]["NetworkSettings"]["Networks"].values():
-            if network["IPAMConfig"] is None:
-                continue
+            #if network["IPAMConfig"] is None:
+            #    continue
 
             default_gateway = network["Gateway"]
 

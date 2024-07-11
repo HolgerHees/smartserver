@@ -1,5 +1,6 @@
 /.vagrant/
 /.vscode/
+/.collections/
 config/*
 config/demo/backup/*
 !config/demo/

@@ -21,8 +21,8 @@
 #      - roles/nextcloud_libreoffice/templates/container/Dockerfile
 #  include_tasks: roles/container/shared/build_docker_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: libreoffice
     image: "collabora/code:{{libreoffice_version}}"
 #    image: "custom_libreoffice:{{libreoffice_version}}"
@@ -39,32 +39,28 @@
     log_driver: journald
     log_options:
       tag: libreoffice
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_libreoffice_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_libreoffice_ip}}"
 #    volumes:
 #      - '{{global_etc}}libreoffice/fonts:/usr/share/fonts/truetype/custom:z'
 #      - '{{global_log}}libreoffice:/var/log/libreoffice:z'
 #      - '{{global_lib}}libreoffice:/var/www/libreoffice/Data:z'
     exposed_ports:
-     - "9980:9980"
+      - "9980"
   notify: "restart libreoffice"
     
 - name: allow libreoffice service
   vars:
     name: "libreoffice"
     rules:
-      - "saddr {{docker_libreoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
+      - "saddr {{podman_libreoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add container name
   vars:
     host_name: "libreoffice"
-    host_ip_address: "{{docker_libreoffice_ip}}"
+    host_ip_address: "{{podman_libreoffice_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
@@ -94,7 +90,7 @@
   vars:
     container_name: "libreoffice"
 #    container_after: [ "mysql", "redis" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register update notifier

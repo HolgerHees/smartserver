@@ -4,19 +4,19 @@
 #    php_version: "8.3.3" => https://github.com/Imagick/imagick/issues/640
   tags: [ 'update_notifier_config' ]
   
-- name: build docker image
+- name: build podman image
   vars:
     name: "php"
     image_name: "custom_php"
     image_version: "{{php_version}}"
     files:
       - roles/php/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: php
     image: "custom_php:{{php_version}}"
     state: present
@@ -28,12 +28,8 @@
     log_driver: journald
     log_options:
       tag: php
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks: 
-      - name: "isolated"
-        ipv4_address: "{{docker_php_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_php_ip}}"
     etc_hosts:
       openhab: "{{default_server_ip}}" # fix to make openhab reachable
       netdata: "{{default_server_ip}}" # fix to make netdata reachable
@@ -50,19 +46,19 @@
   vars:
     name: "php"
     rules:
-      - "saddr {{docker_php_ip}} daddr {{docker_mysql_ip}}"
-      - "saddr {{docker_php_ip}} daddr {{docker_influxdb_ip}}"
-      - "saddr {{docker_php_ip}} daddr {{docker_redis_ip}}"
-      - "saddr {{docker_php_ip}} daddr {{docker_postfix_ip}}"
-      - "saddr {{docker_php_ip}} daddr {{default_server_ip}} proto tcp dport 443"
-      - "saddr {{docker_php_ip}} outerface {{default_network_interface}}"
+      - "saddr {{podman_php_ip}} daddr {{podman_mysql_ip}}"
+      - "saddr {{podman_php_ip}} daddr {{podman_influxdb_ip}}"
+      - "saddr {{podman_php_ip}} daddr {{podman_redis_ip}}"
+      - "saddr {{podman_php_ip}} daddr {{podman_postfix_ip}}"
+      - "saddr {{podman_php_ip}} daddr {{default_server_ip}} proto tcp dport 443"
+      - "saddr {{podman_php_ip}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add container name
   vars:
     host_name: "php"
-    host_ip_address: "{{docker_php_ip}}"
+    host_ip_address: "{{podman_php_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
@@ -77,7 +73,7 @@
   vars:
     container_name: "php"
     container_after: [ "mysql", "redis", "postfix", "influxdb" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register update notifier

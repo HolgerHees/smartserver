@@ -76,7 +76,7 @@ class Handler(Server):
 
         leftovers = virtualbox.getMachineLeftovers(config.lib_dir, {})
         if len(leftovers) > 0:
-            self.self.has_leftovers = True
+            self.has_leftovers = True
             for leftover in leftovers:
                 logging.error(u"Leftover - name: '{}', path: '{}'".format(leftover,leftovers[leftover]))
 
@@ -198,7 +198,7 @@ class Handler(Server):
 
     def processStart(self):
         result = []
-        if not info.Info.isDefaultConnectionActive():
+        if not info.Info.isDefaultConnectionActive(config.server_host):
             result.append("Skip job, because default isp connection is inactive")
         elif self.job_executor.isRunning():
             if self.job_executor.isTerminated():

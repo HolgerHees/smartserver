@@ -18,13 +18,8 @@
     mode: 0750
   notify: "restart mosquitto"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: mosquitto
     image: "eclipse-mosquitto:{{mosquitto_version}}"
     state: present
@@ -35,12 +30,8 @@
     log_driver: journald
     log_options:
       tag: mosquitto
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_mosquitto_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_mosquitto_ip}}"
     volumes:
       - '{{global_etc}}mosquitto:/mosquitto/config:z'
     published_ports: |
@@ -57,14 +48,14 @@
 - name: add container name
   vars:
     host_name: "mosquitto"
-    host_ip_address: "{{docker_mosquitto_ip}}"
+    host_ip_address: "{{podman_mosquitto_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create systemd service
   vars:
     container_name: "mosquitto"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
 
 - name: register update notifier
   vars:

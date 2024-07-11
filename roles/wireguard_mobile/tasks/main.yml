@@ -132,7 +132,7 @@
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]
   
-- name: build docker image
+- name: build podman image
   vars:
     name: "wireguard_mobile"
     image_name: "custom_wireguard_mobile"
@@ -140,10 +140,10 @@
     files:
       - roles/wireguard_mobile/templates/container/Dockerfile
       - roles/wireguard_mobile/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
   
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: wireguard_mobile
     image: "custom_wireguard_mobile:{{alpine_version}}"
     state: present
@@ -156,8 +156,7 @@
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
-    container_default_behavior: "compatibility"
-    network_mode: "host"
+    network: "host"
 #    networks:
 #      - name: "mobile_vpn"
 #    networks_cli_compatible: yes
@@ -203,7 +202,7 @@
 - name: create systemd service
   vars:
     container_name: "wireguard_mobile"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: trigger wireguard_mobile handler

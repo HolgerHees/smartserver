@@ -6,7 +6,7 @@
         expr: |
             absent_over_time(
               {group="postfix"}
-              |~ "\\[{{docker_base_gateway | replace('.','\\\\.')}}\\]"
+              |~ "\\[{{podman_base_gateway | replace('.','\\\\.')}}\\]"
               [1d]
             )
         for: 0

@@ -23,13 +23,8 @@
     - { mode: "u=rwx,g=rx,o=", src: "silent_setup.py", dest: "silent_setup.py"}
   notify: "restart alertmanager"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: alertmanager
     image: "prom/alertmanager:v{{alertmanager_version}}"
     state: present
@@ -44,12 +39,8 @@
     log_driver: journald
     log_options:
       tag: alertmanager
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_alertmanager_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_alertmanager_ip}}"
     volumes:
       - '{{global_etc}}alertmanager:/etc/alertmanager:z'
       - '{{global_lib}}alertmanager:/alertmanager:z'
@@ -61,15 +52,15 @@
   vars:
     name: "alertmanager"
     rules:
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_alertmanager_ip}}"
-      - "saddr {{docker_alertmanager_ip}} daddr {{docker_postfix_ip}}"
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_alertmanager_ip}}"
+      - "saddr {{podman_alertmanager_ip}} daddr {{podman_postfix_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add container name
   vars:
     host_name: "alertmanager"
-    host_ip_address: "{{docker_alertmanager_ip}}"
+    host_ip_address: "{{podman_alertmanager_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
@@ -111,7 +102,7 @@
     container_name: "alertmanager"
     container_after: [ "postfix" ]
     container_post_exec: "nohup /bin/sh -c \"(sleep 15 && {{ global_etc }}alertmanager/silent_setup.py) &\""
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register update notifier

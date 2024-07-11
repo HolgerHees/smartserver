@@ -1,97 +1,18 @@
 #https://kofler.info/docker-unter-centos-8-und-fedora-31-installieren/
 
-- name: make sure docker from distro is not installed => is_rhel or is_fedora
-  yum:
-    name: [
-      moby-engine
-      #,docker
-      #,docker-client
-      #,docker-common
-      #,docker-latest
-      #,docker-logrotate
-      #,container-selinux
-      #,docker-selinux
-      #,docker-engine-selinux
-      #,docker-engine
-    ]
-    state: absent
-  when: is_rhel or is_fedora
-
-- name: make sure dnf-plugins.core installed => is_rhel or is_fedora
-  dnf:
-    name: dnf-plugins-core
-    state: present
-  when: is_rhel or is_fedora
-
-- name: remove old packages => is_rhel or is_fedora
-  yum:
-    name: [
-        docker
-        , docker-client
-        , docker-client-latest
-        , docker-common
-        , docker-latest
-        , docker-latest-logrotate
-        , docker-logrotate
-        , docker-selinux
-        , docker-engine-selinux
-        , docker-engine
-    ]
-    state: absent
-  when: is_rhel or is_fedora
-
-- name: install docker repository => is_rhel or is_fedora
-  command: dnf config-manager --add-repo https://download.docker.com/linux/{{'centos' if is_rhel else 'fedora'}}/docker-ce.repo
-  args:
-    warn: no
-  changed_when: no
-  when: is_rhel or is_fedora
-
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: [
-        docker-ce
-        , docker-ce-cli 
-        , containerd.io #-1.4.6 # 1.4.8 does not work
-        , python3-docker  # used by ansible docker module
-        , podman
+        podman
         , hostname
     ]
     state: present
   when: is_rhel or is_fedora
-  
-- name: remove old packages => is_ubuntu
-  apt:
-    name: [
-        docker 
-        , docker-engine 
-        , docker.io 
-        , containerd 
-        , runc
-    ]
-    state: absent
-  when: is_ubuntu
-
-- name: add docker gpg key => is_ubuntu
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-  when: is_ubuntu
-        
-- name: install docker repository => is_ubuntu
-  apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable"
-    state: present
-  when: is_ubuntu
 
 - name: install required packages => is_ubuntu
   apt:
     name: [
-        docker-ce 
-        , docker-ce-cli 
-        , containerd.io
-        , python3-docker
-        , podman
+        podman
         , hostname
     ]
     state: present
@@ -109,16 +30,8 @@
 - name: install required packages => is_suse
   zypper:
     name: [
-        docker
-#        , docker-buildx
-#        , python2-docker   # used by ansible docker module => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/cloud/docker_container.py" is using python2 (vagrant suse version is using it)
-        , python3-docker    # used by ansible docker module
-        , podman
+        podman
         , hostname          # used by container visualizer cli
-#        , cni
-#        , podman>=1.6.2
-#        , cni>=0.7.1
-#        , cni-plugins>=0.8.3
     ]
     state: present
   when: is_suse
@@ -127,50 +40,52 @@
 - name: prepare needed directories
   vars:
     directories:
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/docker/" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/docker" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/docker/config" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}docker" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/container" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/container/config" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}libpod/storage/" }          # podman
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}containers/storage/" }      # podman
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}libpod/" }                  # podman
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/storage/" }      # podman
   include_tasks: roles/_shared/create_directories.yml
 
-- name: set docker selinux configuration => is_rhel or is_fedora
-  sefcontext:
-    target: "{{global_lib}}docker"
-    ftype: "d"
-    setype: "container_var_lib_t"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  when: is_rhel or is_fedora
+#- name: set docker selinux configuration => is_rhel or is_fedora
+#  sefcontext:
+#    target: "{{global_lib}}libpod/storage/"
+#    ftype: "d"
+#    setype: "container_var_lib_t"
+#    seuser: "system_u"
+#    state: present
+#  with_items:
+#    - "{{global_lib}}libpod/storage/"
+#    - "{{global_lib}}containers/storage/"
+#  register: sefcontext_result
+#  when: is_rhel or is_fedora
 
-- name: reload selinux configuration => (is_rhel or is_fedora) and sefcontext changed
-  shell: "restorecon {{global_lib}}docker"
-  when: (is_rhel or is_fedora) and sefcontext_result.changed
+#- name: reload selinux configuration => (is_rhel or is_fedora) and sefcontext changed
+#  shell: "restorecon {{global_lib}}docker"
+#  when: (is_rhel or is_fedora) and sefcontext_result.changed
 
-- name: copy daemon config
+- name: copy podman config
   template:
-    src: "templates/etc/docker/daemon.json"
-    dest: "/etc/docker/daemon.json"
+    src: "templates{{item}}"
+    dest: "{{item}}"
     owner: root
     group: root
     mode: 0640
-  register: docker_config_result
-  notify: "restart docker"
+  with_items:
+    - "/etc/containers/containers.conf"
+    - "/etc/containers/registries.conf"
 
 - name: copy fluentd config
   vars:
-    config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
 
-- name: synchronize docker tools
+- name: synchronize container tools
   synchronize:
-    src: "templates/opt/docker"
+    src: "templates/opt/container"
     dest: "/opt/"
     archive: no
     checksum: yes
@@ -182,10 +97,10 @@
       - "--chown=root:root"
       - "--chmod=D750,F750"
 
-- name: copy docker tools config
+- name: copy container tools config
   template:
     src: "templates/config.py"
-    dest: "/opt/docker/config/config.py"
+    dest: "/opt/container/config/config.py"
     owner: root
     group: root
     mode: 0750
@@ -214,13 +129,7 @@
     - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
     - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
 
-- name: copy fluentd config => is_suse
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
-  include_tasks: roles/fluentd/shared/add_config.yml
-  tags: ['fluentd_config']
-  when: "monitoring_enabled"
-  
+
 #http://download.opensuse.org/repositories/devel:/kubic/openSUSE_Tumbleweed/x86_64/
 #- name: clone dnsname git
 #  git:
@@ -256,38 +165,15 @@
   shell: sysctl -p
   when: sysctlchanged.changed
 
-- name: force docker stop => docker_config_result changed
-  systemd:
-    state: stopped
-    name: docker
-  when: docker_config_result.changed
-
-# needs to be started to create docker_network
-- name: starting docker
-  systemd:
-    state: started
-    name: docker
-    
-# bridge network to allow containers host access without beeing in networkmode "host"
-- name: create isolated docker network
-  docker_network:
-    name: "isolated"
-    ipam_config:
-      - subnet: "{{docker_base_network}}/24"
-        gateway: "{{docker_base_gateway}}"
-    ipam_driver_options:
-      "com.docker.network.bridge.enable_icc": "false"
-#    appends: yes
-
 ##### MACVLAN #####
 - name: create macvlan network
-  docker_network:
+  containers.podman.podman_network:
     name: 'macvlan'
-    enable_ipv6: "{{ 'true' if default_server_ipv6 is defined else 'false' }}"
+    ipv6: "{{ 'true' if default_server_ipv6 is defined else 'false' }}"
     driver: macvlan
-    driver_options:
+    opt:
       parent: '{{default_network_interface}}'
-    ipam_config: |
+    net_config: |
       [
         { "subnet": "{{default_server_network}}", "gateway": "{{default_server_gateway}}" }
         {% if default_server_ipv6 is defined %}
@@ -295,33 +181,18 @@
         {% endif %}
       ]
 
-# needed, because macvlan in a VM has no internet access, but pihole needs internet access during startup
-#- name: macvlan routing => not is_production
-#  shell: |
-#    ip a | grep br-macvlan > /dev/null
-#    if [ $? -eq 1 ]; then
-#      ip link add br-macvlan link {{default_network_interface}} type macvlan mode bridge
-#      ip addr add {{default_server_network}} dev br-macvlan
-#      ip link set dev br-macvlan up
-#      iptables -t filter -I FORWARD --in-interface br-macvlan --out-interface {{ansible_default_ipv4.interface}} --source {{server_network}} --destination {{ansible_default_ipv4.address}} -j ACCEPT
-#      iptables -t filter -I FORWARD --in-interface {{ansible_default_ipv4.interface}} --out-interface br-macvlan --source {{ansible_default_ipv4.network}}/24 --destination {{server_network}} -j ACCEPT
-#      iptables -t nat -I POSTROUTING -o {{ansible_default_ipv4.interface}} -j MASQUERADE
-#      echo "created"
-#    else
-#      echo "skipped"
-#    fi
-#  changed_when: macvlan_result.stdout != 'skipped'
-#  register: macvlan_result
-#  when: "macvlan_range | length > 0 and not is_production"
-
-#- name: test
-#  debug:
-#    msg: "{{macvlan_result}}"
+- name: create isolated podman network
+  containers.podman.podman_network:
+    name: "isolated"
+    internal: no
+    ipv6: "{{ 'true' if default_server_ipv6 is defined else 'false' }}"
+    subnet: "{{podman_base_network}}/24"
+    gateway: "{{podman_base_gateway}}"
 
 - name: copy macvlan_bridge cmd
   template:
     src: "templates/create_macvlan_bridge.sh"
-    dest: "/opt/docker/create_macvlan_bridge.sh"
+    dest: "/opt/container/create_macvlan_bridge.sh"
     owner: root
     group: root
     mode: 0750
@@ -355,15 +226,15 @@
 
 - name: register systemd service watcher
   vars:
-    name: "docker"
+    name: "podman"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
-- name: trigger docker handler
+- name: trigger podman handler
   vars:
-    notify: "restart docker"
-    service: "docker.service"
+    notify: "restart podman"
+    service: "podman.service"
   include_tasks: roles/_shared/service_check.yml
 
 #- name: register systemd service watcher

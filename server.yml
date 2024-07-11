@@ -7,16 +7,18 @@
   environment:
     PATH: /sbin:/usr/sbin:/usr/local/sbin:/usr/bin:/bin:/usr/local/bin
   pre_tasks:
-    - name: verify that ansible version is >= 2.11.12
-      assert:
-        that: "ansible_version.full is version_compare('2.11.12', '>=')"
-        fail_msg: "This deployment requires at least ansible-core 2.11.12. You can install it by running 'pip install ansible==4.10.0' which includes this ansible-core version."
-        success_msg: "ansible version is {{ansible_version.full}}"
-      tags: always
+    - name: verify ansible versions
+      verify_ansible_versions:
+        ansible_required_version: "4.10.0"
+        ansible_core_required_version: "2.11.12"
+        collection_versions_cmd: "ansible-galaxy collection list"
+        requirements: "./requirements.yml"
+      tags: all
 
     # ************ INIT CONFIG ***********
-    - { import_role: { name: base, tasks_from: init, handlers_from: empty }, tags: [ 'always' ] }                                                                                                   # detect environment and load configs
-    - { import_role: { name: base, tasks_from: validate, handlers_from: empty } }                                                                                                                   # config validator, without tags => is checked inside
+    - { import_role: { name: base, tasks_from: init, handlers_from: empty },                tags: [ 'always' ] }                                                                                   # detect environment and load configs
+    - { import_role: { name: base, tasks_from: validate, handlers_from: empty } }                                                                                                                  # config validator, without tags => is checked inside
+    - { import_role: { name: base, tasks_from: cleanup, handlers_from: empty },             tags: [ 'docker_cleanup' ] }                                                                           # cleanup of obsolete files and configurations
     # ************************************
     #- name:
     #  debug:  
@@ -86,15 +88,15 @@
     - { import_role: { name: update_service, tasks_from: create_shared_directories, handlers_from: empty }, tags: [ 'update_service', "update_system_config", "update_notifier_config" ], when: "update_service_enabled" }
 
   tasks:
-    - { import_role: { name: base }, tags: [ 'base' ] }                                                                                                                                               # basic setup like global folders and tools
+    - { import_role: { name: base },                                                         tags: [ 'base' ] }                                                                                                 # basic setup like global folders and tools
 
-    - { import_role: { name: firewall }, tags: [ 'firewall', 'macvlan' ] }                                                                                                                                      # firewall configuration
+    - { import_role: { name: firewall },                                                     tags: [ 'firewall', 'macvlan' ] }                                                                                  # firewall configuration
 
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers } # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
     # **************************************
 
-    - { import_role: { name: cron },                                                         tags: [ 'cron' ] }                                                                                     # basic cron configuration + common cron jobs
+    - { import_role: { name: cron },                                                         tags: [ 'cron' ] }                                                                                                 # basic cron configuration + common cron jobs
 
     - { import_role: { name: shared_libs },                                                  tags: [ 'shared_libs' ] }                                                                                          # php & python libs
 

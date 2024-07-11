@@ -12,7 +12,7 @@
   when: "service_result.rc != 0"
   
 - name: "pihole : wait_until_ready : wait for to become ready"
-  command: "docker exec pihole sh -c \"echo 'hello' > /dev/null\""
+  command: "podman exec pihole sh -c \"echo 'hello' > /dev/null\""
   register: check_result
   until: not check_result.rc  # or check_result.rc == 0 if you prefer
   retries: 20

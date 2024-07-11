@@ -204,17 +204,17 @@
    - state
    - robots.txt
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "apache"
     image_name: "custom_apache2"
     image_version: "{{apache_version}}"
     files:
       - roles/apache/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
   
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: apache2
     image: "custom_apache2:{{apache_version}}"
     state: present
@@ -224,8 +224,7 @@
     log_driver: journald
     log_options:
       tag: apache
-    container_default_behavior: "compatibility"
-    network_mode: "host"
+    network: "host"
     volumes:
       - '{{global_etc}}apache2/_.ansible.auth:/etc/apache2/_.ansible.auth:z'
       - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d:z'
@@ -296,7 +295,7 @@
 - name: create systemd service
   vars:
     container_name: "apache2"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register apache update notifier

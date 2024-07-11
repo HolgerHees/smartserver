@@ -6,7 +6,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}weather_service/" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "weather_service"
     image_name: "custom_weather_service"
@@ -14,10 +14,10 @@
     files:
       - roles/weather_service/templates/container/Dockerfile
       - roles/weather_service/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: weather_service
     image: "custom_weather_service:{{alpine_version}}"
     state: present
@@ -27,12 +27,8 @@
     log_driver: journald
     log_options:
       tag: weather_service
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_weather_service_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_weather_service_ip}}"
     volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}weather_service/:/opt/weather_service:ro,z'
@@ -43,10 +39,10 @@
   vars:
     name: "weather_service"
     rules:
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_weather_service_ip}}"
-      - "saddr {{docker_weather_service_ip}} daddr {{docker_mysql_ip}}"
-      - "saddr {{docker_weather_service_ip}} daddr {{docker_cloud_mosquitto_ip if weather_mqtt_server == 'cloud_mosquitto' else docker_mosquitto_ip}}"
-      - "saddr {{docker_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_weather_service_ip}}"
+      - "saddr {{podman_weather_service_ip}} daddr {{podman_mysql_ip}}"
+      - "saddr {{podman_weather_service_ip}} daddr {{vpn_cloud_services.local.mosquitto if weather_mqtt_server == 'cloud_mosquitto' else podman_mosquitto_ip}}"
+      - "saddr {{podman_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
@@ -55,7 +51,7 @@
   when: "mysql_enabled"
 
 - name: check mysql table
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
+  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
   register: mysql_table_exists
   changed_when: "'weather_forecast' not in mysql_table_exists.stdout"
   when: "mysql_enabled"
@@ -77,7 +73,7 @@
   when: "'weather_forecast' not in mysql_table_exists.stdout"
   
 - name: create missing table 'weather_service' => does not exists in database
-  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
+  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | podman exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
   when: "mysql_enabled and 'weather_forecast' not in mysql_table_exists.stdout"
 
 - name: copy config
@@ -152,7 +148,7 @@
 - name: copy service apache config
   vars:
     service_name: "weather_service"
-    service_host: "{{docker_weather_service_ip}}"
+    service_host: "{{podman_weather_service_ip}}"
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
   tags: ['apache_config']
 
@@ -168,7 +164,7 @@
   vars:
     container_name: "weather_service"
     container_after: [ "cloud_mosquitto", "mysql" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: trigger weather_service handler

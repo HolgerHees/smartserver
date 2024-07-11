@@ -33,17 +33,17 @@
       - "--chmod=D750,F640"
   notify: "restart mysql"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "mysql"
     image_name: "custom_mysql"
     image_version: "{{mysql_version}}"
     files:
       - roles/mysql/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: mysql
     image: "custom_mysql:{{mysql_version}}"
     state: present
@@ -61,12 +61,8 @@
     volumes:
       - '{{ global_etc }}mysql:/etc/mysql:z'
       - '{{ global_lib }}mysql:/var/lib/mysql:z'
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_mysql_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_mysql_ip}}"
     exposed_ports:
       - "3306"  
   register: mysql_container
@@ -75,7 +71,7 @@
 - name: add container name
   vars:
     host_name: "mysql"
-    host_ip_address: "{{docker_mysql_ip}}"
+    host_ip_address: "{{podman_mysql_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
@@ -93,7 +89,7 @@
 - name: create cron job
   vars:
     name: "MySQL Core Backup"
-    cmd: "set -o pipefail && docker exec mysql sh -c \"/usr/bin/mysqldump mysql -u root --quick --single-transaction -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cmd: "set -o pipefail && podman exec mysql sh -c \"/usr/bin/mysqldump mysql -u root --quick --single-transaction -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     group: "mysql"
     log: "dump_mysql"
     hour: "1"
@@ -111,7 +107,7 @@
 - name: create systemd service
   vars:
     container_name: "mysql"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
     
 - name: register update notifier
@@ -138,7 +134,7 @@
   when: mysql_container.changed
 
 - name: check mysql upgrade
-  shell: "docker exec mysql sh -c \"/usr/bin/mysql_upgrade\""
+  shell: "podman exec mysql sh -c \"/usr/bin/mysql_upgrade\""
   when: mysql_container.changed
   
 # ***** SHARED DATABASE ****
@@ -152,18 +148,18 @@
   tags: ['cron_job','backup_restore']
   
 - name: "check healthcheck user"
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SELECT User FROM mysql.user'\""
+  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SELECT User FROM mysql.user'\""
   register: mysql_user_exists
   changed_when: "system_users['mysql'].name not in mysql_user_exists.stdout"
 
 - name: "create healthcheck user => user does not exists"
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{system_users['mysql'].name}}'@'%'\\\"\""
+  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{system_users['mysql'].name}}'@'%'\\\"\""
   when: "system_users['mysql'].name not in mysql_user_exists.stdout"
 
 - name: "refresh privileges => user does not exists"
-  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
+  shell: "podman exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
   when: "system_users['mysql'].name not in mysql_user_exists.stdout"
 
 #- name: "grant healthcheck user permissions => user does not exists"
-#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT USAGE TO '{{system_users['mysql'].name}}'@'%';\\\"\""
+#  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT USAGE TO '{{system_users['mysql'].name}}'@'%';\\\"\""
 #  when: "system_users['mysql'].name not in mysql_user_exists.stdout"

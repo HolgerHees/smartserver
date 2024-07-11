@@ -12,7 +12,7 @@
   when: "service_result.rc != 0"
 
 - name: "redis : wait to become ready"
-  command: "docker exec redis sh -c 'redis-cli'"
+  command: "podman exec redis sh -c 'redis-cli'"
   register: check_result
   retries: 300
   delay: 1

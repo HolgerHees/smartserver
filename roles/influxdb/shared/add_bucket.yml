@@ -3,28 +3,28 @@
 
 # BUCKETS
 - name: "influxdb : add_bucket : check bucket"
-  shell: "docker exec influxdb sh -c \"influx bucket list --org default-org\""
+  shell: "podman exec influxdb sh -c \"influx bucket list --org default-org\""
   register: influxdb_bucket_result
   changed_when: False
 
 - name: "influxdb : add_bucket : create bucket => bucket does not exists"
-  shell: "docker exec influxdb sh -c \"influx bucket create --name {{database + ('_' + item.name if item.name is defined else '')}} --org default-org --retention {{item.retention}}\""
+  shell: "podman exec influxdb sh -c \"influx bucket create --name {{database + ('_' + item.name if item.name is defined else '')}} --org default-org --retention {{item.retention}}\""
   when: "'\t' + database + ('_' + item.name if item.name is defined else '') + '\t' not in influxdb_bucket_result.stdout"
   with_items: "{{retentions}}"
 
 # MAPPINGS
 - name: "influxdb : add_bucket : get bucket ids => bucket mapping does not exists"
-  shell: "docker exec influxdb sh -c \"influx bucket list --org default-org --json\""
+  shell: "podman exec influxdb sh -c \"influx bucket list --org default-org --json\""
   register: influxdb_bucket_result
   changed_when: False
 
 - name: "influxdb : add_bucket : check v1 mapping"
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp list --org default-org\""
+  shell: "podman exec influxdb sh -c \"influx v1 dbrp list --org default-org\""
   register: influxdb_mapping_result
   changed_when: False
 
 - name: "influxdb : add_bucket : create v1 mapping => bucket mapping does not exists"
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db {{database}} --org default-org --rp {{item.name if item.name is defined else 'autogen'}} --bucket-id {{(influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', database + ('_' + item.name if item.name is defined else '')) )[0].id}} {{'' if item.name is defined else '--default'}}\""
+  shell: "podman exec influxdb sh -c \"influx v1 dbrp create --db {{database}} --org default-org --rp {{item.name if item.name is defined else 'autogen'}} --bucket-id {{(influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', database + ('_' + item.name if item.name is defined else '')) )[0].id}} {{'' if item.name is defined else '--default'}}\""
   when: "'\t' + ( influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', database + ('_' + item.name if item.name is defined else '')) )[0].id + '\t' not in influxdb_mapping_result.stdout"
   with_items: "{{retentions}}"  
 
@@ -44,14 +44,14 @@
   with_items: "{{retentions}}"
   
 - name: "influxdb : add_bucket : check task"
-  shell: "docker exec influxdb sh -c \"influx task list --org default-org\""
+  shell: "podman exec influxdb sh -c \"influx task list --org default-org\""
   register: influxdb_task_result
   changed_when: False
 
 - name: "influxdb : add_bucket : create task => task does not exists => downsampling active and task does not exists"
-#  shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | docker exec -i influxdb sh -c \"influx task create --org default-org\""
+#  shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | podman exec -i influxdb sh -c \"influx task create --org default-org\""
 # WORKARROUND for influxdb 2.4
-  shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | docker exec -i influxdb sh -c \"cat > tmp.flux && influx task create --org default-org -f tmp.flux\""
+  shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | podman exec -i influxdb sh -c \"cat > tmp.flux && influx task create --org default-org -f tmp.flux\""
   when: "item.name is defined and '\tdownsampling_' + database + '_' + item.name + '\t' not in influxdb_task_result.stdout"
   with_items: "{{retentions}}"
 
@@ -59,7 +59,7 @@
 - name: "influxdb : add_bucket : create cron job"
   vars:
     name: "Influxdb {{(database|capitalize) + ('_' + item.name if item.name is defined else '')}} Backup"
-    cmd: "docker exec influxdb sh -c \"influx backup --bucket {{database + ('_' + item.name if item.name is defined else '')}} --org default-org /var/lib/influxdb_backup/{{database + ('_' + item.name if item.name is defined else '')}}_$(date +\\%Y-\\%m-\\%d)/ &> /dev/null\""
+    cmd: "podman exec influxdb sh -c \"influx backup --bucket {{database + ('_' + item.name if item.name is defined else '')}} --org default-org /var/lib/influxdb_backup/{{database + ('_' + item.name if item.name is defined else '')}}_$(date +\\%Y-\\%m-\\%d)/ &> /dev/null\""
     group: "influxdb"
     log: "dump_{{database}}"
     hour: "1"

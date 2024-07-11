@@ -1,0 +1,58 @@
+- name: process obsolete docker container
+  vars:
+    container_name: "{{item}}"
+  include_tasks: cleanup_docker_container.yml
+  with_items: "{{container_names}}"
+
+- name: remove obsolete docker networks
+  shell:
+    cmd: "docker network rm {{item}}"
+  changed_when: no
+  with_items:
+    - "isolated"
+    - "macvlan"
+    - "cloud_vpn"
+
+- name: uninstall docker => is_rhel or is_fedora
+  yum:
+    name: [
+        docker-ce
+        , docker-ce-cli
+        , containerd.io
+        , python3-docker
+    ]
+    state: absent
+  when: is_rhel or is_fedora
+
+- name: uninstall docker => is_ubuntu
+  apt:
+    name: [
+        docker-ce
+        , docker-ce-cli
+        , containerd.io
+        , python3-docker
+    ]
+    state: absent
+  when: is_ubuntu
+
+- name: uninstall docker => is_suse
+  zypper:
+    name: [
+        docker
+        , python3-docker
+    ]
+    state: present
+  when: is_suse
+
+- name: clean old docker related files
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "/etc/ferm/ferm.d/00-docker.ferm"
+    - "/etc/ferm/ferm.d/99-docker.ferm"
+    - "/usr/lib/systemd/system/ferm.service"
+    - "/smartserver/etc/fluentd/_.ansible.d/docker.conf"
+    - "/opt/docker/"
+    - "/etc/docker/"
+    - "/smartserver/var/lib/docker/"

@@ -41,13 +41,8 @@
     - "netdata.conf"
   notify: "restart netdata"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: netdata
     image: "netdata/netdata:v{{netdata_version}}"
     state: present
@@ -67,12 +62,11 @@
     capabilities:
       - SYS_PTRACE
       - SYS_ADMIN
-    security_opts:
+    security_opt:
       - "apparmor:unconfined"
     pid_mode: "host"
     privileged: yes
-    container_default_behavior: "compatibility"
-    network_mode: "host"
+    network: "host"
     volumes:
       - '/etc/passwd:/host/etc/passwd:ro'
       - '/etc/group:/host/etc/group:ro'
@@ -84,7 +78,6 @@
       - '/run/dbus:/run/dbus:ro'
       - '/var/lib/smartmontools/:/var/lib/smartmontools/:ro'
 
-      - '/var/run/docker.sock:/var/run/docker.sock:ro'
       - '/var/log:/host/var/log:ro'
 
       - '{{ global_lib }}netdata:/var/lib/netdata:z'
@@ -167,7 +160,7 @@
 - name: create systemd service
   vars:
     container_name: "netdata"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register update notifier

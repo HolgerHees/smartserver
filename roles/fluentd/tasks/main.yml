@@ -53,17 +53,17 @@
     - "_.ansible.d/fluentd.conf"
   notify: "restart fluentd"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "fluentd"
     image_name: "custom_fluentd"
     image_version: "{{fluentd_version}}"
     files:
       - roles/fluentd/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: fluentd
     image: "custom_fluentd:{{fluentd_version}}"
     state: present
@@ -74,12 +74,8 @@
     log_driver: journald
     log_options:
       tag: fluentd
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_fluentd_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_fluentd_ip}}"
     volumes:
       - '{{ global_etc }}fluentd:/fluentd/etc/:z'
       - '{{ global_log }}:{{ global_log }}:z'
@@ -90,21 +86,21 @@
   vars:
     name: "fluentd"
     rules:
-      - "saddr {{docker_fluentd_ip}} daddr {{docker_loki_ip}}"
+      - "saddr {{podman_fluentd_ip}} daddr {{podman_loki_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
   
 - name: add container name
   vars:
     host_name: "fluentd"
-    host_ip_address: "{{docker_fluentd_ip}}"
+    host_ip_address: "{{podman_fluentd_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 - name: create systemd service
   vars:
     container_name: "fluentd"
     container_after: [ "loki" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
   
 - name: register update notifier

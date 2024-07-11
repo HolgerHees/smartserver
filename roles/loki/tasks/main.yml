@@ -20,17 +20,17 @@
     - "loki/local-config.yaml"
   notify: "restart loki"
   
-- name: build docker image
+- name: build podman image
   vars:
     name: "loki"
     image_name: "custom_loki"
     image_version: "{{loki_version}}"
     files:
       - roles/loki/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
     
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: loki
     image: "custom_loki:{{loki_version}}"
     state: present
@@ -46,12 +46,8 @@
     log_driver: journald
     log_options:
       tag: loki
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_loki_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_loki_ip}}"
     volumes:
       - '{{global_etc}}loki:/etc/loki:z'
       - '{{global_lib}}loki:/loki:z'
@@ -63,15 +59,15 @@
   vars:
     name: "loki"
     rules:
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_loki_ip}}"
-      - "saddr {{docker_loki_ip}} daddr {{docker_alertmanager_ip}}"
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_loki_ip}}"
+      - "saddr {{podman_loki_ip}} daddr {{podman_alertmanager_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add container name
   vars:
     host_name: "loki"
-    host_ip_address: "{{docker_loki_ip}}"
+    host_ip_address: "{{podman_loki_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
@@ -111,7 +107,7 @@
   vars:
     container_name: "loki"
     container_after: [ "alertmanager" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
   
 - name: register grafana configs

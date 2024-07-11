@@ -52,22 +52,6 @@
   notify: restart pihole
   when: "dns_enabled and dns_type == 'pihole'"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-
-- name: prepare pihole networks
-  set_fact:
-    pihole_networks: |
-      {
-        "name": "macvlan",
-        "ipv4_address": "{{pihole_ip}}"
-        {% if pihole_ipv6 is defined %}
-            , "ipv6_address": "{{pihole_ipv6}}"
-        {% endif %}
-      }
-
 - name: prepare pihole environment variables
   set_fact:
     pihole_env: |
@@ -76,7 +60,7 @@
         "PIHOLE_UID": "{{system_users['pihole'].id}}",
         "PIHOLE_GID": "{{system_groups['pihole'].id}}",
         "WEBPASSWORD": "{{pihole_password}}",
-        "DNS1": "127.0.0.11",
+        "DNS1": "{{default_server_ip}}",
         "DNS2": "no"
         {% if dns_enabled and dns_type == 'pihole' %}
             , "DNS_BOGUS_PRIV": "true"
@@ -104,8 +88,8 @@
     group: "{{system_groups['pihole'].name}}"
     mode: 0640
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: pihole
     image: "pihole/pihole:{{pihole_version}}"
     state: present
@@ -113,14 +97,13 @@
     env: "{{pihole_env}}"
     capabilities:
       - net_admin
+    shm_size: 256m
     log_driver: journald
     log_options:
       tag: pihole
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - "{{pihole_networks}}"
-    networks_cli_compatible: yes
+    network: "macvlan"
+    ip: "{{pihole_ip}}"
+    ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"
     volumes:
       - '{{ global_etc }}pihole/:/etc/pihole/:z'
       - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
@@ -146,7 +129,7 @@
 - name: create cron job
   vars:
     name: "Pihole update"
-    cmd: "docker exec pihole pihole updateGravity > /dev/null"
+    cmd: "podman exec pihole pihole updateGravity > /dev/null"
     group: "pihole"
     hour: "1"
     minute: "0"
@@ -163,7 +146,7 @@
 - name: create systemd service
   vars:
     container_name: "pihole"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register update notifier

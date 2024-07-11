@@ -20,23 +20,22 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_build }}influxdb" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "influxdb"
     image_name: "custom_influxdb"
     image_version: "{{influxdb_version}}"
     files:
       - roles/influxdb/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: influxdb
     image: "custom_influxdb:{{influxdb_version}}"
     state: present
 #    recreate: true
-    entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
-    command_handling: "compatibility"
+    entrypoint: '["sh", "-c", "/entrypoint.sh influxd 2>&1" ]'
     user: "{{system_users['influxdb'].name}}:{{system_groups['influxdb'].name}}"
     env:
       DOCKER_INFLUXDB_INIT_MODE: "setup"
@@ -53,12 +52,8 @@
     log_driver: journald
     log_options:
       tag: influxdb
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_influxdb_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_influxdb_ip}}"
     volumes:
       - '{{ global_etc }}influxdb:/etc/influxdb2:z'
       - '{{ global_lib }}influxdb:/var/lib/influxdb2:z'
@@ -71,7 +66,7 @@
 - name: add container name
   vars:
     host_name: "influxdb"
-    host_ip_address: "{{docker_influxdb_ip}}"
+    host_ip_address: "{{podman_influxdb_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
@@ -113,7 +108,7 @@
 - name: create systemd service
   vars:
     container_name: "influxdb"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
   
 - name: register update notifier
@@ -141,11 +136,11 @@
   when: "influxdb_container_result.changed"
   
 - name: check cli config
-  shell: "docker exec influxdb sh -c \"influx config list\""
+  shell: "podman exec influxdb sh -c \"influx config list\""
   register: influxdb_config_result
   changed_when: False
   when: "influxdb_container_result.changed"
   
 - name: create cli config token => config does not exists
-  shell: "docker exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active\""
+  shell: "podman exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active\""
   when: "influxdb_container_result.changed and '\tdefault\t' not in influxdb_config_result.stdout"

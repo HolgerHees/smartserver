@@ -74,28 +74,27 @@
   with_items:
     - "wg0.conf"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "wireguard_cloud"
     image_name: "custom_wireguard_cloud"
     image_version: "{{alpine_version}}"
     files:
       - roles/wireguard_cloud/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker network
+- name: create podman network
   vars:
     network_name: "cloud_vpn"
-    network_ip: ""
     network_subnet: "{{cloud_vpn.interface.network}}"
     network_gateway: "{{vpn_cloud_services.local.bridge}}"
     network_internal: no
     network_firewall_subnet: "{{vpn_cloud_subnet}}.0.0/16"
-  include_tasks: roles/container/shared/create_docker_network.yml
+  include_tasks: roles/container/shared/create_podman_network.yml
   tags: ['firewall_config']
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: "wireguard_cloud"
     image: "custom_wireguard_cloud:{{alpine_version}}"
     state: present
@@ -112,14 +111,8 @@
     privileged: yes
     #domainname : "cloud"
     #hostname: "nfsd"
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "cloud_vpn"
-        ipv4_address: "{{vpn_cloud_services.local.gateway}}"
-#      - name: "isolated"
-#        ipv4_address: "{{docker_wireguard_cloud_ip}}"
-    networks_cli_compatible: yes
+    network: "cloud_vpn"
+    ip: "{{vpn_cloud_services.local.gateway}}"
     volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
     published_ports: |
@@ -130,16 +123,6 @@
         {% endif %}
       ]
   notify: "restart wireguard_cloud"
-
-#- name: clean old docker images => image does not exists
-#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
-#  when: "wg_image_name not in image_exists.stdout"
-  
-#- name: add container name
-#  vars:
-#    host_name: "wireguard_cloud"
-#    host_ip_address: "{{vpn_cloud_services.local.gateway}}"
-#  include_tasks: roles/_shared/add_to_hosts.yml
 
 - name: prepare used ports
   set_fact:
@@ -174,8 +157,8 @@
   vars:
     container_name: "wireguard_cloud"
     trigger_name: "wireguard_cloud"
-    container_post_exec: "/opt/docker/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
-  include_tasks: roles/container/shared/add_docker_service.yml
+    container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: trigger wireguard_cloud handler

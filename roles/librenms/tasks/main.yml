@@ -36,8 +36,8 @@
     - "config.php"
   notify: "restart librenms"
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: librenms
     image: "librenms/librenms:{{librenms_version}}"
     state: present
@@ -58,15 +58,14 @@
 #      APP_URL: "https://librenms.{{server_domain}}/"
 #      LIBRENMS_BASE_URL: "https://librenms.{{server_domain}}/"
       TZ: "{{timezone}}"
+    capabilities:
+#      - NET_ADMIN
+      - NET_RAW
     log_driver: journald
     log_options:
       tag: librenms
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks: 
-      - name: "isolated"
-        ipv4_address: "{{docker_librenms_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_librenms_ip}}"
     volumes:
       - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:z'
       - '{{global_etc}}librenms:/data/config:z'
@@ -84,10 +83,10 @@
   set_fact:
     librenms_ferm_rules: |
       [
-      "saddr {{docker_librenms_ip}} daddr {{docker_mysql_ip}}",
-      "saddr {{docker_librenms_ip}} daddr {{docker_redis_ip}}",
+      "saddr {{podman_librenms_ip}} daddr {{podman_mysql_ip}}",
+      "saddr {{podman_librenms_ip}} daddr {{podman_redis_ip}}",
       {% for network in intern_networks %}
-        "saddr {{docker_librenms_ip}} daddr {{network}}",
+        "saddr {{podman_librenms_ip}} daddr {{network}}",
       {% endfor %}
       ]
   tags: ['firewall_config']
@@ -102,7 +101,7 @@
 - name: add container name
   vars:
     host_name: "librenms"
-    host_ip_address: "{{docker_librenms_ip}}"
+    host_ip_address: "{{podman_librenms_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** MYSQL DATABASE ****
@@ -145,7 +144,7 @@
   vars:
     container_name: "librenms"
     container_after: [ "redis", "mysql" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register update notifier

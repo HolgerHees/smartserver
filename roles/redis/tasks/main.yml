@@ -3,13 +3,8 @@
     redis_version: '7.2.5'
   tags: [ 'update_notifier_config' ]
   
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-
 - name: create docker container
-  docker_container:
+  containers.podman.podman_container:
     name: redis
     image: "redis:{{redis_version}}-alpine"
     state: present
@@ -20,12 +15,8 @@
     log_driver: journald
     log_options:
       tag: redis
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_redis_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_redis_ip}}"
     exposed_ports:
      - "6379"
   notify: "restart redis"
@@ -39,14 +30,14 @@
   vars:
     name: "redis"
     rules:
-      - "saddr {{docker_redis_ip}} daddr {{docker_php_ip}}"
+      - "saddr {{podman_redis_ip}} daddr {{podman_php_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: create systemd service
   vars:
     container_name: "redis"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register update notifier

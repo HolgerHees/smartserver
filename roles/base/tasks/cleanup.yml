@@ -1,0 +1,15 @@
+# check if docker exists
+
+# unmount cloud remotes if available
+
+- name: check for obsolete docker
+  shell:
+    cmd: "docker ps -a --format '{{ '{{' }}.Names {{ '}}' }}'"
+  changed_when: no
+  register: obsolete_container
+
+- name: process obsolete docker
+  vars:
+    container_names: "{{obsolete_container.stdout_lines}}"
+  include_tasks: cleanup_container.yml
+  when: "obsolete_container.stdout_lines | len > 0"

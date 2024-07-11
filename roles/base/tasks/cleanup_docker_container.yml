@@ -1,0 +1,16 @@
+- name: "process_obsolete_container : set temporary dns => container_name == 'dnsmasq'"
+  copy:
+    content: "nameserver 8.8.8.8"
+    dest: "/etc/resolv.conf"
+  when: "container_name == 'dnsmasq'"
+
+- name: "process_obsolete_container : stop container '{{container_name}}'"
+  systemd:
+    name: "{{container_name}}"
+    state: stopped
+    enabled: yes
+    masked: no
+
+- name: "process_obsolete_container : clean docker container '{{container_name}}'"
+  shell:
+    cmd: "docker rm {{container_name}}"

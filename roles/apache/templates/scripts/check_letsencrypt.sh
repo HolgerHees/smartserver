@@ -10,13 +10,13 @@ UNIQUE_DOMAINS=`echo $DOMAINS | tr ' ' '\n' | sort -u | tr '\n' ' '| xargs | sed
 
 if [ $# -gt 0 ] & [ "$1" == "update" ]
 then
-  LETSENCRYPT_CMD="docker exec apache2 sh -c \"certbot certonly --webroot -w ${HTDOCS}_public --preferred-challenges http --agree-tos --email $EMAIL --cert-name $SERVER -d $SERVER -d $UNIQUE_DOMAINS\""
+  LETSENCRYPT_CMD="podman exec apache2 sh -c \"certbot certonly --webroot -w ${HTDOCS}_public --preferred-challenges http --agree-tos --email $EMAIL --cert-name $SERVER -d $SERVER -d $UNIQUE_DOMAINS\""
 
   printf "\n\n"
 
   eval $LETSENCRYPT_CMD
 else
-  LETSENCRYPT_CMD="docker exec apache2 sh -c \"certbot certonly --webroot -w ${HTDOCS}_public --dry-run --preferred-challenges http --agree-tos --email $EMAIL --cert-name $SERVER -d $SERVER -d $UNIQUE_DOMAINS\""
+  LETSENCRYPT_CMD="podman exec apache2 sh -c \"certbot certonly --webroot -w ${HTDOCS}_public --dry-run --preferred-challenges http --agree-tos --email $EMAIL --cert-name $SERVER -d $SERVER -d $UNIQUE_DOMAINS\""
 
   echo $LETSENCRYPT_CMD
 

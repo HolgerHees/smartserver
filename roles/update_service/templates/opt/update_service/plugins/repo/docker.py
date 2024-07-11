@@ -68,7 +68,8 @@ class Application(App):
         else:
             if Application.repositories is None:
                 Application.repositories = {}
-                result = command.exec([ "/usr/bin/docker", "image", "list" ] )
+
+                result = command.exec([ "/usr/bin/podman", "image", "list" ] )
                 lines = result.stdout.decode("utf-8").split("\n")
                 for line in lines:
                     columns = line.split()

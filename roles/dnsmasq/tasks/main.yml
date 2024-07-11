@@ -70,17 +70,17 @@
       when: dhcp_changed.changed
   when: "dhcp_enabled and dhcp_type == 'dnsmasq'"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "dnsmasq"
     image_name: "custom_dnsmasq"
     image_version: "{{alpine_version}}"
     files:
       - roles/dnsmasq/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
   
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: dnsmasq
     image: "custom_dnsmasq:{{alpine_version}}"
     state: present
@@ -90,12 +90,8 @@
     log_driver: journald
     log_options:
       tag: dnsmasq
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_dns_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_dns_ip}}"
     volumes:
       - '{{ global_etc }}dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:z'
       - '{{ global_etc }}dnsmasq/:/etc/dnsmasq/:z'
@@ -114,7 +110,7 @@
 # ***** FINALIZE *****
 - name: prepare iptables rules
   set_fact:
-    dns_rules: "{{ (dns_rules | default([])) + [ 'saddr ' + docker_dns_ip + ' daddr ' + item ] }}"
+    dns_rules: "{{ (dns_rules | default([])) + [ 'saddr ' + podman_dns_ip + ' daddr ' + item ] }}"
   with_items: "{{ dns_forward_ip_addresses }}"
   tags: ['firewall_config']
 
@@ -129,7 +125,7 @@
 - name: create systemd service
   vars:
     container_name: "dnsmasq"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
   
 # must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port

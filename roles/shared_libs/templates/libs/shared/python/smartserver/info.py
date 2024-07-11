@@ -5,9 +5,9 @@ import logging
 
 class Info():
     @staticmethod
-    def _getConnectionState():
+    def _getConnectionState(server_name):
         try:
-            response = requests.get("http://127.0.0.1:8507/wan_state/")
+            response = requests.get("https://{}/system_service/api/wan_state/".format(server_name))
             return response.content.decode("utf-8")
         except requests.exceptions.ConnectionError:
             return "unknown"
@@ -16,13 +16,13 @@ class Info():
             return "unknown"
 
     @staticmethod
-    def isDefaultConnectionActive():
-        return Info._getConnectionState() == "default"
+    def isDefaultConnectionActive(server_name):
+        return Info._getConnectionState(server_name) == "default"
 
     @staticmethod
-    def isFallbackConnectionActive():
-        return Info._getConnectionState() == "fallback"
+    def isFallbackConnectionActive(server_name):
+        return Info._getConnectionState(server_name) == "fallback"
 
     @staticmethod
-    def isConnectionOnline():
-        return Info._getConnectionState() != "unknown"
+    def isConnectionOnline(server_name):
+        return Info._getConnectionState(server_name) != "unknown"

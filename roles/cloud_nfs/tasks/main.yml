@@ -12,6 +12,9 @@
     owner: "root"
     group: "root"
     mode: 0750
+#  async: 5
+#    poll: 0
+#    register: cloud_nfs_folder_check
   with_items:
     - "{{cloud_path}}"
     - "{{cloud_path}}/local"
@@ -78,17 +81,17 @@
     - "peers"
     - "exports"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "cloud_nfs"
     image_name: "custom_cloud_nfs"
     image_version: "{{alpine_version}}"
     files:
       - roles/cloud_nfs/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create docker container
-  docker_container:
+  containers.podman.podman_container:
     name: "cloud_nfs"
     image: "custom_cloud_nfs:{{alpine_version}}"
     state: present
@@ -105,12 +108,8 @@
     #  - SYS_ADMIN
     #  - SETPCAP
     privileged: yes
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "cloud_vpn"
-        ipv4_address: "{{vpn_cloud_services.local.nfs}}"
-    networks_cli_compatible: yes
+    network: "cloud_vpn"
+    ip: "{{vpn_cloud_services.local.nfs}}"
     volumes:
       - '{{global_etc}}cloud_nfs:/etc/cloud_nfs:z'
       - '{{global_etc}}cloud_nfs/exports:/etc/exports:z'
@@ -141,11 +140,7 @@
     container_name: "cloud_nfs"
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
-    container_after:
-      - "wireguard_cloud"
-    container_binds:
-      - "wireguard_cloud"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: trigger cloud_nfs handler

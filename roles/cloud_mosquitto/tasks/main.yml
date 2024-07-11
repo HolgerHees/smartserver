@@ -18,13 +18,8 @@
     mode: 0750
   notify: "restart cloud_mosquitto"
   
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: cloud_mosquitto
     image: "eclipse-mosquitto:{{mosquitto_version}}"
     state: present
@@ -35,14 +30,8 @@
     log_driver: journald
     log_options:
       tag: cloud_mosquitto
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "cloud_vpn"
-        ipv4_address: "{{vpn_cloud_services.local.mosquitto}}"
-      - name: "isolated"
-        ipv4_address: "{{docker_cloud_mosquitto_ip}}"
-    networks_cli_compatible: yes
+    network: "cloud_vpn"
+    ip: "{{vpn_cloud_services.local.mosquitto}}"
     volumes:
       - '{{global_etc}}cloud_mosquitto:/mosquitto/config:z'
   notify: "restart cloud_mosquitto"
@@ -65,7 +54,7 @@
     container_name: "cloud_mosquitto"
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 #- name: register update notifier

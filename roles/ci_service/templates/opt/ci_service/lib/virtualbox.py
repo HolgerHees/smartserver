@@ -64,9 +64,9 @@ def destroyMachineLeftover(leftover,lib_dir,machines):
 
 def destroyMachinesLeftovers(lib_dir,machines):
     destroyed = []
-    leftovers = virtualbox.getMachineLeftovers(config.lib_dir,machines)
+    leftovers = getMachineLeftovers(lib_dir,machines)
     for leftover in leftovers:
-        name = virtualbox.destroyMachineLeftover(leftover,config.lib_dir,machines)
+        name = destroyMachineLeftover(leftover,lib_dir,machines)
         destroyed.append({"name": name})
     return destroyed
 

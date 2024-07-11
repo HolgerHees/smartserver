@@ -30,7 +30,7 @@
 #  when: "certificate_mode == 'create'"
 
 #- name: create certificates => certificate_mode = 'create'
-#  shell: "docker exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
+#  shell: "podman exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
 #  notify: "restart apache2"
 #  when: "certificate_mode == 'create'"
 
@@ -50,7 +50,7 @@
 - name: create cron job
   vars:
     name: "Letsencrypt renew job"
-    cmd: "docker exec apache2 sh -c \"certbot renew -q --deploy-hook=\\\"apachectl -k graceful\\\"\""
+    cmd: "podman exec apache2 sh -c \"certbot renew -q --deploy-hook=\\\"apachectl -k graceful\\\"\""
     group: "apache"
     log: "letsencrypt"
     hour: "1"

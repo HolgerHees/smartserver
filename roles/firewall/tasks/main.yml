@@ -76,12 +76,11 @@
     group: root
     mode: "{{item.mode}}"
   with_items:
-    - { mode: "u=rw,g=r,o=r", src: "/etc/systemd/ferm.service", dest: "/usr/lib/systemd/system/ferm.service" }
+    - { mode: "u=rw,g=r,o=r", src: "/etc/systemd/ferm.service", dest: "/etc/systemd/system/ferm.service" }
     - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.conf", dest: "/etc/ferm/ferm.conf" }
-    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/00-docker.ferm", dest: "/etc/ferm/ferm.d/00-docker.ferm" }
-    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/10-docker.ferm", dest: "/etc/ferm/ferm.d/10-docker.ferm" }
+    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/00-container.ferm", dest: "/etc/ferm/ferm.d/00-container.ferm" }
     - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/20-in.trusted.ferm", dest: "/etc/ferm/ferm.d/20-in.trusted.ferm" }
-    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/99-docker.ferm", dest: "/etc/ferm/ferm.d/99-docker.ferm" }
+    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/99-container.ferm", dest: "/etc/ferm/ferm.d/99-container.ferm" }
   notify: "restart ferm"
 
 # ***** FINALIZE *****

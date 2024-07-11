@@ -48,13 +48,8 @@
   shell: "restorecon -irv {{ global_etc }}prometheus"
   when: (is_fedora or is_rhel) and sefcontext_result.changed
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-  
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: prometheus
     image: "prom/prometheus:v{{prometheus_version}}"
     state: present
@@ -70,12 +65,8 @@
     log_driver: journald
     log_options:
       tag: prometheus
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_prometheus_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_prometheus_ip}}"
     volumes:
       - '{{ global_etc }}prometheus:/etc/prometheus:z'
       - '{{ global_lib }}prometheus:/prometheus:z'
@@ -87,15 +78,15 @@
   vars:
     name: "prometheus"
     rules:
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_alertmanager_ip}}"
-      - "saddr {{docker_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_alertmanager_ip}}"
+      - "saddr {{podman_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add container name
   vars:
     host_name: "prometheus"
-    host_ip_address: "{{docker_prometheus_ip}}"
+    host_ip_address: "{{podman_prometheus_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
@@ -137,7 +128,7 @@
     container_name: "prometheus"
     container_pre_exec: "{{ global_etc }}prometheus/generator"
     container_after: [ "alertmanager" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
   
 - name: register update notifier

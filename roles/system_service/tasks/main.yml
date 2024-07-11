@@ -38,7 +38,7 @@
     mode: 0750
   notify: "restart system_service"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "system_service"
     image_name: "custom_system_service"
@@ -46,10 +46,10 @@
     files:
       - roles/system_service/templates/container/Dockerfile
       - roles/system_service/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: system_service
     image: "custom_system_service:{{alpine_version}}"
     state: present
@@ -62,8 +62,7 @@
     log_driver: journald
     log_options:
       tag: system_service
-    container_default_behavior: "compatibility"
-    network_mode: "host"
+    network: "host"
     exposed_ports:
       - "8507"
       - "2055/udp"
@@ -72,6 +71,12 @@
       - '{{global_opt}}system_service/:/opt/system_service:ro,z'
       - "{{global_lib}}system_service/:/var/lib/system_service:rw,z"
   notify: "restart system_service"
+
+- name: add container name
+  vars:
+    host_name: "system_service"
+    host_ip_address: "{{default_server_ip}}"
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** INFLUXDB DATABASE ****
 - name: create database
@@ -177,7 +182,7 @@
   vars:
     container_name: "system_service"
     container_after: [ "network-online.target", "mosquitto", "influxdb" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: trigger device_ping handler

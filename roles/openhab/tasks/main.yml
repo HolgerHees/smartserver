@@ -316,7 +316,7 @@
   with_indexed_items: "{{device_result.stdout_lines}}"
   when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
   
-- name: build docker image
+- name: build podman image
   vars:
     name: "openhab"
     image_name: "custom_openhab"
@@ -324,7 +324,7 @@
     files:
       - roles/openhab/templates/container/Dockerfile
       - roles/openhab/templates/container/init.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: check conf volumens
   shell: "ls -1 {{global_etc}}openhab/conf"
@@ -352,7 +352,7 @@
 #    msg: "{{openhab_volumes}}"
 
 - name: create docker container
-  docker_container:
+  containers.podman.podman_container:
     name: openhab
     image: "custom_openhab:{{openhab_version}}"
     state: present
@@ -373,9 +373,8 @@
     log_driver: journald
     log_options:
       tag: openhab
-    devices: "{{openhab_device_mounts | default([])}}"
-    container_default_behavior: "compatibility"
-    network_mode: "host"
+    device: "{{openhab_device_mounts | default([])}}"
+    network: "host"
     volumes: "{{openhab_volumes}}"
 #      - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
 #      - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
@@ -385,14 +384,6 @@
 #      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
 #      - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
 #      - '{{global_log}}openhab:/openhab/userdata/logs:z'
-
-#    networks:
-#      - name: "openhab"
-#        ipv4_address: "{{docker_openhab_ip}}"
-#    networks_cli_compatible: yes
-#    sysctls:
-#      "net.ipv4.conf.all.arp_accept": "1"
-#      "net.ipv4.conf.all.proxy_arp": "1"
     exposed_ports:
       - "8080"  
       - "8443"  
@@ -559,7 +550,7 @@
   vars:
     container_name: "openhab"
     container_after: [ "mysql", "influxdb", "mosquitto" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
   
 - name: register openhab update notifier

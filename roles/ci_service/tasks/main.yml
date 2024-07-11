@@ -33,7 +33,7 @@
   when: is_suse
   notify: "restart virtualbox" 
   
-- name: build docker image
+- name: build podman image
   vars:
     name: "ci_service"
     image_name: "custom_ci_service"
@@ -41,10 +41,10 @@
     files:
       - roles/ci_service/templates/container/Dockerfile
       - roles/ci_service/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: ci_service
     image: "custom_ci_service:{{alpine_version}}"
     state: present
@@ -56,12 +56,8 @@
       tag: ci_service
     pid_mode: "host"
     privileged: "true"
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_ci_service_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_ci_service_ip}}"
     volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}ci_service/:{{global_opt}}ci_service:ro,z'
@@ -75,9 +71,9 @@
   vars:
     name: "ci_service"
     rules:
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_ci_service_ip}}"
-      - "saddr {{docker_ci_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
-#      - "saddr {{docker_ci_service_ip}} proto tcp dport 443 daddr {{docker_ci_service_ip}}"
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_ci_service_ip}}"
+      - "saddr {{podman_ci_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
+      - "saddr {{podman_ci_service_ip}} proto tcp dport 443 daddr {{default_server_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
@@ -146,7 +142,7 @@
 - name: create check cron job
   vars:
     name: "Continues integration job"
-    cmd: "docker exec ci_service sh -c \"{{global_opt}}ci_service/ci_job_handler start > /dev/null\""
+    cmd: "podman exec ci_service sh -c \"{{global_opt}}ci_service/ci_job_handler start > /dev/null\""
     group: "ci_service"
     log: "job"
     minute: "*/5"
@@ -178,7 +174,7 @@
 - name: copy service apache config
   vars:
     service_name: "ci_service"
-    service_host: "{{docker_ci_service_ip}}"
+    service_host: "{{podman_ci_service_ip}}"
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
   tags: ['apache_config']
 
@@ -193,7 +189,7 @@
 - name: create systemd service
   vars:
     container_name: "ci_service"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
  
 - name: register service watcher

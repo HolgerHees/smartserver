@@ -85,6 +85,12 @@ class FileWatcher():
                 del self.inotify_in_progress[event.path]
 
         elif event.mask & inotify.Constants.IN_CLOSE_WRITE:
+            if event.path in self.inotify_in_progress: # can happen when IN_CREATE instead of IN_OPEN was called
+                with self.inotify_lock:
+                    if event.path in self.inotify_in_progress:
+                        self.inotify_in_progress[event.path].cancel()
+                        del self.inotify_in_progress[event.path]
+
             #logging.info("Closed path '{}'".format(event.path))
             if event.path in self.modified_time:
                 self.modified_time[event.path] = datetime.now().timestamp()

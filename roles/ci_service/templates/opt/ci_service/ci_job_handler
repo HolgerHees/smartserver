@@ -5,8 +5,6 @@ import sys
 import logging
 import requests
 
-from config import config
-
 
 handler = logging.StreamHandler(sys.stdout)
 
@@ -19,17 +17,17 @@ logging.basicConfig(
 cmd = ""
 if len(sys.argv) >= 2:
     cmd = sys.argv[1]
-    
+
 if cmd == "status":
-    result = requests.get("http://{}:{}/status/".format(config.service_ip, config.service_port))
+    result = requests.get("http://localhost/status/")
     print(result.text)
     exit(0)
 elif cmd == "clean":
-    result = requests.get("http://{}:{}/clean/".format(config.service_ip, config.service_port))
+    result = requests.get("http://localhost/clean/")
     print(result.text)
     exit(0)
 elif cmd == "stop":
-    result = requests.get("http://{}:{}/stop/".format(config.service_ip, config.service_port))
+    result = requests.get("http://localhost/stop/")
     print(result.text)
     exit(0)
 elif cmd == "start" or cmd == "restart":
@@ -41,7 +39,7 @@ elif cmd == "start" or cmd == "restart":
             exit(1)
     else:
         start_os = "all"
-    result = requests.post("http://{}:{}/start/".format(config.service_ip, config.service_port), data={"cmd": cmd, "start_os": start_os })
+    result = requests.post("http://localhost/start/", data={"cmd": cmd, "start_os": start_os })
     print(result.text)
     exit(0)
 elif cmd != "":

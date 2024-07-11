@@ -16,7 +16,7 @@
     - "canonical_maps_recipient"
   notify: "restart postfix"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "postfix"
     image_name: "custom_postfix"
@@ -24,10 +24,10 @@
     files:
       - roles/postfix/templates/container/Dockerfile
       - roles/postfix/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: postfix
     image: "custom_postfix:{{alpine_version}}"
     state: present
@@ -37,12 +37,8 @@
     log_driver: journald
     log_options:
       tag: postfix
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_postfix_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_postfix_ip}}"
     volumes:
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
       - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:z'
@@ -54,15 +50,15 @@
   vars:
     name: "postfix"
     rules:
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_postfix_ip}}"
-      - "saddr {{docker_postfix_ip}} proto tcp dport {{mailserver_port}} outerface {{default_network_interface}}"
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_postfix_ip}}"
+      - "saddr {{podman_postfix_ip}} proto tcp dport {{mailserver_port}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add container name
   vars:
     host_name: "postfix"
-    host_ip_address: "{{docker_postfix_ip}}"
+    host_ip_address: "{{podman_postfix_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # SET LOCAL SMTP CLIENT
@@ -150,7 +146,7 @@
 - name: create systemd service
   vars:
     container_name: "postfix"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: create cron 'ping' job

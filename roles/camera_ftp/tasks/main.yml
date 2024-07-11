@@ -20,7 +20,7 @@
       ]
   include_tasks: roles/_shared/create_directories.yml
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "ftp"
     image_name: "custom_vsftpd"
@@ -28,10 +28,10 @@
     files:
       - roles/camera_ftp/templates/container/Dockerfile
       - roles/camera_ftp/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
   
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: vsftpd
     image: "custom_vsftpd:{{alpine_version}}"
     state: present
@@ -54,12 +54,8 @@
       tag: vsftpd
     volumes:
       - '{{global_lib}}/camera_service/upload/:/home/upload:z'
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_camera_ftp_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_camera_ftp_ip}}"
     published_ports: |
       [
         "21:21",
@@ -74,7 +70,7 @@
 
 - name: prepare iptables rules
   set_fact:
-    ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + docker_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
+    ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + podman_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
   with_items: "{{ intern_networks }}"
   tags: ['firewall_config']
 
@@ -103,7 +99,7 @@
 - name: create systemd service
   vars:
     container_name: "vsftpd"
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: trigger vsftpd handler

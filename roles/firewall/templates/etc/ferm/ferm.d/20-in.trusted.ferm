@@ -1,6 +1,6 @@
 domain (ip ip6) {
     table filter {
-        chain INPUT {
+        chain SMARTSERVER_INPUT {
             # internal ip's can connect to host
 {% for network in intern_networks %}
             saddr {{network}} ACCEPT;
@@ -8,7 +8,7 @@ domain (ip ip6) {
             # mobile vpn ip's can connect to host
             saddr {{vpn_mobile_network}}/24 ACCEPT;
         }
-        chain DOCKER-USER {
+        chain SMARTSERVER_FORWARD {
             # internal ip's can forward to containers
 {% for network in intern_networks %}
             saddr {{network}} ACCEPT;

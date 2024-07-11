@@ -13,7 +13,7 @@
       ]
   include_tasks: roles/_shared/create_directories.yml
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "camera_service"
     image_name: "custom_camera_service"
@@ -21,10 +21,10 @@
     files:
       - roles/camera_service/templates/container/Dockerfile
       - roles/camera_service/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: camera_service
     image: "custom_camera_service:{{alpine_version}}"
     state: present
@@ -34,12 +34,8 @@
     log_driver: journald
     log_options:
       tag: camera_service
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "isolated"
-        ipv4_address: "{{docker_camera_service_ip}}"
-    networks_cli_compatible: yes
+    network: "isolated"
+    ip: "{{podman_camera_service_ip}}"
     volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}camera_service/:/opt/camera_service:ro,z'
@@ -51,7 +47,7 @@
   vars:
     name: "camera_service"
     rules:
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_camera_service_ip}}"
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_camera_service_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
@@ -132,7 +128,7 @@
 - name: copy service apache config
   vars:
     service_name: "camera_service"
-    service_host: "{{docker_camera_service_ip}}"
+    service_host: "{{podman_camera_service_ip}}"
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
   tags: ['apache_config']
 
@@ -148,7 +144,7 @@
   vars:
     container_name: "camera_service"
     container_after: [ "camera_ftp" ]
-  include_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 
 - name: register systemd service watcher

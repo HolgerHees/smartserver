@@ -3,8 +3,8 @@
     name: "{{network_name}}"
     internal: "{{network_internal}}"
     ipam_config:
-      - subnet: "{{network_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
-        gateway: "{{network_gateway | default(network_ip.split('.')[:3] | join('.') + '.1')}}"
+      - subnet: "{{network_subnet}}"
+        gateway: "{{network_gateway}}"
 #    connected: "{{network_container | default([])}}"
     appends: no
   register: network_result
@@ -12,8 +12,8 @@
 - name: "container : create_docker_network : allow network {{network_name}}"
   vars:
 #    network_saddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
-    network_saddr: "{{network_firewall_subnet | default(network_ip)}}"
-    network_daddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
+    network_saddr: "{{network_firewall_subnet}}"
+    network_daddr: "{{network_firewall_subnet}}"
   include_tasks: roles/firewall/shared/allow_network.yml
   tags: ['firewall_config']
 
