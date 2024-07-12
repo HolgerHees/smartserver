@@ -10,12 +10,6 @@
   tags: [ 'update_notifier_config', 'user' ]
 
 # ***** PREPARE FOLDER *****
-- name: prepare needed directories
-  vars:
-    directories:
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_log}}nextcloud" }
-  include_tasks: roles/_shared/create_directories.yml
-
 - name: prepare .ocdata file
   copy:
     content: ""

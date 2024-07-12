@@ -231,21 +231,19 @@
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
-- name: trigger podman handler
+- name: create iptables rule cron job
   vars:
-    notify: "restart podman"
-    service: "podman.service"
-  include_tasks: roles/_shared/service_check.yml
+    name: "IPTables netavark leftover check"
+    cmd: "/opt/container/clean_iptables.sh check"
+    group: "container"
+    log: "iptables_check"
+    minute: "*/5"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
-#- name: register systemd service watcher
-#  vars:
-#    name: "podman.socket"
-#  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-#  tags: ['systemd_watcher_config']
-#  when: "monitoring_enabled"
-
-#- name: trigger podman handler
-#  vars:
-#    notify: "restart podman"
-#    service: "podman.socket"
-#  include_tasks: roles/_shared/service_check.yml
+- name: enable podman
+  systemd:
+    name: podman
+    daemon_reload: yes
+    enabled: yes
+    masked: no

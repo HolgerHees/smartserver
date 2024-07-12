@@ -79,6 +79,8 @@ class Handler(Server):
             self.has_leftovers = True
             for leftover in leftovers:
                 logging.error(u"Leftover - name: '{}', path: '{}'".format(leftover,leftovers[leftover]))
+        else:
+            self.has_leftovers = False
 
     def notifyChangedExecutorRunnerState(self, is_running):
         if self.isSocketRoomActive("widget"):

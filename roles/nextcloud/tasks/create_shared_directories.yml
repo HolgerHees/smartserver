@@ -2,4 +2,5 @@
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{nextcloud_data_path}}" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{global_log}}nextcloud" } # needed to be able to create php container
   include_tasks: roles/_shared/create_directories.yml

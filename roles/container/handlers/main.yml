@@ -6,12 +6,3 @@
     enabled: yes
     masked: no
   listen: "restart macvlan_bridge"
-
-- name: restart podman
-  systemd:
-    name: podman
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart podman"

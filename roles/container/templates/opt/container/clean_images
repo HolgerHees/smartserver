@@ -29,7 +29,7 @@ class Image:
         self.repository = repository
         self.tag = tag
         self.created = created
-        
+
         if self.repository is not None and self.tag is not None:
             if self.tag == "latest":
                 self.name = self.repository
@@ -37,16 +37,16 @@ class Image:
                 self.name = u"{}:{}".format(self.repository,self.tag)
         else:
             self.name = self.id
-            
+
     def __eq__(self, other):
         return self.id == other.id
 
     def __lt__(self, other):
         return self.name < other.name or ( self.name == other.name and self.created < other.created )
-      
+
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
-  
+
 def sortImages(item1, item2):
     item1_is_custom = item1 is not None and item1.startswith("custom")
     item2_is_custom = item2 is not None and item2.startswith("custom")
@@ -98,8 +98,7 @@ def collectContainers():
             result = command.exec(["podman", "inspect", obj["Id"]])
             _obj = json.loads(result.stdout.decode("utf-8"))
             state = _obj[0]["State"]
-            finished_at = state["Finished"].split('.')[0]
-            finished_at = datetime.strptime("{}Z".format(finished_at), '%Y-%m-%dT%H:%M:%SZ')
+            finished_at = datetime.fromtimestamp(state["ExitedAt"])
             is_stopped_since = (datetime.utcnow() - finished_at)
         containers.append(Container(obj["Id"],obj["Names"],obj["Image"],is_stopped_since)  )
 
@@ -115,7 +114,7 @@ def collectUsedImages(images, containers):
         #build_images[columns[-1]] = True
         for _images in images.values():
             for _image in _images:
-                if columns[-1] == _image.name.split("/", 1)[1]:
+                if columns[-1] == _image.name.split("/", 1)[-1]:
                     used_images[_image.id] = "referenced"
 
     for container in containers:
@@ -151,7 +150,7 @@ used_images = collectUsedImages(images, containers)
 
 cleaned = False
 for name in sorted(images,key=cmp_to_key(sortImages)):
-    
+
     image_versions = sorted(images[name], reverse=True)
 
     for image_version in image_versions:
@@ -165,10 +164,10 @@ for name in sorted(images,key=cmp_to_key(sortImages)):
             continue
 
         print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image_version.id,image_version.name))
-        
+
         cleaned = True
 
         command.exec(["podman", "image", "rm", "-f", "{}".format(image_version.id)])
-      
+
 if is_quite and not cleaned:
     print(u"No images deleted")

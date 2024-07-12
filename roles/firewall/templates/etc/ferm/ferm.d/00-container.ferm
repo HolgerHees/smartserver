@@ -2,7 +2,9 @@ domain (ip ip6) {
     table filter {
         chain ("/^NETAVARK.*/" NETAVARK_INPUT NETAVARK_FORWARD) @preserve;
 
-        chain ip;
+        chain SMARTSERVER_BLOCKER {
+
+        }
 
         chain SMARTSERVER_FORWARD {
             mod conntrack ctstate (INVALID) DROP;
@@ -32,6 +34,7 @@ domain (ip ip6) {
             #proto ipv6-icmp ACCEPT; # => default
             #jump NETAVARK_INPUT;
             #saddr 10.101.1.0/24 proto udp dport 54 ACCEPT
+            jump SMARTSERVER_BLOCKER;
             jump SMARTSERVER_INPUT;
             LOG log-prefix 'DROPPED INPUT ';
             DROP;

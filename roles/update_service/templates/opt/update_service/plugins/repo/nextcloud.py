@@ -21,7 +21,7 @@ class Repository(object):
 
         if limit is None or "nextcloud" in limit:
             #self.apps = [ Application(job_config,global_config) ]
-            result = command.exec([ "docker","exec", "php", "sh", "-c", "php {}nextcloud/occ app:list".format(self.htdocs_dir) ] )
+            result = command.exec([ "podman","exec", "php", "sh", "-c", "php {}nextcloud/occ app:list".format(self.htdocs_dir) ] )
             lines = result.stdout.decode("utf-8").split("\n")
             current_versions = {}
             for line in lines:
@@ -32,7 +32,7 @@ class Repository(object):
 
             #print(current_versions)
 
-            result = command.exec([ "docker","exec", "php", "sh", "-c", "php {}nextcloud/occ app:update --showonly".format(self.htdocs_dir) ] )
+            result = command.exec([ "podman","exec", "php", "sh", "-c", "php {}nextcloud/occ app:update --showonly".format(self.htdocs_dir) ] )
             stdout = result.stdout.decode("utf-8")
             if 'no updates' not in stdout:
                 lines = result.stdout.decode("utf-8").split("\n")
