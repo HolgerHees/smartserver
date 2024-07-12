@@ -8,5 +8,5 @@
   listen: "restart prometheus"
 
 - name: refresh prometheus
-  command: "docker kill --signal=HUP prometheus"
+  command: "podman kill --signal=HUP prometheus"
   listen: "refresh prometheus"

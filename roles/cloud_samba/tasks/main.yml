@@ -63,7 +63,7 @@
     - "smb.conf"
     - "fstab"
 
-- name: build docker image
+- name: build podman image
   vars:
     name: "cloud_samba"
     image_name: "custom_cloud_samba"
@@ -72,8 +72,8 @@
       - roles/cloud_samba/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_docker_image.yml
 
-- name: create docker container
-  docker_container:
+- name: create podman container
+  containers.podman.podman_container:
     name: "cloud_samba"
     image: "custom_cloud_samba:{{alpine_version}}"
     state: present
@@ -93,12 +93,8 @@
     #privileged: yes
     #domainname : "cloud"
     #hostname: "nfsd"
-    container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "cloud_vpn"
-        ipv4_address: "{{vpn_cloud_services.local.samba}}"
-    networks_cli_compatible: yes
+    network: "cloud_vpn"
+    ip: "{{vpn_cloud_services.local.samba}}"
     volumes:
       - '{{global_etc}}cloud_samba:/etc/samba:z'
       - '{{global_etc}}cloud_samba/fstab:/etc/fstab:z'

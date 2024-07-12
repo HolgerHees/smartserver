@@ -54,5 +54,6 @@
     - "/usr/lib/systemd/system/ferm.service"
     - "/smartserver/etc/fluentd/_.ansible.d/docker.conf"
     - "/opt/docker/"
+    - "/opt/containerd/"
     - "/etc/docker/"
     - "/smartserver/var/lib/docker/"

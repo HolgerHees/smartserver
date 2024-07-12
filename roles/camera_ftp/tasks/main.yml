@@ -81,10 +81,6 @@
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
-#- name: clean old docker images => image does not exists
-#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
-#  when: "'custom_vsftpd' not in image_exists.stdout"
-  
 # ***** FINALIZE *****
 - name: create cron job
   vars:

@@ -25,8 +25,8 @@
         name: named
         state: stopped
         enabled: false
-    - name: cleanup named docker
-      shell: "docker rm named"
+    - name: cleanup named podman
+      shell: "podman rm named"
     - name: temporary enable public dns
       copy:
         content: "nameserver 8.8.8.8"

@@ -37,7 +37,7 @@
   tags: ['prometheus_config']
   when: "monitoring_enabled and custom_rules_result.rc == 0"
 
-- name: set docker selinux configuration => is_rhel or is_fedora
+- name: set podman selinux configuration => is_rhel or is_fedora
   sefcontext:
     target: "{{ global_etc }}prometheus/generator"
     setype: "bin_t"

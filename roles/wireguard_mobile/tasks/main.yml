@@ -166,10 +166,7 @@
 #      - "{{mobile_vpn_internal_port}}:{{mobile_vpn_internal_port}}/udp"
   notify: "restart wireguard_mobile"
 
-#- name: clean old docker images => image does not exists
-#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
-#  when: "'custom_wireguard_mobile' not in image_exists.stdout"
-  
+
 # ***** FINALIZE *****
 # todo => enable forwarding if needed to allow vpn client to access complete network
 

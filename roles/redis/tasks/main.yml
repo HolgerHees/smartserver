@@ -3,7 +3,7 @@
     redis_version: '7.2.5'
   tags: [ 'update_notifier_config' ]
   
-- name: create docker container
+- name: create podman container
   containers.podman.podman_container:
     name: redis
     image: "redis:{{redis_version}}-alpine"
@@ -21,10 +21,6 @@
      - "6379"
   notify: "restart redis"
 
-#- name: clean old docker images => image does not exists
-#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
-#  when: "'custom_redis' not in image_exists.stdout"
-  
 # ***** FINALIZE *****
 - name: allow redis service
   vars:

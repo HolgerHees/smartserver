@@ -12,15 +12,6 @@
 #      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_etc}}libreoffice" }
 #  include_tasks: roles/_shared/create_directories.yml
 
-#- name: build docker image
-#  vars:
-#    name: "libreoffice"
-#    image_name: "custom_libreoffice"
-#    image_version: "{{libreoffice_version}}"
-#    files:
-#      - roles/nextcloud_libreoffice/templates/container/Dockerfile
-#  include_tasks: roles/container/shared/build_docker_image.yml
-
 - name: create podman container
   containers.podman.podman_container:
     name: libreoffice
