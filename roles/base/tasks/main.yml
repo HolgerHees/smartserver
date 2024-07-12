@@ -68,6 +68,8 @@
       , python3-pip
       , python3-passlib
       
+      , python3-requests   # used by various system scripts like 'systemd_watcher_service_check'
+
       , python3-libselinux # used by ansible on fedora
       , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
 #      , redhat-rpm-config  # used by ansible gem mobule
@@ -113,6 +115,8 @@
       , python3-setuptools
       , python3-pip
       , python3-passlib
+
+      , python3-requests   # used by various system scripts like 'systemd_watcher_service_check'
     ]
     state: present
   when: is_ubuntu
@@ -157,6 +161,8 @@
       , python3-setuptools
       , python3-pip
       , python3-passlib    # used by ansible htpasswd module (user role), must be added here as the add web user task is a shared task
+
+      , python3-requests   # used by various system scripts like 'systemd_watcher_service_check'
       
       , insserv-compat     # used by ansible systemd module
     ]

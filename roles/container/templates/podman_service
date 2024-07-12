@@ -10,7 +10,7 @@ After=network-online.target{% if container_after is defined %}{% for dependency_
 [Service]
 TimeoutStartSec=0
 TimeoutStopSec={{container_stop_timeout | default('300')}}
-Restart=always
+Restart=on-failure
 RestartSec=3
 ExecStart=/usr/bin/podman start -a {{container_name}}
 {% if container_pre_exec is defined %}ExecStartPre={{container_pre_exec}}{{''}}
