@@ -55,8 +55,8 @@
 
 - name: "container : build_podman_image : cleanup outdated container '{{name}}'"
   shell: "podman rm {{name}}"
-  changed_when: "{{podman_container_state.rc == 0}}"
-  failed_when: "{{podman_container_state.rc != 0 and podman_container_state.rc != 127 }}"
+  changed_when: "podman_container_state.rc == 0"
+  failed_when: "podman_container_state.rc != 0 and podman_container_state.rc != 1"
   register: podman_container_state
   when: "podman_build.changed"
 
