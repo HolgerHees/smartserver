@@ -50,10 +50,12 @@
     state: stopped
     enabled: yes
     masked: no
+  failed_when: no
   when: "podman_build.changed"
 
 - name: "container : build_podman_image : cleanup outdated container '{{name}}'"
   shell: "podman rm {{name}}"
+  failed_when: no
   when: "podman_build.changed"
 
 #- name: "container : push image to podman registry"
