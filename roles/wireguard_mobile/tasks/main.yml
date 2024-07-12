@@ -162,8 +162,8 @@
 #    networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}wireguard_mobile:/etc/wireguard:z'
-#    published_ports:
-#      - "{{mobile_vpn_internal_port}}:{{mobile_vpn_internal_port}}/udp"
+#    exposed_ports:
+#      - "{{mobile_vpn_internal_port}}/udp"
   notify: "restart wireguard_mobile"
 
 
