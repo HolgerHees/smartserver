@@ -31,7 +31,7 @@ vagrant [OPTION] ... CMD
 --os <suse|fedora|ubuntu|alma>:
   Used linux distribution. 
   
-  <suse>      : openSUSE Leap 15.4 (bento/opensuse-leap-15.4)
+  <suse>      : openSUSE Leap 15.6 (opensuse/Leap-15.6.x86_64)
   <alma>      : AlmaLinux 9 (almalinux/9)
   <ubuntu>    : Ubuntu 21.10 (ubuntu/jammy64)
 

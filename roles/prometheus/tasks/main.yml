@@ -39,7 +39,7 @@
 
 - name: set podman selinux configuration => is_rhel or is_fedora
   sefcontext:
-    target: "{{ global_etc }}prometheus/generator"
+    target: "{{ global_etc }}prometheus/generator(/.*)?"
     setype: "bin_t"
   register: sefcontext_result
   when: is_rhel or is_fedora
