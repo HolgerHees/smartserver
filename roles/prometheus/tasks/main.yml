@@ -39,13 +39,13 @@
 
 - name: set podman selinux configuration => is_rhel or is_fedora
   sefcontext:
-    target: "{{ global_etc }}prometheus/generator(/.*)?"
+    target: "{{ global_etc }}prometheus/generator"
     setype: "bin_t"
   register: sefcontext_result
   when: is_rhel or is_fedora
 
 - name: reload selinux configuration => (is_rhel or is_fedora) and sefcontext changed
-  shell: "restorecon -irv {{ global_etc }}prometheus"
+  shell: "restorecon -irv -F {{ global_etc }}prometheus/generator"
   when: (is_fedora or is_rhel) and sefcontext_result.changed
 
 - name: create podman container
