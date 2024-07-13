@@ -199,6 +199,7 @@
 - name: create systemd service
   vars:
     container_name: "wireguard_mobile"
+    container_pre_exec: "modprobe wireguard"
   include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
 

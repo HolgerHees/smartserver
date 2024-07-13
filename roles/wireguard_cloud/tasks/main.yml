@@ -156,7 +156,7 @@
 - name: create systemd service
   vars:
     container_name: "wireguard_cloud"
-    trigger_name: "wireguard_cloud"
+    container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
   include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']
