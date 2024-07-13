@@ -46,7 +46,7 @@
       - '/etc/passwd:/etc/passwd:ro'
 #      - '/etc/shadow:/etc/shadow:ro,z'
     security_opt:
-      - label=disable
+      - label=disable # is needed, otherwise /etc/passwd is not mountable
     published_ports: |
       [
         "137:137/udp",
