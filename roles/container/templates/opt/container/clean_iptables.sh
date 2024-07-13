@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export PATH="/sbin:/bin:/usr/sbin:/usr/bin"
+
 collectRules() {
     #RESULT=$(iptables -S $1 | grep SMARTSERVER | cut -c4-)
     RESULT=$(iptables -S $1 | grep NETAVARK | cut -c4-)

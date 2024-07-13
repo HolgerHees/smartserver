@@ -5,9 +5,9 @@ domain (ip ip6) {
         }
 
         chain SMARTSERVER_INPUT {
-            saddr 0.0.0.0 daddr 255.255.255.255 proto udp DROP; # disables podman broadcasts
-            #mod pkttype pkt-type broadcast;
-            #mod pkttype pkt-type multicast;
+            #saddr 0.0.0.0 daddr 255.255.255.255 proto udp DROP;
+            mod pkttype pkt-type broadcast DROP;
+            mod pkttype pkt-type multicast DROP;
         }
     }
 }
