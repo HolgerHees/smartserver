@@ -785,5 +785,6 @@ user_key_maps: {
 }
 
 group_key_maps: {
-  "nogroup": "nobody"
+  "nogroup": "nobody",
+  "apache": "www"
 }
