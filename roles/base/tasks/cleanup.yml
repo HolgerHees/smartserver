@@ -5,10 +5,10 @@
 - name: check for docker
   shell:
     cmd: "docker 2> /dev/null"
-  changed_when: no
+  changed_when: "obsolete_docker.rc == 0"
   failed_when: no
   register: obsolete_docker
 
 - name: process obsolete docker
-  include_tasks: cleanup_container.yml
+  include_tasks: cleanup_docker.yml
   when: "obsolete_docker.rc == 0"

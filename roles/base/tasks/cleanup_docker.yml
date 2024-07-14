@@ -1,20 +1,23 @@
 - name: check for obsolete docker
   shell:
     cmd: "docker ps -a --format '{{ '{{' }}.Names {{ '}}' }}'"
-  changed_when: no
+  changed_when: "docker_container_check.rc == 0"
   failed_when: no
-  register: container_names
+  register: docker_container_check
 
 - name: process obsolete docker container
   vars:
     container_name: "{{item}}"
   include_tasks: cleanup_docker_container.yml
-  with_items: "{{container_names}}"
+  with_items: "{{container_names.stdout_lines}}"
+  when: "docker_container_check.rc == 0"
 
 - name: remove obsolete docker networks
   shell:
     cmd: "docker network rm {{item}}"
-  changed_when: no
+  changed_when: "docker_network_check.rc == 0"
+  failed_when: no
+  register: docker_network_check
   with_items:
     - "isolated"
     - "macvlan"
@@ -64,5 +67,5 @@
         docker
         , python3-docker
     ]
-    state: present
+    state: absent
   when: is_suse
