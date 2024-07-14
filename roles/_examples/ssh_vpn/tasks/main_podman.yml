@@ -43,7 +43,8 @@
     name: "ssh_vpn_podman"
     image: "custom_ssh_vpn:{{alpine_version}}"
     state: present
-#    recreate: yes
+    security_opt:
+      - label=disable
     env:
       SSH_GID: "10002"
       SSH_UID: "10002"
@@ -54,9 +55,9 @@
     published_ports:
       - "4444:{{ssh_vpn_internal_port}}/tcp"
     volumes:
-      - "{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z"
-      - "{{global_etc}}ssh_vpn/util:/etc/ssh/util:z"
-      - '{{global_etc}}ssh_vpn/run:/home/vpn/.ssh:z'
+      - "{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config"
+      - "{{global_etc}}ssh_vpn/util:/etc/ssh/util"
+      - '{{global_etc}}ssh_vpn/run:/home/vpn/.ssh'
   notify: "restart ssh_vpn_podman"
 
 # ***** FINALIZE *****

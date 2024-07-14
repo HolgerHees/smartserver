@@ -93,7 +93,8 @@
     name: pihole
     image: "pihole/pihole:{{pihole_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env: "{{pihole_env}}"
     capabilities:
       - net_admin
@@ -105,9 +106,9 @@
     ip: "{{pihole_ip}}"
     ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"
     volumes:
-      - '{{ global_etc }}pihole/:/etc/pihole/:z'
-      - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
-      - '{{ global_lib }}pihole/:/var/lib/pihole/:z'
+      - '{{ global_etc }}pihole/:/etc/pihole/'
+      - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/'
+      - '{{ global_lib }}pihole/:/var/lib/pihole/'
     exposed_ports:
       - "53/tcp"
       - "53/udp"

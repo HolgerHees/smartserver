@@ -77,8 +77,8 @@
     name: "cloud_samba"
     image: "custom_cloud_samba:{{alpine_version}}"
     state: present
-#    network_mode: "none"
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -96,8 +96,8 @@
     network: "cloud_vpn"
     ip: "{{vpn_cloud_services.local.samba}}"
     volumes:
-      - '{{global_etc}}cloud_samba:/etc/samba:z'
-      - '{{global_etc}}cloud_samba/fstab:/etc/fstab:z'
+      - '{{global_etc}}cloud_samba:/etc/samba'
+      - '{{global_etc}}cloud_samba/fstab:/etc/fstab'
       - '{{cloud_smb_path}}:/cloud:z,rshared'
   notify: "restart cloud_samba"
 

@@ -37,10 +37,10 @@
   set_fact:
     minidlna_volumes: |
       [
-      "{{global_etc}}minidlna:/etc/minidlna:z",
-      "{{global_lib}}minidlna:/minidlna:z",
+      "{{global_etc}}minidlna:/etc/minidlna",
+      "{{global_lib}}minidlna:/minidlna",
       {% for dlna_volume in dlna_volumes %}
-      "{{dlna_volume}}:{{dlna_volumes[dlna_volume]}}/:z",
+      "{{dlna_volume}}:{{dlna_volumes[dlna_volume]}}/",
       {% endfor %}
       ]
 
@@ -49,7 +49,8 @@
     name: minidlna
     image: "custom_minidlna:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
       PGID: "{{system_groups['www'].id}}"

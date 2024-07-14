@@ -11,15 +11,15 @@
 
 - name: copy config
   copy:
-    src: "templates/etc/prometheus/{{item.path}}"
-    dest: "{{ global_etc }}prometheus/{{item.path}}"
+    src: "templates/{{item.src}}"
+    dest: "{{item.dest}}"
     owner: "{{item.user}}"
     group: "{{item.group}}"
     mode: "{{item.mode}}"
   with_items:
-    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", path: "prometheus.yml.tpl" }
-    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", path: "rules/prometheus.yml" }
-    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rwx,g=rx,o=", path: "generator" }
+    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", src: "/etc/prometheus/prometheus.yml.tpl", dest: "{{ global_etc }}prometheus/prometheus.yml.tpl" }
+    - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", src: "/etc/prometheus/rules/prometheus.yml", dest: "{{ global_etc }}prometheus/rules/prometheus.yml" }
+    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", src: "/opt/scripts/prometheus_generator", dest: "/opt/scripts/prometheus_generator" }
   notify: "restart prometheus"
 
 - name: check custom rules
@@ -37,23 +37,13 @@
   tags: ['prometheus_config']
   when: "monitoring_enabled and custom_rules_result.rc == 0"
 
-- name: set podman selinux configuration => is_rhel or is_fedora
-  sefcontext:
-    target: "{{ global_etc }}prometheus/generator"
-    setype: "bin_t"
-  register: sefcontext_result
-  when: is_rhel or is_fedora
-
-- name: reload selinux configuration => (is_rhel or is_fedora) and sefcontext changed
-  shell: "restorecon -irv -F {{ global_etc }}prometheus/generator"
-  when: (is_fedora or is_rhel) and sefcontext_result.changed
-
 - name: create podman container
   containers.podman.podman_container:
     name: prometheus
     image: "prom/prometheus:v{{prometheus_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     command:
@@ -68,8 +58,8 @@
     network: "isolated"
     ip: "{{podman_prometheus_ip}}"
     volumes:
-      - '{{ global_etc }}prometheus:/etc/prometheus:z'
-      - '{{ global_lib }}prometheus:/prometheus:z'
+      - '{{ global_etc }}prometheus:/etc/prometheus'
+      - '{{ global_lib }}prometheus:/prometheus'
     exposed_ports:
      - "9090"
   notify: "restart prometheus"
@@ -126,7 +116,7 @@
 - name: create systemd service
   vars:
     container_name: "prometheus"
-    container_pre_exec: "{{ global_etc }}prometheus/generator"
+    container_pre_exec: "/opt/scripts/prometheus_generator {{ global_etc }}prometheus/"
     container_after: [ "alertmanager" ]
   include_tasks: roles/container/shared/add_podman_service.yml
   tags: ['systemd_watcher_config']

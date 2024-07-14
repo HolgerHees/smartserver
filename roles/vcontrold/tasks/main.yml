@@ -29,7 +29,8 @@
     name: vcontrold
     image: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -39,8 +40,8 @@
     network: "isolated"
     ip: "{{podman_vcontrold_ip}}"
     volumes:
-      - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
-      - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
+      - '{{global_etc}}vcontrold/:/etc/vcontrold:ro'
+      - '{{global_log}}vcontrold/:{{global_log}}vcontrold'
     device:
       - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"
     exposed_ports:

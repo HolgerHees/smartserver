@@ -34,7 +34,8 @@
     name: influxdb
     image: "custom_influxdb:{{influxdb_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     entrypoint: '["sh", "-c", "/entrypoint.sh influxd 2>&1" ]'
     user: "{{system_users['influxdb'].name}}:{{system_groups['influxdb'].name}}"
     env:
@@ -55,9 +56,9 @@
     network: "isolated"
     ip: "{{podman_influxdb_ip}}"
     volumes:
-      - '{{ global_etc }}influxdb:/etc/influxdb2:z'
-      - '{{ global_lib }}influxdb:/var/lib/influxdb2:z'
-      - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup:z'
+      - '{{ global_etc }}influxdb:/etc/influxdb2'
+      - '{{ global_lib }}influxdb:/var/lib/influxdb2'
+      - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup'
     exposed_ports:
      - "8086"
   register: influxdb_container_result

@@ -84,7 +84,8 @@
     name: dnsmasq
     image: "custom_dnsmasq:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -93,8 +94,8 @@
     network: "isolated"
     ip: "{{podman_dns_ip}}"
     volumes:
-      - '{{ global_etc }}dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:z'
-      - '{{ global_etc }}dnsmasq/:/etc/dnsmasq/:z'
+      - '{{ global_etc }}dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf'
+      - '{{ global_etc }}dnsmasq/:/etc/dnsmasq/'
     published_ports: |
       [
         "53:53/udp",

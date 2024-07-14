@@ -41,7 +41,8 @@
     name: librenms
     image: "librenms/librenms:{{librenms_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
 #    user: "{{system_users['librenms'].name}}:{{system_groups['librenms'].name}}"
     env:
 #      OBSERVIUM_ADMIN_USER: "admin"
@@ -67,14 +68,14 @@
     network: "isolated"
     ip: "{{podman_librenms_ip}}"
     volumes:
-      - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:z'
-      - '{{global_etc}}librenms:/data/config:z'
-      - '{{global_log}}librenms:/data/logs:z'
-      - '{{global_lib}}librenms/alert-templates:/data/alert-templates:z'
-      - '{{global_lib}}librenms/monitoring-plugins:/data/monitoring-plugins:z'
-      - '{{global_lib}}librenms/plugins:/data/plugins:z'
-      - '{{global_lib}}librenms/rrd:/data/rrd:z'
-      - '{{global_lib}}librenms/weathermap:/data/weathermap:z'
+      - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/'
+      - '{{global_etc}}librenms:/data/config'
+      - '{{global_log}}librenms:/data/logs'
+      - '{{global_lib}}librenms/alert-templates:/data/alert-templates'
+      - '{{global_lib}}librenms/monitoring-plugins:/data/monitoring-plugins'
+      - '{{global_lib}}librenms/plugins:/data/plugins'
+      - '{{global_lib}}librenms/rrd:/data/rrd'
+      - '{{global_lib}}librenms/weathermap:/data/weathermap'
     exposed_ports:
      - "8000"
   notify: "restart librenms"

@@ -28,7 +28,8 @@
     name: alertmanager
     image: "prom/alertmanager:v{{alertmanager_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     command:
@@ -42,8 +43,8 @@
     network: "isolated"
     ip: "{{podman_alertmanager_ip}}"
     volumes:
-      - '{{global_etc}}alertmanager:/etc/alertmanager:z'
-      - '{{global_lib}}alertmanager:/alertmanager:z'
+      - '{{global_etc}}alertmanager:/etc/alertmanager'
+      - '{{global_lib}}alertmanager:/alertmanager'
     exposed_ports:
      - "9093"
   notify: "restart alertmanager"

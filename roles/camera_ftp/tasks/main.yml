@@ -35,7 +35,8 @@
     name: vsftpd
     image: "custom_vsftpd:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       FTP_USER: "{{camera_ftp_username}}"
       FTP_PASS: "{{camera_ftp_password}}"
@@ -53,7 +54,7 @@
     log_options:
       tag: vsftpd
     volumes:
-      - '{{global_lib}}/camera_service/upload/:/home/upload:z'
+      - '{{global_lib}}/camera_service/upload/:/home/upload'
     network: "isolated"
     ip: "{{podman_camera_ftp_ip}}"
     published_ports: |

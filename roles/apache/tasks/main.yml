@@ -218,7 +218,8 @@
     name: apache2
     image: "custom_apache2:{{apache_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -226,16 +227,16 @@
       tag: apache
     network: "host"
     volumes:
-      - '{{global_etc}}apache2/_.ansible.auth:/etc/apache2/_.ansible.auth:z'
-      - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d:z'
-      - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d:z'
-      - '{{global_etc}}apache2/_.ansible.server.conf:/etc/apache2/_.ansible.server.conf:z'
-      - '{{global_etc}}apache2/_.ansible.httpd.conf:/usr/local/apache2/conf/httpd.conf:z'
-      - '{{global_etc}}letsencrypt:/etc/letsencrypt:z'
+      - '{{global_etc}}apache2/_.ansible.auth:/etc/apache2/_.ansible.auth'
+      - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d'
+      - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d'
+      - '{{global_etc}}apache2/_.ansible.server.conf:/etc/apache2/_.ansible.server.conf'
+      - '{{global_etc}}apache2/_.ansible.httpd.conf:/usr/local/apache2/conf/httpd.conf'
+      - '{{global_etc}}letsencrypt:/etc/letsencrypt'
 
-      - '{{global_log}}:{{global_log}}:z'
+      - '{{global_log}}:{{global_log}}'
 
-      - '{{htdocs_path}}:{{htdocs_path}}:z'
+      - '{{htdocs_path}}:{{htdocs_path}}'
 #    published_ports:
 #      - "80:80"
 #      - "443:443"

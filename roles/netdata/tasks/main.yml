@@ -64,6 +64,7 @@
       - SYS_ADMIN
     security_opt:
       - "apparmor:unconfined"
+      - label=disable
     pid_mode: "host"
     privileged: yes
     network: "host"
@@ -80,21 +81,21 @@
 
       - '/var/log:/host/var/log:ro'
 
-      - '{{ global_lib }}netdata:/var/lib/netdata:z'
-      - '{{ global_lib }}netdata/cache:/var/cache/netdata:z'
+      - '{{ global_lib }}netdata:/var/lib/netdata'
+      - '{{ global_lib }}netdata/cache:/var/cache/netdata'
 
-      - "{{ global_etc }}netdata/.environment:/etc/netdata/.environment:ro,z"
-      - "{{ global_etc }}netdata/netdata.conf:/etc/netdata/netdata.conf:ro,z"
-      - "{{ global_etc }}netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro,z"
-      - "{{ global_etc }}netdata/python.d.conf:/etc/netdata/python.d.conf:ro,z"
-      - "{{ global_etc }}netdata/go.d.conf:/etc/netdata/go.d.conf:ro,z"
+      - "{{ global_etc }}netdata/.environment:/etc/netdata/.environment:ro"
+      - "{{ global_etc }}netdata/netdata.conf:/etc/netdata/netdata.conf:ro"
+      - "{{ global_etc }}netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro"
+      - "{{ global_etc }}netdata/python.d.conf:/etc/netdata/python.d.conf:ro"
+      - "{{ global_etc }}netdata/go.d.conf:/etc/netdata/go.d.conf:ro"
 
-      - "{{ global_etc }}netdata/health.d/disks.conf:/etc/netdata/health.d/disks.conf:ro,z"
-      - "{{ global_etc }}netdata/health.d/net.conf:/etc/netdata/health.d/net.conf:ro,z"
-      - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro,z"
-      - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/disks.conf:/etc/netdata/health.d/disks.conf:ro"
+      - "{{ global_etc }}netdata/health.d/net.conf:/etc/netdata/health.d/net.conf:ro"
+      - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro"
+      - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro"
 
-      - "{{ global_etc }}netdata/cloud.d/cloud.conf:/etc/netdata/cloud.d/cloud.conf:ro,z"
+      - "{{ global_etc }}netdata/cloud.d/cloud.conf:/etc/netdata/cloud.d/cloud.conf:ro"
     #exposed_ports:
     # - "19999"
     # - "127.0.0.1:19999:19999"  

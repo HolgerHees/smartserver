@@ -35,7 +35,8 @@
     image: "custom_loki:{{loki_version}}"
     state: present
 #    user: "root:root"
-#    recreate: true
+    security_opt:
+      - label=disable
     user: "{{system_users['loki'].name}}:{{system_groups['loki'].name}}"
     env:
       TZ: "{{timezone}}"
@@ -49,8 +50,8 @@
     network: "isolated"
     ip: "{{podman_loki_ip}}"
     volumes:
-      - '{{global_etc}}loki:/etc/loki:z'
-      - '{{global_lib}}loki:/loki:z'
+      - '{{global_etc}}loki:/etc/loki'
+      - '{{global_lib}}loki:/loki'
     exposed_ports:
      - "3100"
   notify: "restart loki"

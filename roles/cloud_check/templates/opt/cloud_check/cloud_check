@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import signal
 import threading
 import paho.mqtt.client as mqtt
@@ -14,7 +16,7 @@ import logging
 
 import requests
 
-import config
+from config import config
 
 CHECK_INTERVAL = 60
 

@@ -23,7 +23,8 @@
     name: mosquitto
     image: "eclipse-mosquitto:{{mosquitto_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     user: "{{system_users['nobody'].name}}:{{system_groups['nobody'].name}}"
     env:
       TZ: "{{timezone}}"
@@ -33,7 +34,7 @@
     network: "isolated"
     ip: "{{podman_mosquitto_ip}}"
     volumes:
-      - '{{global_etc}}mosquitto:/mosquitto/config:z'
+      - '{{global_etc}}mosquitto:/mosquitto/config'
     published_ports: |
       [
         "1883:1883",

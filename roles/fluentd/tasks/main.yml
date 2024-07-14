@@ -68,6 +68,8 @@
     image: "custom_fluentd:{{fluentd_version}}"
     state: present
     user: "root:root"
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
       LD_PRELOAD: "" # fix SEGFAULT => https://github.com/fluent/fluentd-docker-image/issues/378
@@ -77,9 +79,9 @@
     network: "isolated"
     ip: "{{podman_fluentd_ip}}"
     volumes:
-      - '{{ global_etc }}fluentd:/fluentd/etc/:z'
-      - '{{ global_log }}:{{ global_log }}:z'
-      - '/run/log/journal:/run/log/journal:z'
+      - '{{ global_etc }}fluentd:/fluentd/etc/'
+      - '{{ global_log }}:{{ global_log }}'
+      - '/run/log/journal:/run/log/journal'
   notify: "restart fluentd"
     
 - name: allow fluentd service

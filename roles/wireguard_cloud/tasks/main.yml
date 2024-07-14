@@ -98,6 +98,8 @@
     name: "wireguard_cloud"
     image: "custom_wireguard_cloud:{{alpine_version}}"
     state: present
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -114,7 +116,7 @@
     network: "cloud_vpn"
     ip: "{{vpn_cloud_services.local.gateway}}"
     volumes:
-      - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
+      - '{{global_etc}}wireguard_cloud:/etc/wireguard'
     published_ports: |
       [
         "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",

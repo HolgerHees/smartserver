@@ -2,10 +2,23 @@
 
 import glob
 import os
+import sys
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+if len(sys.argv) != 2:
+    print("Missing folder")
+    print("Usage: prometheus_generator <yout_prometheus_path>")
+    exit(1)
 
-with open("{}/prometheus.yml.tpl".format(dir_path)) as f:
+dir_path = sys.argv[1]
+tpl_file_path = "{}prometheus.yml.tpl".format(dir_path)
+yml_file_path = "{}prometheus.yml".format(dir_path)
+#os.path.dirname(os.path.realpath(__file__))
+
+if not os.path.isfile(tpl_file_path):
+    print("File '" + tpl_file_path + "' not found")
+    exit(1)
+
+with open(tpl_file_path) as f:
     prometheus_yml = f.read()
 
     rule_files = []
@@ -23,9 +36,9 @@ with open("{}/prometheus.yml.tpl".format(dir_path)) as f:
 
     prometheus_yml = prometheus_yml.replace("{{SCRAPE_CONFIGS}}", "".join(scrape_configs))
 
-with open("{}/prometheus.yml".format(dir_path), "w") as f:
+with open(yml_file_path, "w") as f:
     f.write(prometheus_yml)
     f.close()
 
-st = os.stat("{}/prometheus.yml.tpl".format(dir_path))
-os.chown("{}/prometheus.yml".format(dir_path), st.st_uid, st.st_gid)
+st = os.stat(yml_file_path)
+os.chown(yml_file_path, st.st_uid, st.st_gid)

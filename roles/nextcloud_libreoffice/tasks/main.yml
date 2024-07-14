@@ -16,10 +16,9 @@
   containers.podman.podman_container:
     name: libreoffice
     image: "collabora/code:{{libreoffice_version}}"
-#    image: "custom_libreoffice:{{libreoffice_version}}"
     state: present
-#    network_mode: "host"
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
       extra_params: "--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"
@@ -33,9 +32,9 @@
     network: "isolated"
     ip: "{{podman_libreoffice_ip}}"
 #    volumes:
-#      - '{{global_etc}}libreoffice/fonts:/usr/share/fonts/truetype/custom:z'
-#      - '{{global_log}}libreoffice:/var/log/libreoffice:z'
-#      - '{{global_lib}}libreoffice:/var/www/libreoffice/Data:z'
+#      - '{{global_etc}}libreoffice/fonts:/usr/share/fonts/truetype/custom'
+#      - '{{global_log}}libreoffice:/var/log/libreoffice'
+#      - '{{global_lib}}libreoffice:/var/www/libreoffice/Data'
     exposed_ports:
       - "9980"
   notify: "restart libreoffice"

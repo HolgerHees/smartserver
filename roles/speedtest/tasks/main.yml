@@ -20,6 +20,8 @@
     name: speedtest
     image: "custom_speedtest:v{{speedtest_version}}"
     state: present
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald

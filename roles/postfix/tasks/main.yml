@@ -31,7 +31,8 @@
     name: postfix
     image: "custom_postfix:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -40,8 +41,8 @@
     network: "isolated"
     ip: "{{podman_postfix_ip}}"
     volumes:
-      - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
-      - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:z'
+      - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf'
+      - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient'
     exposed_ports:
       - "25/tcp"
   notify: "restart postfix"

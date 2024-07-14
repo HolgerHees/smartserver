@@ -147,7 +147,8 @@
     name: wireguard_mobile
     image: "custom_wireguard_mobile:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -161,7 +162,7 @@
 #      - name: "mobile_vpn"
 #    networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}wireguard_mobile:/etc/wireguard:z'
+      - '{{global_etc}}wireguard_mobile:/etc/wireguard'
 #    exposed_ports:
 #      - "{{mobile_vpn_internal_port}}/udp"
   notify: "restart wireguard_mobile"

@@ -1,7 +1,8 @@
 - name: prepare needed directories
   vars:
     directories:
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_check/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}cloud_check/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}cloud_check/config/" }
   include_tasks: roles/_shared/create_directories.yml
 
 - name: build podman image
@@ -11,6 +12,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/cloud_check/templates/container/Dockerfile
+      - roles/cloud_check/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create podman container
@@ -18,7 +20,8 @@
     name: cloud_check
     image: "custom_cloud_check:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -27,8 +30,8 @@
     network: "isolated"
     ip: "{{podman_cloud_check_ip}}"
     volumes:
-      - '{{global_etc}}cloud_check/:/etc/cloud_check:z'
-      - '{{cloud_path}}/remote:/cloud/remote:z,rshared'
+      - '{{global_opt}}cloud_check/:/opt/cloud_check'
+      - '{{cloud_path}}/remote:/cloud/remote:rshared'
   notify: "restart cloud_check"
 
 - name: allow cloud_check service
@@ -50,7 +53,7 @@
     group: root
     mode: 0640
   with_items:
-    - { src: "/config.py", dest: "{{global_etc}}cloud_check/config.py" }
+    - { src: "/config.py", dest: "{{global_opt}}cloud_check/config/config.py" }
   notify: "restart cloud_check"
 
 - name: copy service
@@ -59,9 +62,9 @@
     dest: "{{item.dest}}"
     owner: root
     group: root
-    mode: 0640
+    mode: 0750
   with_items:
-    - { src: "/etc/daemon.py", dest: "{{global_etc}}cloud_check/daemon.py" }
+    - { src: "/opt/cloud_check/cloud_check", dest: "{{global_opt}}cloud_check/cloud_check" }
   notify: "restart cloud_check"
 
 # ***** FINALIZE *****

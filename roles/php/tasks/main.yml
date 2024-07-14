@@ -17,13 +17,13 @@
   set_fact:
     php_mounted_folders: |
       [
-        '{{htdocs_path}}:{{htdocs_path}}:z'
+        '{{htdocs_path}}:{{htdocs_path}}'
         {% if nextcloud_enabled %}
-          , '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
-          , '{{global_log}}nextcloud:{{global_log}}nextcloud:z'       # needed by nextcloud role
+          , '{{nextcloud_data_path}}:{{nextcloud_data_path}}'       # needed by nextcloud role
+          , '{{global_log}}nextcloud:{{global_log}}nextcloud'       # needed by nextcloud role
         {% endif %}
         {% if openhab_enabled %}
-          , '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
+          , '{{projects_path}}toolbox:{{projects_path}}toolbox'     # needed by openhab_toolbox role
         {% endif %}
       ]
 
@@ -35,9 +35,9 @@
     name: php
     image: "custom_php:{{php_version}}"
     state: present
-#    network_mode: "host"
     user: "{{system_users['www'].name}}:{{system_groups['www'].name}}"
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -48,8 +48,6 @@
     etc_hosts:
       openhab: "{{default_server_ip}}" # fix to make openhab reachable
       netdata: "{{default_server_ip}}" # fix to make netdata reachable
-    security_opt:
-      - label=disable                  # is needed, otherwise all subfolder like nextcloud, mysql etc needs to get correct label after each update
     volumes: "{{php_mounted_folders}}"
     exposed_ports:
       - "9000"

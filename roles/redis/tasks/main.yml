@@ -8,8 +8,8 @@
     name: redis
     image: "redis:{{redis_version}}-alpine"
     state: present
-#    network_mode: "none"
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald

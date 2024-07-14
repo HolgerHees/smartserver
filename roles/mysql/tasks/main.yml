@@ -47,7 +47,8 @@
     name: mysql
     image: "custom_mysql:{{mysql_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
 #    command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
     user: "{{system_users['mysql'].name}}:{{system_groups['mysql'].name}}"
     env:
@@ -59,8 +60,8 @@
     log_options:
       tag: mysql
     volumes:
-      - '{{ global_etc }}mysql:/etc/mysql:z'
-      - '{{ global_lib }}mysql:/var/lib/mysql:z'
+      - '{{ global_etc }}mysql:/etc/mysql'
+      - '{{ global_lib }}mysql:/var/lib/mysql'
     network: "isolated"
     ip: "{{podman_mysql_ip}}"
     exposed_ports:

@@ -29,7 +29,8 @@
     name: samba
     image: "custom_samba:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -37,16 +38,14 @@
       tag: samba
     network: "isolated"
     volumes:
-      - '{{ global_etc }}samba:/etc/samba:z'
-      - '{{ global_lib }}samba:/var/lib/samba:z'
-      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'
-#      - '{{base_path}}:{{base_path}}:z'
-#      - '{{data_path}}:{{data_path}}:z'
-#      - '/etc/group:/etc/group:ro,z'
+      - '{{ global_etc }}samba:/etc/samba'
+      - '{{ global_lib }}samba:/var/lib/samba'
+      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}'
+#      - '{{base_path}}:{{base_path}}'
+#      - '{{data_path}}:{{data_path}}'
+#      - '/etc/group:/etc/group:ro'
       - '/etc/passwd:/etc/passwd:ro'
-#      - '/etc/shadow:/etc/shadow:ro,z'
-    security_opt:
-      - label=disable # is needed, otherwise /etc/passwd is not mountable
+#      - '/etc/shadow:/etc/shadow:ro'
     published_ports: |
       [
         "137:137/udp",

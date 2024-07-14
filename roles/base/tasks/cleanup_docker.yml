@@ -1,3 +1,10 @@
+- name: check for obsolete docker
+  shell:
+    cmd: "docker ps -a --format '{{ '{{' }}.Names {{ '}}' }}'"
+  changed_when: no
+  failed_when: no
+  register: container_names
+
 - name: process obsolete docker container
   vars:
     container_name: "{{item}}"
@@ -12,6 +19,22 @@
     - "isolated"
     - "macvlan"
     - "cloud_vpn"
+
+- name: clean old docker related files
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "/etc/ferm/ferm.d/00-docker.ferm"
+    - "/etc/ferm/ferm.d/99-docker.ferm"
+    - "/usr/lib/systemd/system/ferm.service"
+    - "{{global_etc}}fluentd/_.ansible.d/docker.conf"
+    - "/opt/docker/"
+    - "/opt/containerd/"
+    - "/etc/docker/"
+    - "{{global_lib}}docker/"
+    - "{{global_etc}}prometheus/generator"
+    - "{{global_etc}}cloud_check"
 
 - name: uninstall docker => is_rhel or is_fedora
   yum:
@@ -43,17 +66,3 @@
     ]
     state: present
   when: is_suse
-
-- name: clean old docker related files
-  file:
-    path: "{{item}}"
-    state: absent
-  with_items:
-    - "/etc/ferm/ferm.d/00-docker.ferm"
-    - "/etc/ferm/ferm.d/99-docker.ferm"
-    - "/usr/lib/systemd/system/ferm.service"
-    - "/smartserver/etc/fluentd/_.ansible.d/docker.conf"
-    - "/opt/docker/"
-    - "/opt/containerd/"
-    - "/etc/docker/"
-    - "/smartserver/var/lib/docker/"

@@ -62,9 +62,9 @@
     name: grafana
     image: "custom_grafana:{{grafana_version}}"
     state: present
-#    network_mode: "host"
+    security_opt:
+      - label=disable
     user: "root:root"
-#    recreate: true
     env:
       GF_SERVER_DOMAIN: "grafana.{{server_domain}}"
 #      GF_SERVER_HTTP_ADDR: "127.0.0.1"
@@ -79,8 +79,8 @@
     network: "isolated"
     ip: "{{podman_grafana_ip}}"
     volumes:
-      - '{{global_lib}}grafana:/var/lib/grafana:z'
-      - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning:z'
+      - '{{global_lib}}grafana:/var/lib/grafana'
+      - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning'
     exposed_ports:
      - "3000"
   notify: "restart grafana"

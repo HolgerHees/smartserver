@@ -28,7 +28,8 @@
     name: camera_service
     image: "custom_camera_service:{{alpine_version}}"
     state: present
-#    recreate: true
+    security_opt:
+      - label=disable
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -37,10 +38,10 @@
     network: "isolated"
     ip: "{{podman_camera_service_ip}}"
     volumes:
-      - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
-      - '{{global_opt}}camera_service/:/opt/camera_service:ro,z'
-      - "{{global_lib}}camera_service/:/var/lib/camera_service:rw,z"
-      - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw,z'
+      - '{{global_opt}}shared/python:/opt/shared/python:ro'
+      - '{{global_opt}}camera_service/:/opt/camera_service:ro'
+      - "{{global_lib}}camera_service/:/var/lib/camera_service:rw"
+      - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw'
   notify: "restart camera_service"
 
 - name: allow camera_service service
