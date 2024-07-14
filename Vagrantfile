@@ -33,7 +33,7 @@ vagrant [OPTION] ... CMD
   
   <suse>      : openSUSE Leap 15.6 (opensuse/Leap-15.6.x86_64)
   <alma>      : AlmaLinux 9 (almalinux/9)
-  <ubuntu>    : Ubuntu 21.10 (ubuntu/jammy64)
+  <ubuntu>    : Ubuntu 23.10 (ubuntu/mantic64)
 
 --ansible [-vvv]:
   Optional argument to provide additional parameters for ansible. 
@@ -53,8 +53,8 @@ Example: vagrant --config=demo --os=suse up
             setup_image = "opensuse/Leap-" + setup_version + ".x86_64"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
-            setup_version = "22.10"
-            setup_image = "ubuntu/jammy64"
+            setup_version = "23.10"
+            setup_image = "ubuntu/mantic64"
         elsif arg == "alma" then
             setup_os = "alma"
             setup_version = "9"
