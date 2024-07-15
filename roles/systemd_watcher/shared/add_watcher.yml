@@ -1,7 +1,7 @@
-- name: "systemd_watcher : add_watcher : copy config for '{{name}}'"
+- name: "systemd_watcher : add_watcher : copy config for '{{watcher_name}}'"
   copy:
     content: "{{ lookup('template', 'roles/systemd_watcher/templates/config.conf') }}"
-    dest: "{{global_etc}}systemd_watcher/services/{{name}}.conf"
+    dest: "{{global_etc}}systemd_watcher/services/{{watcher_name}}.conf"
     owner: root
     group: root
     mode: 0640

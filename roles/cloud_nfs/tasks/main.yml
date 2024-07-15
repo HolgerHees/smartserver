@@ -83,10 +83,10 @@
 
 - name: build podman image
   vars:
-    name: "cloud_nfs"
+    container_name: "cloud_nfs"
     image_name: "custom_cloud_nfs"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/cloud_nfs/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
@@ -114,13 +114,18 @@
       - '{{global_etc}}cloud_nfs:/etc/cloud_nfs'
       - '{{global_etc}}cloud_nfs/exports:/etc/exports'
       - '{{cloud_path}}local:/cloud/local:rshared'
+  register: "podman_container_state"
   notify: "restart cloud_nfs"
   
-#- name: add container name
-#  vars:
-#    host_name: "cloud_nfs"
-#    host_ip_address: "{{vpn_cloud_services.local.nfs}}"
-#  include_tasks: roles/_shared/add_to_hosts.yml
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "cloud_nfs"
+    container_changed: "{{podman_container_state.changed}}"
+    container_routes:
+      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
 
 # ***** FINALIZE *****
 - name: register loki rules
@@ -130,17 +135,3 @@
   include_tasks: roles/loki/shared/add_config.yml
   tags: ['loki_config']
   when: "monitoring_enabled"
-
-- name: create systemd service
-  vars:
-    container_name: "cloud_nfs"
-    container_routes:
-      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: trigger cloud_nfs handler
-  vars:
-    notify: "restart cloud_nfs"
-    service: "cloud_nfs.service"
-  include_tasks: roles/_shared/service_check.yml

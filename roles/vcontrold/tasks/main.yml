@@ -15,12 +15,31 @@
   register: group_dialout_id
   changed_when: no
 
+- name: copy config and service
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { src: "/etc/vcontrold/mqtt.py", dest: "{{global_etc}}vcontrold/mqtt.py" }
+    - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
+    - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
+  notify: "restart vcontrold"
+
+- name: copy udev rules
+  vars:
+    udev_rules_path: "{{config_path}}templates/vcontrold/"
+    udev_rules_trigger: "restart vcontrold"
+  include_tasks: roles/_shared/synchronize_udev_rules.yml
+
 - name: build podman image
   vars:
-    name: "vcontrold"
+    container_name: "vcontrold"
     image_name: "custom_vcontrold"
     image_version: "{{alpine_version}}-{{vcontrold_version}}"
-    files:
+    image_files:
       - roles/vcontrold/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
@@ -46,15 +65,25 @@
       - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"
     exposed_ports:
       - "3002"
+  register: "podman_container_state"
   notify: "restart vcontrold"
 
-- name: allow vcontrol service
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
   vars:
-    name: "vcontrold"
-    rules: [ "saddr {{podman_vcontrold_ip}} daddr {{podman_mosquitto_ip}}" ]
+    container_name: "vcontrold"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "mosquitto" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+
+- name: allow service
+  vars:
+    firewall_name: "vcontrold"
+    firewall_rules: [ "saddr {{podman_vcontrold_ip}} daddr {{podman_mosquitto_ip}}" ]
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
+# ***** DEPENDENCY CONFIGS *****
 - name: set logrotate job
   vars:
     logrotate_path: "{{global_log}}vcontrold/*.log"
@@ -64,33 +93,6 @@
     owner: root
     group: root
     mode: 0640
-
-- name: copy config and service
-  template:
-    src: "templates{{item.src}}"
-    dest: "{{item.dest}}"
-    owner: root
-    group: root
-    mode: 0640
-  with_items:
-    - { src: "/etc/vcontrold/mqtt.py", dest: "{{global_etc}}vcontrold/mqtt.py" }
-    - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
-    - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
-  notify: "restart vcontrold"
-
-- name: copy udev rules
-  vars:
-    udev_rules_path: "{{config_path}}templates/vcontrold/"
-    udev_rules_trigger: "restart vcontrold"
-  include_tasks: roles/_shared/synchronize_udev_rules.yml
-
-# ***** FINALIZE *****
-- name: create systemd service
-  vars:
-    container_name: "vcontrold"
-    container_after: [ "mosquitto" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
 
 - name: register update notifier
   vars:
@@ -105,9 +107,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger vcontrold handler
-  vars:
-    notify: "restart vcontrold"
-    service: "vcontrold.service"
-  include_tasks: roles/_shared/service_check.yml

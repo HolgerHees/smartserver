@@ -1,6 +1,6 @@
 - name: "container : build_podman_image : prepare build folder"
   file:
-    path: "{{global_build}}{{name}}/"
+    path: "{{global_build}}{{container_name}}/"
     state: directory
     owner: root
     group: root
@@ -20,16 +20,16 @@
 - name: "container : build_podman_image : copy dockerfiles"
   template:
     src: "{{item}}"
-    dest: "{{global_build}}{{name}}/{{item | basename}}"
+    dest: "{{global_build}}{{container_name}}/{{item | basename}}"
     owner: root
     group: root
     mode: 0600
   register: file_status
-  with_items: "{{files}}"
+  with_items: "{{image_files}}"
 
 # async podman build is used to show progress and prevent travisci killing our job because of inactivity
 - name: "container : build_podman_image : compose podman image => image does not exists"
-  shell: "podman build --network host --no-cache -t {{image_name}}:{{image_version}} {{global_build}}{{name}}/"
+  shell: "podman build --network host --no-cache -t {{image_name}}:{{image_version}} {{global_build}}{{container_name}}/"
   async: 1800
   poll: 0
   register: podman_build
@@ -42,22 +42,6 @@
   until: job_result.finished
   retries: 30
   delay: 60
-  when: "podman_build.changed"
-
-- name: "container : build_podman_image : stop service '{{name}}'"
-  systemd:
-    name: "{{name}}"
-    state: stopped
-    enabled: yes
-    masked: no
-  failed_when: no
-  when: "podman_build.changed"
-
-- name: "container : build_podman_image : cleanup outdated container '{{name}}'"
-  shell: "podman rm {{name}}"
-  changed_when: "podman_container_state.rc == 0"
-  failed_when: "podman_container_state.rc != 0 and podman_container_state.rc != 1"
-  register: podman_container_state
   when: "podman_build.changed"
 
 #- name: "container : push image to podman registry"

@@ -318,10 +318,10 @@
   
 - name: build podman image
   vars:
-    name: "openhab"
+    container_name: "openhab"
     image_name: "custom_openhab"
     image_version: "{{openhab_version}}"
-    files:
+    image_files:
       - roles/openhab/templates/container/Dockerfile
       - roles/openhab/templates/container/init.sh
   include_tasks: roles/container/shared/build_podman_image.yml
@@ -391,25 +391,35 @@
       - "8443"  
       - "5007"  
       - "8101" 
-  register: openhab_container_result 
+  register: "podman_container_state"
   notify: "restart openhab"
 
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "openhab"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "mysql", "influxdb", "mosquitto" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: add service name
+  vars:
+    host_name: "openhab"
+    host_ip_address: "127.0.0.1"
+  include_tasks: roles/_shared/add_to_hosts.yml
+
+# ***** DEPENDENCY CONFIGS *****
 - name: check ssh key
   shell: "ls /root/.ssh/known_hosts"
   register: ssh_key_result
   changed_when: no
   failed_when: no
-  when: openhab_container_result.changed
+  when: podman_container_state.changed
    
 - name: clean ssh key
   command: "ssh-keygen -R [openhab]:8101 -f /root/.ssh/known_hosts"
-  when: "openhab_container_result.changed and ssh_key_result.rc == 0"
-
-- name: add container name
-  vars:
-    host_name: "openhab"
-    host_ip_address: "127.0.0.1"
-  include_tasks: roles/_shared/add_to_hosts.yml
+  when: "podman_container_state.changed and ssh_key_result.rc == 0"
 
 # ***** MYSQL DATABASE ****
 - name: create database
@@ -548,13 +558,6 @@
   tags: ['fluentd_config']
   when: "monitoring_enabled"
 
-- name: create systemd service
-  vars:
-    container_name: "openhab"
-    container_after: [ "mysql", "influxdb", "mosquitto" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-  
 - name: register openhab update notifier
   vars:
     name: "openhab"
@@ -567,9 +570,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger openhab handler
-  vars:
-    notify: "restart openhab"
-    service: "openhab.service"
-  include_tasks: roles/_shared/service_check.yml

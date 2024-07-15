@@ -99,10 +99,18 @@
     #exposed_ports:
     # - "19999"
     # - "127.0.0.1:19999:19999"  
-#  notify: "restart netdata"
+  register: "podman_container_state"
+  notify: "restart netdata"
 
-# https://github.com/Tecnativa/docker-socket-proxy
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "netdata"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
 
+# ***** DEPENDENCY CONFIGS *****
 - name: copy helper
   template:
     src: "templates{{item}}"
@@ -142,7 +150,6 @@
   tags: ['cron_job']
   when: "monitoring_enabled"
 
-# ***** FINALIZE *****
 - name: register prometheus metrics
   vars:
     name: "netdata"
@@ -150,19 +157,6 @@
   include_tasks: roles/prometheus/shared/add_config.yml
   tags: ['prometheus_config']
   when: "monitoring_enabled"
-
-- name: register systemd service watcher
-  vars:
-    name: "netdata"
-  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  tags: ['systemd_watcher_config']
-  when: "monitoring_enabled"
-
-- name: create systemd service
-  vars:
-    container_name: "netdata"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
 
 - name: register update notifier
   vars:
@@ -176,9 +170,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger netdata handler
-  vars:
-    notify: "restart netdata"
-    service: "netdata.service"
-  include_tasks: roles/_shared/service_check.yml

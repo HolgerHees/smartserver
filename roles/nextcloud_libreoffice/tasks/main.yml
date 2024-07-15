@@ -37,12 +37,21 @@
 #      - '{{global_lib}}libreoffice:/var/www/libreoffice/Data'
     exposed_ports:
       - "9980"
+  register: "podman_container_state"
   notify: "restart libreoffice"
-    
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "libreoffice"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
 - name: allow libreoffice service
   vars:
-    name: "libreoffice"
-    rules:
+    firewall_name: "libreoffice"
+    firewall_rules:
       - "saddr {{podman_libreoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
@@ -53,7 +62,7 @@
     host_ip_address: "{{podman_libreoffice_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 #- name: register style
 #  vars:
 #    name: "libreoffice"
@@ -76,13 +85,6 @@
   tags: ['fluentd_config']
   when: "monitoring_enabled"
 
-- name: create systemd service
-  vars:
-    container_name: "libreoffice"
-#    container_after: [ "mysql", "redis" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
 - name: register update notifier
   vars:
     name: "libreoffice"
@@ -95,9 +97,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger libreoffice handler
-  vars:
-    notify: "restart libreoffice"
-    service: "libreoffice.service"
-  include_tasks: roles/_shared/service_check.yml

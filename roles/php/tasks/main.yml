@@ -6,10 +6,10 @@
   
 - name: build podman image
   vars:
-    name: "php"
+    container_name: "php"
     image_name: "custom_php"
     image_version: "{{php_version}}"
-    files:
+    image_files:
       - roles/php/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
@@ -51,12 +51,22 @@
     volumes: "{{php_mounted_folders}}"
     exposed_ports:
       - "9000"
+  register: "podman_container_state"
   notify: "restart php"
 
-- name: allow php service
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
   vars:
-    name: "php"
-    rules:
+    container_name: "php"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "mysql", "redis", "postfix", "influxdb" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: allow service
+  vars:
+    firewall_name: "php"
+    firewall_rules:
       - "saddr {{podman_php_ip}} daddr {{podman_mysql_ip}}"
       - "saddr {{podman_php_ip}} daddr {{podman_influxdb_ip}}"
       - "saddr {{podman_php_ip}} daddr {{podman_redis_ip}}"
@@ -66,13 +76,13 @@
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
-- name: add container name
+- name: add service name
   vars:
     host_name: "php"
     host_ip_address: "{{podman_php_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/php.conf"
@@ -80,13 +90,6 @@
   tags: ['fluentd_config']
   when: "monitoring_enabled"
   
-- name: create systemd service
-  vars:
-    container_name: "php"
-    container_after: [ "mysql", "redis", "postfix", "influxdb" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
 - name: register update notifier
   vars:
     name: "php"
@@ -99,9 +102,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger php handler
-  vars:
-    notify: "restart php"
-    service: "php.service"
-  include_tasks: roles/_shared/service_check.yml

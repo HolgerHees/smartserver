@@ -3,8 +3,8 @@ Description={{container_name}}
 StartLimitBurst=20
 StartLimitIntervalSec=300
 Wants=network-online.target
-After=network-online.target{% if container_after is defined %}{% for dependency_name in container_after %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif %}{{''}}
-{% if container_binds is defined %}BindsTo={% for dependency_name in container_binds %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{{''}}
+After=network-online.target{% if container_after is defined and container_after != None %}{% for dependency_name in container_after %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif %}{{''}}
+{% if container_binds is defined and container_binds != None %}BindsTo={% for dependency_name in container_binds %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{{''}}
 {% endif %}
 
 [Service]
@@ -13,11 +13,11 @@ TimeoutStopSec={{container_stop_timeout | default('300')}}
 Restart=on-failure
 RestartSec=3
 ExecStart=/usr/bin/podman start -a {{container_name}}
-{% if container_pre_exec is defined %}ExecStartPre={{container_pre_exec}}{{''}}
+{% if container_pre_exec is defined and container_pre_exec != None %}ExecStartPre={{container_pre_exec}}{{''}}
 {% endif %}
 ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/clean_iptables.sh) &"
-ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %}) &"
-{% if container_post_exec is defined %}ExecStartPost={{container_post_exec}}{{''}}
+ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined and container_routes != None %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %}) &"
+{% if container_post_exec is defined and container_post_exec != None %}ExecStartPost={{container_post_exec}}{{''}}
 {% endif %}
 ExecStop=/usr/bin/podman stop {{container_name}}
 #ExecStop=/usr/bin/podman stop -t {{container_stop_timeout | default('300')}} {{container_name}}

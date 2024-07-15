@@ -52,7 +52,7 @@
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
-    name: "roomba"
+    watcher_name: "roomba"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "is_production|bool" # restart handler is also disabled if no production

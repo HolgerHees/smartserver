@@ -44,20 +44,24 @@
           "[::]:9001:9001",
         {% endif %}
       ]
+  register: "podman_container_state"
   notify: "restart mosquitto"
-    
-- name: add container name
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "mosquitto"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: add service name
   vars:
     host_name: "mosquitto"
     host_ip_address: "{{podman_mosquitto_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
-- name: create systemd service
-  vars:
-    container_name: "mosquitto"
-  include_tasks: roles/container/shared/add_podman_service.yml
-
+# ***** DEPENDENCY CONFIGS *****
 - name: register update notifier
   vars:
     name: "mosquitto"
@@ -70,9 +74,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger mosquitto handler
-  vars:
-    notify: "restart mosquitto"
-    service: "mosquitto.service"
-  include_tasks: roles/_shared/service_check.yml

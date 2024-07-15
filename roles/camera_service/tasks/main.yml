@@ -13,45 +13,6 @@
       ]
   include_tasks: roles/_shared/create_directories.yml
 
-- name: build podman image
-  vars:
-    name: "camera_service"
-    image_name: "custom_camera_service"
-    image_version: "{{alpine_version}}"
-    files:
-      - roles/camera_service/templates/container/Dockerfile
-      - roles/camera_service/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_podman_image.yml
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: camera_service
-    image: "custom_camera_service:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: camera_service
-    network: "isolated"
-    ip: "{{podman_camera_service_ip}}"
-    volumes:
-      - '{{global_opt}}shared/python:/opt/shared/python:ro'
-      - '{{global_opt}}camera_service/:/opt/camera_service:ro'
-      - "{{global_lib}}camera_service/:/var/lib/camera_service:rw"
-      - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw'
-  notify: "restart camera_service"
-
-- name: allow camera_service service
-  vars:
-    name: "camera_service"
-    rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_camera_service_ip}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-
 - name: copy config
   template:
     src: "templates/config.py"
@@ -87,6 +48,55 @@
     mode: 0750
   notify: "restart camera_service"
 
+- name: build podman image
+  vars:
+    container_name: "camera_service"
+    image_name: "custom_camera_service"
+    image_version: "{{alpine_version}}"
+    image_files:
+      - roles/camera_service/templates/container/Dockerfile
+      - roles/camera_service/templates/container/entrypoint.sh
+  include_tasks: roles/container/shared/build_podman_image.yml
+
+- name: create podman container
+  containers.podman.podman_container:
+    name: camera_service
+    image: "custom_camera_service:{{alpine_version}}"
+    state: present
+    security_opt:
+      - label=disable
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: camera_service
+    network: "isolated"
+    ip: "{{podman_camera_service_ip}}"
+    volumes:
+      - '{{global_opt}}shared/python:/opt/shared/python:ro'
+      - '{{global_opt}}camera_service/:/opt/camera_service:ro'
+      - "{{global_lib}}camera_service/:/var/lib/camera_service:rw"
+      - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw'
+  register: "podman_container_state"
+  notify: "restart camera_service"
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "camera_service"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "camera_ftp" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: allow service
+  vars:
+    firewall_name: "camera_service"
+    firewall_rules:
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_camera_service_ip}}"
+  include_tasks: roles/firewall/shared/allow_service.yml
+
+# ***** DEPENDENCY CONFIGS *****
 - name: synchronize htdocs
   synchronize:
     src: "templates/htdocs/"
@@ -116,7 +126,6 @@
   include_tasks: roles/apache_webui/shared/add_webui.yml
   tags: ['apache_webui_config']
 
-# ***** FINALIZE *****
 - name: register prometheus rules & metrics
   vars:
     name: "camera_service"
@@ -140,24 +149,3 @@
   include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
-
-- name: create systemd service
-  vars:
-    container_name: "camera_service"
-    container_after: [ "camera_ftp" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: register systemd service watcher
-  vars:
-    name: "camera_service"
-  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  tags: ['systemd_watcher_config']
-  when: "monitoring_enabled"
-  
-- name: trigger update_service handler
-  vars:
-    notify: "restart camera_service"
-    service: "camera_service.service"
-  include_tasks: roles/_shared/service_check.yml
-

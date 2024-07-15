@@ -19,23 +19,26 @@
     ip: "{{podman_redis_ip}}"
     exposed_ports:
      - "6379"
+  register: "podman_container_state"
   notify: "restart redis"
 
-# ***** FINALIZE *****
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "redis"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
 - name: allow redis service
   vars:
-    name: "redis"
-    rules:
+    firewall_name: "redis"
+    firewall_rules:
       - "saddr {{podman_redis_ip}} daddr {{podman_php_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
-- name: create systemd service
-  vars:
-    container_name: "redis"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
+# ***** DEPENDENCY CONFIGS *****
 - name: register update notifier
   vars:
     name: "redis"
@@ -48,9 +51,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger redis handler
-  vars:
-    notify: "restart redis"
-    service: "redis.service"
-  include_tasks: roles/_shared/service_check.yml

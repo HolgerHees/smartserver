@@ -50,10 +50,10 @@
     
 - name: build podman image
   vars:
-    name: "grafana"
+    container_name: "grafana"
     image_name: "custom_grafana"
     image_version: "{{grafana_version}}"
-    files:
+    image_files:
       - roles/grafana/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
     
@@ -83,12 +83,22 @@
       - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning'
     exposed_ports:
      - "3000"
+  register: "podman_container_state"
   notify: "restart grafana"
-      
-- name: allow grafana service
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
   vars:
-    name: "grafana"
-    rules:
+    container_name: "grafana"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+      
+- name: allow service
+  vars:
+    firewall_name: "grafana"
+    firewall_rules:
       - "saddr {{podman_grafana_ip}} daddr {{podman_mysql_ip}}"
       - "saddr {{podman_grafana_ip}} daddr {{podman_influxdb_ip}}"
       - "saddr {{podman_grafana_ip}} daddr {{podman_loki_ip}}"
@@ -98,13 +108,13 @@
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
-- name: add container name
+- name: add service name
   vars:
     host_name: "grafana"
     host_ip_address: "{{podman_grafana_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: register webui
   vars:
     name: "grafana"
@@ -128,14 +138,7 @@
   include_tasks: roles/fluentd/shared/add_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
-      
-- name: create systemd service
-  vars:
-    container_name: "grafana"
-    container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-  
+
 - name: register update notifier
   vars:
     name: "grafana"
@@ -148,9 +151,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger grafana handler
-  vars:
-    notify: "restart grafana"
-    service: "grafana.service"
-  include_tasks: roles/_shared/service_check.yml

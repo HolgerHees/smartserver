@@ -204,12 +204,28 @@
    - state
    - robots.txt
 
+- name: prepare auth files
+  copy:
+    content: ""
+    dest: "{{global_etc}}apache2/_.ansible.auth/{{item}}"
+    force: no
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
+  with_items:
+    - .htpasswd
+    - auth_openidc_users.txt
+    - auth_openidc_user_fullnames.txt
+    - auth_openidc_user_groups.txt
+    - auth_user_fullnames.txt
+    - auth_user_groups.txt
+
 - name: build podman image
   vars:
-    name: "apache"
+    container_name: "apache2"
     image_name: "custom_apache2"
     image_version: "{{apache_version}}"
-    files:
+    image_files:
       - roles/apache/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
   
@@ -224,7 +240,7 @@
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
-      tag: apache
+      tag: apache2
     network: "host"
     volumes:
       - '{{global_etc}}apache2/_.ansible.auth:/etc/apache2/_.ansible.auth'
@@ -241,29 +257,30 @@
 #      - "80:80"
 #      - "443:443"
 #      - "10114:10114"
+  register: "podman_container_state"
   notify: "restart apache2"
   
+# ***** SERVICE CONFIGS *****
 - name: disable old systemd service
   shell: "if [ -f /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service ]; then mv /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service.org; echo \"1\"; else echo \"0\"; fi"
   register: service_change
   changed_when: "'1' in service_change.stdout"
 
-- name: prepare auth files
-  copy:
-    content: ""
-    dest: "{{global_etc}}apache2/_.ansible.auth/{{item}}"
-    force: no
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  with_items:
-    - .htpasswd
-    - auth_openidc_users.txt
-    - auth_openidc_user_fullnames.txt
-    - auth_openidc_user_groups.txt
-    - auth_user_fullnames.txt
-    - auth_user_groups.txt
-    
+- name: handle systemd service
+  vars:
+    container_name: "apache2"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: allow letsencrypt service
+  vars:
+    firewall_name: "http.letsencrypt"
+    firewall_rules: [ "daddr {{default_server_ip}} proto tcp dport 80" ]
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
+
+# ***** DEPENDENCY CONFIGS *****
 - name: set logrotate job
   vars:
     logrotate_path: "{{global_log}}apache2/*.log"
@@ -274,26 +291,12 @@
     group: root
     mode: 0640
 
-# ***** FINALIZE *****
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/apache.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
-  
-- name: allow letsencrypt service
-  vars:
-    name: "http.letsencrypt"
-    rules: [ "daddr {{default_server_ip}} proto tcp dport 80" ]
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  
-- name: create systemd service
-  vars:
-    container_name: "apache2"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
 
 - name: register apache update notifier
   vars:
@@ -321,9 +324,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger apache2 handler
-  vars:
-    notify: "restart apache2"
-    service: "apache2.service"
-  include_tasks: roles/_shared/service_check.yml

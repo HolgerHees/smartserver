@@ -35,10 +35,10 @@
 
 - name: build podman image
   vars:
-    name: "mysql"
+    container_name: "mysql"
     image_name: "custom_mysql"
     image_version: "{{mysql_version}}"
-    files:
+    image_files:
       - roles/mysql/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
@@ -66,16 +66,24 @@
     ip: "{{podman_mysql_ip}}"
     exposed_ports:
       - "3306"  
-  register: mysql_container
+  register: "podman_container_state"
   notify: "restart mysql"
 
-- name: add container name
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "mysql"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: add service name
   vars:
     host_name: "mysql"
     host_ip_address: "{{podman_mysql_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: create cron job
   vars:
     name: "MySQL Clean Backup"
@@ -104,12 +112,6 @@
   include_tasks: roles/fluentd/shared/add_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
-
-- name: create systemd service
-  vars:
-    container_name: "mysql"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
     
 - name: register update notifier
   vars:
@@ -124,19 +126,13 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-- name: trigger mysql handler
-  vars:
-    notify: "restart mysql"
-    service: "mysql.service"
-  include_tasks: roles/_shared/service_check.yml
-
 - name: check mysql service
   include_tasks: roles/mysql/shared/wait_until_ready.yml
-  when: mysql_container.changed
+  when: podman_container_state.changed
 
 - name: check mysql upgrade
   shell: "podman exec mysql sh -c \"/usr/bin/mysql_upgrade\""
-  when: mysql_container.changed
+  when: podman_container_state.changed
   
 # ***** SHARED DATABASE ****
 - name: create database

@@ -25,10 +25,10 @@
 
 - name: build podman image
   vars:
-    name: "minidlna"
+    container_name: "minidlna"
     image_name: "custom_minidlna"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/minidlna/templates/container/Dockerfile
       - roles/minidlna/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
@@ -65,17 +65,13 @@
     exposed_ports:
      - "8200/tcp"  
      - "1900/udp"  
+  register: "podman_container_state"
   notify: "restart minidlna"
-    
-# ***** FINALIZE *****
-- name: create systemd service
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
   vars:
     container_name: "minidlna"
-  include_tasks: roles/container/shared/add_podman_service.yml
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
-
-- name: trigger minidlna handler
-  vars:
-    notify: "restart minidlna"
-    service: "minidlna.service"
-  include_tasks: roles/_shared/service_check.yml

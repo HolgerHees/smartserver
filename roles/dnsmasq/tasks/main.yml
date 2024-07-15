@@ -72,10 +72,10 @@
 
 - name: build podman image
   vars:
-    name: "dnsmasq"
+    container_name: "dnsmasq"
     image_name: "custom_dnsmasq"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/dnsmasq/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
   
@@ -105,10 +105,21 @@
           "[::]:53:53/tcp",
         {% endif %}
       ]
-  register: dns_result
+  register: "podman_container_state"
   notify: "restart dnsmasq"
 
-# ***** FINALIZE *****
+# ***** SERVICE CONFIGS *****
+# must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
+- name: enable dnsmasq
+  include_tasks: roles/dnsmasq/tasks/enable.yml
+
+- name: handle systemd service
+  vars:
+    container_name: "dnsmasq"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
 - name: prepare iptables rules
   set_fact:
     dns_rules: "{{ (dns_rules | default([])) + [ 'saddr ' + podman_dns_ip + ' daddr ' + item ] }}"
@@ -117,32 +128,9 @@
 
 - name: allow dns service
   vars:
-    name: "dnsmasq"
-    rules: "{{dns_rules}}"
+    firewall_name: "dnsmasq"
+    firewall_rules: "{{dns_rules}}"
     instant_activation: True
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
-
-- name: create systemd service
-  vars:
-    container_name: "dnsmasq"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
   
-# must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
-- name: enable dnsmasq
-  include_tasks: roles/dnsmasq/tasks/enable.yml
-
-- name: force dnsmasq restart
-  systemd:
-    state: restarted
-    daemon_reload: yes
-    name: dnsmasq
-  when: dns_result.changed
-
-- name: trigger dnsmasq handler
-  vars:
-    notify: "restart dnsmasq"
-    service: "dnsmasq.service"
-  include_tasks: roles/_shared/service_check.yml
-

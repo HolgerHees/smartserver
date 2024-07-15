@@ -22,10 +22,10 @@
 
 - name: build podman image
   vars:
-    name: "ftp"
+    container_name: "vsftpd"
     image_name: "custom_vsftpd"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/camera_ftp/templates/container/Dockerfile
       - roles/camera_ftp/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
@@ -67,9 +67,18 @@
           "[::]:30000-30005:30000-30005",
         {% endif %}
       ]
+  register: "podman_container_state"
   notify: "restart vsftpd"
 
-- name: prepare iptables rules
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "vsftpd"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: prepare firewall rules
   set_fact:
     ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + podman_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
   with_items: "{{ intern_networks }}"
@@ -77,12 +86,12 @@
 
 - name: allow ftp service
   vars:
-    name: "ftp"
-    rules: "{{ftp_rules}}"
+    firewall_name: "ftp"
+    firewall_rules: "{{ftp_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: create cron job
   vars:
     name: "Camera Cleanup"
@@ -92,18 +101,3 @@
     minute: "50"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
-
-- name: create systemd service
-  vars:
-    container_name: "vsftpd"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: trigger vsftpd handler
-  vars:
-    notify: "restart vsftpd"
-    service: "vsftpd.service"
-  include_tasks: roles/_shared/service_check.yml
-          
-    
-    

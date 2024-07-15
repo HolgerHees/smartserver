@@ -1,3 +1,11 @@
+- name: install required packages => is_ubuntu
+  apt:
+    name: [
+        openssh-server
+    ]
+    state: present
+  when: is_ubuntu
+
 - name: set config
   lineinfile:
     path: /etc/ssh/sshd_config
@@ -10,7 +18,7 @@
 # ***** FINALIZE *****
 - name: register service watcher
   vars:
-    name: "{{'ssh' if is_ubuntu else 'sshd'}}"
+    watcher_name: "{{'ssh' if is_ubuntu else 'sshd'}}"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"

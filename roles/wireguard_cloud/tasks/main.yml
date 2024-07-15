@@ -76,10 +76,10 @@
 
 - name: build podman image
   vars:
-    name: "wireguard_cloud"
+    container_name: "wireguard_cloud"
     image_name: "custom_wireguard_cloud"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/wireguard_cloud/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
@@ -124,7 +124,17 @@
           "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
         {% endif %}
       ]
+  register: "podman_container_state"
   notify: "restart wireguard_cloud"
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "wireguard_cloud"
+    container_changed: "{{podman_container_state.changed}}"
+    container_pre_exec: "modprobe wireguard"
+    container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
 
 - name: prepare used ports
   set_fact:
@@ -147,24 +157,9 @@
       ]
   tags: ['firewall_config']
 
-# ***** FINALIZE *****
 - name: allow cloud service
   vars:
-    name: "wireguard_cloud"
-    rules: "{{wireguard_cloud_ferm_rules}}"
+    firewall_name: "wireguard_cloud"
+    firewall_rules: "{{wireguard_cloud_ferm_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
-
-- name: create systemd service
-  vars:
-    container_name: "wireguard_cloud"
-    container_pre_exec: "modprobe wireguard"
-    container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: trigger wireguard_cloud handler
-  vars:
-    notify: "restart wireguard_cloud"
-    service: "wireguard_cloud.service"
-  include_tasks: roles/_shared/service_check.yml

@@ -134,10 +134,10 @@
   
 - name: build podman image
   vars:
-    name: "wireguard_mobile"
+    container_name: "wireguard_mobile"
     image_name: "custom_wireguard_mobile"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/wireguard_mobile/templates/container/Dockerfile
       - roles/wireguard_mobile/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
@@ -165,19 +165,16 @@
       - '{{global_etc}}wireguard_mobile:/etc/wireguard'
 #    exposed_ports:
 #      - "{{mobile_vpn_internal_port}}/udp"
+  register: "podman_container_state"
   notify: "restart wireguard_mobile"
 
-
-# ***** FINALIZE *****
-# todo => enable forwarding if needed to allow vpn client to access complete network
-
-## iptables -A FORWARD -i wg0 -j ACCEPT # => not needed, because we trust this network always
-
-# https://gist.github.com/insdavm/b1034635ab23b8839bf957aa406b5e39
-# https://www.cyberciti.biz/faq/how-to-set-up-wireguard-firewall-rules-in-linux/
-# iptables -t nat -I POSTROUTING -s {{vpn_gate_client_privatekeys[item]}} -o {{default_network_interface}} -j MASQUERADE
-
-# sysctl net.ipv4.ip_forward=1
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "wireguard_mobile"
+    container_changed: "{{podman_container_state.changed}}"
+    container_pre_exec: "modprobe wireguard"
+  include_tasks: roles/container/shared/handle_podman_service.yml
 
 - name: prepare mobile vpn admin ip rules
   set_fact:
@@ -192,20 +189,7 @@
 
 - name: allow mobile vpn service
   vars:
-    name: "wireguard_mobile"
-    rules: "{{vpn_admin_ip_rules}}"
+    firewall_name: "wireguard_mobile"
+    firewall_rules: "{{vpn_admin_ip_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
-
-- name: create systemd service
-  vars:
-    container_name: "wireguard_mobile"
-    container_pre_exec: "modprobe wireguard"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: trigger wireguard_mobile handler
-  vars:
-    notify: "restart wireguard_mobile"
-    service: "wireguard_mobile.service"
-  include_tasks: roles/_shared/service_check.yml

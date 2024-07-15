@@ -1,4 +1,4 @@
-- name: "container : add_podman_service : create systemd service for '{{container_name}}'"
+- name: "container : add_podman_service : create systemd service"
   copy:
     content: "{{ lookup('template', 'roles/container/templates/podman_service') }}"
     dest: "/etc/systemd/system/{{service_name | default(container_name)}}.service"
@@ -9,7 +9,7 @@
  
 - name: "container : add_podman_service : register systemd service watcher"
   vars:
-    name: "{{container_name}}"
+    watcher_name: "{{container_name}}"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"

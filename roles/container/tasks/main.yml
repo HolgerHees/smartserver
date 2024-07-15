@@ -67,6 +67,7 @@
   with_items:
     - "/etc/containers/containers.conf"
     - "/etc/containers/registries.conf"
+    - "/etc/containers/storage.conf"
 
 - name: copy fluentd config
   vars:
@@ -110,9 +111,6 @@
     - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
     - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
     - { file: 'libpod.conf', field: 'cgroup_manager', value: "systemd" }
-    - { file: 'storage.conf', field: 'driver', value: 'overlay' }
-    - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
-    - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
 
 # https://success.docker.com/article/node-using-swap-memory-instead-of-host-memory
 # vm.swappiness = 0   # Swap is disabled. In earlier versions, this meant that the kernel would swap only to avoid an out of memory condition, but in later versions this is achieved by setting to 1.
@@ -182,7 +180,7 @@
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
-    name: "macvlan_bridge"
+    watcher_name: "macvlan_bridge"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled and macvlan_range | length > 0"
@@ -196,7 +194,7 @@
 
 - name: register systemd service watcher
   vars:
-    name: "podman"
+    watcher_name: "podman"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"

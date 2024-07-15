@@ -115,9 +115,18 @@
     # - "67:67/udp"
       - "80/tcp"
       - "443/tcp"
+  register: "podman_container_state"
   notify: "restart pihole"
 
-# ***** FINALIZE *****
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "pihole"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+# ***** DEPENDENCY CONFIGS *****
 - name: register webui
   vars:
     name: "pihole"
@@ -144,12 +153,6 @@
   tags: ['fluentd_config']
   when: "monitoring_enabled"
 
-- name: create systemd service
-  vars:
-    container_name: "pihole"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
 - name: register update notifier
   vars:
     name: "pihole"
@@ -162,9 +165,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger pihole handler
-  vars:
-    notify: "restart pihole"
-    service: "pihole.service"
-  include_tasks: roles/_shared/service_check.yml

@@ -118,7 +118,7 @@ class LogCollector(threading.Thread):
             server_ports.append(port)
 
         #self.query_test = "{group=\"apache\"}"
-        self.query = "{{group=\"apache\"}} |~ \" vhost={}:({}) \" != \" status=200 \"".format(self.config.server_domain, "|".join(server_ports)) if len(server_ports) > 0 else None
+        self.query = "{{group=\"apache2\"}} |~ \" vhost={}:({}) \" != \" status=200 \"".format(self.config.server_domain, "|".join(server_ports)) if len(server_ports) > 0 else None
         self.limit = 10000
 
         self.starttime = None

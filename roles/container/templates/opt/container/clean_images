@@ -141,7 +141,7 @@ for container in containers:
         else:
             print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}'".format(container.id, container.name, container.image))
 
-            command.exec(["podman", "rm", "{}".format(container.id)])
+            #command.exec(["podman", "rm", "{}".format(container.id)])
             continue
     _containers.append(container)
 containers = _containers
@@ -167,7 +167,7 @@ for name in sorted(images,key=cmp_to_key(sortImages)):
 
         cleaned = True
 
-        command.exec(["podman", "image", "rm", "-f", "{}".format(image_version.id)])
+        #command.exec(["podman", "image", "rm", "-f", "{}".format(image_version.id)])
 
 if is_quite and not cleaned:
     print(u"No images deleted")

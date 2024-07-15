@@ -5,46 +5,6 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_opt}}cloud_check/config/" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: build podman image
-  vars:
-    name: "cloud_check"
-    image_name: "custom_cloud_check"
-    image_version: "{{alpine_version}}"
-    files:
-      - roles/cloud_check/templates/container/Dockerfile
-      - roles/cloud_check/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_podman_image.yml
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: cloud_check
-    image: "custom_cloud_check:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: cloud_check
-    network: "isolated"
-    ip: "{{podman_cloud_check_ip}}"
-    volumes:
-      - '{{global_opt}}cloud_check/:/opt/cloud_check'
-      - '{{cloud_path}}/remote:/cloud/remote:rshared'
-  notify: "restart cloud_check"
-
-- name: allow cloud_check service
-  vars:
-    name: "cloud_check"
-    rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_cloud_check_ip}}"
-      - "saddr {{podman_cloud_check_ip}} daddr {{vpn_cloud_services.local.mosquitto}}"
-      - "saddr {{podman_cloud_check_ip}} proto tcp dport 80 outerface {{default_network_interface}}"
-      - "saddr {{podman_cloud_check_ip}} proto icmp outerface {{default_network_interface}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-
 - name: copy config
   template:
     src: "templates{{item.src}}"
@@ -67,7 +27,57 @@
     - { src: "/opt/cloud_check/cloud_check", dest: "{{global_opt}}cloud_check/cloud_check" }
   notify: "restart cloud_check"
 
-# ***** FINALIZE *****
+- name: build podman image
+  vars:
+    container_name: "cloud_check"
+    image_name: "custom_cloud_check"
+    image_version: "{{alpine_version}}"
+    image_files:
+      - roles/cloud_check/templates/container/Dockerfile
+      - roles/cloud_check/templates/container/entrypoint.sh
+  include_tasks: roles/container/shared/build_podman_image.yml
+
+- name: create podman container
+  containers.podman.podman_container:
+    name: cloud_check
+    image: "custom_cloud_check:{{alpine_version}}"
+    state: present
+    security_opt:
+      - label=disable
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: cloud_check
+    network: "isolated"
+    ip: "{{podman_cloud_check_ip}}"
+    volumes:
+      - '{{global_opt}}cloud_check/:/opt/cloud_check'
+      - '{{cloud_path}}/remote:/cloud/remote:rshared'
+  register: "podman_container_state"
+  notify: "restart cloud_check"
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "cloud_check"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "cloud_mosquitto" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: allow service
+  vars:
+    firewall_name: "cloud_check"
+    firewall_rules:
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_cloud_check_ip}}"
+      - "saddr {{podman_cloud_check_ip}} daddr {{vpn_cloud_services.local.mosquitto}}"
+      - "saddr {{podman_cloud_check_ip}} proto tcp dport 80 outerface {{default_network_interface}}"
+      - "saddr {{podman_cloud_check_ip}} proto icmp outerface {{default_network_interface}}"
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
+
+# ***** DEPENDENCY CONFIGS *****
 - name: register prometheus rules & metrics
   vars:
     name: "cloud_check"
@@ -76,16 +86,3 @@
   include_tasks: roles/prometheus/shared/add_config.yml
   tags: ['prometheus_config']
   when: "monitoring_enabled"
-
-- name: create systemd service
-  vars:
-    container_name: "cloud_check"
-    container_after: [ "cloud_mosquitto" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: trigger cloud_check handler
-  vars:
-    notify: "restart cloud_check"
-    service: "cloud_check.service"
-  include_tasks: roles/_shared/service_check.yml

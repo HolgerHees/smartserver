@@ -22,10 +22,10 @@
 
 - name: build podman image
   vars:
-    name: "influxdb"
+    container_name: "influxdb"
     image_name: "custom_influxdb"
     image_version: "{{influxdb_version}}"
-    files:
+    image_files:
       - roles/influxdb/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
@@ -61,16 +61,24 @@
       - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup'
     exposed_ports:
      - "8086"
-  register: influxdb_container_result
+  register: "podman_container_state"
   notify: "restart influxdb"
 
-- name: add container name
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "influxdb"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: add service name
   vars:
     host_name: "influxdb"
     host_ip_address: "{{podman_influxdb_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: create cron job
   vars:
     name: "Influxdb Cleanup"
@@ -106,12 +114,6 @@
   tags: ['fluentd_config']
   when: "monitoring_enabled"
     
-- name: create systemd service
-  vars:
-    container_name: "influxdb"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-  
 - name: register update notifier
   vars:
     name: "influxdb"
@@ -125,23 +127,17 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-- name: trigger influxdb handler
-  vars:
-    notify: "restart influxdb"
-    service: "influxdb.service"
-  include_tasks: roles/_shared/service_check.yml
-
 # CHECK local cli token => only needed if a new container is created and data folder already exists
 - name: check influxdb service
   include_tasks: roles/influxdb/shared/wait_until_ready.yml
-  when: "influxdb_container_result.changed"
+  when: "podman_container_state.changed"
   
 - name: check cli config
   shell: "podman exec influxdb sh -c \"influx config list\""
   register: influxdb_config_result
   changed_when: False
-  when: "influxdb_container_result.changed"
+  when: "podman_container_state.changed"
   
 - name: create cli config token => config does not exists
   shell: "podman exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active\""
-  when: "influxdb_container_result.changed and '\tdefault\t' not in influxdb_config_result.stdout"
+  when: "podman_container_state.changed and '\tdefault\t' not in influxdb_config_result.stdout"

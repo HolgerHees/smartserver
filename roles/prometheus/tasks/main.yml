@@ -62,12 +62,23 @@
       - '{{ global_lib }}prometheus:/prometheus'
     exposed_ports:
      - "9090"
+  register: "podman_container_state"
   notify: "restart prometheus"
-  
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "prometheus"
+    container_changed: "{{podman_container_state.changed}}"
+    container_pre_exec: "/opt/scripts/prometheus_generator {{ global_etc }}prometheus/"
+    container_after: [ "alertmanager" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
 - name: allow prometheus service
   vars:
-    name: "prometheus"
-    rules:
+    firewall_name: "prometheus"
+    firewall_rules:
       - "saddr {{podman_prometheus_ip}} daddr {{podman_alertmanager_ip}}"
       - "saddr {{podman_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
   include_tasks: roles/firewall/shared/allow_service.yml
@@ -79,7 +90,7 @@
     host_ip_address: "{{podman_prometheus_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: register grafana configs
   vars:
     name: "loki"
@@ -112,15 +123,7 @@
   include_tasks: roles/fluentd/shared/add_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
-    
-- name: create systemd service
-  vars:
-    container_name: "prometheus"
-    container_pre_exec: "/opt/scripts/prometheus_generator {{ global_etc }}prometheus/"
-    container_after: [ "alertmanager" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-  
+
 - name: register update notifier
   vars:
     name: "prometheus"
@@ -134,8 +137,3 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-- name: trigger prometheus handler
-  vars:
-    notify: "restart prometheus"
-    service: "prometheus.service"
-  include_tasks: roles/_shared/service_check.yml

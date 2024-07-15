@@ -35,44 +35,21 @@
     ip: "{{vpn_cloud_services.local.mosquitto}}"
     volumes:
       - '{{global_etc}}cloud_mosquitto:/mosquitto/config'
+  register: "podman_container_state"
   notify: "restart cloud_mosquitto"
     
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "cloud_mosquitto"
+    container_changed: "{{podman_container_state.changed}}"
+    container_routes:
+      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
 - name: add container name
   vars:
     host_name: "cloud_mosquitto"
     host_ip_address: "{{vpn_cloud_services.local.mosquitto}}"
   include_tasks: roles/_shared/add_to_hosts.yml
-
-# ***** FINALIZE *****
-#- name: copy fluentd config
-#  vars:
-#    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
-#  include_tasks: roles/fluentd/shared/add_config.yml
-#  tags: ['fluentd_config']
-
-- name: create systemd service
-  vars:
-    container_name: "cloud_mosquitto"
-    container_routes:
-      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-#- name: register update notifier
-#  vars:
-#    name: "mosquitto"
-#    type: "docker"
-#    url: "https://mosquitto.org/blog/"
-#    config: { 
-#      repository: "eclipse-mosquitto", 
-#      pattern: "^([0-9\\.]+)$" 
-#    }
-#  include_tasks: roles/update_service/shared/add_software.yml
-#  tags: ['update_notifier_config']
-#  when: "update_service_software_check_enabled"
-
-- name: trigger cloud_mosquitto handler
-  vars:
-    notify: "restart cloud_mosquitto"
-    service: "cloud_mosquitto.service"
-  include_tasks: roles/_shared/service_check.yml

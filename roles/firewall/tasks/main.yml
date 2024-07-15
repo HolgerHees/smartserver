@@ -86,7 +86,7 @@
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
-    name: "ferm"
+    watcher_name: "ferm"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"

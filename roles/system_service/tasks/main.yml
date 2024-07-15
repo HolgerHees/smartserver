@@ -40,10 +40,10 @@
 
 - name: build podman image
   vars:
-    name: "system_service"
+    container_name: "system_service"
     image_name: "custom_system_service"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/system_service/templates/container/Dockerfile
       - roles/system_service/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
@@ -71,7 +71,16 @@
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
       - '{{global_opt}}system_service/:/opt/system_service:ro'
       - "{{global_lib}}system_service/:/var/lib/system_service:rw"
+  register: "podman_container_state"
   notify: "restart system_service"
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "system_service"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "network-online.target", "mosquitto", "influxdb" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
 
 - name: add container name
   vars:
@@ -93,7 +102,7 @@
   tags: ["cron_job", "backup_restore"]
   when: "influxdb_enabled"
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: register prometheus rules & metrics
   vars:
     name: "system_service"
@@ -171,25 +180,3 @@
   include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
-
-- name: register systemd service watcher
-  vars:
-    name: "system_service"
-  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  tags: ['systemd_watcher_config']
-  when: "monitoring_enabled"
-
-- name: create systemd service
-  vars:
-    container_name: "system_service"
-    container_after: [ "network-online.target", "mosquitto", "influxdb" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: trigger device_ping handler
-  vars:
-    notify: "restart system_service"
-    service: "system_service.service"
-  include_tasks: roles/_shared/service_check.yml
-
-  

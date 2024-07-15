@@ -18,10 +18,10 @@
 
 - name: build podman image
   vars:
-    name: "postfix"
+    container_name: "postfix"
     image_name: "custom_postfix"
     image_version: "{{alpine_version}}"
-    files:
+    image_files:
       - roles/postfix/templates/container/Dockerfile
       - roles/postfix/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
@@ -45,12 +45,21 @@
       - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient'
     exposed_ports:
       - "25/tcp"
+  register: "podman_container_state"
   notify: "restart postfix"
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "postfix"
+    container_changed: "{{podman_container_state.changed}}"
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: allow postfix service
   vars:
-    name: "postfix"
-    rules:
+    firewall_name: "postfix"
+    firewall_rules:
       - "saddr {{podman_prometheus_ip}} daddr {{podman_postfix_ip}}"
       - "saddr {{podman_postfix_ip}} proto tcp dport {{mailserver_port}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
@@ -118,6 +127,7 @@
     owner: root
     group: root
   
+# ***** DEPENDENCY CONFIGS *****
 - name: copy config
   template:
     src: "templates/etc/msmtprc"
@@ -144,12 +154,6 @@
   tags: ['loki_config']
   when: "monitoring_enabled"
 
-- name: create systemd service
-  vars:
-    container_name: "postfix"
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
 - name: create cron 'ping' job
   vars:
     name: "Daily Ping"
@@ -160,13 +164,6 @@
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
 
-- name: register systemd service watcher
-  vars:
-    name: "postfix"
-  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  tags: ['systemd_watcher_config']
-  when: "monitoring_enabled"
-
 - name: register system package dependency
   vars:
     tag: "postfix"
@@ -174,9 +171,3 @@
   include_tasks: roles/update_service/shared/add_dependency.yml
   tags: ['update_system_config']
   when: "update_service_system_check_enabled"
-
-- name: trigger postfix handler
-  vars:
-    notify: "restart postfix"
-    service: "postfix.service"
-  include_tasks: roles/_shared/service_check.yml

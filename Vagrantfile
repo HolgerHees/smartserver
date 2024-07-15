@@ -170,7 +170,7 @@ Vagrant.configure(2) do |config|
         setup.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update
         sudo apt-get -y install python3-netaddr python3-pip
-        sudo pip install ansible==4.10.0
+        sudo pip install ansible==4.10.0 --break-system-packages
         SHELL
     elsif setup_os == 'alma' then
         #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service

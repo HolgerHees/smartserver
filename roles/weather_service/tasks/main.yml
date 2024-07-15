@@ -6,77 +6,6 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}weather_service/" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: build podman image
-  vars:
-    name: "weather_service"
-    image_name: "custom_weather_service"
-    image_version: "{{alpine_version}}"
-    files:
-      - roles/weather_service/templates/container/Dockerfile
-      - roles/weather_service/templates/container/entrypoint.sh
-  include_tasks: roles/container/shared/build_podman_image.yml
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: weather_service
-    image: "custom_weather_service:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: weather_service
-    network: "isolated"
-    ip: "{{podman_weather_service_ip}}"
-    volumes:
-      - '{{global_opt}}shared/python:/opt/shared/python:ro'
-      - '{{global_opt}}weather_service/:/opt/weather_service:ro'
-      - "{{global_lib}}weather_service/:/var/lib/weather_service:rw"
-  notify: "restart weather_service"
-
-- name: allow weather_service service
-  vars:
-    name: "weather_service"
-    rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_weather_service_ip}}"
-      - "saddr {{podman_weather_service_ip}} daddr {{podman_mysql_ip}}"
-      - "saddr {{podman_weather_service_ip}} daddr {{vpn_cloud_services.local.mosquitto if weather_mqtt_server == 'cloud_mosquitto' else podman_mosquitto_ip}}"
-      - "saddr {{podman_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-
-- name: check mysql service
-  include_tasks: roles/mysql/shared/wait_until_ready.yml
-  when: "mysql_enabled"
-
-- name: check mysql table
-  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
-  register: mysql_table_exists
-  changed_when: "'weather_forecast' not in mysql_table_exists.stdout"
-  when: "mysql_enabled"
-
-- name: synchronize table config
-  synchronize:
-    src: "templates/weather_forecast.sql"
-    dest: "{{ global_build }}weather_service/"
-    archive: no
-    checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
-    recursive: yes
-    rsync_opts:
-      - "--chown=root:root"
-      - "--chmod=F600"
-  changed_when: no
-  when: "'weather_forecast' not in mysql_table_exists.stdout"
-  
-- name: create missing table 'weather_service' => does not exists in database
-  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | podman exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
-  when: "mysql_enabled and 'weather_forecast' not in mysql_table_exists.stdout"
-
 - name: copy config
   template:
     src: "templates/config.py"
@@ -113,6 +42,87 @@
     mode: 0750
   notify: "restart weather_service"
 
+- name: build podman image
+  vars:
+    container_name: "weather_service"
+    image_name: "custom_weather_service"
+    image_version: "{{alpine_version}}"
+    image_files:
+      - roles/weather_service/templates/container/Dockerfile
+      - roles/weather_service/templates/container/entrypoint.sh
+  include_tasks: roles/container/shared/build_podman_image.yml
+
+- name: create podman container
+  containers.podman.podman_container:
+    name: weather_service
+    image: "custom_weather_service:{{alpine_version}}"
+    state: present
+    security_opt:
+      - label=disable
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: weather_service
+    network: "isolated"
+    ip: "{{podman_weather_service_ip}}"
+    volumes:
+      - '{{global_opt}}shared/python:/opt/shared/python:ro'
+      - '{{global_opt}}weather_service/:/opt/weather_service:ro'
+      - "{{global_lib}}weather_service/:/var/lib/weather_service:rw"
+  register: "podman_container_state"
+  notify: "restart weather_service"
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
+  vars:
+    container_name: "weather_service"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "cloud_mosquitto", "mysql" ]
+  include_tasks: roles/container/shared/handle_podman_service.yml
+
+- name: allow service
+  vars:
+    firewall_name: "weather_service"
+    firewall_rules:
+      - "saddr {{podman_prometheus_ip}} daddr {{podman_weather_service_ip}}"
+      - "saddr {{podman_weather_service_ip}} daddr {{podman_mysql_ip}}"
+      - "saddr {{podman_weather_service_ip}} daddr {{vpn_cloud_services.local.mosquitto if weather_mqtt_server == 'cloud_mosquitto' else podman_mosquitto_ip}}"
+      - "saddr {{podman_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
+
+# ***** DEPENDENCY CONFIGS *****
+- name: check mysql service
+  include_tasks: roles/mysql/shared/wait_until_ready.yml
+  when: "mysql_enabled"
+
+- name: check mysql table
+  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
+  register: mysql_table_exists
+  changed_when: "'weather_forecast' not in mysql_table_exists.stdout"
+  when: "mysql_enabled"
+
+- name: synchronize table config
+  synchronize:
+    src: "templates/weather_forecast.sql"
+    dest: "{{ global_build }}weather_service/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=F600"
+  changed_when: no
+  when: "'weather_forecast' not in mysql_table_exists.stdout"
+  
+- name: create missing table 'weather_service' => does not exists in database
+  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | podman exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
+  when: "mysql_enabled and 'weather_forecast' not in mysql_table_exists.stdout"
+
 - name: synchronize htdocs
   synchronize:
     src: "templates/htdocs/weather_service"
@@ -136,7 +146,6 @@
   include_tasks: roles/apache_webui/shared/add_webui.yml
   tags: ['apache_webui_config']
 
-# ***** FINALIZE *****
 - name: register prometheus rules & metrics
   vars:
     name: "weather_service"
@@ -160,16 +169,3 @@
   include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
   tags: ['fluentd_config']
   when: "monitoring_enabled"
-
-- name: create systemd service
-  vars:
-    container_name: "weather_service"
-    container_after: [ "cloud_mosquitto", "mysql" ]
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
-- name: trigger weather_service handler
-  vars:
-    notify: "restart weather_service"
-    service: "weather_service.service"
-  include_tasks: roles/_shared/service_check.yml

@@ -166,7 +166,7 @@
  
 - name: register systemd service watcher
   vars:
-    name: "update_service"
+    watcher_name: "update_service"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"

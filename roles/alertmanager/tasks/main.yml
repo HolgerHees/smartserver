@@ -47,24 +47,34 @@
       - '{{global_lib}}alertmanager:/alertmanager'
     exposed_ports:
      - "9093"
+  register: "podman_container_state"
   notify: "restart alertmanager"
-  
-- name: allow alertmanager service
+
+# ***** SERVICE CONFIGS *****
+- name: handle systemd service
   vars:
-    name: "alertmanager"
-    rules:
+    container_name: "alertmanager"
+    container_changed: "{{podman_container_state.changed}}"
+    container_after: [ "postfix" ]
+    container_post_exec: "nohup /bin/sh -c \"(sleep 15 && {{ global_etc }}alertmanager/silent_setup.py) &\""
+  include_tasks: roles/container/shared/handle_podman_service.yml
+  tags: ['systemd_watcher_config']
+
+- name: allow service
+  vars:
+    firewall_name: "alertmanager"
+    firewall_rules:
       - "saddr {{podman_prometheus_ip}} daddr {{podman_alertmanager_ip}}"
       - "saddr {{podman_alertmanager_ip}} daddr {{podman_postfix_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
 
-- name: add container name
+- name: add service name
   vars:
-    host_name: "alertmanager"
+    host_name: alertmanager
     host_ip_address: "{{podman_alertmanager_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** FINALIZE *****
+# ***** DEPENDENCY CONFIGS *****
 - name: register webui
   vars:
     name: "alertmanager"
@@ -98,14 +108,6 @@
   tags: ['fluentd_config']
   when: "monitoring_enabled"
     
-- name: create systemd service
-  vars:
-    container_name: "alertmanager"
-    container_after: [ "postfix" ]
-    container_post_exec: "nohup /bin/sh -c \"(sleep 15 && {{ global_etc }}alertmanager/silent_setup.py) &\""
-  include_tasks: roles/container/shared/add_podman_service.yml
-  tags: ['systemd_watcher_config']
-
 - name: register update notifier
   vars:
     name: "alertmanager"
@@ -118,9 +120,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-- name: trigger alertmanager handler
-  vars:
-    notify: "restart alertmanager"
-    service: "alertmanager.service"
-  include_tasks: roles/_shared/service_check.yml

@@ -44,7 +44,7 @@
 
 - name: register systemd service watcher
   vars:
-    name: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
+    watcher_name: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
