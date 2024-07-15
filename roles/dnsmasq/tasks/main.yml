@@ -134,3 +134,9 @@
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
   
+- name: force dnsmasq restart
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: dnsmasq
+  when: "podman_container_state.changed"
