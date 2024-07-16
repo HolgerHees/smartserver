@@ -71,5 +71,5 @@
 - name: trigger mdmonitor handler
   vars:
     notify: "restart mdmonitor"
-    service: "mdmonitor.service"
+    service: "mdmonitor"
   include_tasks: roles/_shared/service_check.yml

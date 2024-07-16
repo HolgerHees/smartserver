@@ -94,7 +94,7 @@
 - name: trigger ssh_vpn handler
   vars:
     notify: "restart ssh_vpn"
-    service: "ssh_vpn.service"
+    service: "ssh_vpn"
   include_tasks: roles/_shared/service_check.yml
           
     

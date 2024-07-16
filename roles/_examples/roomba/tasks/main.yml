@@ -60,6 +60,6 @@
 - name: trigger roomba handler
   vars:
     notify: "restart roomba"
-    service: "roomba.service"
+    service: "roomba"
   include_tasks: roles/_shared/service_check.yml
   when: "is_production|bool" # restart handler is also disabled if no production

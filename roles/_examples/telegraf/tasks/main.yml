@@ -87,6 +87,6 @@
 - name: trigger telegraf handler
   vars:
     notify: "restart telegraf"
-    service: "telegraf.service"
+    service: "telegraf"
   include_tasks: roles/_shared/service_check.yml
 

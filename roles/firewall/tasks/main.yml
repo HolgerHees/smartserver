@@ -105,30 +105,8 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-#- name: trigger ferm handler
-#  command: "/bin/true"
-#  changed_when: "'ferm.service' not in ansible_facts.services or ansible_facts.services['ferm.service'].status == 'disabled'"
-#  notify: "restart ferm"
-  
 - name: trigger ci_service handler
   vars:
     notify: "restart ferm"
-    service: "ferm.service"
+    service: "ferm"
   include_tasks: roles/_shared/service_check.yml
- 
-# nftables rule to filter fritzbox homeplug broadcasts
-#table netdev filter {
-#    chain ingress {
-#        type filter hook ingress device eno1 priority 0; policy accept;
-#        meta protocol {0x8912, 0x88e1} drop
-#    }
-#}
-
-#/sbin/iptables -A INPUT -m mac --mac-source cc:ce:1e:ab:e8:44 -p all -j ACCEPT
-#/sbin/iptables -A INPUT -m mac --mac-source cc:ce:1e:ab:e8:44 -j DROP
-
-#- name: trigger ferm handler
-#  vars:
-#    notify: "restart ferm"
-#    service: "ferm.service"
-#  include_tasks: roles/_shared/service_check.yml

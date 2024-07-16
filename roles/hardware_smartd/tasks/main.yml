@@ -52,5 +52,5 @@
 - name: trigger smartd handler
   vars:
     notify: "restart smartd"
-    service: "{{'smartmontools' if is_ubuntu else 'smartd'}}.service"
+    service: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
   include_tasks: roles/_shared/service_check.yml

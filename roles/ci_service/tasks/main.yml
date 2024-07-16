@@ -135,7 +135,7 @@
 - name: trigger vboxdrv handler
   vars:
     notify: "restart virtualbox"
-    service: "vboxdrv.service"
+    service: "vboxdrv"
     process: "lsmod | grep vbox"
   include_tasks: roles/_shared/service_process_check.yml
 

@@ -9,7 +9,7 @@
   
 - name: "_shared : trigger {{service}} handler"
 #  shell: "systemctl status {{service}}"
-  shell: "systemctl is-active --quiet {{service}} && systemctl is-enabled --quiet {{service}}"
+  shell: "systemctl is-active --quiet {{service}}.service && systemctl is-enabled --quiet {{service}}.service"
   register: service_result
 #  changed_when: "('active (running)' not in service_result.stdout and 'active (exited)' not in service_result.stdout ) or ('service; enabled' not in service_result.stdout and 'service; static' not in service_result.stdout)"
   changed_when: "service_result.rc != 0"
