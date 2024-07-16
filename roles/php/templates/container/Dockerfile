@@ -6,11 +6,11 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   apt-get install -y sudo && \
 
   docker-php-ext-enable opcache && \
-  docker-php-ext-install pcntl && \
-  docker-php-ext-install exif && \
-  docker-php-ext-install bcmath && \
-  docker-php-ext-install mysqli pdo_mysql && \
-  docker-php-ext-install sysvsem && \
+  docker-php-ext-install -j$(nproc) pcntl && \
+  docker-php-ext-install -j$(nproc) exif && \
+  docker-php-ext-install -j$(nproc) bcmath && \
+  docker-php-ext-install -j$(nproc) mysqli pdo_mysql && \
+  docker-php-ext-install -j$(nproc) sysvsem && \
 
 # preview generator nextcloud
   apt-get install -y ffmpeg && \
@@ -21,15 +21,15 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
 #  && docker-php-ext-configure gmp \
 #  && docker-php-ext-install gmp
   apt-get install -y libgmp-dev && \
-  docker-php-ext-install gmp && \
+  docker-php-ext-install -j$(nproc) gmp && \
   
 # INTL
   apt-get install -y libicu-dev && \
-  docker-php-ext-install intl && \
+  docker-php-ext-install -j$(nproc) intl && \
 
 # ZIP
   apt-get install -y zlib1g-dev libzip-dev && \
-  docker-php-ext-install zip && \
+  docker-php-ext-install -j$(nproc) zip && \
 
 # APC Cache
   pecl install apcu && \
@@ -44,7 +44,7 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
 # GD Image library with freetype support
   apt-get install -y libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev && \
   docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype && \
-  docker-php-ext-install gd && \
+  docker-php-ext-install -j$(nproc) gd && \
 
 # Redis
   pecl install redis && \
