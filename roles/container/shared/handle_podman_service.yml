@@ -26,5 +26,5 @@
 - name: "container : handle_podman_service : trigger systemd service"
   vars:
     notify: "restart {{container_name}}"
-    service: "{{container_name}}.service"
+    service: "{{container_name}}"
   include_tasks: roles/_shared/service_check.yml
