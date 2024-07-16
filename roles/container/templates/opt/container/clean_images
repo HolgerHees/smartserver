@@ -78,7 +78,13 @@ def collectImages():
     for line in lines[0:-1]:
         obj = json.loads(line[1:-1])
         created = datetime.fromtimestamp(obj["Created"])
-        image = Image(obj["Id"],obj["repository"] if obj["repository"] != "<none>" else None,obj["tag"] if obj["tag"] != "<none>" else None,created)
+
+        repository = obj["repository"] if obj["repository"] != "<none>" else "None"
+        repository = repository.split("/", 1)[-1]
+        if repository.startswith("library/"):
+            repository = repository[8:]
+
+        image = Image(obj["Id"],repository,obj["tag"] if obj["tag"] != "<none>" else "None",created)
         if image.repository not in images:
             images[image.repository] = []
         images[image.repository].append(image)
@@ -100,7 +106,11 @@ def collectContainers():
             state = _obj[0]["State"]
             finished_at = datetime.fromtimestamp(state["ExitedAt"])
             is_stopped_since = (datetime.utcnow() - finished_at)
-        containers.append(Container(obj["Id"],obj["Names"],obj["Image"],is_stopped_since)  )
+
+        name = obj["Names"][0].split("/", 1)[-1]
+        image = obj["Image"].split("/", 1)[-1]
+
+        containers.append(Container(obj["Id"],name,image,is_stopped_since)  )
 
     return containers
 
@@ -114,7 +124,7 @@ def collectUsedImages(images, containers):
         #build_images[columns[-1]] = True
         for _images in images.values():
             for _image in _images:
-                if columns[-1] == _image.name.split("/", 1)[-1]:
+                if columns[-1] == _image.name:
                     used_images[_image.id] = "referenced"
 
     for container in containers:
