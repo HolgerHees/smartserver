@@ -25,7 +25,7 @@
     state: present
     security_opt:
       - label=disable
-    user: "{{system_users['nobody'].name}}:{{system_groups['nobody'].name}}"
+    user: "{{system_users['nobody'].id}}:{{system_groups['nobody'].id}}"
     env:
       TZ: "{{timezone}}"
     log_driver: journald

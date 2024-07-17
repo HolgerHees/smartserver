@@ -12,3 +12,12 @@
 - name: process obsolete docker
   include_tasks: cleanup_docker.yml
   when: "obsolete_docker.rc == 0"
+
+- name: clean old build folder
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "{{global_build}}loki"
+    - "{{global_build}}influxdb"
+    - "{{global_build}}mysql"

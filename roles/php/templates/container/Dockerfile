@@ -1,9 +1,20 @@
 FROM php:{{image_version}}-fpm
 
-RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
-  useradd -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -r -s /bin/false {{system_users['www'].name}} && \
-  apt-get update && \
-  apt-get install -y sudo && \
+RUN apt-get update && \
+  apt-get install -y sudo \
+# preview generator nextcloud
+  ffmpeg \
+# GMP => needed by nextcloud bookmarks
+  libgmp-dev \
+# INTL
+  libicu-dev \
+# ZIP
+  zlib1g-dev libzip-dev \
+# ImageMagick
+  libmagickwand-dev \
+# GD Image library with freetype support
+  libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev && \
+
 
   docker-php-ext-enable opcache && \
   docker-php-ext-install -j$(nproc) pcntl && \
@@ -12,23 +23,13 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   docker-php-ext-install -j$(nproc) mysqli pdo_mysql && \
   docker-php-ext-install -j$(nproc) sysvsem && \
 
-# preview generator nextcloud
-  apt-get install -y ffmpeg && \
-
 # GMP => needed by nextcloud bookmarks
-#RUN apt-get install -y libgmp-dev re2c libmhash-dev libmcrypt-dev file \
-#  && ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/local/include/ \
-#  && docker-php-ext-configure gmp \
-#  && docker-php-ext-install gmp
-  apt-get install -y libgmp-dev && \
   docker-php-ext-install -j$(nproc) gmp && \
   
 # INTL
-  apt-get install -y libicu-dev && \
   docker-php-ext-install -j$(nproc) intl && \
 
 # ZIP
-  apt-get install -y zlib1g-dev libzip-dev && \
   docker-php-ext-install -j$(nproc) zip && \
 
 # APC Cache
@@ -36,13 +37,10 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   docker-php-ext-enable apcu && \
 
 # ImageMagick
-#RUN apt-get install -y libjpeg-dev libpng-dev libmagickwand-dev
-  apt-get install -y libmagickwand-dev && \
   pecl install imagick && \
   docker-php-ext-enable imagick && \
 
 # GD Image library with freetype support
-  apt-get install -y libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev && \
   docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype && \
   docker-php-ext-install -j$(nproc) gd && \
 
@@ -51,8 +49,8 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   docker-php-ext-enable redis && \
   
 # CLEANUPS
-  apt-get autoremove -y && \
-  apt-get clean && \
+#  apt-get autoremove -y && \
+#  apt-get clean && \
   
   mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini" && \
   echo "apc.enable_cli=1\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-apcu.ini" && \

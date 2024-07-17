@@ -43,7 +43,7 @@
     state: present
     security_opt:
       - label=disable
-#    user: "{{system_users['librenms'].name}}:{{system_groups['librenms'].name}}"
+#    user: "{{system_users['librenms'].id}}:{{system_groups['librenms'].id}}"
     env:
 #      OBSERVIUM_ADMIN_USER: "admin"
 #      OBSERVIUM_ADMIN_PASS: "admin"

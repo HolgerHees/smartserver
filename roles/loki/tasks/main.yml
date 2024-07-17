@@ -20,30 +20,16 @@
     - "loki/local-config.yaml"
   notify: "restart loki"
   
-- name: build podman image
-  vars:
-    container_name: "loki"
-    image_name: "custom_loki"
-    image_version: "{{loki_version}}"
-    image_files:
-      - roles/loki/templates/container/Dockerfile
-  include_tasks: roles/container/shared/build_podman_image.yml
-    
 - name: create podman container
   containers.podman.podman_container:
     name: loki
-    image: "custom_loki:{{loki_version}}"
+    image: "grafana/loki:{{loki_version}}"
     state: present
-#    user: "root:root"
     security_opt:
       - label=disable
-    user: "{{system_users['loki'].name}}:{{system_groups['loki'].name}}"
+    user: "{{system_users['loki'].id}}:{{system_groups['loki'].id}}"
     env:
       TZ: "{{timezone}}"
-#    entrypoint:
-#      - "/bin/sh"
-#      - "-c"
-#      - "\"/usr/bin/loki -log.level=debug -config.file=/etc/loki/local-config.yaml 2>&1\""
     log_driver: journald
     log_options:
       tag: loki
