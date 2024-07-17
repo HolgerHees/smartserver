@@ -21,7 +21,7 @@ RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjanss
     && autoreconf -fi \
     && ./configure CFLAGS="-g -O0" LDFLAGS="-lrt" \
     && make clean && make test \
-    && make \
+    && make -j$(nproc) \
     && cp .libs/mod_auth_openidc.so /usr/local/apache2/modules/mod_auth_openidc.so \
     && cd / \
     && rm -rf /mod_auth_openidc \
