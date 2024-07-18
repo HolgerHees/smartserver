@@ -1,50 +1,9 @@
-- name: set ferm version
-  set_fact:
-    ferm_version: "2.7"
-  tags: [ 'update_notifier_config' ]
-
-- name: prepare needed directories
-  vars:
-    directories:
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm/ferm.d" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_build}}ferm" }
-  include_tasks: roles/_shared/create_directories.yml
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-      iptables
-    ]
-    state: present
-  when: is_suse
-
-- name: install required packages => is_rhel or is_fedora
-  yum:
-    name: [
-      perl-Pod-Html
-      ,iptables
-    ]
-    state: present
-  when: is_rhel or is_fedora
-
-- name: load module ip_tables => is_rhel
-  modprobe:
-    name: ip_tables
-    state: present
-  register: iptables_result
-  when: is_rhel
-
-- name: enable module ip_tables => is_rhel
-  shell: "echo \"ip_tables\" > /etc/modules-load.d/iptables.conf"
-  when: is_rhel and iptables_result.changed
-
 - name: check firewalld status
   shell: "systemctl is-active --quiet firewalld || systemctl is-enabled --quiet firewalld"
   register: "service_result"
   changed_when: no
   failed_when: no
-  
+
 - name: disable firewalld
   systemd:
     name: firewalld
@@ -55,18 +14,75 @@
 #  when: "'firewalld.service' in ansible_facts.services"
   when: "service_result.rc == 0"
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+- name: set ferm version
+  set_fact:
+    ferm_version: "2.7"
+  tags: [ 'update_notifier_config' ]
+  when: "not nftables_enabled"
+
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm/ferm.d" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_build}}ferm" }
+  include_tasks: roles/_shared/create_directories.yml
+  when: "not nftables_enabled"
+
+- name: install required packages => is_suse
+  zypper:
+    name: [
+      iptables
+    ]
+    state: present
+  when: "not nftables_enabled and is_suse"
+
+- name: install required packages => is_rhel or is_fedora
+  yum:
+    name: [
+      perl-Pod-Html
+      ,iptables
+    ]
+    state: present
+  when: "not nftables_enabled and (is_rhel or is_fedora)"
+
+- name: load module ip_tables => is_rhel
+  modprobe:
+    name: ip_tables
+    state: present
+  register: iptables_result
+  when: "not nftables_enabled and (is_rhel or is_fedora)"
+
+- name: enable module ip_tables => is_rhel
+  shell: "echo \"ip_tables\" > /etc/modules-load.d/iptables.conf"
+  when: "not nftables_enabled and (is_rhel or is_fedora) and iptables_result.changed"
+
 - name: "clone ferm git"
   git:
     repo: 'https://github.com/MaxKellermann/ferm'
     dest: '{{global_build}}ferm'
     version: 'v{{ferm_version}}'  
   register: ferm_git
-  
+  when: "not nftables_enabled"
+
 - name: "install ferm"
   shell: "make install"
   args:
     chdir: "{{global_build}}ferm"
-  when: "ferm_git.changed"
+  when: "not nftables_enabled and ferm_git.changed"
 
 - name: copy ferm config and service
   template:
@@ -82,6 +98,7 @@
     - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/20-in.trusted.ferm", dest: "/etc/ferm/ferm.d/20-in.trusted.ferm" }
     - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/99-container.ferm", dest: "/etc/ferm/ferm.d/99-container.ferm" }
   notify: "restart ferm"
+  when: "not nftables_enabled"
 
 # ***** FINALIZE *****
 - name: register systemd service watcher
@@ -89,7 +106,7 @@
     watcher_name: "ferm"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
-  when: "monitoring_enabled"
+  when: "not nftables_enabled and monitoring_enabled"
 
 - name: register update notifier
   vars:
@@ -103,10 +120,11 @@
     }
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
-  when: "update_service_software_check_enabled"
+  when: "not nftables_enabled and update_service_software_check_enabled"
 
 - name: trigger ci_service handler
   vars:
     notify: "restart ferm"
     service: "ferm"
   include_tasks: roles/_shared/service_check.yml
+  when: "not nftables_enabled"

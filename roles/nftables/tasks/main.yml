@@ -1,0 +1,30 @@
+- name: install required packages => is_suse
+  zypper:
+    name: [
+      nftables
+    ]
+    state: present
+  when: is_suse
+
+#- name: unintall iptables => is_suse
+#  zypper:
+#    name: [
+#      iptables
+#    ]
+#    state: absent
+#  when: is_suse
+
+- name: check firewalld status
+  shell: "systemctl is-active --quiet firewalld || systemctl is-enabled --quiet firewalld"
+  register: "service_result"
+  changed_when: no
+  failed_when: no
+
+- name: disable firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    daemon_reload: no
+    enabled: no
+    masked: yes
+  when: "service_result.rc == 0"

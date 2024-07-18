@@ -90,7 +90,7 @@
   tasks:
     - { import_role: { name: base },                                                         tags: [ 'base' ] }                                                                                                 # basic setup like global folders and tools
 
-    - { import_role: { name: firewall },                                                     tags: [ 'firewall', 'macvlan' ] }                                                                                  # firewall configuration
+    - { import_role: { name: firewall },                                                     tags: [ 'firewall' ] }                                                                                             # firewall configuration
 
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers } # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
