@@ -4,46 +4,57 @@ flush ruleset
 
 # DEFAULT ip4  & ip6 FILTER CHAINS
 table inet filter {
-
     chain INPUT {
-        #type filter hook input priority filter; policy drop;
-        type filter hook input priority filter; policy accept;
+        type filter hook input priority filter; policy drop;
+        #type filter hook input priority filter; policy accept;
 
-        ct state invalid counter drop comment "early drop of invalid packets"
-        ct state { established, related } counter accept comment "accept all connections related to connections made by us"
+        ct state invalid counter drop                                                               comment "early drop of invalid packets"
+        ct state { established, related } counter accept                                            comment "accept all connections related to connections made by us"
 
         iif "lo" accept comment "accept loopback"
-        iif != "lo" ip daddr 127.0.0.0/8 counter comment "drop connections to loopback not coming from loopback"
-        iif != "lo" ip6 daddr ::1 counter drop comment "drop connections to loopback not coming from loopback"
+        iif != "lo" ip daddr 127.0.0.0/8 counter                                                    comment "drop connections to loopback not coming from loopback"
+        iif != "lo" ip6 daddr ::1 counter drop                                                      comment "drop connections to loopback not coming from loopback"
 
-        ip protocol icmp counter accept comment "accept all ICMP types"
-        ip6 nexthdr ipv6-icmp counter accept comment "accept all ICMP types"
+        jump SMARTSERVER_BLOCKER
+
+        ip protocol icmp counter accept                                                             comment "accept all ICMP types"
+        ip6 nexthdr ipv6-icmp counter accept                                                        comment "accept all ICMP types"
 
         ct state new tcp dport 22 accept comment "accept ssh"
 
+        meta l4proto udp ip saddr 172.16.0.0/24 udp dport 54 accept                                 comment "accept pdoman dns"
+        meta l4proto udp ip saddr 10.101.1.0/24 udp dport 54 accept                                 comment "accept pdoman dns"
+
         ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
-        ip saddr 0.0.0.0 udp dport 67 drop comment "silently ignore DHCP broadcasts"
-        ip daddr 255.255.255.255 udp dport 68 drop comment "silently ignore DHCP broadcasts"
+        ip saddr 0.0.0.0 udp dport 67 drop                                                          comment "silently ignore DHCP broadcasts"
+        ip daddr 255.255.255.255 udp dport 68 drop                                                  comment "silently ignore DHCP broadcasts"
+
+        jump SMARTSERVER_INPUT
 
         log prefix "rejecting [IN]: "
-        counter reject with icmpx type admin-prohibited comment "count dropped packets"
+        counter reject with icmpx type admin-prohibited                                             comment "count dropped packets"
 
     }
     chain FORWARD {
-        type filter hook forward priority filter; policy accept;
+        type filter hook forward priority filter; policy drop;
 
-        counter comment "count accepted packets"
+        ct state invalid counter drop                                                               comment "early drop of invalid packets"
+        ct state { established, related } counter accept                                            comment "accept all connections related to connections made by us"
+
+        jump SMARTSERVER_FORWARD
+
+        log prefix "rejecting [FORWARD]: "
+        counter reject with icmpx type admin-prohibited                                             comment "count dropped packets"
     }
     chain OUTPUT {
-        #type filter hook output priority filter; policy drop;
         type filter hook output priority filter; policy accept;
-
-        oif "lo" accept comment "accept loopback"
-        ip protocol icmp accept
-        ct state established,related accept
-
-        log prefix "rejecting [OUT]: "
-        counter comment "count dropped packets"
+        counter                                                                                     comment "count accepted packets"
+    }
+    chain SMARTSERVER_BLOCKER {
+    }
+    chain SMARTSERVER_INPUT {
+    }
+    chain SMARTSERVER_FORWARD {
     }
 }
 
@@ -51,7 +62,7 @@ table inet filter {
 table ip nat {
     chain PREROUTING {
         type nat hook prerouting priority dstnat; policy accept;
-        fib daddr type local counter jump HOSTPORT-DNAT
+        fib daddr type local counter jump HOSTPORT_DNAT
     }
 
     chain INPUT {
@@ -60,84 +71,71 @@ table ip nat {
 
     chain POSTROUTING {
         type nat hook postrouting priority srcnat; policy accept;
-        counter jump HOSTPORT-MASQ
+        counter jump HOSTPORT_MASQ
     }
 
     chain OUTPUT {
         type nat hook output priority -100; policy accept;
-        fib daddr type local counter jump HOSTPORT-DNAT
+        fib daddr type local counter jump HOSTPORT_DNAT
     }
 
-    chain HOSTPORT-SETMARK {
+    chain HOSTPORT_DNAT {
+        meta l4proto udp ip daddr 172.16.0.1 udp dport 53 counter dnat to 172.16.0.1:54             comment "redirect container dns to podman dns"
+        meta l4proto udp ip daddr 10.101.1.1 udp dport 53 counter dnat to 10.101.1.1:54             comment "redirect container dns to podman dns"
+
+        jump SMARTSERVER_DNAT
+    }
+
+    chain HOSTPORT_MASQ {
+        mark and 0x2000 == 0x2000 counter masquerade
+        ip saddr 172.16.0.0/24 ip daddr != 224.0.0.0/4 counter masquerade
+    }
+
+    chain HOSTPORT_SETMARK {
         counter meta mark set mark or 0x2000
     }
 
-    chain HOSTPORT-MASQ {
-        mark and 0x2000 == 0x2000 counter masquerade
-    }
-
-    chain HOSTPORT-DNAT {
+    chain SMARTSERVER_DNAT {
     }
 }
 
-# *** CUSTOM CONTAINER NAT EXAMPLE ***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# *** CUSTOM POSTFIX EXAMPLE ***
+table inet filter {
+    chain SMARTSERVER_FORWARD {
+        meta l4proto tcp ip saddr 172.16.0.101 tcp dport 587 iif "eth0" accept                              comment "container postfix"
+    }
+}
+
+# *** CUSTOM DNSMASQ EXAMPLE ***
+table inet filter {
+    chain SMARTSERVER_FORWARD {
+        meta l4proto udp ip saddr 172.16.0.100 ip daddr 8.8.8.8 udp dport 53 accept                         comment "container dnsmasq"
+        meta l4proto tcp ip saddr 172.16.0.100 ip daddr 8.8.8.8 tcp dport 53 accept                         comment "container dnsmasq"
+        meta l4proto udp ip saddr 172.16.0.100 ip daddr 8.8.4.4 udp dport 53 accept                         comment "container dnsmasq"
+        meta l4proto tcp ip saddr 172.16.0.100 ip daddr 8.8.4.4 tcp dport 53 accept                         comment "container dnsmasq"
+    }
+}
 table ip nat {
-    chain HOSTPORT-MASQ {
-        ip saddr 10.88.0.10 counter jump CONTAINER-NETDATA-HOSTPORT-MASQ
-    }
-
-    chain HOSTPORT-DNAT {
-        meta l4proto tcp tcp dport 8080 counter jump CONTAINER-NETDATA-HOSTPORT-DNAT
-    }
-
-    chain CONTAINER-NETDATA-HOSTPORT-MASQ {
-        ip daddr 10.88.0.0/16 counter
-        ip daddr != 224.0.0.0/4 counter masquerade
-    }
-
-    chain CONTAINER-NETDATA-HOSTPORT-DNAT {
-        meta l4proto tcp ip saddr 10.88.0.0/16 ip daddr 127.0.0.1 tcp dport 8080 counter jump HOSTPORT-SETMARK
-        meta l4proto tcp ip saddr 127.0.0.1 ip daddr 127.0.0.1 tcp dport 8080 counter jump HOSTPORT-SETMARK
-        meta l4proto tcp ip daddr 127.0.0.1 tcp dport 8080 counter dnat to 10.88.0.10:80
+    chain SMARTSERVER_DNAT {
+        meta l4proto udp ip daddr 127.0.0.1 udp dport 53 counter jump HOSTPORT_SETMARK                      comment "container dnsmasq"
+        meta l4proto udp ip saddr 127.0.0.1 ip daddr 127.0.0.1 udp dport 53 counter jump HOSTPORT_SETMARK   comment "container dnsmasq"
+        meta l4proto udp ip daddr 127.0.0.1 udp dport 53 counter dnat to 172.16.0.100:53                    comment "container dnsmasq"
     }
 }
 
 
 
-
-
-
-
-
-
-#table ip filter {
-#    chain INPUT {
-#        type filter hook input priority filter; policy accept;
-#    }
-
-#    chain FORWARD {
-#        type filter hook forward priority filter; policy accept;
-#    }
-
-#    chain OUTPUT {
-#        type filter hook output priority filter; policy accept;
-#    }
-#}
-
-#table ip6 nat {
-#    chain PREROUTING {
-#        type nat hook prerouting priority dstnat; policy accept;
-#    }
-
-#    chain INPUT {
-#        type nat hook input priority 100; policy accept;
-#    }
-
-#    chain POSTROUTING {
-#        type nat hook postrouting priority srcnat; policy accept;
-#    }
-
-#    chain OUTPUT {
-#        type nat hook output priority -100; policy accept;
-#    }
-#}
