@@ -123,8 +123,7 @@ table inet filter {
 # *** CUSTOM DNSMASQ EXAMPLE ***
 table inet filter {
     chain SMARTSERVER_FORWARD {
-        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 8.8.8.8 th dport 53 accept                             comment "container dnsmasq"
-        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 8.8.4.4 th dport 53 accept                             comment "container dnsmasq"
+        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr { 8.8.8.8, 8.8.4.4 } th dport 53 accept                comment "container dnsmasq"
     }
 }
 table ip nat {
