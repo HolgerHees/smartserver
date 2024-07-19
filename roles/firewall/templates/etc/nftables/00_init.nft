@@ -1,0 +1,143 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+# DEFAULT ip4  & ip6 FILTER CHAINS
+table inet filter {
+
+    chain INPUT {
+        #type filter hook input priority filter; policy drop;
+        type filter hook input priority filter; policy accept;
+
+        ct state invalid counter drop comment "early drop of invalid packets"
+        ct state { established, related } counter accept comment "accept all connections related to connections made by us"
+
+        iif "lo" accept comment "accept loopback"
+        iif != "lo" ip daddr 127.0.0.0/8 counter comment "drop connections to loopback not coming from loopback"
+        iif != "lo" ip6 daddr ::1 counter drop comment "drop connections to loopback not coming from loopback"
+
+        ip protocol icmp counter accept comment "accept all ICMP types"
+        ip6 nexthdr ipv6-icmp counter accept comment "accept all ICMP types"
+
+        ct state new tcp dport 22 accept comment "accept ssh"
+
+        ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
+        ip saddr 0.0.0.0 udp dport 67 drop comment "silently ignore DHCP broadcasts"
+        ip daddr 255.255.255.255 udp dport 68 drop comment "silently ignore DHCP broadcasts"
+
+        log prefix "rejecting [IN]: "
+        counter reject with icmpx type admin-prohibited comment "count dropped packets"
+
+    }
+    chain FORWARD {
+        type filter hook forward priority filter; policy accept;
+
+        counter comment "count accepted packets"
+    }
+    chain OUTPUT {
+        #type filter hook output priority filter; policy drop;
+        type filter hook output priority filter; policy accept;
+
+        oif "lo" accept comment "accept loopback"
+        ip protocol icmp accept
+        ct state established,related accept
+
+        log prefix "rejecting [OUT]: "
+        counter comment "count dropped packets"
+    }
+}
+
+# DEFAULT ip4 NAT CHAINS
+table ip nat {
+    chain PREROUTING {
+        type nat hook prerouting priority dstnat; policy accept;
+        fib daddr type local counter jump HOSTPORT-DNAT
+    }
+
+    chain INPUT {
+        type nat hook input priority 100; policy accept;
+    }
+
+    chain POSTROUTING {
+        type nat hook postrouting priority srcnat; policy accept;
+        counter jump HOSTPORT-MASQ
+    }
+
+    chain OUTPUT {
+        type nat hook output priority -100; policy accept;
+        fib daddr type local counter jump HOSTPORT-DNAT
+    }
+
+    chain HOSTPORT-SETMARK {
+        counter meta mark set mark or 0x2000
+    }
+
+    chain HOSTPORT-MASQ {
+        mark and 0x2000 == 0x2000 counter masquerade
+    }
+
+    chain HOSTPORT-DNAT {
+    }
+}
+
+# *** CUSTOM CONTAINER NAT EXAMPLE ***
+table ip nat {
+    chain HOSTPORT-MASQ {
+        ip saddr 10.88.0.10 counter jump CONTAINER-NETDATA-HOSTPORT-MASQ
+    }
+
+    chain HOSTPORT-DNAT {
+        meta l4proto tcp tcp dport 8080 counter jump CONTAINER-NETDATA-HOSTPORT-DNAT
+    }
+
+    chain CONTAINER-NETDATA-HOSTPORT-MASQ {
+        ip daddr 10.88.0.0/16 counter
+        ip daddr != 224.0.0.0/4 counter masquerade
+    }
+
+    chain CONTAINER-NETDATA-HOSTPORT-DNAT {
+        meta l4proto tcp ip saddr 10.88.0.0/16 ip daddr 127.0.0.1 tcp dport 8080 counter jump HOSTPORT-SETMARK
+        meta l4proto tcp ip saddr 127.0.0.1 ip daddr 127.0.0.1 tcp dport 8080 counter jump HOSTPORT-SETMARK
+        meta l4proto tcp ip daddr 127.0.0.1 tcp dport 8080 counter dnat to 10.88.0.10:80
+    }
+}
+
+
+
+
+
+
+
+
+
+#table ip filter {
+#    chain INPUT {
+#        type filter hook input priority filter; policy accept;
+#    }
+
+#    chain FORWARD {
+#        type filter hook forward priority filter; policy accept;
+#    }
+
+#    chain OUTPUT {
+#        type filter hook output priority filter; policy accept;
+#    }
+#}
+
+#table ip6 nat {
+#    chain PREROUTING {
+#        type nat hook prerouting priority dstnat; policy accept;
+#    }
+
+#    chain INPUT {
+#        type nat hook input priority 100; policy accept;
+#    }
+
+#    chain POSTROUTING {
+#        type nat hook postrouting priority srcnat; policy accept;
+#    }
+
+#    chain OUTPUT {
+#        type nat hook output priority -100; policy accept;
+#    }
+#}
