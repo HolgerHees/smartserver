@@ -20,14 +20,14 @@ table inet filter {
         ip protocol icmp counter accept                                                             comment "accept all ICMP types"
         ip6 nexthdr ipv6-icmp counter accept                                                        comment "accept all ICMP types"
 
-        ct state new tcp dport 22 accept comment "accept ssh"
+        meta l4proto tcp ct state new th dport 22 accept comment "accept ssh"
 
-        meta l4proto udp ip saddr 172.16.0.0/24 udp dport 54 accept                                 comment "accept pdoman dns"
-        meta l4proto udp ip saddr 10.101.1.0/24 udp dport 54 accept                                 comment "accept pdoman dns"
+        meta l4proto udp ip saddr 172.16.0.0/24 th dport 54 accept                                  comment "accept podman dns"
+        meta l4proto udp ip saddr 10.101.1.0/24 th dport 54 accept                                  comment "accept podman dns"
 
         ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
-        ip saddr 0.0.0.0 udp dport 67 drop                                                          comment "silently ignore DHCP broadcasts"
-        ip daddr 255.255.255.255 udp dport 68 drop                                                  comment "silently ignore DHCP broadcasts"
+        meta l4proto udp ip saddr 0.0.0.0 th dport 67 drop                                          comment "silently ignore DHCP broadcasts"
+        meta l4proto udp ip daddr 255.255.255.255 th dport 68 drop                                  comment "silently ignore DHCP broadcasts"
 
         jump SMARTSERVER_INPUT
 
@@ -62,7 +62,7 @@ table inet filter {
 table ip nat {
     chain PREROUTING {
         type nat hook prerouting priority dstnat; policy accept;
-        fib daddr type local counter jump HOSTPORT_DNAT
+        fib daddr type local counter jump HOSTPORT_DNAT                                             comment "external packages arriving"
     }
 
     chain INPUT {
@@ -76,12 +76,12 @@ table ip nat {
 
     chain OUTPUT {
         type nat hook output priority -100; policy accept;
-        fib daddr type local counter jump HOSTPORT_DNAT
+        fib daddr type local counter jump HOSTPORT_DNAT                                             comment "local packages arriving"
     }
 
     chain HOSTPORT_DNAT {
-        meta l4proto udp ip daddr 172.16.0.1 udp dport 53 counter dnat to 172.16.0.1:54             comment "redirect container dns to podman dns"
-        meta l4proto udp ip daddr 10.101.1.1 udp dport 53 counter dnat to 10.101.1.1:54             comment "redirect container dns to podman dns"
+        meta l4proto udp ip daddr 172.16.0.1 th dport 53 counter dnat to 172.16.0.1:54              comment "redirect container dns to podman dns"
+        meta l4proto udp ip daddr 10.101.1.1 th dport 53 counter dnat to 10.101.1.1:54              comment "redirect container dns to podman dns"
 
         jump SMARTSERVER_DNAT
     }
@@ -116,24 +116,22 @@ table ip nat {
 # *** CUSTOM POSTFIX EXAMPLE ***
 table inet filter {
     chain SMARTSERVER_FORWARD {
-        meta l4proto tcp ip saddr 172.16.0.101 tcp dport 587 iif "eth0" accept                              comment "container postfix"
+        meta l4proto tcp ip saddr 172.16.0.101 th dport 587 iif "eth0" accept                                           comment "container postfix"
     }
 }
 
 # *** CUSTOM DNSMASQ EXAMPLE ***
 table inet filter {
     chain SMARTSERVER_FORWARD {
-        meta l4proto udp ip saddr 172.16.0.100 ip daddr 8.8.8.8 udp dport 53 accept                         comment "container dnsmasq"
-        meta l4proto tcp ip saddr 172.16.0.100 ip daddr 8.8.8.8 tcp dport 53 accept                         comment "container dnsmasq"
-        meta l4proto udp ip saddr 172.16.0.100 ip daddr 8.8.4.4 udp dport 53 accept                         comment "container dnsmasq"
-        meta l4proto tcp ip saddr 172.16.0.100 ip daddr 8.8.4.4 tcp dport 53 accept                         comment "container dnsmasq"
+        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 8.8.8.8 th dport 53 accept                             comment "container dnsmasq"
+        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 8.8.4.4 th dport 53 accept                             comment "container dnsmasq"
     }
 }
 table ip nat {
     chain SMARTSERVER_DNAT {
-        meta l4proto udp ip daddr 127.0.0.1 udp dport 53 counter jump HOSTPORT_SETMARK                      comment "container dnsmasq"
-        meta l4proto udp ip saddr 127.0.0.1 ip daddr 127.0.0.1 udp dport 53 counter jump HOSTPORT_SETMARK   comment "container dnsmasq"
-        meta l4proto udp ip daddr 127.0.0.1 udp dport 53 counter dnat to 172.16.0.100:53                    comment "container dnsmasq"
+        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK    comment "container dnsmasq"
+        meta l4proto { tcp, udp } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK       comment "container dnsmasq"
+        meta l4proto { tcp, udp } ip daddr 127.0.0.1 th dport 53 counter dnat to 172.16.0.100:53                        comment "container dnsmasq"
     }
 }
 
