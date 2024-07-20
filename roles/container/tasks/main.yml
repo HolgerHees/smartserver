@@ -120,7 +120,7 @@
       - "--chmod=D750,F750"
 
 - name: copy legacy iptables cleaner
-  template:
+  copy:
     src: "templates/clean_iptables.sh"
     dest: "/opt/container/clean_iptables.sh"
     owner: root

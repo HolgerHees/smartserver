@@ -20,8 +20,6 @@ table inet filter {
         ip protocol icmp counter accept                                                             comment "accept all ICMP types"
         ip6 nexthdr ipv6-icmp counter accept                                                        comment "accept all ICMP types"
 
-        meta l4proto tcp ct state new th dport 22 accept comment "accept ssh"
-
         meta l4proto udp ip saddr 172.16.0.0/24 th dport 54 accept                                  comment "accept podman dns"
         meta l4proto udp ip saddr 10.101.1.0/24 th dport 54 accept                                  comment "accept podman dns"
 
@@ -105,28 +103,6 @@ table ip nat {
     }
 }
 
+include "/etc/nftables/20_*"
+
 include "/etc/nftables/30_*"
-
-# *** CUSTOM POSTFIX EXAMPLE ***
-#table inet filter {
-#    chain SMARTSERVER_FORWARD {
-#        meta l4proto tcp ip saddr 172.16.0.101 th dport 587 iif "eth0" accept                                           comment "postfix"
-#    }
-#}
-
-# *** CUSTOM DNSMASQ EXAMPLE ***
-#table inet filter {
-#    chain SMARTSERVER_FORWARD {
-#        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr { 8.8.8.8, 8.8.4.4 } th dport 53 accept                comment "dnsmasq"
-#    }
-#}
-#table ip nat {
-#    chain SMARTSERVER_DNAT {
-#        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK    comment "dnsmasq"
-#        meta l4proto { tcp, udp } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK       comment "dnsmasq"
-#        meta l4proto { tcp, udp } ip daddr 127.0.0.1 th dport 53 counter dnat to 172.16.0.100:53                        comment "dnsmasq"
-#    }
-#}
-
-
-
