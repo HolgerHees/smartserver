@@ -1,6 +1,6 @@
 table inet filter {
     chain SMARTSERVER_INPUT {
-        meta l4proto tcp ct state new th dport 22 accept                                        comment "accept ssh"
+        #meta l4proto tcp ct state new th dport 22 accept                                        comment "accept ssh"
 
 {% for network in intern_networks %}
         ip saddr {{network}} accept                                                             comment "trusted networks - internal ip's can access host"
@@ -15,7 +15,7 @@ table inet filter {
         ip saddr {{vpn_mobile_network}}/24 ip daddr {{macvlan_range}} accept                    comment "trusted networks - mobile vpn ip's can access pihole"
 {% endif %}
 {% for network in intern_networks %}
-        ip saddr {{vpn_mobile_network}}/24 ip daddr !{{network}} accept                         comment "trusted networks - mobile vpn ip's can access internet"
+        ip saddr {{vpn_mobile_network}}/24 ip daddr != {{network}} accept                         comment "trusted networks - mobile vpn ip's can access internet"
 {% endfor %}
     }
 }

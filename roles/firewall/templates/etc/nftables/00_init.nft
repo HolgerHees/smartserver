@@ -20,8 +20,7 @@ table inet filter {
         ip protocol icmp counter accept                                                             comment "accept all ICMP types"
         ip6 nexthdr ipv6-icmp counter accept                                                        comment "accept all ICMP types"
 
-        meta l4proto udp ip saddr 172.16.0.0/24 th dport 54 accept                                  comment "accept podman dns"
-        meta l4proto udp ip saddr 10.101.1.0/24 th dport 54 accept                                  comment "accept podman dns"
+        meta l4proto udp ip saddr {{podman_base_network}}/24 th dport 54 accept                     comment "accept podman dns"
 
         ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
         meta l4proto udp ip saddr 0.0.0.0 th dport 67 drop                                          comment "silently ignore DHCP broadcasts"
@@ -78,8 +77,7 @@ table ip nat {
     }
 
     chain HOSTPORT_DNAT {
-        meta l4proto udp ip daddr 172.16.0.1 th dport 53 counter dnat to 172.16.0.1:54              comment "redirect container dns to podman dns"
-        meta l4proto udp ip daddr 10.101.1.1 th dport 53 counter dnat to 10.101.1.1:54              comment "redirect container dns to podman dns"
+        meta l4proto udp ip daddr {{podman_base_gateway}} th dport 53 counter dnat to {{podman_base_gateway}}:54 comment "redirect container dns to podman dns"
 
         jump SMARTSERVER_DNAT
     }
@@ -87,7 +85,7 @@ table ip nat {
     chain HOSTPORT_MASQ {
         mark and 0x2000 == 0x2000 counter masquerade
 
-        ip saddr 172.16.0.0/24 ip daddr != 224.0.0.0/4 counter masquerade
+        ip saddr {{podman_base_network}}/24 ip daddr != 224.0.0.0/4 counter masquerade
 
         counter jump SMARTSERVER_MASQ
     }
