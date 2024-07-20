@@ -1,0 +1,41 @@
+{% if filter_rules is defined %}
+table inet filter {
+{% if input_rules | length > 0 %}
+    chain SMARTSERVER_INPUT {
+{% for input_rule in input_rules %}
+        {{input_rule}} comment "{{service_name}}"
+{% endfor %}
+    }
+{% endif %}
+{% if forward_rules | length > 0 %}
+    chain SMARTSERVER_FORWARD {
+{% for forward_rule in forward_rules %}
+        {{forward_rule}} comment "{{service_name}}"
+{% endfor %}
+    }
+{% endif %}
+}
+{% endif %}
+{% if nat_ports is defined %}
+table ip nat {
+    chain SMARTSERVER_DNAT {
+{% for nat_port in nat_ports %}
+        {%- if '/' in nat_port %}{% set port, protocol = nat_port.split('/') %}{% else %}{% set port = nat_port %}{% set protocol = 'tcp, udp' %}{% endif %}
+        {%- if ':' in port %}{% set src_port, dest_port = port.split(':') %}{% else %}{% set src_port = port %}{% set dest_port = port %}{% endif %}
+        meta l4proto { {{protocol}} } ip saddr {{nat_ip}} ip daddr 127.0.0.1 th dport {{src_port}} counter jump HOSTPORT_SETMARK comment "{{service_name}}"
+        meta l4proto { {{protocol}} } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport {{src_port}} counter jump HOSTPORT_SETMARK comment "{{service_name}}"
+        meta l4proto { {{protocol}} } ip daddr 127.0.0.1 th dport {{src_port}} counter dnat to {{nat_ip}}:{{dest_port}} comment "{{service_name}}"
+{% endfor %}
+    }
+}
+{% endif %}
+{% if masquerading_rules is defined %}
+table ip nat {
+    chain SMARTSERVER_MASQ {
+{% for masquerading_rule in masquerading_rules %}
+        {{masquerading_rule}} comment "{{service_name}}"
+{% endfor %}
+    }
+}
+{% endif %}
+

@@ -1,0 +1,39 @@
+- name: "firewall : allow_service : service '{{service_name}}'"
+  vars:
+    input_rules: |
+      [
+      {% if filter_rules is defined %}
+          {% for filter_rule in filter_rules %}
+              {% if 'daddr ' + default_server_ip in filter_rule %}
+                "{{filter_rule | replace('"', '\"')}}",
+              {% endif %}
+          {% endfor %}
+      {% endif %}
+      ]
+    forward_rules: |
+      [
+      {% if filter_rules is defined %}
+          {% for filter_rule in filter_rules %}
+              {% if 'daddr ' + default_server_ip not in filter_rule %}
+                "{{filter_rule | replace('"', '\"')}}",
+              {% endif %}
+          {% endfor %}
+      {% endif %}
+      ]
+  template:
+    src: "roles/firewall/templates/nftables.template"
+    dest: "/etc/nftables/30-{{service_name}}.nft"
+    owner: root
+    group: root
+    mode: 0640
+  register: "firewall_config_result"
+  tags: [ 'firewall_config' ]
+#  notify: "restart nftables"
+
+#- name: "firewall : allow_service : apply nftables changes => instant_activation"
+#  systemd:
+#    state: restarted
+#    daemon_reload: yes
+#    name: nftables
+#  when: "instant_activation | default(False) and firewall_config_result.changed"
+

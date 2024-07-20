@@ -11,7 +11,7 @@ table inet filter {
         ct state invalid counter drop                                                               comment "early drop of invalid packets"
         ct state { established, related } counter accept                                            comment "accept all connections related to connections made by us"
 
-        iif "lo" accept comment "accept loopback"
+        iif "lo" accept                                                                             comment "accept loopback"
         iif != "lo" ip daddr 127.0.0.0/8 counter                                                    comment "drop connections to loopback not coming from loopback"
         iif != "lo" ip6 daddr ::1 counter drop                                                      comment "drop connections to loopback not coming from loopback"
 
@@ -88,51 +88,45 @@ table ip nat {
 
     chain HOSTPORT_MASQ {
         mark and 0x2000 == 0x2000 counter masquerade
+
         ip saddr 172.16.0.0/24 ip daddr != 224.0.0.0/4 counter masquerade
+
+        counter jump SMARTSERVER_MASQ
     }
 
     chain HOSTPORT_SETMARK {
         counter meta mark set mark or 0x2000
     }
 
+    chain SMARTSERVER_MASQ {
+    }
+
     chain SMARTSERVER_DNAT {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+include "/etc/nftables/30-*"
 
 # *** CUSTOM POSTFIX EXAMPLE ***
-table inet filter {
-    chain SMARTSERVER_FORWARD {
-        meta l4proto tcp ip saddr 172.16.0.101 th dport 587 iif "eth0" accept                                           comment "postfix"
-    }
-}
+#table inet filter {
+#    chain SMARTSERVER_FORWARD {
+#        meta l4proto tcp ip saddr 172.16.0.101 th dport 587 iif "eth0" accept                                           comment "postfix"
+#    }
+#}
 
 # *** CUSTOM DNSMASQ EXAMPLE ***
-table inet filter {
-    chain SMARTSERVER_FORWARD {
-        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr { 8.8.8.8, 8.8.4.4 } th dport 53 accept                comment "dnsmasq"
-    }
-}
-table ip nat {
-    chain SMARTSERVER_DNAT {
-        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK    comment "dnsmasq"
-        meta l4proto { tcp, udp } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK       comment "dnsmasq"
-        meta l4proto { tcp, udp } ip daddr 127.0.0.1 th dport 53 counter dnat to 172.16.0.100:53                        comment "dnsmasq"
-    }
-}
+#table inet filter {
+#    chain SMARTSERVER_FORWARD {
+#        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr { 8.8.8.8, 8.8.4.4 } th dport 53 accept                comment "dnsmasq"
+#    }
+#}
+#table ip nat {
+#    chain SMARTSERVER_DNAT {
+#        meta l4proto { tcp, udp } ip saddr 172.16.0.100 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK    comment "dnsmasq"
+#        meta l4proto { tcp, udp } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport 53 counter jump HOSTPORT_SETMARK       comment "dnsmasq"
+#        meta l4proto { tcp, udp } ip daddr 127.0.0.1 th dport 53 counter dnat to 172.16.0.100:53                        comment "dnsmasq"
+#    }
+#}
 
 
 
