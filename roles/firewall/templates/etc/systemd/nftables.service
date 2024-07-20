@@ -1,0 +1,12 @@
+[Unit]
+Description=Handle nftables
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=sh -c "/usr/sbin/iptables --flush 2> /dev/null || echo \"iptables filter skipped\""
+ExecStartPre=sh -c "/usr/sbin/iptables --flush -t nat 2> /dev/null || echo \"iptables nat skipped\""
+ExecStart=/usr/sbin/nft -f /etc/nftables/00_init.nft
+
+[Install]
+WantedBy=multi-user.target

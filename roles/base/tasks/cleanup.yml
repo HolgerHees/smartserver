@@ -21,3 +21,13 @@
     - "{{global_build}}loki"
     - "{{global_build}}influxdb"
     - "{{global_build}}mysql"
+
+- name: clean old iptables related files
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "{{global_build}}ferm/"
+    - "/etc/ferm/"
+    - "/opt/container/clean_iptables.sh"
+  when: "nftables_enabled"

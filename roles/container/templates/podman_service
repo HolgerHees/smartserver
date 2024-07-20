@@ -15,7 +15,8 @@ RestartSec=3
 ExecStart=/usr/bin/podman start -a {{container_name}}
 {% if container_pre_exec is defined and container_pre_exec != None %}ExecStartPre={{container_pre_exec}}{{''}}
 {% endif %}
-ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/clean_iptables.sh) &"
+{% if not nftables_enabled %}ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/clean_iptables.sh) &"
+{% endif %}
 ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined and container_routes != None %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %}) &"
 {% if container_post_exec is defined and container_post_exec != None %}ExecStartPost={{container_post_exec}}{{''}}
 {% endif %}

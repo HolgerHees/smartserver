@@ -105,7 +105,7 @@ table ip nat {
     }
 }
 
-include "/etc/nftables/30-*"
+include "/etc/nftables/30_*"
 
 # *** CUSTOM POSTFIX EXAMPLE ***
 #table inet filter {

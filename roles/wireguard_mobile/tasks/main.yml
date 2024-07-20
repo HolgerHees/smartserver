@@ -190,7 +190,7 @@
         [
             "meta l4proto { tcp, udp } ip saddr {{vpn_mobile_network}}/24 iif \"{{default_network_interface}}\" masquerade"
             {% if macvlan_range | length > 0 %}
-            , "meta l4proto { tcp, udp } ip saddr {{vpn_mobile_network}}/24 iif \"mac0\" masquerade"
+            , "meta l4proto { tcp, udp } ip saddr {{vpn_mobile_network}}/24 iifname \"mac0\" masquerade"
             {% endif %}
         ]
   include_tasks: roles/firewall/shared/allow_service_nftables.yml

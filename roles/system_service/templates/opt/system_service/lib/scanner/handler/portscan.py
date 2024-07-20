@@ -153,7 +153,7 @@ class PortScanner(_handler.Handler):
 
         if self._isRunning() and device.getMAC() in self.monitored_devices:
             with self.data_lock:
-                # randomize next scan to avoid flooting connection track table of netfilter (iptables)
+                # randomize next scan to avoid flooting connection track table of netfilter
                 self.monitored_devices[device.getMAC()]["time"] = time.time() + self.config.port_rescan_interval + random.randint(0,3600)
                 self.monitored_devices[device.getMAC()]["services"] = services
 

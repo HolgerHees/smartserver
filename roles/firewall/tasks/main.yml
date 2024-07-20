@@ -24,6 +24,7 @@
       nftables
     ]
     state: present
+  notify: "restart nftables"
   when: "nftables_enabled and is_suse"
 
 - name: prepare needed directories
@@ -42,7 +43,36 @@
     mode: "{{item.mode}}"
   with_items:
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/00_init.nft" }
+  notify: "restart nftables"
   when: "nftables_enabled"
+
+# ***** FINALIZE *****
+- name: copy nftables service
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rw,g=r,o=r", src: "/etc/systemd/nftables.service", dest: "/etc/systemd/system/nftables.service" }
+  notify: "restart nftables"
+  when: "nftables_enabled"
+
+- name: register systemd service watcher
+  vars:
+    watcher_name: "nftables"
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
+  when: "nftables_enabled and monitoring_enabled"
+
+- name: trigger nftables handler
+  vars:
+    notify: "restart nftables"
+    service: "nftables"
+  include_tasks: roles/_shared/service_check.yml
+  when: "nftables_enabled"
+
 
 
 
@@ -149,7 +179,7 @@
   tags: ['update_notifier_config']
   when: "not nftables_enabled and update_service_software_check_enabled"
 
-- name: trigger ci_service handler
+- name: trigger ferm handler
   vars:
     notify: "restart ferm"
     service: "ferm"

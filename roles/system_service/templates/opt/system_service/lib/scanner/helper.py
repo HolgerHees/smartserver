@@ -84,7 +84,7 @@ class Helper():
     def nmap(ip, isRunningCallback = None):
         services = {}
 
-        # using "--defeat-rst-ratelimit" will hit the limit of netfilter (iptables) conntrack table
+        # using "--defeat-rst-ratelimit" will hit the limit of netfilter conntrack table
         #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--defeat-rst-ratelimit", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
 
         # TCP scan 2 retries

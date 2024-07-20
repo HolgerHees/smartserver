@@ -17,6 +17,8 @@ netflow_incoming_traffic = {
 {% endfor %}
 }
 
+nftables_enabled = {{ 'True' if nftables_enabled else 'False' }}
+
 service_ip = "127.0.0.1"
 service_port = "8507"
 

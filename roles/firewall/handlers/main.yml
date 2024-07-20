@@ -6,3 +6,12 @@
     enabled: yes
     masked: no
   listen: "restart ferm"
+
+- name: restart nftables
+  systemd:
+    name: nftables
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart nftables"

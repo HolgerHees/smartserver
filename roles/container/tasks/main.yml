@@ -119,6 +119,15 @@
       - "--chown=root:root"
       - "--chmod=D750,F750"
 
+- name: copy legacy iptables cleaner
+  template:
+    src: "templates/clean_iptables.sh"
+    dest: "/opt/container/clean_iptables.sh"
+    owner: root
+    group: root
+    mode: 0750
+  when: "not nftables_enabled"
+
 - name: copy container tools config
   template:
     src: "templates/config.py"
@@ -237,6 +246,7 @@
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
+  when: "not nftables_enabled"
 
 - name: enable podman
   systemd:

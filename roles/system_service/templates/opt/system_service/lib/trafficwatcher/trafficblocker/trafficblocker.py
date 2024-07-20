@@ -68,7 +68,7 @@ class TrafficBlocker(threading.Thread):
         try:
             logging.info("IP traffic blocker started")
 
-            self.blocked_ips = Helper.getBlockedIps()
+            self.blocked_ips = Helper.getBlockedIps(self.config)
 
             HIERARCHY = {
                 TrafficGroup.SCANNING: [TrafficGroup.INTRUDED],
@@ -137,7 +137,7 @@ class TrafficBlocker(threading.Thread):
 
                                 if group_data["count"] > treshold:
                                     if blocked_ips is None:
-                                        blocked_ips = Helper.getBlockedIps()
+                                        blocked_ips = Helper.getBlockedIps(self.config)
                                     if ip in self.config_map["observed_ips"]:
                                         data = self.config_map["observed_ips"][ip]
                                         data["updated"] = now
@@ -161,7 +161,7 @@ class TrafficBlocker(threading.Thread):
 
                                     if ip not in blocked_ips:
                                         changed = True
-                                        Helper.blockIp(ip)
+                                        Helper.blockIp(self.config, ip)
                                         blocked_ips.append(ip)
                                         logging.info("BLOCK IP {} after {} samples ({} - {} - {})".format(ip, group_data["count"], group_data["connection_type"], group_data["blocklist_name"], group_data["traffic_group"]))
 
@@ -189,12 +189,12 @@ class TrafficBlocker(threading.Thread):
 
         with self.config_lock:
             now = time.time()
-            blocked_ips = Helper.getBlockedIps()
+            blocked_ips = Helper.getBlockedIps(self.config)
 
             # restore state
             for ip in [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "blocked" and ip not in blocked_ips]:
                 changed = True
-                Helper.blockIp(ip)
+                Helper.blockIp(self.config, ip)
                 blocked_ips.append(ip)
                 logging.info("BLOCK IP {} restored for state: blocked".format(ip))
 
@@ -220,7 +220,7 @@ class TrafficBlocker(threading.Thread):
                     logging.info("UNBLOCK IP {} restored for missing state".format(ip))
 
                 changed = True
-                Helper.unblockIp(ip)
+                Helper.unblockIp(self.config, ip)
                 blocked_ips.remove(ip)
 
             self.blocked_ips = blocked_ips
