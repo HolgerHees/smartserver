@@ -48,13 +48,23 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
-- name: allow libreoffice service
+- name: allow service
+  vars:
+    service_name: "libreoffice"
+    filter_rules:
+      - "meta l4proto tcp ip saddr {{podman_libreoffice_ip}} ip daddr {{default_server_ip}} th dport 443 accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
   vars:
     firewall_name: "libreoffice"
     firewall_rules:
       - "saddr {{podman_libreoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 - name: add container name
   vars:

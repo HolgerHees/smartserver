@@ -97,6 +97,19 @@
       
 - name: allow service
   vars:
+    service_name: "grafana"
+    filter_rules:
+      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_mysql_ip}} accept"
+      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_influxdb_ip}} accept"
+      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_loki_ip}} accept"
+      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_prometheus_ip}} accept"
+      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_alertmanager_ip}} accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
+  vars:
     firewall_name: "grafana"
     firewall_rules:
       - "saddr {{podman_grafana_ip}} daddr {{podman_mysql_ip}}"
@@ -104,9 +117,9 @@
       - "saddr {{podman_grafana_ip}} daddr {{podman_loki_ip}}"
       - "saddr {{podman_grafana_ip}} daddr {{podman_prometheus_ip}}"
       - "saddr {{podman_grafana_ip}} daddr {{podman_alertmanager_ip}}"
-#      - "saddr {{podman_grafana_ip}} proto tcp dport 443 outerface {{default_network_interface}}" # fetching grafana plugin keys
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 - name: add service name
   vars:

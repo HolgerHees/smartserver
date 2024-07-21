@@ -44,6 +44,7 @@
   with_items:
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/00_init.nft" }
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/20_trusted_networks.nft" }
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/nftables/flush_iptables.sh" }
   notify: "restart nftables"
   when: "nftables_enabled"
 

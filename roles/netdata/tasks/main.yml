@@ -96,9 +96,9 @@
       - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro"
 
       - "{{ global_etc }}netdata/cloud.d/cloud.conf:/etc/netdata/cloud.d/cloud.conf:ro"
-    #exposed_ports:
-    # - "19999"
-    # - "127.0.0.1:19999:19999"  
+    exposed_ports:
+     - "19999"
+     - "8125"
   register: "podman_container_state"
   notify: "restart netdata"
 

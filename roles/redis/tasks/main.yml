@@ -30,13 +30,23 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
-- name: allow redis service
+- name: allow service
+  vars:
+    service_name: "redis"
+    filter_rules:
+      - "ip saddr {{podman_redis_ip}} ip daddr {{podman_php_ip}} accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
   vars:
     firewall_name: "redis"
     firewall_rules:
       - "saddr {{podman_redis_ip}} daddr {{podman_php_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: register update notifier

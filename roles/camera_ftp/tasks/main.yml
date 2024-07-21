@@ -30,6 +30,19 @@
       - roles/camera_ftp/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
   
+- name: prepare published_ports
+  set_fact:
+    published_ports:  |
+      [
+        "21:21",
+        "20:20",
+        "30000-30005:30000-30005",
+        {% if default_server_ipv6 is defined %}
+          "[::]:21:21",
+          "[::]:30000-30005:30000-30005",
+        {% endif %}
+      ]
+
 - name: create podman container
   containers.podman.podman_container:
     name: vsftpd
@@ -57,16 +70,7 @@
       - '{{global_lib}}/camera_service/upload/:/home/upload'
     network: "isolated"
     ip: "{{podman_camera_ftp_ip}}"
-    published_ports: |
-      [
-        "21:21",
-        "20:20",
-        "30000-30005:30000-30005",
-        {% if default_server_ipv6 is defined %}
-          "[::]:21:21",
-          "[::]:30000-30005:30000-30005",
-        {% endif %}
-      ]
+    published_ports: "{{published_ports}}"
   register: "podman_container_state"
   notify: "restart vsftpd"
 
@@ -78,18 +82,33 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
+- name: allow service
+  vars:
+    service_name: "vsftpd"
+    filter_rules:  |
+      [
+      {% for network in intern_networks %}
+        "meta l4proto tcp ip saddr {{podman_camera_ftp_ip}} th sport 20 ip daddr {{network}} accept",
+      {% endfor %}
+      ]
+    nat_rules: { ip: "{{podman_camera_ftp_ip}}", ports: "{{published_ports}}" }
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
 - name: prepare firewall rules
   set_fact:
     ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + podman_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
   with_items: "{{ intern_networks }}"
   tags: ['firewall_config']
 
-- name: allow ftp service
+- name: allow service
   vars:
     firewall_name: "ftp"
     firewall_rules: "{{ftp_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: create cron job

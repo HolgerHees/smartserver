@@ -65,6 +65,20 @@
 
 - name: allow service
   vars:
+    service_name: "php"
+    filter_rules:
+      - "ip saddr {{podman_php_ip}} ip daddr {{podman_mysql_ip}} accept"
+      - "ip saddr {{podman_php_ip}} ip daddr {{podman_influxdb_ip}} accept"
+      - "ip saddr {{podman_php_ip}} ip daddr {{podman_redis_ip}} accept"
+      - "ip saddr {{podman_php_ip}} ip daddr {{podman_postfix_ip}} accept"
+      - "meta l4proto tcp ip saddr {{podman_php_ip}} ip daddr {{default_server_ip}} th dport 443 accept"
+      - "ip saddr {{podman_php_ip}} oif \"{{default_network_interface}}\" accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
+  vars:
     firewall_name: "php"
     firewall_rules:
       - "saddr {{podman_php_ip}} daddr {{podman_mysql_ip}}"
@@ -75,6 +89,7 @@
       - "saddr {{podman_php_ip}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 - name: add service name
   vars:

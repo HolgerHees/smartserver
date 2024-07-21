@@ -253,10 +253,10 @@
       - '{{global_log}}:{{global_log}}'
 
       - '{{htdocs_path}}:{{htdocs_path}}'
-#    published_ports:
-#      - "80:80"
-#      - "443:443"
-#      - "10114:10114"
+    exposed_ports:
+      - "80"
+      - "443"
+      - "10114"
   register: "podman_container_state"
   notify: "restart apache2"
   
@@ -273,12 +273,21 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
-- name: allow letsencrypt service
-  vars:
-    firewall_name: "http.letsencrypt"
-    firewall_rules: [ "daddr {{default_server_ip}} proto tcp dport 80" ]
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
+#- name: allow service
+#  vars:
+#    service_name: "http.letsencrypt"
+#    filter_rules:
+#      - "meta l4proto tcp ip daddr {{default_server_ip}} th dport 80 accept"
+#  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+#  tags: ['firewall_config']
+#  when: "nftables_enabled"
+
+#- name: allow service
+#  vars:
+#    firewall_name: "http.letsencrypt"
+#    firewall_rules: [ "daddr {{default_server_ip}} proto tcp dport 80" ]
+#  include_tasks: roles/firewall/shared/allow_service.yml
+#  tags: ['firewall_config']
 
 # ***** DEPENDENCY CONFIGS *****
 - name: set logrotate job

@@ -15,6 +15,12 @@
       - roles/speedtest/templates/container/patches/gzip.js
   include_tasks: roles/container/shared/build_podman_image.yml
 
+- name: prepare published_ports
+  set_fact:
+    published_ports:
+     - "5201:5201/tcp"
+     - "5201:5201/udp"
+
 - name: create podman container
   containers.podman.podman_container:
     name: speedtest
@@ -32,9 +38,7 @@
     ip: "{{podman_speedtest_ip}}"
     exposed_ports:
      - "80"
-    published_ports:
-     - "5201:5201/tcp"
-     - "5201:5201/udp"
+    published_ports: "{{published_ports}}"
   register: "podman_container_state"
   notify: "restart speedtest"
 
@@ -51,6 +55,14 @@
     host_name: "speedtest"
     host_ip_address: "{{podman_speedtest_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
+
+- name: allow service
+  vars:
+    service_name: "speedtest"
+    nat_rules: { ip: "{{podman_speedtest_ip}}", ports: "{{published_ports}}" }
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: register webui

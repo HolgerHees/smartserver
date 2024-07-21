@@ -75,7 +75,17 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
-- name: allow prometheus service
+- name: allow service
+  vars:
+    service_name: "prometheus"
+    filter_rules:
+      - "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_alertmanager_ip}} accept"
+      - "meta l4proto tcp ip saddr {{podman_prometheus_ip}} ip daddr {{default_server_ip}} th dport 443 accept" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
   vars:
     firewall_name: "prometheus"
     firewall_rules:
@@ -83,6 +93,7 @@
       - "saddr {{podman_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 - name: add container name
   vars:

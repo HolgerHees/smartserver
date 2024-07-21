@@ -83,6 +83,18 @@
 
 - name: allow service
   vars:
+    service_name: "weather_service"
+    filter_rules:
+      - "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_weather_service_ip}} accept"
+      - "ip saddr {{podman_weather_service_ip}} ip daddr {{podman_mysql_ip}} accept"
+      - "ip saddr {{podman_weather_service_ip}} ip daddr {{vpn_cloud_services.local.mosquitto if weather_mqtt_server == 'cloud_mosquitto' else podman_mosquitto_ip}} accept"
+      - "meta l4proto tcp ip saddr {{podman_weather_service_ip}} th dport 443 oif \"{{default_network_interface}}\" accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
+  vars:
     firewall_name: "weather_service"
     firewall_rules:
       - "saddr {{podman_prometheus_ip}} daddr {{podman_weather_service_ip}}"
@@ -91,6 +103,7 @@
       - "saddr {{podman_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: check mysql service

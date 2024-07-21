@@ -62,11 +62,22 @@
 
 - name: allow service
   vars:
+    service_name: "alertmanager"
+    filter_rules:
+      - "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_alertmanager_ip}} accept"
+      - "ip saddr {{podman_alertmanager_ip}} ip daddr {{podman_postfix_ip}} accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
+  vars:
     firewall_name: "alertmanager"
     firewall_rules:
       - "saddr {{podman_prometheus_ip}} daddr {{podman_alertmanager_ip}}"
       - "saddr {{podman_alertmanager_ip}} daddr {{podman_postfix_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
+  when: "not nftables_enabled"
 
 - name: add service name
   vars:

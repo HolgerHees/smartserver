@@ -117,6 +117,17 @@
 
 - name: allow service
   vars:
+    service_name: "ci_service"
+    filter_rules:
+      - "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_ci_service_ip}} accept"
+      - "meta l4proto tcp ip saddr {{podman_ci_service_ip}} oif \"{{default_network_interface}}\" th dport 443 accept"
+      - "meta l4proto tcp ip saddr {{podman_ci_service_ip}} ip daddr {{default_server_ip}} th dport 443 accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+  
+- name: allow service
+  vars:
     firewall_name: "ci_service"
     firewall_rules:
       - "saddr {{podman_prometheus_ip}} daddr {{podman_ci_service_ip}}"
@@ -124,6 +135,7 @@
       - "saddr {{podman_ci_service_ip}} proto tcp dport 443 daddr {{default_server_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 - name: register service watcher
   vars:

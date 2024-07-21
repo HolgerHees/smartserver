@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/sh
 
 EMAIL="{{root_email}}"
 SERVER="{{server_domain}}"

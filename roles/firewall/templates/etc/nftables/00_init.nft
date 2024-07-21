@@ -17,8 +17,9 @@ table inet filter {
 
         jump SMARTSERVER_BLOCKER
 
+        ip6 nexthdr icmpv6 counter accept                                                           comment "accept all ICMP types"
         ip protocol icmp counter accept                                                             comment "accept all ICMP types"
-        ip6 nexthdr ipv6-icmp counter accept                                                        comment "accept all ICMP types"
+        ip protocol igmp accept;                                                                    comment "accept all IGMP types"
 
         meta l4proto udp ip saddr {{podman_base_network}}/24 th dport 54 accept                     comment "accept podman dns"
 

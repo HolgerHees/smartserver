@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/sh
+
 #Change directory to where the script resides.
 BASEDIR=$(dirname $0)
 cd $BASEDIR

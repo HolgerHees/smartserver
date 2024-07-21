@@ -78,10 +78,20 @@
 
 - name: allow service
   vars:
+    service_name: "vcontrold"
+    filter_rules:
+      - "ip saddr {{podman_vcontrold_ip}} ip daddr {{podman_mosquitto_ip}} accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
+  vars:
     firewall_name: "vcontrold"
     firewall_rules: [ "saddr {{podman_vcontrold_ip}} daddr {{podman_mosquitto_ip}}" ]
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: set logrotate job

@@ -52,7 +52,17 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
       
-- name: allow loki service
+- name: allow service
+  vars:
+    service_name: "loki"
+    filter_rules:
+      - "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_loki_ip}} accept"
+      - "ip saddr {{podman_loki_ip}} ip daddr {{podman_alertmanager_ip}} accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
+- name: allow service
   vars:
     firewall_name: "loki"
     firewall_rules:
@@ -60,6 +70,7 @@
       - "saddr {{podman_loki_ip}} daddr {{podman_alertmanager_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 - name: add container name
   vars:

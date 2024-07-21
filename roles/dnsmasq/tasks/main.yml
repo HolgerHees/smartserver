@@ -79,6 +79,18 @@
       - roles/dnsmasq/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
   
+- name: prepare published_ports
+  set_fact:
+    published_ports:  |
+      [
+        "53:53/udp",
+        "53:53/tcp",
+        {% if default_server_ipv6 is defined %}
+          "[::]:53:53/udp",
+          "[::]:53:53/tcp",
+        {% endif %}
+      ]
+
 - name: create podman container
   containers.podman.podman_container:
     name: dnsmasq
@@ -96,15 +108,7 @@
     volumes:
       - '{{ global_etc }}dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf'
       - '{{ global_etc }}dnsmasq/:/etc/dnsmasq/'
-    published_ports: |
-      [
-        "53:53/udp",
-        "53:53/tcp",
-        {% if default_server_ipv6 is defined %}
-          "[::]:53:53/udp",
-          "[::]:53:53/tcp",
-        {% endif %}
-      ]
+    published_ports: "{{published_ports}}"
   register: "podman_container_state"
   notify: "restart dnsmasq"
 
@@ -120,20 +124,11 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
-- name: allow dns service
+- name: allow service
   vars:
     service_name: "dnsmasq"
     filter_rules: [ "meta l4proto { tcp, udp } ip saddr {{podman_dns_ip}} ip daddr { {{ dns_forward_ip_addresses | join(',') }} } th dport 53 accept" ]
-    nat_ip: "{{podman_dns_ip}}"
-    nat_ports: |
-      [
-        "53:53/udp",
-        "53:53/tcp",
-        {% if default_server_ipv6 is defined %}
-          "[::]:53:53/udp",
-          "[::]:53:53/tcp",
-        {% endif %}
-      ]
+    nat_rules: { ip: "{{podman_dns_ip}}", ports: "{{published_ports}}" }
     instant_activation: True
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
@@ -146,7 +141,7 @@
   tags: ['firewall_config']
   when: "not nftables_enabled"
 
-- name: allow dns service
+- name: allow service
   vars:
     firewall_name: "dnsmasq"
     firewall_rules: "{{dns_rules}}"

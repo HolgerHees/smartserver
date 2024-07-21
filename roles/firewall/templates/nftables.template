@@ -16,15 +16,15 @@ table inet filter {
 {% endif %}
 }
 {% endif %}
-{% if nat_ports is defined %}
+{% if nat_rules is defined %}
 table ip nat {
     chain SMARTSERVER_DNAT {
-{% for nat_port in nat_ports %}
+{% for nat_port in nat_rules['ports'] %}
         {%- if '/' in nat_port %}{% set port, protocol = nat_port.split('/') %}{% else %}{% set port = nat_port %}{% set protocol = 'tcp, udp' %}{% endif %}
         {%- if ':' in port %}{% set src_port, dest_port = port.split(':') %}{% else %}{% set src_port = port %}{% set dest_port = port %}{% endif %}
-        meta l4proto { {{protocol}} } ip saddr {{nat_ip}} ip daddr 127.0.0.1 th dport {{src_port}} counter jump HOSTPORT_SETMARK comment "{{service_name}}"
+        meta l4proto { {{protocol}} } ip saddr {{nat_rules['ip']}} ip daddr 127.0.0.1 th dport {{src_port}} counter jump HOSTPORT_SETMARK comment "{{service_name}}"
         meta l4proto { {{protocol}} } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport {{src_port}} counter jump HOSTPORT_SETMARK comment "{{service_name}}"
-        meta l4proto { {{protocol}} } ip daddr 127.0.0.1 th dport {{src_port}} counter dnat to {{nat_ip}}:{{dest_port}} comment "{{service_name}}"
+        meta l4proto { {{protocol}} } ip daddr 127.0.0.1 th dport {{src_port}} counter dnat to {{nat_rules['ip']}}:{{dest_port}} comment "{{service_name}}"
 {% endfor %}
     }
 }

@@ -109,29 +109,6 @@
       - { app: "richdocuments", name: "wopi_url", value: "https://libreoffice.{{server_domain}}" }
       - { app: "richdocuments", name: "uiDefaults-UIMode", value: "tabbed" }
 
-#      - { app: "onlyoffice", name: "DocumentServerInternalUrl", value: "" }
-#      - { app: "onlyoffice", name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
-#      - { app: "onlyoffice", name: "StorageUrl", value: "" }
-#      - { app: "onlyoffice", name: "customizationChat", value: "false" }
-#      - { app: "onlyoffice", name: "customizationCompactHeader", value: "true" }
-#      - { app: "onlyoffice", name: "customizationForcesave", value: "true" }
-#      - { app: "onlyoffice", name: "customizationFeedback", value: "false" }
-#      - { app: "onlyoffice", name: "customizationHelp", value: "true" }
-#      - { app: "onlyoffice", name: "customizationReviewDisplay", value: "original" }
-#      - { app: "onlyoffice", name: "customizationToolbarNoTabs", value: "true" }
-#      - { app: "onlyoffice", name: "defFormats", value: '{"csv":"true","doc":"true","docm":"false","docx":"true","dotx":"true","epub":"false","html":"false","odp":"true","ods":"true","odt":"true","otp":"false","ots":"false","ott":"false","pdf":"false","potm":"false","potx":"false","ppsm":"false","ppsx":"true","ppt":"false","pptm":"false","pptx":"false","rtf":"true","txt":"true","xls":"true","xlsm":"false","xlsx":"true","xltm":"false","xltx":"false"}' }
-#      - { app: "onlyoffice", name: "editFormats", value: '{"csv":"true","odp":"false","ods":"false","odt":"false","rtf":"false","txt":"true"}' }
-#      - { app: "onlyoffice", name: "enabled", value: "yes" }
-#      - { app: "onlyoffice", name: "groups", value: "[]" }
-#      - { app: "onlyoffice", name: "preview", value: "false" }
-#      - { app: "onlyoffice", name: "sameTab", value: "false" }
-#      - { app: "onlyoffice", name: "settings_error", value: "" }
-#      - { app: "onlyoffice", name: "types", value: "prevent_group_restriction" }
-#      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
-#      - { app: "onlyoffice", name: "versionHistory", value: "true" }
-
-#      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
-
       - { app: "previewgenerator", name: "squareSizes", value: "256" }
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
       - { app: "previewgenerator", name: "heightSizes", value: "256" }
@@ -152,6 +129,12 @@
   failed_when: change_app_config_result.rc != 0
   with_items: "{{prepared_app_configs}}"
   when: "prepared_app_configs is defined"
+
+#- name: set app config
+#  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_user_saml_configurations (id, name, configuration) VALUES (1, '', '{{item.value}}') ON DUPLICATE KEY UPDATE configuration='{{item.value}}';\\\"\""
+#  failed_when: change_app_config_result.rc != 0
+#  when: "prepared_app_configs is defined"
+#  {"general-uid_mapping":"REMOTE_USERNAME","saml-attribute-mapping-displayName_mapping":"REMOTE_USERFULLNAME"}
 
 # ***** PREVIEW GENERATOR CRON JOB *****
 - name: create previewgenerator incremental cron job

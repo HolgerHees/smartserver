@@ -93,6 +93,16 @@
   include_tasks: roles/container/shared/create_podman_network.yml
   tags: ['firewall_config']
 
+- name: prepare published_ports
+  set_fact:
+    published_ports: |
+      [
+        "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+        {% if default_server_ipv6 is defined %}
+          "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+        {% endif %}
+      ]
+
 - name: create podman container
   containers.podman.podman_container:
     name: "wireguard_cloud"
@@ -117,13 +127,7 @@
     ip: "{{vpn_cloud_services.local.gateway}}"
     volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard'
-    published_ports: |
-      [
-        "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
-        {% if default_server_ipv6 is defined %}
-          "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
-        {% endif %}
-      ]
+    published_ports: "{{published_ports}}"
   register: "podman_container_state"
   notify: "restart wireguard_cloud"
 
@@ -145,7 +149,22 @@
       {% endfor %}
       }
   tags: ['firewall_config']
-  
+
+- name: allow service
+  vars:
+    service_name: "wireguard_cloud"
+    filter_rules: |
+      [
+      {% for port in wireguard_cloud_ports %}
+        "meta l4proto udp ip saddr {{vpn_cloud_services.local.gateway}} th dport {{port}} oif \"{{default_network_interface}}\" accept",
+      {% endfor %}
+      "meta l4proto udp ip daddr {{vpn_cloud_services.local.gateway}} th dport {{cloud_vpn.interface.port}} accept"
+      ]
+    nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{published_ports}}" }
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
 - name: prepare ferm rules
   set_fact:
     wireguard_cloud_ferm_rules: |
@@ -156,6 +175,7 @@
       "daddr {{vpn_cloud_services.local.gateway}} proto udp dport {{cloud_vpn.interface.port}}"
       ]
   tags: ['firewall_config']
+  when: "not nftables_enabled"
 
 - name: allow cloud service
   vars:
@@ -163,3 +183,4 @@
     firewall_rules: "{{wireguard_cloud_ferm_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+  when: "not nftables_enabled"

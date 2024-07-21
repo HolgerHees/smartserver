@@ -68,6 +68,18 @@
 
 - name: allow service
   vars:
+    service_name: "cloud_check"
+    filter_rules:
+      - "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_cloud_check_ip}} accept"
+      - "ip saddr {{podman_cloud_check_ip}} ip daddr {{vpn_cloud_services.local.mosquitto}} accept"
+      - "meta l4proto tcp ip saddr {{podman_cloud_check_ip}} oif \"{{default_network_interface}}\" th dport 80 accept"
+      - "meta l4proto icmp ip saddr {{podman_cloud_check_ip}} oif \"{{default_network_interface}}\" accept"
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+  
+- name: allow service
+  vars:
     firewall_name: "cloud_check"
     firewall_rules:
       - "saddr {{podman_prometheus_ip}} daddr {{podman_cloud_check_ip}}"

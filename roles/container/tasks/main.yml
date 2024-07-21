@@ -119,13 +119,27 @@
       - "--chown=root:root"
       - "--chmod=D750,F750"
 
-- name: copy legacy iptables cleaner
+- name: copy nftables tools
   copy:
-    src: "templates/clean_iptables.sh"
-    dest: "/opt/container/clean_iptables.sh"
+    src: "templates/{{item.src}}"
+    dest: "/opt/container/{{item.dest}}"
     owner: root
     group: root
     mode: 0750
+  with_items:
+      - { src: "nftables_visualizer", dest: "visualizer" }
+  when: "nftables_enabled"
+
+- name: copy legacy iptables tools
+  copy:
+    src: "templates/{{item.src}}"
+    dest: "/opt/container/{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+      - { src: "iptables_clean.sh", dest: "clean_iptables.sh" }
+      - { src: "iptables_visualizer", dest: "visualizer" }
   when: "not nftables_enabled"
 
 - name: copy container tools config

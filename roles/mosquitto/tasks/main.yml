@@ -18,6 +18,18 @@
     mode: 0750
   notify: "restart mosquitto"
 
+- name: prepare published_ports
+  set_fact:
+    published_ports:  |
+      [
+        "1883:1883",
+        "9001:9001",
+        {% if default_server_ipv6 is defined %}
+          "[::]:1883:1883",
+          "[::]:9001:9001",
+        {% endif %}
+      ]
+
 - name: create podman container
   containers.podman.podman_container:
     name: mosquitto
@@ -35,15 +47,7 @@
     ip: "{{podman_mosquitto_ip}}"
     volumes:
       - '{{global_etc}}mosquitto:/mosquitto/config'
-    published_ports: |
-      [
-        "1883:1883",
-        "9001:9001",
-        {% if default_server_ipv6 is defined %}
-          "[::]:1883:1883",
-          "[::]:9001:9001",
-        {% endif %}
-      ]
+    published_ports: "{{published_ports}}"
   register: "podman_container_state"
   notify: "restart mosquitto"
 
@@ -54,6 +58,14 @@
     container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
+
+- name: allow service
+  vars:
+    service_name: "mosquitto"
+    nat_rules: { ip: "{{podman_mosquitto_ip}}", ports: "{{published_ports}}" }
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
 
 - name: add service name
   vars:
