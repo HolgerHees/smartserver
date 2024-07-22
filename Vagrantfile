@@ -173,7 +173,7 @@ Vagrant.configure(2) do |config|
         setup.vm.box_version = "9.1.20221117"
         setup.vm.provision "shell", inline: <<-SHELL
         sudo yum --assumeyes install python python3-netaddr python3-pip
-        sudo pip install --prefix=/usr/ ansible==4.10.0
+        sudo pip install --prefix=/usr/ ansible==8.7.0
         # is needed to avoid that 'dnf-makecache.timer' is running during deployemnt. Could result in failed 'dnf-makecache.service' because of restarted named container
         sudo systemctl stop dnf-makecache.timer
         SHELL

@@ -10,7 +10,7 @@
     state: stopped
     daemon_reload: no
     enabled: no
-    masked: no
+    masked: yes
 #  when: "'firewalld.service' in ansible_facts.services"
   when: "service_result.rc == 0"
 
@@ -18,6 +18,22 @@
 
 
 # **** NFTABLES ****
+- name: install required packages => is_rhel
+  yum:
+    name: [
+      iptables-legacy
+    ]
+    state: present
+  when: "nftables_enabled and (is_rhel or is_fedora)"
+
+  # this will redirect podman network changes to iptables, which will be flushed later
+  # can be removed if podman frierwall_driver can be disabled in version 5.x
+- name: set iptables-legacy to avoid podman conflicts with nftables => is_rhel or is_ubuntu
+  community.general.alternatives:
+    name: iptables
+    path: /usr/sbin/iptables-legacy
+  when: "nftables_enabled and (is_rhel or is_fedora or is_ubuntu)"
+
 - name: install required packages => is_suse
   zypper:
     name: [

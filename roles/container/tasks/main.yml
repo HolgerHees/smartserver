@@ -25,23 +25,6 @@
     state: present
   when: is_suse
 
-# https://github.com/containers/podman/issues/20278
-#- name: disable apparmor on ubuntu temporary
-#  systemd:
-#    name: apparmor
-#    state: stopped
-#    daemon_reload: yes
-#    enabled: no
-#    masked: no
-#  register: apparmor_state
-#  when: is_ubuntu
-
-#- name: teardown apparmor on ubuntu temporary
-#  shell: "aa-teardown"
-#  register: teardown_result
-#  failed_when: "'Unloading AppArmor profiles' not in teardown_result.stdout"
-#  when: is_ubuntu and apparmor_state.changed
-
 #https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2040483
 - name: teardown apparmor for containers on ubuntu temporary
   shell: "{{item}}"
