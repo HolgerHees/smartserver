@@ -10,7 +10,6 @@ opts = GetoptLong.new(
 )
 
 setup_os = ""
-setup_version = ""
 setup_image = ""
 setup_config = ""
 setup_ansible = ""
@@ -28,12 +27,12 @@ vagrant [OPTION] ... CMD
 --config <demo|your_custom_config>:
   Used configuration. All configurations are located inside ./config/ folder
 
---os <suse|fedora|ubuntu|alma>:
+--os <suse|alma|ubuntu>:
   Used linux distribution. 
   
   <suse>      : openSUSE Leap 15.6 (opensuse/Leap-15.6.x86_64)
-  <alma>      : AlmaLinux 9 (almalinux/9)
-  <ubuntu>    : Ubuntu 22.04 (bento/ubuntu-22.04)
+  <alma>      : AlmaLinux 9.1 (almalinux/9)
+  <ubuntu>    : Ubuntu 24.04 (bento/ubuntu-24.04)
 
 --ansible [-vvv]:
   Optional argument to provide additional parameters for ansible. 
@@ -49,16 +48,13 @@ Example: vagrant --config=demo --os=suse up
       when '--os'
         if arg == "suse" then
             setup_os = "suse"
-            setup_version = "15.6"
-            setup_image = "opensuse/Leap-" + setup_version + ".x86_64"
+            setup_image = "opensuse/Leap-15.6.x86_64"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
-            setup_version = "22.04"
-            setup_image = "bento/ubuntu-22.04"
+            setup_image = "bento/ubuntu-24.04"
         elsif arg == "alma" then
             setup_os = "alma"
-            setup_version = "9"
-            setup_image = "almalinux/" + setup_version
+            setup_image = "almalinux/9"
         end
       when '--ansible'
         setup_ansible=arg
@@ -92,7 +88,7 @@ Vagrant.configure(2) do |config|
   end
   
   print "Used ip address: #{$env_ip}\n"
-  
+
   config.vm.define $image_name, autostart: true do |setup|
     setup.vm.box = setup_image
     setup.ssh.username = 'vagrant'
@@ -170,7 +166,7 @@ Vagrant.configure(2) do |config|
         setup.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update
         sudo apt-get -y install python3-netaddr python3-pip
-        sudo pip install ansible==4.10.0 --break-system-packages
+        sudo pip install ansible==9.8.0 --break-system-packages
         SHELL
     elsif setup_os == 'alma' then
         #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service

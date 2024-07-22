@@ -7,7 +7,7 @@
 - name: check mysql service
   include_tasks: roles/mysql/shared/wait_until_ready.yml
   when: "mysql_enabled"
-    
+
 - name: check redis service
   include_tasks: roles/redis/shared/wait_until_ready.yml
   when: "redis_enabled"
@@ -68,7 +68,7 @@
   shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --showonly\""
   changed_when: no
   register: app_update_available_result
-  
+
 #- name: show available app updates
 #  debug:
 #    msg: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update {{item.split()[0]}}\""
@@ -95,8 +95,6 @@
   set_fact:
     app_configs:
       - { app: "user_saml", name: "type", value: "environment-variable" }
-      - { app: "user_saml", name: "general-uid_mapping", value: "REMOTE_USERNAME" }
-      - { app: "user_saml", name: "saml-attribute-mapping-displayName_mapping", value: "REMOTE_USERFULLNAME" }
 
       - { app: "updatenotification", name: "notify_groups", value: "[]" }
 
@@ -117,24 +115,31 @@
 
       - { app: "text", name: "workspace_available", value: "0" }
 
-- name: prepare app configs
-  set_fact:
-    prepared_app_configs: "{{ prepared_app_configs | default([]) + [ { 'app': item.app, 'name': item.name, 'value': item.value | replace(\"'\", \"\\'\" ) | replace('\"', '\\\\\\\"') } ] }}"
-  when: "item.app + \"\\t\" + item.name + \"\\t\" + item.value not in app_config_result.stdout "
-  with_items: "{{app_configs}}"
-      
 - name: set app config
-  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('{{item.app}}', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
+  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ config:app:set --value='{{item.value}}' {{item.app}} {{item.name}}\""
   register: change_app_config_result
   failed_when: change_app_config_result.rc != 0
-  with_items: "{{prepared_app_configs}}"
-  when: "prepared_app_configs is defined"
+  when: "item.app + \"\\t\" + item.name + \"\\t\" + item.value not in app_config_result.stdout "
+  with_items: "{{app_configs}}"
 
-#- name: set app config
-#  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_user_saml_configurations (id, name, configuration) VALUES (1, '', '{{item.value}}') ON DUPLICATE KEY UPDATE configuration='{{item.value}}';\\\"\""
-#  failed_when: change_app_config_result.rc != 0
-#  when: "prepared_app_configs is defined"
-#  {"general-uid_mapping":"REMOTE_USERNAME","saml-attribute-mapping-displayName_mapping":"REMOTE_USERFULLNAME"}
+# ***** CONFIGURE user_saml *****
+- name: read user_saml configs
+  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"SELECT configuration FROM oc_user_saml_configurations WHERE id = 1;\\\"\""
+  changed_when: no
+  register: user_saml_config_result
+
+- name: set user_saml configs
+  set_fact:
+    user_saml_configs:
+      - { id: "1", name: "general-uid_mapping", value: "REMOTE_USERNAME" }
+      - { id: "1", name: "saml-attribute-mapping-displayName_mapping", value: "REMOTE_USERFULLNAME" }
+
+- name: set user_saml config
+  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ saml:config:set --{{item.name}}='{{item.value}}' {{item.id}}\""
+  register: change_user_saml_config_result
+  failed_when: change_user_saml_config_result.rc != 0
+  when: "'\"' + item.name + '\":\"' + item.value + '\"' not in user_saml_config_result.stdout "
+  with_items: "{{user_saml_configs}}"
 
 # ***** PREVIEW GENERATOR CRON JOB *****
 - name: create previewgenerator incremental cron job
@@ -165,13 +170,13 @@
 #  register: keeweb_result
 #  changed_when: "keeweb_result.rc == 0"
 #  failed_when: False
-  
+
 #- name: uninstall outdated keeweb version => old version was detected
 #  file:
 #    state: absent
 #    path: "{{htdocs_path}}nextcloud/apps/keeweb/"
 #  when: "keeweb_result.rc == 0"
-  
+
 #- name: install keeweb app => app does not exists
 #  unarchive:
 #    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v{{nextcloud_keeweb_version}}/keeweb-{{nextcloud_keeweb_version}}.tar.gz"
@@ -181,7 +186,7 @@
 #    owner: "{{system_users['www'].name}}"
 #    group: "{{system_groups['www'].name}}"
 #  register: keeweb_installation
-  
+
 #- name: check keeweb max version
 #  lineinfile:
 #    path: "{{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml"
@@ -189,11 +194,11 @@
 #    line: '\1="21"\2'
 #    backrefs: yes
 #  when: keeweb_installation.changed
-    
+
 #- name: upgrade existing database => keeweb version changed
 #  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
 #  when: "keeweb_installation.changed"
-  
+
 # maybe cleanup
 # UPDATE `oc_jobs` SET `reserved_at` = 0 WHERE `class` = 'OCA\\News\\Cron\\Updater'
 

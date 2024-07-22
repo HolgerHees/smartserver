@@ -46,12 +46,12 @@
 - name: teardown apparmor for containers on ubuntu temporary
   shell: "{{item}}"
   with_items:
-    - "ln -s /etc/apparmor.d/usr.sbin.runc /etc/apparmor.d/disable/"
-    - "apparmor_parser -R /etc/apparmor.d/usr.sbin.runc"
-    - "ln -s /etc/apparmor.d/usr.bin.crun /etc/apparmor.d/disable/"
-    - "apparmor_parser -R /etc/apparmor.d/usr.bin.crun"
-    - "ln -s /etc/apparmor.d/usr.bin.podman /etc/apparmor.d/disable/"
-    - "apparmor_parser -R /etc/apparmor.d/usr.bin.podman"
+    - "ln -s /etc/apparmor.d/runc /etc/apparmor.d/disable/"
+    - "apparmor_parser -R /etc/apparmor.d/runc"
+    - "ln -s /etc/apparmor.d/crun /etc/apparmor.d/disable/"
+    - "apparmor_parser -R /etc/apparmor.d/crun"
+    - "ln -s /etc/apparmor.d/podman /etc/apparmor.d/disable/"
+    - "apparmor_parser -R /etc/apparmor.d/podman"
   when: is_ubuntu
 
 ##### DOCKER #####

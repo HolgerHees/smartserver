@@ -12,9 +12,9 @@
   when: "service_result.rc != 0"
 
 - name: "openhab : wait_until_ready : wait to become ready"
-  command: "sshpass -p \"habopen\" ssh -o \"StrictHostKeyChecking no\" -p 8101 openhab@openhab \"users list\""
+  shell: "sshpass -v -p \"habopen\" ssh -o \"StrictHostKeyChecking no\" -p 8101 openhab@openhab \"users list\""
   register: check_result
-  until: "'Password authentication' in check_result.stderr and check_result.rc == 0"
+  until: "'Password' in check_result.stderr and check_result.rc == 0"
   retries: 300
   delay: 1
   changed_when: "service_result.rc != 0"
