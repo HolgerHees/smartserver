@@ -2,65 +2,82 @@
 
 flush ruleset
 
-# DEFAULT ip4  & ip6 FILTER CHAINS
+table bridge filter {
+    chain FORWARD {
+        type filter hook forward priority filter; policy drop;
+
+        ct state invalid drop                                                                       comment "early drop of invalid packets"
+        ct state { established, related } accept                                                    comment "accept all connections related to connections made by us"
+
+        ether type arp accept                                                                       comment "without arp, ip is not possible"
+
+        meta l4proto icmpv6 drop                                                                    comment "silently ignore icmpv6 traffic"
+
+        jump SMARTSERVER_FORWARD
+
+        log prefix "DROP [BRIDGE FORWARD]: "
+
+    }
+    chain SMARTSERVER_FORWARD {
+    }
+}
+
 table inet filter {
     chain INPUT {
         type filter hook input priority filter; policy drop;
-        #type filter hook input priority filter; policy accept;
 
-        ct state invalid counter drop                                                               comment "early drop of invalid packets"
-        ct state { established, related } counter accept                                            comment "accept all connections related to connections made by us"
+        ct state invalid drop                                                                       comment "early drop of invalid packets"
+        ct state { established, related } accept                                                    comment "accept all connections related to connections made by us"
 
         iif "lo" accept                                                                             comment "accept loopback"
-        iif != "lo" ip daddr 127.0.0.0/8 counter                                                    comment "drop connections to loopback not coming from loopback"
-        iif != "lo" ip6 daddr ::1 counter drop                                                      comment "drop connections to loopback not coming from loopback"
+        iif != "lo" ip daddr 127.0.0.0/8 drop                                                       comment "drop connections to loopback not coming from loopback"
+        iif != "lo" ip6 daddr ::1 drop                                                              comment "drop connections to loopback not coming from loopback"
 
         jump SMARTSERVER_BLOCKER
 
-        ip6 nexthdr icmpv6 counter accept                                                           comment "accept all ICMP types"
-        ip protocol icmp counter accept                                                             comment "accept all ICMP types"
-        ip protocol igmp accept;                                                                    comment "accept all IGMP types"
+        ip protocol icmp iif "{{default_network_interface}}"  accept                                comment "accept all ICMP types"
 
         meta l4proto udp ip saddr {{podman_base_network}}/24 th dport 54 accept                     comment "accept podman dns"
 
         ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
         meta l4proto udp ip saddr 0.0.0.0 th dport 67 drop                                          comment "silently ignore DHCP broadcasts"
         meta l4proto udp ip daddr 255.255.255.255 th dport 68 drop                                  comment "silently ignore DHCP broadcasts"
+        meta l4proto udp ip daddr 224.0.0.251  th dport 5353 drop                                   comment "silently ignore multicasts"
 
         jump SMARTSERVER_INPUT
 
-        log prefix "rejecting [IN]: "
-        counter reject with icmpx type admin-prohibited                                             comment "count dropped packets"
-
+        log prefix "DROP [INET INPUT]: "
     }
+
     chain FORWARD {
         type filter hook forward priority filter; policy drop;
 
-        ct state invalid counter drop                                                               comment "early drop of invalid packets"
-        ct state { established, related } counter accept                                            comment "accept all connections related to connections made by us"
+        ct state invalid drop                                                                       comment "early drop of invalid packets"
+        ct state { established, related } accept                                                    comment "accept all connections related to connections made by us"
 
         jump SMARTSERVER_FORWARD
 
-        log prefix "rejecting [FORWARD]: "
-        counter reject with icmpx type admin-prohibited                                             comment "count dropped packets"
+        log prefix "DROP [INET FORWARD]: "
     }
+
     chain OUTPUT {
         type filter hook output priority filter; policy accept;
-        counter                                                                                     comment "count accepted packets"
     }
+
     chain SMARTSERVER_BLOCKER {
     }
+
     chain SMARTSERVER_INPUT {
     }
+
     chain SMARTSERVER_FORWARD {
     }
 }
 
-# DEFAULT ip4 NAT CHAINS
 table ip nat {
     chain PREROUTING {
         type nat hook prerouting priority dstnat; policy accept;
-        fib daddr type local counter jump HOSTPORT_DNAT                                             comment "external packages arriving"
+        fib daddr type local jump HOSTPORT_DNAT                                                     comment "external packages arriving"
     }
 
     chain INPUT {
@@ -69,30 +86,30 @@ table ip nat {
 
     chain POSTROUTING {
         type nat hook postrouting priority srcnat; policy accept;
-        counter jump HOSTPORT_MASQ
+        jump HOSTPORT_MASQ
     }
 
     chain OUTPUT {
         type nat hook output priority -100; policy accept;
-        fib daddr type local counter jump HOSTPORT_DNAT                                             comment "local packages arriving"
+        fib daddr type local jump HOSTPORT_DNAT                                                     comment "local packages arriving"
     }
 
     chain HOSTPORT_DNAT {
-        meta l4proto udp ip daddr {{podman_base_gateway}} th dport 53 counter dnat to {{podman_base_gateway}}:54 comment "redirect container dns to podman dns"
+        meta l4proto udp ip daddr {{podman_base_gateway}} th dport 53 dnat to {{podman_base_gateway}}:54 comment "redirect container dns to podman dns"
 
         jump SMARTSERVER_DNAT
     }
 
     chain HOSTPORT_MASQ {
-        mark and 0x2000 == 0x2000 counter masquerade
+        mark and 0x2000 == 0x2000 masquerade
 
-        ip saddr {{podman_base_network}}/24 ip daddr != 224.0.0.0/4 counter masquerade
+        ip saddr {{podman_base_network}}/24 ip daddr != 224.0.0.0/4 masquerade
 
-        counter jump SMARTSERVER_MASQ
+        jump SMARTSERVER_MASQ
     }
 
     chain HOSTPORT_SETMARK {
-        counter meta mark set mark or 0x2000
+        meta mark set mark or 0x2000
     }
 
     chain SMARTSERVER_MASQ {

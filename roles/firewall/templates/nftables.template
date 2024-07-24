@@ -1,39 +1,51 @@
-{% if filter_rules is defined %}
+{% if tpl_bridge_forward_rules | length > 0 %}
+table bridge filter {
+    chain SMARTSERVER_FORWARD {
+{% for rule in tpl_bridge_forward_rules %}
+        {{rule['rule']}} comment "{{service_name}}{{ ': ' + rule['comment'] if 'comment' in rule else '' }}"
+{% endfor %}
+    }
+}
+{% endif %}
+
+{% if tpl_inet_input_rules | length > 0 or tpl_inet_forward_rules | length > 0 %}
 table inet filter {
-{% if input_rules | length > 0 %}
+{% if tpl_inet_input_rules | length > 0 %}
     chain SMARTSERVER_INPUT {
-{% for input_rule in input_rules %}
-        {{input_rule}} comment "{{service_name}}"
+{% for rule in tpl_inet_input_rules %}
+        {{rule['rule']}} comment "{{service_name}}{{ ': ' + rule['comment'] if 'comment' in rule else '' }}"
 {% endfor %}
     }
 {% endif %}
-{% if forward_rules | length > 0 %}
+{% if tpl_inet_forward_rules | length > 0 %}
     chain SMARTSERVER_FORWARD {
-{% for forward_rule in forward_rules %}
-        {{forward_rule}} comment "{{service_name}}"
+{% for rule in tpl_inet_forward_rules %}
+        {{rule['rule']}} comment "{{service_name}}{{ ': ' + rule['comment'] if 'comment' in rule else '' }}"
 {% endfor %}
     }
 {% endif %}
 }
 {% endif %}
+
 {% if nat_rules is defined %}
 table ip nat {
     chain SMARTSERVER_DNAT {
 {% for nat_port in nat_rules['ports'] %}
         {%- if '/' in nat_port %}{% set port, protocol = nat_port.split('/') %}{% else %}{% set port = nat_port %}{% set protocol = 'tcp, udp' %}{% endif %}
         {%- if ':' in port %}{% set src_port, dest_port = port.split(':') %}{% else %}{% set src_port = port %}{% set dest_port = port %}{% endif %}
-        meta l4proto { {{protocol}} } ip saddr {{nat_rules['ip']}} ip daddr 127.0.0.1 th dport {{src_port}} counter jump HOSTPORT_SETMARK comment "{{service_name}}"
-        meta l4proto { {{protocol}} } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport {{src_port}} counter jump HOSTPORT_SETMARK comment "{{service_name}}"
-        meta l4proto { {{protocol}} } ip daddr 127.0.0.1 th dport {{src_port}} counter dnat to {{nat_rules['ip']}}:{{dest_port}} comment "{{service_name}}"
+        meta l4proto { {{protocol}} } ip saddr {{nat_rules['ip']}} ip daddr 127.0.0.1 th dport {{src_port}} jump HOSTPORT_SETMARK comment "{{service_name}}{{ ': ' + nat_rules['comment'] if 'comment' in nat_rules else '' }}"
+        meta l4proto { {{protocol}} } ip saddr 127.0.0.1 ip daddr 127.0.0.1 th dport {{src_port}} jump HOSTPORT_SETMARK comment "{{service_name}}{{ ': ' + nat_rules['comment'] if 'comment' in nat_rules else '' }}"
+        meta l4proto { {{protocol}} } ip daddr 127.0.0.1 th dport {{src_port}} dnat to {{nat_rules['ip']}}:{{dest_port}} comment "{{service_name}}{{ ': ' + nat_rules['comment'] if 'comment' in nat_rules else '' }}"
 {% endfor %}
     }
 }
 {% endif %}
+
 {% if masquerading_rules is defined %}
 table ip nat {
     chain SMARTSERVER_MASQ {
-{% for masquerading_rule in masquerading_rules %}
-        {{masquerading_rule}} comment "{{service_name}}"
+{% for rule in masquerading_rules %}
+        {{rule['rule']}} comment "{{service_name}}{{ ': ' + rule['comment'] if 'comment' in rule else '' }}"
 {% endfor %}
     }
 }

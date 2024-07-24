@@ -18,21 +18,21 @@
 
 
 # **** NFTABLES ****
-- name: install required packages => is_rhel
-  yum:
-    name: [
-      iptables-legacy
-    ]
-    state: present
-  when: "nftables_enabled and (is_rhel or is_fedora)"
+#- name: install required packages => is_rhel
+#  yum:
+#    name: [
+#      iptables-legacy
+#    ]
+#    state: present
+#  when: "nftables_enabled and (is_rhel or is_fedora)"
 
   # this will redirect podman network changes to iptables, which will be flushed later
   # can be removed if podman frierwall_driver can be disabled in version 5.x
-- name: set iptables-legacy to avoid podman conflicts with nftables => is_rhel or is_ubuntu
-  community.general.alternatives:
-    name: iptables
-    path: /usr/sbin/iptables-legacy
-  when: "nftables_enabled and (is_rhel or is_fedora or is_ubuntu)"
+#- name: set iptables-legacy to avoid podman conflicts with nftables => is_rhel or is_ubuntu
+#  community.general.alternatives:
+#    name: iptables
+#    path: /usr/sbin/iptables-legacy
+#  when: "nftables_enabled and (is_rhel or is_fedora or is_ubuntu)"
 
 - name: install required packages => is_suse
   zypper:
@@ -60,7 +60,8 @@
   with_items:
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/00_init.nft" }
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/20_trusted_networks.nft" }
-    - { mode: "u=rwx,g=rx,o=", path: "/etc/nftables/flush_iptables.sh" }
+#    - { mode: "u=rwx,g=rx,o=", path: "/etc/nftables/flush_iptables.sh" }
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/iptables-blacklist.conf" } # block iptables
   notify: "restart nftables"
   when: "nftables_enabled"
 

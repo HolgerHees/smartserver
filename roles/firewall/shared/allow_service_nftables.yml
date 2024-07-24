@@ -1,25 +1,12 @@
+#- name: debug
+#  debug:
+#    msg: "{{inet_forward_rules}}"
+
 - name: "firewall : allow_service : service '{{service_name}}'"
   vars:
-    input_rules: |
-      [
-      {% if filter_rules is defined %}
-          {% for filter_rule in filter_rules %}
-              {% if 'daddr ' + default_server_ip in filter_rule %}
-                "{{filter_rule | replace('"', '\"')}}",
-              {% endif %}
-          {% endfor %}
-      {% endif %}
-      ]
-    forward_rules: |
-      [
-      {% if filter_rules is defined %}
-          {% for filter_rule in filter_rules %}
-              {% if 'daddr ' + default_server_ip not in filter_rule %}
-                "{{filter_rule | replace('"', '\"')}}",
-              {% endif %}
-          {% endfor %}
-      {% endif %}
-      ]
+    tpl_bridge_forward_rules: "{{bridge_forward_rules | default([])}}"
+    tpl_inet_forward_rules: "{{inet_forward_rules | default([])}}"
+    tpl_inet_input_rules: "{{inet_input_rules | default([])}}"
   template:
     src: "roles/firewall/templates/nftables.template"
     dest: "/etc/nftables/30_{{service_name}}.nft"

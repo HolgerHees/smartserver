@@ -153,12 +153,12 @@
 - name: allow service
   vars:
     service_name: "wireguard_cloud"
-    filter_rules: |
+    inet_forward_rules: |
       [
       {% for port in wireguard_cloud_ports %}
-        "meta l4proto udp ip saddr {{vpn_cloud_services.local.gateway}} th dport {{port}} oif \"{{default_network_interface}}\" accept",
+        { "rule": "meta l4proto udp ip saddr {{vpn_cloud_services.local.gateway}} th dport {{port}} oif \"{{default_network_interface}}\" accept" },
       {% endfor %}
-      "meta l4proto udp ip daddr {{vpn_cloud_services.local.gateway}} th dport {{cloud_vpn.interface.port}} accept"
+      { "rule": "meta l4proto udp ip daddr {{vpn_cloud_services.local.gateway}} th dport {{cloud_vpn.interface.port}} accept" }
       ]
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml

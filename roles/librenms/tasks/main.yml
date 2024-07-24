@@ -95,14 +95,11 @@
 - name: allow service
   vars:
     service_name: "librenms"
-    filter_rules:  |
-      [
-      "ip saddr {{podman_librenms_ip}} ip daddr {{podman_mysql_ip}} accept",
-      "ip saddr {{podman_librenms_ip}} ip daddr {{podman_redis_ip}} accept",
-      {% for network in intern_networks %}
-        "ip saddr {{podman_librenms_ip}} ip daddr {{network}} accept",
-      {% endfor %}
-      ]
+    bridge_forward_rules:
+      - { rule: "ip saddr {{podman_librenms_ip}} ip daddr {{podman_mysql_ip}} accept", comment: "librenms => mysql" }
+      - { rule: "ip saddr {{podman_librenms_ip}} ip daddr {{podman_redis_ip}} accept", comment: "librenms => redis" }
+    inet_forward_rules:
+      - { rule: "ip saddr {{podman_librenms_ip}} ip daddr { {{ intern_networks | join(', ')}} } accept", comment: "snmp scanner => internal networks" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

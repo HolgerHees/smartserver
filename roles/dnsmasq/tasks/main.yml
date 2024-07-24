@@ -127,7 +127,8 @@
 - name: allow service
   vars:
     service_name: "dnsmasq"
-    filter_rules: [ "meta l4proto { tcp, udp } ip saddr {{podman_dns_ip}} ip daddr { {{ dns_forward_ip_addresses | join(',') }} } th dport 53 accept" ]
+    inet_forward_rules:
+      - { rule: "meta l4proto { tcp, udp } ip saddr {{podman_dns_ip}} ip daddr { {{ dns_forward_ip_addresses | join(',') }} } th dport 53 accept", comment: "outgoing access to forwarded dns" }
     nat_rules: { ip: "{{podman_dns_ip}}", ports: "{{published_ports}}" }
     instant_activation: True
   include_tasks: roles/firewall/shared/allow_service_nftables.yml

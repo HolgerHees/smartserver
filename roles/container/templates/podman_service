@@ -12,6 +12,8 @@ TimeoutStartSec=0
 TimeoutStopSec={{container_stop_timeout | default('300')}}
 Restart=on-failure
 RestartSec=3
+{% if nftables_enabled %}Environment=NETAVARK_FW=none
+{% endif %}
 ExecStart=/usr/bin/podman start -a {{container_name}}
 {% if container_pre_exec is defined and container_pre_exec != None %}ExecStartPre={{container_pre_exec}}{{''}}
 {% endif %}

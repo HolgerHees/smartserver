@@ -79,8 +79,8 @@
 - name: allow service
   vars:
     service_name: "vcontrold"
-    filter_rules:
-      - "ip saddr {{podman_vcontrold_ip}} ip daddr {{podman_mosquitto_ip}} accept"
+    bridge_forward_rules:
+      - { "rule": "ip saddr {{podman_vcontrold_ip}} ip daddr {{podman_mosquitto_ip}} accept", "comment": "vcontrold => mosquitto" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

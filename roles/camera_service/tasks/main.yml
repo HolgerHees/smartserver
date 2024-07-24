@@ -92,8 +92,8 @@
 - name: allow service
   vars:
     service_name: "camera_service"
-    filter_rules:
-      - "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_camera_service_ip}} accept"
+    bridge_forward_rules:
+      - { "rule": "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_camera_service_ip}} accept", "comment": "prometheus => camera_service" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

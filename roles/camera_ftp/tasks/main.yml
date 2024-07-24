@@ -85,12 +85,8 @@
 - name: allow service
   vars:
     service_name: "vsftpd"
-    filter_rules:  |
-      [
-      {% for network in intern_networks %}
-        "meta l4proto tcp ip saddr {{podman_camera_ftp_ip}} th sport 20 ip daddr {{network}} accept",
-      {% endfor %}
-      ]
+    inet_forward_rules:
+      - { rule: "meta l4proto tcp ip saddr {{podman_camera_ftp_ip}} th sport 20 ip daddr { {{ intern_networks | join(', ')}} } accept", comment: "camera_ftp => internal networks" }
     nat_rules: { ip: "{{podman_camera_ftp_ip}}", ports: "{{published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']

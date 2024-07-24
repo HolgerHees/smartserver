@@ -98,12 +98,12 @@
 - name: allow service
   vars:
     service_name: "grafana"
-    filter_rules:
-      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_mysql_ip}} accept"
-      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_influxdb_ip}} accept"
-      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_loki_ip}} accept"
-      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_prometheus_ip}} accept"
-      - "ip saddr {{podman_grafana_ip}} ip daddr {{podman_alertmanager_ip}} accept"
+    bridge_forward_rules:
+      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_mysql_ip}} accept", "comment": "grafana => mysql" }
+      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_influxdb_ip}} accept", "comment": "grafana => influxdb" }
+      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_loki_ip}} accept", "comment": "grafana => loki" }
+      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_prometheus_ip}} accept", "comment": "grafana => prometheus" }
+      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_alertmanager_ip}} accept", "comment": "grafana => alertmanager" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

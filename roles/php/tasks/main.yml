@@ -66,13 +66,15 @@
 - name: allow service
   vars:
     service_name: "php"
-    filter_rules:
-      - "ip saddr {{podman_php_ip}} ip daddr {{podman_mysql_ip}} accept"
-      - "ip saddr {{podman_php_ip}} ip daddr {{podman_influxdb_ip}} accept"
-      - "ip saddr {{podman_php_ip}} ip daddr {{podman_redis_ip}} accept"
-      - "ip saddr {{podman_php_ip}} ip daddr {{podman_postfix_ip}} accept"
-      - "meta l4proto tcp ip saddr {{podman_php_ip}} ip daddr {{default_server_ip}} th dport 443 accept"
-      - "ip saddr {{podman_php_ip}} oif \"{{default_network_interface}}\" accept"
+    bridge_forward_rules:
+      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_mysql_ip}} accept", comment: "php => mysql" }
+      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_influxdb_ip}} accept", comment: "php => influxdb" }
+      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_redis_ip}} accept", comment: "php => redis" }
+      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_postfix_ip}} accept", comment: "php => postfix" }
+    inet_forward_rules:
+      - { rule: "ip saddr {{podman_php_ip}} oif \"{{default_network_interface}}\" accept", comment: "outgoing access to all networks" }
+    inet_input_rules:
+      - { rule: "meta l4proto tcp ip saddr {{podman_php_ip}} ip daddr {{default_server_ip}} th dport 443 accept", comment: "apache access" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

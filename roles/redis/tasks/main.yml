@@ -33,8 +33,8 @@
 - name: allow service
   vars:
     service_name: "redis"
-    filter_rules:
-      - "ip saddr {{podman_redis_ip}} ip daddr {{podman_php_ip}} accept"
+    bridge_forward_rules:
+      - { "rule": "ip saddr {{podman_redis_ip}} ip daddr {{podman_php_ip}} accept", "comment": "redis => php" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

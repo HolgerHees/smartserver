@@ -69,6 +69,17 @@
     - "{{global_lib}}containers/storage/"
   when: (is_rhel or is_fedora) and sefcontext_result.changed
 
+# ***** NESSECARRY UNTIL PODMAN 5 ********
+# because "firewall_driver" setting in containers.conf is ignored
+# second part is inside podman_service template
+# ****************************************
+- name: force none firewall driver
+  lineinfile:
+    path: /etc/environment
+    regexp: '^NETAVARK_FW\s*='
+    line: 'NETAVARK_FW=none'
+  when: "nftables_enabled"
+
 - name: copy podman config
   template:
     src: "templates{{item}}"
@@ -172,8 +183,8 @@
 - name: create macvlan network
   containers.podman.podman_network:
     name: 'macvlan'
+    driver: "macvlan"
     ipv6: "{{ 'true' if default_server_ipv6 is defined else 'false' }}"
-    driver: macvlan
     opt:
       parent: '{{default_network_interface}}'
     net_config: |
@@ -187,6 +198,7 @@
 - name: create isolated podman network
   containers.podman.podman_network:
     name: "isolated"
+    #driver: "ipvlan"
     internal: no
     ipv6: "{{ 'true' if default_server_ipv6 is defined else 'false' }}"
     subnet: "{{podman_base_network}}/24"
