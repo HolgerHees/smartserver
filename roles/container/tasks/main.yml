@@ -16,6 +16,17 @@
     state: present
   when: is_ubuntu
 
+- name: check netavark => is_ubuntu
+  shell: "/usr/lib/podman/netavark version | grep 'version' | grep -Po '[0-9\\.]*'"
+  changed_when: "netavark_version.stdout != '1.11.0'"
+  register: netavark_version
+  when: "nftables_enabled and is_ubuntu"
+
+  # With old netavark version, firewall_driver 'none' is not possible
+- name: upgrade netavark => is_ubuntu
+  shell: "wget -O - https://github.com/containers/netavark/releases/download/v1.11.0/netavark.gz | gzip -d > /usr/lib/podman/netavark && chown root:root /usr/lib/podman/netavark && chmod 755 /usr/lib/podman/netavark"
+  when: "nftables_enabled and is_ubuntu and netavark_version.stdout != '1.11.0'"
+
 - name: install required packages => is_suse
   zypper:
     name: [
