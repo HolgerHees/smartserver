@@ -179,14 +179,14 @@
 - name: allow wireguard_mobile service
   vars:
     service_name: "wireguard_mobile"
-    inet_forward_rules:
-      - { "rule": "meta l4proto { udp } ip saddr { {{ vpn_admin_ips | join(', ')}} } accept", "comment": "vpn admin clients" }
-      - { "rule": "meta l4proto { udp } ip daddr {{default_server_ip}} th dport {{mobile_vpn_internal_port}} accept" }
+    container_to_outside_rules:
+      - { saddr: "{ {{ vpn_admin_ips | join(', ')}} }", protocol: "udp", comment: "vpn admin clients" }
+      - { protocol: "udp", daddr: "{{default_server_ip}}", dport: "{{mobile_vpn_internal_port}}", comment: "open vpn port" }
     masquerading_rules: |
         [
-            { "rule": "meta l4proto { tcp, udp } ip saddr {{vpn_mobile_network}}/24 oif \"{{default_network_interface}}\" masquerade" }
+            { "saddr": "{{vpn_mobile_network}}/24", "oif": "{{default_network_interface}}" }
             {% if macvlan_range | length > 0 %}
-              , { "rule": "meta l4proto { tcp, udp } ip saddr {{vpn_mobile_network}}/24 oifname \"mac0\" masquerade" }
+              , { "saddr": "{{vpn_mobile_network}}/24", "oifname": "mac0" }
             {% endif %}
         ]
   include_tasks: roles/firewall/shared/allow_service_nftables.yml

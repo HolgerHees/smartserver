@@ -20,6 +20,7 @@
     published_ports:
      - "5201:5201/tcp"
      - "5201:5201/udp"
+  tags: ['firewall_config']
 
 - name: create podman container
   containers.podman.podman_container:

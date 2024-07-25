@@ -42,7 +42,8 @@
           "[::]:30000-30005:30000-30005",
         {% endif %}
       ]
-
+  tags: ['firewall_config']
+  
 - name: create podman container
   containers.podman.podman_container:
     name: vsftpd
@@ -85,8 +86,8 @@
 - name: allow service
   vars:
     service_name: "vsftpd"
-    inet_forward_rules:
-      - { rule: "meta l4proto tcp ip saddr {{podman_camera_ftp_ip}} th sport 20 ip daddr { {{ intern_networks | join(', ')}} } accept", comment: "camera_ftp => internal networks" }
+    container_to_outside_rules:
+      - { saddr: "{{podman_camera_ftp_ip}}", sport: "20", daddr: "{{intern_networks}}", protocol: "tcp", comment: "camera_ftp => internal networks" }
     nat_rules: { ip: "{{podman_camera_ftp_ip}}", ports: "{{published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']

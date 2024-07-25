@@ -59,10 +59,10 @@
 - name: allow service
   vars:
     service_name: "postfix"
-    bridge_forward_rules:
-      - { rule: "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_postfix_ip}} accept", comment: "prometheus => postfix" }
-    inet_forward_rules:
-      - { rule: "meta l4proto tcp ip saddr {{podman_postfix_ip}} th dport {{mailserver_port}} oif \"{{default_network_interface}}\" accept", comment: "outgoing access to extern mailer" }
+    container_to_container_rules:
+      - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => postfix" }
+    container_to_outside_rules:
+      - { saddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "{{mailserver_port}}", oif: "{{default_network_interface}}", comment: "postfix => extern mailserver" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

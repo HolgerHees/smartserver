@@ -39,7 +39,8 @@
           "[::]:138:138/tcp",
         {% endif %}
       ]
-
+  tags: ['firewall_config']
+  
 - name: create podman container
   containers.podman.podman_container:
     name: samba

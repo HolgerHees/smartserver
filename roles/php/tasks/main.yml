@@ -66,15 +66,15 @@
 - name: allow service
   vars:
     service_name: "php"
-    bridge_forward_rules:
-      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_mysql_ip}} accept", comment: "php => mysql" }
-      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_influxdb_ip}} accept", comment: "php => influxdb" }
-      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_redis_ip}} accept", comment: "php => redis" }
-      - { rule: "ip saddr {{podman_php_ip}} ip daddr {{podman_postfix_ip}} accept", comment: "php => postfix" }
-    inet_forward_rules:
-      - { rule: "ip saddr {{podman_php_ip}} oif \"{{default_network_interface}}\" accept", comment: "outgoing access to all networks" }
-    inet_input_rules:
-      - { rule: "meta l4proto tcp ip saddr {{podman_php_ip}} ip daddr {{default_server_ip}} th dport 443 accept", comment: "apache access" }
+    container_to_container_rules:
+      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_mysql_ip}}", protocol: "tcp", dport: "3306", comment: "php => mysql" }
+      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_influxdb_ip}}", protocol: "tcp", dport: "8086", comment: "php => influxdb" }
+      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_redis_ip}}", protocol: "tcp", dport: "6379", comment: "php => redis" }
+      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "25", comment: "php => postfix" }
+    container_to_host_rules:
+      - { saddr: "{{podman_php_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (rest api's ...)" }
+    container_to_outside_rules:
+      - { saddr: "{{podman_php_ip}}", oif: "{{default_network_interface}}", comment: "php => all outgoing networks" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

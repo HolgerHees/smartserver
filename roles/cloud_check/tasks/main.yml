@@ -69,12 +69,12 @@
 - name: allow service
   vars:
     service_name: "cloud_check"
-    bridge_forward_rules:
-      - { "rule": "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_cloud_check_ip}} accept", "comment": "prometheus => cloud_check" }
-      - { "rule": "ip saddr {{podman_cloud_check_ip}} ip daddr {{vpn_cloud_services.local.mosquitto}} accept", "comment": "cloud_check => cloud_mosquitto" }
-    inet_forward_rules:
-      - { "rule": "meta l4proto tcp ip saddr {{podman_cloud_check_ip}} oif \"{{default_network_interface}}\" th dport 80 accept" }
-      - { "rule": "meta l4proto icmp ip saddr {{podman_cloud_check_ip}} oif \"{{default_network_interface}}\" accept" }
+    container_to_container_rules:
+      - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_cloud_check_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => cloud_check" }
+      - { saddr: "{{podman_cloud_check_ip}}", daddr: "{{vpn_cloud_services.local.mosquitto}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "cloud_check => cloud_mosquitto" }
+    container_to_outside_rules:
+      - { saddr: "{{podman_cloud_check_ip}}", protocol: "tcp", dport: "80", oif: "{{default_network_interface}}", comment: "cloud_check => http endpoint of other clouds" }
+      - { saddr: "{{podman_cloud_check_ip}}", protocol: "icmp", oif: "{{default_network_interface}}", comment: "cloud_check => icmp endpoint of other clouds" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

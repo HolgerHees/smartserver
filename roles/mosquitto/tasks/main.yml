@@ -29,7 +29,8 @@
           "[::]:9001:9001",
         {% endif %}
       ]
-
+  tags: ['firewall_config']
+  
 - name: create podman container
   containers.podman.podman_container:
     name: mosquitto

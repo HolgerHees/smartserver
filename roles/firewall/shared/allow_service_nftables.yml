@@ -4,9 +4,9 @@
 
 - name: "firewall : allow_service : service '{{service_name}}'"
   vars:
-    tpl_bridge_forward_rules: "{{bridge_forward_rules | default([])}}"
-    tpl_inet_forward_rules: "{{inet_forward_rules | default([])}}"
-    tpl_inet_input_rules: "{{inet_input_rules | default([])}}"
+    tpl_container_to_container_rules: "{{container_to_container_rules | default([])}}"
+    tpl_container_to_host_rules: "{{container_to_host_rules | default([])}}"
+    tpl_container_to_outside_rules: "{{container_to_outside_rules | default([])}}"
   template:
     src: "roles/firewall/templates/nftables.template"
     dest: "/etc/nftables/30_{{service_name}}.nft"

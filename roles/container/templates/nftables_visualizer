@@ -5,6 +5,7 @@ import json
 import socket
 import re
 import ipaddress
+import json
 
 class Network:
     def __init__(self,id,name,driver,scope):
@@ -149,6 +150,8 @@ for container_json in containers_json:
     for networkName in container_json['NetworkSettings']['Networks']:
         network = network_r[networkName]
 
+       # print(container.interfaceResult)
+
         veth = ""
         if network.name != 'host':
             #print("#######")
@@ -163,10 +166,9 @@ for container_json in containers_json:
                     container_ns_result = execCommand("nsenter --net={} ethtool -S {} | grep peer_ifindex".format(container.sandboxKey,columns[6]))
                     peer_ifindex_r = container_ns_result.stdout.decode("utf-8").split()
                     if len(peer_ifindex_r) > 0:
-                        result = re.findall("^{}: veth.*".format(peer_ifindex_r[-1]), link_list, flags=re.MULTILINE)
+                        result = re.findall("^{}: ([^:]*):".format(peer_ifindex_r[-1]), link_list, flags=re.MULTILINE)
                         if len(result)>0:
-                            veth_info = result[0].split()
-                            veth = veth_info[1][:-1]
+                            veth = result[0]
                     #print(columns[6])
                     #print(veth)
                     break
@@ -188,41 +190,78 @@ for container_json in containers_json:
 
         network.addConnection(connection)
 
-# Collect iptables chains
-iptables_rules = execCommand("iptables -nvL").stdout.decode("utf-8").split("\n")
-current_chain = None
+# Collect nftables chains
+nftables_data = execCommand("nft -j list ruleset").stdout.decode("utf-8")
+nftables_rules = json.loads(nftables_data)
+
 chain_r = {}
-for rule in iptables_rules:
-    if len(rule) == 0:
+for line in nftables_rules['nftables']:
+    if 'rule' not in line:
         continue
-    rule_r = rule.split(" ")
-    rule_r = list(filter(lambda item: item.strip(), rule_r))
 
-    if rule_r[0].lower() == "chain":
-        current_chain = Chain(rule_r[1].lower())
-        chain_r[current_chain.name] = current_chain
+    chain_name = line['rule']['chain']
+
+    if chain_name not in chain_r:
+        chain = Chain(chain_name)
+        chain_r[chain_name] = chain
     else:
-        if ( rule_r[2] != "ACCEPT" and rule_r[2] != "DROP" ) or rule_r[5] == "lo":
-            continue
+        chain = chain_r[chain_name]
 
-        if len(rule_r) < 9:
-            continue
+    source_ip = None
+    source_port = None
+    target_ip = None
+    target_port = None
+    mode = "DROP"
+    type = None
+    interface = None
 
-        source_ip = rule_r[7]
-        target_ip = rule_r[8]
-        target_port = ""
-        source_port = ""
-        if len(rule_r) > 10:
-            if rule_r[10].startswith("dpt:"):
-                target_port = rule_r[10][4:]
-            elif rule_r[10].startswith("spt:"):
-                source_port = rule_r[10][4:]
+    for part in line['rule']['expr']:
+        if 'match' in part:
+            if part['match']['op'] != '==':
+                continue
 
-        current_chain.addRule(source_ip,source_port,target_ip,target_port,rule_r[2],rule_r[3],rule_r[6],rule_r)
-        #print(source_ip + ' => ' + target_ip + ' ' + target_port)
+            if 'payload' in part['match']['left']:
+                protocol = part['match']['left']['payload']['protocol']
+                field = part['match']['left']['payload']['field']
+                value = part['match']['right']
 
-        #chain_r[current_chain].append()
-#target     prot opt source               destination
+                if field == 'saddr':
+                    source_ip = value
+                elif field == 'daddr':
+                    target_ip = value
+                elif field == 'sport':
+                    source_port = value
+                    type = protocol
+                elif field == 'dport':
+                    target_port = value
+                    type = protocol
+            elif 'meta' in part['match']['left']:
+                key = part['match']['left']['meta']['key']
+                if key == 'l4proto':
+                    protocols = part['match']['right']['set'] if 'set' in part['match']['right'] else part['match']['right']
+                    if len(protocols) == 1:
+                        type = protocols[0]
+                elif key == 'oif':
+                    interface = part['match']['right']
+
+        elif 'accept' in part:
+            mode = "ACCEPT"
+
+    if source_ip is None:
+        continue
+
+    source_ips = source_ip['set'] if 'set' in source_ip else [source_ip]
+    target_ips = target_ip['set'] if target_ip is not None and 'set' in target_ip else [target_ip]
+
+    for source_ip in source_ips:
+        for target_ip in target_ips:
+            if 'prefix' in source_ip:
+                source_ip = source_ip['prefix']['addr'] + '/' + str(source_ip['prefix']['len'])
+
+            if target_ip is not None and 'prefix' in target_ip:
+                target_ip = target_ip['prefix']['addr'] + '/' + str(target_ip['prefix']['len'])
+
+            chain.addRule(source_ip,source_port,target_ip,target_port,mode,type,interface, line['rule'])
 
 # Collect additional ports
 listen_port_map = {}
@@ -434,52 +473,54 @@ for network in sorted_network_r:
             outgoingValue.append("*")
         else:
             for chain in chain_r:
+                #if chain != 'SMARTSERVER_FORWARD':
+                #    continue
+
                 rule_r = chain_r[chain].rule_r
-                if chain != 'smartserver_input' and chain != 'smartserver_forward':
-                    continue
 
                 for rule in rule_r:
-                    if rule['sourceIp'] == connection.ip:
-                        if rule['targetIp'] == network.subnet:
-                            targetIp = "subnet"
-                        elif rule['targetIp'] == '0.0.0.0/0':
-                            targetIp = host_ip if rule['chain'] == 'input' else "*"
-                        else:
-                            targetIp = rule['targetIp']
 
-                        value = ""
+                    if chain == 'SMARTSERVER_FORWARD':
+                        if rule['sourceIp'] == connection.ip:
+                            if rule['targetIp'] == network.subnet:
+                                targetIp = "subnet"
+                            elif rule['targetIp'] is None:
+                                targetIp = "*"
+                            else:
+                                targetIp = rule['targetIp']
 
-                        if rule['sourcePort'] != '':
-                            value += ":" + rule['sourcePort']
-                        if rule['interface'] != "*":
-                            value += ":" + rule['interface']
+                                if targetIp in dns_reverse_r:
+                                    targetIp = dns_reverse_r[targetIp]
+                                #    if len(dns_map_r[name]) == 1:
+                                #        value = name
 
-                        if value != "":
-                            value += " ➞ "
+                            value = ""
 
-                        value += targetIp
+                            if rule['sourcePort'] is not None:
+                                value += ":" + str(rule['sourcePort'])
+                            if rule['interface'] is not None:
+                                value += ":" + rule['interface']
 
-                        if rule['targetPort'] != '':
-                            value += ":" + rule['targetPort']
-                        if rule['type'] not in ["all","tcp","udp"]:
-                            value += ":" + rule['type']
+                            if value != "":
+                                value += " ➞ "
 
-                        if value in dns_reverse_r:
-                            name = dns_reverse_r[value]
-                            if len(dns_map_r[name]) == 1:
-                                value = name
+                            value += targetIp
 
-                        outgoingValue.append(value)
-                    #elif rule['sourceIp'] == network.subnet:
-                    #    outgoingValue.append("subnet")
-                    elif rule['sourceIp'] != "0.0.0.0/0" and ipaddress.ip_address(connection.ip) in ipaddress.ip_network(rule['sourceIp']):
-                        targetIp = "*" if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp']
-                        outgoingValue.append(targetIp)
-                        #print(rule['sourceIp'])
+                            if rule['targetPort'] is not None:
+                                value += ":" + str(rule['targetPort'])
+                            if rule['type'] is not None:
+                                value += ":" + rule['type']
+
+                            outgoingValue.append(value)
+                        #elif rule['sourceIp'] == network.subnet:
+                        #    outgoingValue.append("subnet")
+                        elif rule['sourceIp'] is not None and ipaddress.ip_address(connection.ip) in ipaddress.ip_network(rule['sourceIp']):
+                            targetIp = "*" if rule['targetIp'] is None else rule['targetIp']
+                            outgoingValue.append(targetIp)
+                            #print(rule['sourceIp'])
 
                     if network.driver == "host":
-                        activeChain = 'smartserver_input' if network.name == 'host' and connection.veth != "forwarded" else 'smartserver_forward'
-
+                        activeChain = 'SMARTSERVER_INPUT' if network.name == 'host' and connection.veth != "forwarded" else 'SMARTSERVER_FORWARD'
                         if chain == activeChain:
 
                             #if rule['mode'] == "DROP":
@@ -490,18 +531,18 @@ for network in sorted_network_r:
 
                             #hostMatch = rule['targetIp'] == connection.ip # or rule['targetIp'] == "0.0.0.0/0"
                             for key in openPorts:
+
                                 data = openPorts[key]
                                 sourceIp = rule['sourceIp'].split('/')[0]
 
                                 if rule['mode'] == "DROP":
-                                    #sourceIp = sourceIp.lstrip("!") # remove left negates
                                     if rule['targetPort'] == key:
                                         data["access"] = "local"
                                         data["port"] += " (" + sourceIp + ")"
                                 else:
-                                    sourceIp = sourceIp.lstrip("!") # remove left negates
-                                    if rule['targetPort'] == key and (sourceIp == '0.0.0.0' or not ipaddress.ip_address(sourceIp).is_private):
+                                    if rule['targetPort'] == key and (sourceIp is None or not ipaddress.ip_address(sourceIp).is_private):
                                         data["access"] = "extern"
+
         outgoingValue = list(set(outgoingValue))
         outgoingValue.sort()
 

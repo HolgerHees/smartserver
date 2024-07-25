@@ -118,12 +118,12 @@
 - name: allow service
   vars:
     service_name: "ci_service"
-    bridge_forward_rules:
-      - { "rule": "ip saddr {{podman_prometheus_ip}} ip daddr {{podman_ci_service_ip}} accept", "comment": "prometheus => ci_service" }
-    inet_forward_rules:
-      - { "rule": "meta l4proto tcp ip saddr {{podman_ci_service_ip}} oif \"{{default_network_interface}}\" th dport 443 accept" }
-    inet_input_rules:
-      - { "rule": "meta l4proto tcp ip saddr {{podman_ci_service_ip}} ip daddr {{default_server_ip}} th dport 443 accept", "comment": "ci_service => host" }
+    container_to_container_rules:
+      - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => ci_service" }
+    container_to_host_rules:
+      - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", comment: "apache access" }
+    container_to_outside_rules:
+      - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", oif: "{{default_network_interface}}", comment: "ci_service => 'github'" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

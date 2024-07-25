@@ -35,14 +35,15 @@ table inet filter {
 
         jump SMARTSERVER_BLOCKER
 
-        ip protocol icmp iif "{{default_network_interface}}"  accept                                comment "accept all ICMP types"
+        ip protocol icmp iif "{{default_network_interface}}"  accept                                comment "accept all icmp types"
 
         meta l4proto udp ip saddr {{podman_base_network}}/24 th dport 54 accept                     comment "accept podman dns"
 
         ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
-        meta l4proto udp ip saddr 0.0.0.0 th dport 67 drop                                          comment "silently ignore DHCP broadcasts"
-        meta l4proto udp ip daddr 255.255.255.255 th dport 68 drop                                  comment "silently ignore DHCP broadcasts"
-        meta l4proto udp ip daddr 224.0.0.251  th dport 5353 drop                                   comment "silently ignore multicasts"
+        meta l4proto udp ip saddr 0.0.0.0 th dport 67 drop                                          comment "silently ignore dhcp broadcasts"
+        meta l4proto udp ip daddr 255.255.255.255 th dport 68 drop                                  comment "silently ignore dhcp broadcasts"
+        meta l4proto udp ip daddr 239.255.255.250 th dport 1900 drop                                comment "silently ignore ssdp broadcast"
+        meta l4proto udp ip daddr 224.0.0.251 th dport 5353 drop                                    comment "silently ignore multicasts"
 
         jump SMARTSERVER_INPUT
 

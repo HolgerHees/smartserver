@@ -98,12 +98,12 @@
 - name: allow service
   vars:
     service_name: "grafana"
-    bridge_forward_rules:
-      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_mysql_ip}} accept", "comment": "grafana => mysql" }
-      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_influxdb_ip}} accept", "comment": "grafana => influxdb" }
-      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_loki_ip}} accept", "comment": "grafana => loki" }
-      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_prometheus_ip}} accept", "comment": "grafana => prometheus" }
-      - { "rule": "ip saddr {{podman_grafana_ip}} ip daddr {{podman_alertmanager_ip}} accept", "comment": "grafana => alertmanager" }
+    container_to_container_rules:
+      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_mysql_ip}}", protocol: "tcp", dport: "3306", comment: "grafana => mysql" }
+      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_influxdb_ip}}", protocol: "tcp", dport: "8086", comment: "grafana => influxdb" }
+      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_loki_ip}}", protocol: "tcp", dport: "3100", comment: "grafana => loki" }
+      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_prometheus_ip}}", protocol: "tcp", dport: "9090", comment: "grafana => prometheus" }
+      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_alertmanager_ip}}", protocol: "tcp", dport: "9093", comment: "grafana => alertmanager" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

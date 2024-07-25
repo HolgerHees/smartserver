@@ -102,7 +102,8 @@
           "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
         {% endif %}
       ]
-
+  tags: ['firewall_config']
+  
 - name: create podman container
   containers.podman.podman_container:
     name: "wireguard_cloud"
@@ -153,12 +154,12 @@
 - name: allow service
   vars:
     service_name: "wireguard_cloud"
-    inet_forward_rules: |
+    container_to_outside_rules: |
       [
       {% for port in wireguard_cloud_ports %}
-        { "rule": "meta l4proto udp ip saddr {{vpn_cloud_services.local.gateway}} th dport {{port}} oif \"{{default_network_interface}}\" accept" },
+        { "saddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{port}}", "oif": "{{default_network_interface}}", "comment": "wireguard_cloud => external wireguard_cloud's" },
       {% endfor %}
-      { "rule": "meta l4proto udp ip daddr {{vpn_cloud_services.local.gateway}} th dport {{cloud_vpn.interface.port}} accept" }
+      { "daddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml

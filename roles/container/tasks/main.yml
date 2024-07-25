@@ -3,6 +3,7 @@
     name: [
         podman
         , hostname
+        , ethtool
     ]
     state: present
   when: is_rhel or is_fedora
@@ -12,6 +13,7 @@
     name: [
         podman
         , hostname
+        , ethtool
     ]
     state: present
   when: is_ubuntu
@@ -32,6 +34,7 @@
     name: [
         podman
         , hostname          # used by container visualizer cli
+        , ethtool           # used by container visualizer cli
     ]
     state: present
   when: is_suse

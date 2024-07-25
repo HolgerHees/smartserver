@@ -30,14 +30,14 @@
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
-- name: allow service
-  vars:
-    service_name: "redis"
-    bridge_forward_rules:
-      - { "rule": "ip saddr {{podman_redis_ip}} ip daddr {{podman_php_ip}} accept", "comment": "redis => php" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
-  tags: ['firewall_config']
-  when: "nftables_enabled"
+#- name: allow service
+#  vars:
+#    service_name: "redis"
+#    container_to_container_rules:
+#      - { saddr: podman_redis_ip, daddr: podman_php_ip }
+#  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+#  tags: ['firewall_config']
+#  when: "nftables_enabled"
 
 - name: allow service
   vars:
