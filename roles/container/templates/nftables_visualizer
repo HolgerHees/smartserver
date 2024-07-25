@@ -473,51 +473,50 @@ for network in sorted_network_r:
             outgoingValue.append("*")
         else:
             for chain in chain_r:
-                #if chain != 'SMARTSERVER_FORWARD':
-                #    continue
+                if chain not in [ 'SMARTSERVER_FORWARD', 'SMARTSERVER_INPUT' ]:
+                    continue
 
                 rule_r = chain_r[chain].rule_r
 
                 for rule in rule_r:
 
-                    if chain == 'SMARTSERVER_FORWARD':
-                        if rule['sourceIp'] == connection.ip:
-                            if rule['targetIp'] == network.subnet:
-                                targetIp = "subnet"
-                            elif rule['targetIp'] is None:
-                                targetIp = "*"
-                            else:
-                                targetIp = rule['targetIp']
+                    if rule['sourceIp'] == connection.ip:
+                        if rule['targetIp'] == network.subnet:
+                            targetIp = "subnet"
+                        elif rule['targetIp'] is None:
+                            targetIp = "*"
+                        else:
+                            targetIp = rule['targetIp']
 
-                                if targetIp in dns_reverse_r:
-                                    targetIp = dns_reverse_r[targetIp]
-                                #    if len(dns_map_r[name]) == 1:
-                                #        value = name
+                            if targetIp in dns_reverse_r:
+                                targetIp = dns_reverse_r[targetIp]
+                            #    if len(dns_map_r[name]) == 1:
+                            #        value = name
 
-                            value = ""
+                        value = ""
 
-                            if rule['sourcePort'] is not None:
-                                value += ":" + str(rule['sourcePort'])
-                            if rule['interface'] is not None:
-                                value += ":" + rule['interface']
+                        if rule['sourcePort'] is not None:
+                            value += ":" + str(rule['sourcePort'])
+                        if rule['interface'] is not None:
+                            value += ":" + rule['interface']
 
-                            if value != "":
-                                value += " ➞ "
+                        if value != "":
+                            value += " ➞ "
 
-                            value += targetIp
+                        value += targetIp
 
-                            if rule['targetPort'] is not None:
-                                value += ":" + str(rule['targetPort'])
-                            if rule['type'] is not None:
-                                value += ":" + rule['type']
+                        if rule['targetPort'] is not None:
+                            value += ":" + str(rule['targetPort'])
+                        #if rule['type'] is not None:
+                        #    value += ":" + rule['type']
 
-                            outgoingValue.append(value)
-                        #elif rule['sourceIp'] == network.subnet:
-                        #    outgoingValue.append("subnet")
-                        elif rule['sourceIp'] is not None and ipaddress.ip_address(connection.ip) in ipaddress.ip_network(rule['sourceIp']):
-                            targetIp = "*" if rule['targetIp'] is None else rule['targetIp']
-                            outgoingValue.append(targetIp)
-                            #print(rule['sourceIp'])
+                        outgoingValue.append(value)
+                    #elif rule['sourceIp'] == network.subnet:
+                    #    outgoingValue.append("subnet")
+                    elif rule['sourceIp'] is not None and ipaddress.ip_address(connection.ip) in ipaddress.ip_network(rule['sourceIp']):
+                        targetIp = "*" if rule['targetIp'] is None else rule['targetIp']
+                        outgoingValue.append(targetIp)
+                        #print(rule['sourceIp'])
 
                     if network.driver == "host":
                         activeChain = 'SMARTSERVER_INPUT' if network.name == 'host' and connection.veth != "forwarded" else 'SMARTSERVER_FORWARD'
