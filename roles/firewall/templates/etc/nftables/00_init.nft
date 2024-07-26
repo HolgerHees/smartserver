@@ -42,7 +42,9 @@ table inet filter {
         ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
         meta l4proto udp ip saddr 0.0.0.0 th dport 67 drop                                          comment "silently ignore dhcp broadcasts"
         meta l4proto udp ip daddr 255.255.255.255 th dport 68 drop                                  comment "silently ignore dhcp broadcasts"
-        meta l4proto udp ip daddr 239.255.255.250 th dport 1900 drop                                comment "silently ignore ssdp broadcast"
+
+        meta l4proto udp ip daddr 239.255.255.250 th dport { 1900, 3702 } drop                      comment "silently ignore ( 1900:ssdp, 3702:ws-discovery ) broadcast"
+
         meta l4proto udp ip daddr 224.0.0.251 th dport 5353 drop                                    comment "silently ignore multicasts"
 
         jump SMARTSERVER_INPUT

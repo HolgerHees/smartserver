@@ -3,8 +3,8 @@
     git_clone_name: "toolbox"
     git_clone_path: "{{projects_path}}toolbox"
     git_clone_url: "https://github.com/HolgerHees/toolbox.git"
-#    git_owner:  "{{system_users['www'].name}}"
-#    git_group:  "{{system_groups['www'].name}}"
+    git_owner:  "{{system_users['www'].name}}"
+    git_group:  "{{system_groups['www'].name}}"
     git_mode:  "u=rwX,g=rwX,o="
   include_tasks: roles/_shared/git_clone.yml
 

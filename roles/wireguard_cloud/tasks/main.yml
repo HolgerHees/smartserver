@@ -95,7 +95,7 @@
 
 - name: prepare published_ports
   set_fact:
-    published_ports: |
+    wireguard_cloud_published_ports: |
       [
         "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
         {% if default_server_ipv6 is defined %}
@@ -128,7 +128,7 @@
     ip: "{{vpn_cloud_services.local.gateway}}"
     volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard'
-    published_ports: "{{published_ports}}"
+    published_ports: "{{wireguard_cloud_published_ports}}"
   register: "podman_container_state"
   notify: "restart wireguard_cloud"
 
@@ -141,6 +141,21 @@
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
 
+- name: allow service
+  vars:
+    service_name: "wireguard_cloud"
+    container_to_outside_rules: |
+      [
+      {% for peer in cloud_vpn.peers %}
+        { "saddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.peers[peer].port}}", "oif": "{{default_network_interface}}", "comment": "wireguard_cloud => external wireguard_cloud's" },
+      {% endfor %}
+      { "daddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
+      ]
+    nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
 - name: prepare used ports
   set_fact:
     wireguard_cloud_ports: |
@@ -150,21 +165,7 @@
       {% endfor %}
       }
   tags: ['firewall_config']
-
-- name: allow service
-  vars:
-    service_name: "wireguard_cloud"
-    container_to_outside_rules: |
-      [
-      {% for port in wireguard_cloud_ports %}
-        { "saddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{port}}", "oif": "{{default_network_interface}}", "comment": "wireguard_cloud => external wireguard_cloud's" },
-      {% endfor %}
-      { "daddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
-      ]
-    nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
-  tags: ['firewall_config']
-  when: "nftables_enabled"
+  when: "not nftables_enabled"
 
 - name: prepare ferm rules
   set_fact:

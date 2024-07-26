@@ -2,8 +2,6 @@
   yum:
     name: [
         podman
-        , hostname
-        , ethtool
     ]
     state: present
   when: is_rhel or is_fedora
@@ -12,8 +10,6 @@
   apt:
     name: [
         podman
-        , hostname
-        , ethtool
     ]
     state: present
   when: is_ubuntu
@@ -33,8 +29,6 @@
   zypper:
     name: [
         podman
-        , hostname          # used by container visualizer cli
-        , ethtool           # used by container visualizer cli
     ]
     state: present
   when: is_suse

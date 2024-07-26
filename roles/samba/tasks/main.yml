@@ -26,7 +26,7 @@
   
 - name: prepare published_ports
   set_fact:
-    published_ports: |
+    samba_published_ports: |
       [
         "137:137/udp",
         "138:138/udp",
@@ -64,7 +64,7 @@
 #      - '/etc/group:/etc/group:ro'
       - '/etc/passwd:/etc/passwd:ro'
 #      - '/etc/shadow:/etc/shadow:ro'
-    published_ports: "{{published_ports}}"
+    published_ports: "{{samba_published_ports}}"
   register: "podman_container_state"
   notify: "restart samba"
 
@@ -79,7 +79,7 @@
 - name: allow service
   vars:
     service_name: "samba"
-    nat_rules: { ip: "{{podman_samba_ip}}", ports: "{{published_ports}}" }
+    nat_rules: { ip: "{{podman_samba_ip}}", ports: "{{samba_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"
