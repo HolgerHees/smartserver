@@ -14,6 +14,7 @@
     - "/etc/systemd/system/ferm.service"
     - "/etc/ferm/"
     - "/opt/container/clean_iptables.sh"
+    - "/etc/cron.d/ansible_container"
     - "{{global_build}}ferm/"
     - "{{global_etc}}systemd_watcher/services/ferm.conf"
     - "{{global_etc}}update_service/software/ferm.conf"
