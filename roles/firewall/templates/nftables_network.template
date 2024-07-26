@@ -1,0 +1,5 @@
+table bridge filter {
+    chain SMARTSERVER_FORWARD {
+        ip saddr {{network_saddr}} ip daddr {{network_daddr}} accept comment "network: {{network_name}} <=> {{network_name}}"
+    }
+}

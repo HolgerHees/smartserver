@@ -35,13 +35,13 @@ class Helper():
     def _modifyBlockedIps(cmd):
         returncode, cmd_result = command.exec2(cmd)
         if returncode != 0:
-            raise Exception("Cmd '{}' was not successful".format(" ",join(cmd)))
+            raise Exception("Cmd '{}' was not successful".format(" ".join(cmd)))
 
     @staticmethod
     def blockIp(config, ip):
         if config.nftables_enabled:
             ip = "{}/128".format(ip) if ":" in ip else "{}/32".format(ip)
-            cmd = ["/usr/sbin/nft", "add", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "ip saddr", ip, "comment", "trafficblocker", "drop"]
+            cmd = ["/usr/sbin/nft", "add", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "ip saddr", ip, "drop", "comment", "'trafficblocker'"]
         else:
             if ":" in ip:
                 cmd = ["/sbin/ip6tables-legacy", "-I", "SMARTSERVER_BLOCKER", "-s", "{}/128".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]
@@ -53,7 +53,7 @@ class Helper():
     def unblockIp(config, ip):
         if config.nftables_enabled:
             ip = "{}/128".format(ip) if ":" in ip else "{}/32".format(ip)
-            cmd = ["/usr/sbin/nft", "delete", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "ip saddr", ip, "comment", "trafficblocker", "drop"]
+            cmd = ["/usr/sbin/nft", "delete", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "ip saddr", ip, "drop", "comment", "'trafficblocker'"]
         else:
             if ":" in ip:
                 cmd = ["/sbin/ip6tables-legacy", "-D", "SMARTSERVER_BLOCKER", "-s", "{}/128".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]

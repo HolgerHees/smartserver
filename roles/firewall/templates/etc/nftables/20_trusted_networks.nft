@@ -6,7 +6,7 @@ table inet filter {
         ip saddr {{vpn_mobile_network}}/24 accept                                                       comment "trusted networks: mobile vpn clients => host"
     }
     chain SMARTSERVER_FORWARD {
-#        ip saddr { {{ intern_networks | join(', ')}} } accept                                          comment "trusted networks: internal networks => forwarded container port"
+        ip saddr { {{ intern_networks | join(', ')}} } accept                                           comment "trusted networks: internal networks => container ports (nat)"
         ip saddr {{vpn_mobile_network}}/24 ip daddr != { {{ intern_networks | join(', ')}} } accept     comment "trusted networks: mobile vpn clients => internet"
 {% if macvlan_range | length > 0 %}
         ip saddr {{vpn_mobile_network}}/24 ip daddr {{macvlan_range}} accept                            comment "trusted networks: mobile vpn clients => pihole"

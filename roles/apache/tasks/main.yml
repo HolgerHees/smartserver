@@ -260,6 +260,15 @@
   register: "podman_container_state"
   notify: "restart apache2"
   
+- name: allow letsencrypt service
+  vars:
+    service_name: "apache_letsencrypt"
+    network_to_host_rules:
+      - { iif: "{{default_network_interface}}", protocol: "tcp", dport: "80", comment: "external letsencrypt => apache" }
+  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  tags: ['firewall_config']
+  when: "nftables_enabled"
+
 # ***** SERVICE CONFIGS *****
 - name: disable old systemd service
   shell: "if [ -f /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service ]; then mv /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service.org; echo \"1\"; else echo \"0\"; fi"

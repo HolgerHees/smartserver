@@ -1,12 +1,12 @@
-#- name: debug
-#  debug:
-#    msg: "{{inet_forward_rules}}"
-
 - name: "firewall : allow_service : service '{{service_name}}'"
   vars:
-    tpl_container_to_container_rules: "{{container_to_container_rules | default([])}}"
-    tpl_container_to_host_rules: "{{container_to_host_rules | default([])}}"
+    rule_name: "{{service_name}}"
+    tpl_network_to_host_rules: "{{network_to_host_rules | default([])}}"
+    tpl_container_to_host_rules: "{{container_to_host_rules | default([]) }}"
     tpl_container_to_outside_rules: "{{container_to_outside_rules | default([])}}"
+    tpl_container_to_container_rules: "{{container_to_container_rules | default([])}}"
+    tpl_nat_rules: "{{nat_rules | default([])}}"
+    tpl_masquerading_rules: "{{masquerading_rules | default([])}}"
   template:
     src: "roles/firewall/templates/nftables.template"
     dest: "/etc/nftables/30_{{service_name}}.nft"

@@ -88,8 +88,13 @@
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_weather_service_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => weather_service" }
       - { saddr: "{{podman_weather_service_ip}}", daddr: "{{podman_mysql_ip}}", protocol: "tcp", dport: "3306", comment: "weather_service => mysql" }
       - { saddr: "{{podman_weather_service_ip}}", daddr: "{{vpn_cloud_services.local.mosquitto if weather_mqtt_server == 'cloud_mosquitto' else podman_mosquitto_ip}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "weather_service => {{ weather_mqtt_server if weather_mqtt_server != 'dummy' else 'mosquitto' }}" }
-    container_to_outside_rules:
-      - { saddr: "{{podman_weather_service_ip}}", protocol: "tcp", dport: "443", oif: "{{default_network_interface}}", comment: "weather_service => external weather provider" }
+    container_to_outside_rules: |
+      [
+        { "saddr": "{{podman_weather_service_ip}}", "protocol": "tcp", "dport": "443", "oif": "{{default_network_interface}}", "comment": "weather_service => external weather provider" }
+        {% if cloud_vpn is defined %}
+            , { "saddr": "{{podman_weather_service_ip}}", "daddr": "{{vpn_cloud_services['local']['mosquitto']}}", "protocol": "tcp", "dport": "1883", "comment": "weather_service => cloud mosquitto" }
+        {% endif %}
+      ]
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']
   when: "nftables_enabled"

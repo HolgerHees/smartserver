@@ -38,6 +38,9 @@ table inet filter {
         ip protocol icmp iif "{{default_network_interface}}"  accept                                comment "accept all icmp types"
 
         meta l4proto udp ip saddr {{podman_base_network}}/24 th dport 54 accept                     comment "accept podman dns"
+{% if cloud_vpn is defined %}
+        meta l4proto udp ip saddr {{cloud_vpn.interface.network}} th dport 54 accept                comment "accept cloud podman dns"
+{% endif %}
 
         ip saddr 0.0.0.0 ip daddr 224.0.0.1 drop
         meta l4proto udp ip saddr 0.0.0.0 th dport 67 drop                                          comment "silently ignore dhcp broadcasts"
@@ -99,6 +102,9 @@ table ip nat {
 
     chain HOSTPORT_DNAT {
         meta l4proto udp ip daddr {{podman_base_gateway}} th dport 53 dnat to {{podman_base_gateway}}:54 comment "redirect container dns to podman dns"
+{% if cloud_vpn is defined %}
+        meta l4proto udp ip daddr {{vpn_cloud_services.local.bridge}} th dport 53 dnat to {{vpn_cloud_services.local.bridge}}:54 comment "redirect cloud container dns to podman dns"
+{% endif %}
 
         jump SMARTSERVER_DNAT
     }
@@ -106,7 +112,10 @@ table ip nat {
     chain HOSTPORT_MASQ {
         mark and 0x2000 == 0x2000 masquerade
 
-        ip saddr {{podman_base_network}}/24 ip daddr != 224.0.0.0/4 masquerade
+        ip saddr {{podman_base_network}}/24 oif "{{default_network_interface}}" masquerade
+{% if cloud_vpn is defined %}
+        ip saddr {{cloud_vpn['interface']['network']}} oif "{{default_network_interface}}" masquerade
+{% endif %}
 
         jump SMARTSERVER_MASQ
     }

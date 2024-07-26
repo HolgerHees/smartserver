@@ -18,5 +18,9 @@
     - "{{global_etc}}systemd_watcher/services/ferm.conf"
     - "{{global_etc}}update_service/software/ferm.conf"
 
+- name: disable br_netfilter
+  shell: "rmmod br_netfilter"
+  failed_when: no
+
 - name: cleanup systemd
   shell: "systemctl daemon-reload && systemctl reset-failed"

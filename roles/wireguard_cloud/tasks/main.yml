@@ -149,8 +149,9 @@
       {% for peer in cloud_vpn.peers %}
         { "saddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.peers[peer].port}}", "oif": "{{default_network_interface}}", "comment": "wireguard_cloud => external wireguard_cloud's" },
       {% endfor %}
-      { "daddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
+    network_to_host_rules:
+      - { protocol: "udp", dport: "{{cloud_vpn.interface.port}}", comment: "open vpn port" }
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service_nftables.yml
   tags: ['firewall_config']

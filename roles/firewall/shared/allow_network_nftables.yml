@@ -1,0 +1,17 @@
+- name: "firewall : allow_network : copy config '{{network_name}}'"
+  vars:
+    rule_name: "{{network_name}}"
+    tpl_network_to_host_rules: "{{network_to_host_rules | default([])}}"
+    tpl_container_to_container_rules: "{{container_to_container_rules | default([])}}"
+    tpl_container_to_host_rules: "{{container_to_host_rules | default([])}}"
+    tpl_container_to_outside_rules: "{{container_to_outside_rules | default([])}}"
+    tpl_nat_rules: "{{nat_rules | default([])}}"
+    tpl_masquerading_rules: "{{masquerading_rules | default([])}}"
+  template:
+    src: "roles/firewall/templates/nftables.template"
+    dest: "/etc/nftables/20_trusted_{{network_name}}.nft"
+    owner: root
+    group: root
+    mode: 0640
+  tags: [ 'firewall_config' ]
+  notify: "restart nftables"
