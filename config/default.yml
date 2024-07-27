@@ -702,7 +702,7 @@ samba_master:                     "{%if is_production%}yes{%else%}no{%endif%}"
 # used for e.g. openwrt's md5 password crypt
 default_password_salt:            "{{((server_domain+':'+default_server_ip) | b64encode | replace(';','0') )[:-1]}}"
 
-podman_base_network:              "172.16.0.0"
+podman_base_network:              "172.16.0.0/24"
 podman_base_gateway:              "172.16.0.1"
 podman_dns_ip:                    "172.16.0.100"
 podman_postfix_ip:                "172.16.0.101"

@@ -9,8 +9,8 @@ domain (ip ip6) {
         chain SMARTSERVER_FORWARD {
             mod conntrack ctstate (INVALID) DROP;
             mod conntrack ctstate (RELATED ESTABLISHED) ACCEPT;
-            #-A NETAVARK_FORWARD -d {{podman_base_network}}/24 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-            #-A NETAVARK_FORWARD -s {{podman_base_network}}/24 -j ACCEPT
+            #-A NETAVARK_FORWARD -d {{podman_base_network}} -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+            #-A NETAVARK_FORWARD -s {{podman_base_network}} -j ACCEPT
         }
 
         chain FORWARD {
@@ -23,7 +23,7 @@ domain (ip ip6) {
 
         chain SMARTSERVER_INPUT {
             # => podman dns
-            saddr {{podman_base_network}}/24 proto udp dport 54 ACCEPT;
+            saddr {{podman_base_network}} proto udp dport 54 ACCEPT;
         }
 
         chain INPUT {

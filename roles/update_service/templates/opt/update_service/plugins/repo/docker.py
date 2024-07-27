@@ -76,6 +76,8 @@ class Application(App):
                         continue
 
                     obj = json.loads(line[1:-1])
+                    if obj["repository"] is None or obj["repository"] == '<none>':
+                        continue
 
                     name = obj["repository"].split("/", 1)[1]
 

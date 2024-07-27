@@ -209,7 +209,7 @@
     #driver: "ipvlan"
     internal: no
     ipv6: "{{ 'true' if default_server_ipv6 is defined else 'false' }}"
-    subnet: "{{podman_base_network}}/24"
+    subnet: "{{podman_base_network}}"
     gateway: "{{podman_base_gateway}}"
 
 - name: copy macvlan_bridge cmd
