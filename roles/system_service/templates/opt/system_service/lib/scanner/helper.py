@@ -56,7 +56,7 @@ class Helper():
         return None
 
     def arpscan(interface, network, isRunningCallback = None):
-        returncode, result = command.exec2(["/usr/local/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], isRunningCallback=isRunningCallback)
+        returncode, result = command.exec2(["/usr/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], isRunningCallback=isRunningCallback)
         if returncode != 0:
             raise Exception("Cmd 'arpscan' was not successful")
 
