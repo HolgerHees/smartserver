@@ -17,39 +17,51 @@ if len(sys.argv) >= 2:
     is_quite = sys.argv[1] == "-q"
 
 class Container:
-    def __init__(self,id,name,image,is_stopped_since):
+    def __init__(self, id, name, image_id, image_repository, image_tag, is_stopped_since):
         self.id = id
         self.name = name
-        self.image = image
+        self.image_id = image_id
+        self.image_repository = image_repository
+        self.image_tag = image_tag
         self.is_stopped_since = is_stopped_since
 
 class Image:
-    def __init__(self,id,repository,tag,created):
+    def __init__(self, id, repository, tag, created):
         self.id = id
         self.repository = repository
         self.tag = tag
         self.created = created
 
+        self.setRepositiory(repository, tag)
+
+    def setRepositiory(self, repository, tag):
+        if repository is not None:
+            repository = repository.split("/", 1)[-1]
+            if repository.startswith("library/"):
+                repository = repository[8:]
+        self.repository = repository
+        self.tag = tag
+
         if self.repository is not None and self.tag is not None:
-            if self.tag == "latest":
-                self.name = self.repository
-            else:
-                self.name = u"{}:{}".format(self.repository,self.tag)
+            self.pull_reference = u"{}:{}".format(self.repository,self.tag)
         else:
-            self.name = self.id
+            self.pull_reference = self.id
+
+    def isMatch(self, pull_reference):
+        return pull_reference == self.pull_reference
 
     def __eq__(self, other):
         return self.id == other.id
 
     def __lt__(self, other):
-        return self.name < other.name or ( self.name == other.name and self.created < other.created )
+        return self.pull_reference < other.pull_reference or ( self.pull_reference == other.pull_reference and self.created < other.created )
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
 
 def sortImages(item1, item2):
-    item1_is_custom = item1 is not None and item1.startswith("custom")
-    item2_is_custom = item2 is not None and item2.startswith("custom")
+    item1_is_custom = item1 is not None and item1.pull_reference.startswith("custom")
+    item2_is_custom = item2 is not None and item2.pull_reference.startswith("custom")
 
     if item1_is_custom and not item2_is_custom:
         return -1
@@ -79,21 +91,18 @@ def collectImages():
         obj = json.loads(line[1:-1])
         created = datetime.fromtimestamp(obj["Created"])
 
-        repository = obj["repository"] if obj["repository"] != "<none>" else "None"
-        repository = repository.split("/", 1)[-1]
-        if repository.startswith("library/"):
-            repository = repository[8:]
+        if obj["repository"] != "<none>":
+            repository = obj["repository"]
+        else:
+            repository = None
 
-        image = Image(obj["Id"],repository,obj["tag"] if obj["tag"] != "<none>" else "None",created)
-        if image.repository not in images:
-            images[image.repository] = []
-        images[image.repository].append(image)
+        images[obj["Id"]] = Image(obj["Id"], repository, obj["tag"] if obj["tag"] != "<none>" else None, created)
 
     return images
 
 def collectContainers():
     # Collect all containers
-    containers = []
+    containers = {}
     result = command.exec(["podman", "ps", "-a", "--format", "'{{json .}}'"])
     lines = result.stdout.decode("utf-8").split("\n")
     for line in lines[0:-1]:
@@ -108,76 +117,75 @@ def collectContainers():
             is_stopped_since = (datetime.utcnow() - finished_at)
 
         name = obj["Names"][0].split("/", 1)[-1]
-        image = obj["Image"].split("/", 1)[-1]
+        image_repository, image_tag = obj["Image"].split(':', 1)
 
-        containers.append(Container(obj["Id"],name,image,is_stopped_since)  )
+        containers[obj["Id"]] = Container(obj["Id"], name, obj["ImageID"], image_repository, image_tag, is_stopped_since)
 
     return containers
 
 def collectUsedImages(images, containers):
-    # Collect Image ID's used in dockerfiles or containers
     used_images = {}
+
+    for container in containers.values():
+        if container.image_id in images:
+            used_images[container.image_id] = "used"
+            image = images[container.image_id]
+            if image.tag is None:
+                command.exec(["podman tag {} {}:{}".format(container.image_id, container.image_repository, container.image_tag) ] , shell=True)
+
+                image.setRepositiory(container.image_repository, container.image_tag)
+                print(u"\033[0;33mFIXED TAG \033[0m: IMG '{}', '{}'".format(image.id,image.pull_reference))
+
+    # Collect Image ID's used in dockerfiles or containers
     result = command.exec(["grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(config.GLOBAL_BUILD) ] , shell=True)
     lines = result.stdout.decode("utf-8").split("\n")
     for line in lines[0:-1]:
         columns = line.split()
         #build_images[columns[-1]] = True
-        for _images in images.values():
-            for _image in _images:
-                if columns[-1] == _image.name:
-                    used_images[_image.id] = "referenced"
-
-    for container in containers:
-        for _images in images.values():
-            for _image in _images:
-                #print(container.image,_image.name, container.image, _image.id)
-                if container.image == _image.name or container.image == _image.id:
-                    used_images[_image.id] = "used"
+        for image in images.values():
+            if image.isMatch(columns[-1]):
+                used_images[image.id] = "referenced"
 
     return used_images
 
-images = collectImages()
 containers = collectContainers()
+images = collectImages()
 
 # Clean stopped container
-_containers = []
-for container in containers:
+_containers = {}
+for container in containers.values():
     if container.is_stopped_since is not None:
         # remove containers, stopped more then 1 week ago
         if container.is_stopped_since.total_seconds() < 60 * 60 * 24 * 7:
             if not is_quite:
                 stopped_since = str(container.is_stopped_since).split(".")[0]
-                print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}' stopped since {}".format(container.id, container.name, container.image, stopped_since))
+                print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}' stopped since {}".format(container.id, container.name, images[container.image_id].repository, stopped_since))
         else:
-            print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}'".format(container.id, container.name, container.image))
+            print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}'".format(container.id, container.name, images[container.image_id].repository))
 
-            #command.exec(["podman", "rm", "{}".format(container.id)])
+            command.exec(["podman", "rm", "{}".format(container.id)])
             continue
-    _containers.append(container)
+    _containers[container.id] = container
 containers = _containers
 
 used_images = collectUsedImages(images, containers)
 
 cleaned = False
-for name in sorted(images,key=cmp_to_key(sortImages)):
+for image in sorted(images.values(),key=cmp_to_key(sortImages)):
 
-    image_versions = sorted(images[name], reverse=True)
+    if image.id in used_images:
+        if not is_quite:
+            if used_images[image.id] == "referenced":
+                print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image.id,image.pull_reference))
+            else:
+                print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image.id,image.pull_reference))
+        continue
 
-    for image_version in image_versions:
+    print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image.id,image.pull_reference))
 
-        if image_version.id in used_images:
-            if not is_quite:
-                if used_images[image_version.id] == "referenced":
-                    print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image_version.id,image_version.name))
-                else:
-                    print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image_version.id,image_version.name))
-            continue
+    cleaned = True
 
-        print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image_version.id,image_version.name))
-
-        cleaned = True
-
-        #command.exec(["podman", "image", "rm", "-f", "{}".format(image_version.id)])
+    command.exec(["podman", "image", "rm", "{}".format(image.id)])
 
 if is_quite and not cleaned:
     print(u"No images deleted")
