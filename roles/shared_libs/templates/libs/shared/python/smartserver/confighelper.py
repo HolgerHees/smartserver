@@ -12,7 +12,7 @@ class ConfigHelper():
 
     def loadConfig(path, version):
         try:
-            if os.path.exists(path):
+            if os.path.exists(path) and os.path.getsize(path) > 0:
                 with open(path) as f:
                     data = json.load(f)
                     if "version" in data and data["version"] == version:
@@ -24,7 +24,7 @@ class ConfigHelper():
                 logging.info("Config '{}' is empty".format(path))
             return True, None
         except Exception:
-            logging.info("Config '{}' is invalid".format(path))
+            logging.error("Config '{}' is invalid".format(path))
             return False, None
 
     def saveConfig(path, version, data):

@@ -8,5 +8,10 @@
   listen: "restart prometheus"
 
 - name: refresh prometheus
-  command: "podman kill --signal=HUP prometheus"
+  systemd:
+    name: prometheus
+    state: reloaded
+    daemon_reload: yes
+    enabled: yes
+    masked: no
   listen: "refresh prometheus"

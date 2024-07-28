@@ -18,7 +18,7 @@ class State():
         self._restore()
 
     def terminate(self):
-        if self.valid_cache_file and os.path.exists(self.dump_path):
+        if os.path.exists(self.dump_path):
             self._dump()
 
     def _restore(self):
@@ -28,8 +28,7 @@ class State():
             logging.info("Loaded state")
         else:
             self.data = { "status": None, "config": None, "deployment": None, "git_hash": None, "vid": None}
-            if self.valid_cache_file:
-                self._dump()
+            self._dump()
 
     def _dump(self):
         if self.valid_cache_file:

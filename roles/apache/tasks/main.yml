@@ -279,6 +279,7 @@
   vars:
     container_name: "apache2"
     container_changed: "{{podman_container_state.changed}}"
+    container_reload_exec: "/usr/bin/podman exec apache2 sh -c \"apachectl -k graceful\""
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config']
 
