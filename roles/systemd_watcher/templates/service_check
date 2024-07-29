@@ -158,7 +158,11 @@ for systemd_service in services:
                     state_flags.append("active")
 
         if len(state_flags) > 0:
-            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, "Service is not {}".format(" and ".join(state_flags)), systemd_service))
+            msg = "Service is not {}".format(" and ".join(state_flags))
+
+            info(msg + "\n\n" + state)
+
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, msg, systemd_service))
             notified_service.append(systemd_service)
 
 
