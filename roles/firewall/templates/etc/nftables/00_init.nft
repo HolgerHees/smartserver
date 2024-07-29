@@ -35,7 +35,8 @@ table inet filter {
 
         jump SMARTSERVER_BLOCKER
 
-        ip protocol icmp iif "{{default_network_interface}}"  accept                                comment "accept all icmp types"
+        ip protocol icmp iif { "{{default_network_interface}}", "mac0" }  accept                    comment "accept all icmp types"
+        ip6 nexthdr ipv6-icmp iif { "{{default_network_interface}}", "mac0" }  accept               comment "accept all icmpv6 types"
 
         meta l4proto udp ip saddr {{podman_base_network}} th dport 54 accept                        comment "accept podman dns"
 {% if cloud_vpn is defined %}

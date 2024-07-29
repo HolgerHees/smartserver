@@ -18,8 +18,7 @@
 - name: prepare published_ports
   set_fact:
     speedtest_published_ports:
-     - "5201:5201/tcp"
-     - "5201:5201/udp"
+     - "5201:5201"
   tags: ['firewall_config']
 
 - name: create podman container

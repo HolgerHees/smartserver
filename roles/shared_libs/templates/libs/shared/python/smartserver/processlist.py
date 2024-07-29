@@ -135,12 +135,12 @@ class Processlist():
 
             if pattern is not None:
                 cmd.append(pattern)
-            
+
             result = subprocess.run(cmd, shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
             if result.returncode == 0:
                 return result.stdout.decode().strip().split("\n")
             else:
-                return None
+                return []
         else:
             pids = []
             with os.scandir("/proc/") as it:

@@ -23,7 +23,7 @@ class Helper():
         for row in cmd_result.split("\n"):
             if "trafficblocker" not in row:
                 continue
-            match = re.match("-A SMARTSERVER_BLOCKER -s {} .* -j DROP".format(regex) ,row)
+            match = re.match(regex,row)
             if match:
                 result.append(match[1])
 
@@ -31,10 +31,10 @@ class Helper():
     def getBlockedIps(config):
         result = []
         if config.nftables_enabled:
-            Helper._fetchBlockedIps(result, ["/usr/sbin/nft", "list", "chain", "inet", "filter", "SMARTSERVER_BLOCKER"], r"([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/32")
+            Helper._fetchBlockedIps(result, ["/usr/sbin/nft", "list", "chain", "inet", "filter", "SMARTSERVER_BLOCKER"], r"^\s*ip saddr ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) drop")
         else:
-            Helper._fetchBlockedIps(result, ["/sbin/iptables-legacy", "-S", "SMARTSERVER_BLOCKER"], r"([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/32")
-            Helper._fetchBlockedIps(result, ["/sbin/ip6tables-legacy", "-S", "SMARTSERVER_BLOCKER"], r"([0-9a-z:]*)/128")
+            Helper._fetchBlockedIps(result, ["/sbin/iptables-legacy", "-S", "SMARTSERVER_BLOCKER"], "-A SMARTSERVER_BLOCKER -s {} .* -j DROP".format(r"([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/32"))
+            Helper._fetchBlockedIps(result, ["/sbin/ip6tables-legacy", "-S", "SMARTSERVER_BLOCKER"], "-A SMARTSERVER_BLOCKER -s {} .* -j DROP".format(r"([0-9a-z:]*)/128"))
         return result
 
     @staticmethod
@@ -55,6 +55,7 @@ class Helper():
             handle = None
             cmd_result = Helper._executeCmd(["/usr/sbin/nft", "-a", "list", "chain", "inet", "filter", "SMARTSERVER_BLOCKER"])
 
+            handle_r = []
             for row in cmd_result.split("\n"):
                 if ip not in row:
                     continue
@@ -63,11 +64,16 @@ class Helper():
                     logging.error("NFT handle '{}' for ip '{}' not valid".format(row, ip))
                     continue
 
-                cmd = ["/usr/sbin/nft", "delete", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "handle", handle]
-                Helper._executeCmd(cmd)
-                return
+                handle_r.append(handle)
 
-            logging.error("NFT rule for ip '{}' not found".format(ip))
+            if len(handle_r) == 0:
+                logging.error("NFT rule for ip '{}' not found".format(ip))
+            else:
+                for handle in handle_r:
+                    cmd = ["/usr/sbin/nft", "delete", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "handle", handle]
+                    Helper._executeCmd(cmd)
+
+            return
         else:
             if ":" in ip:
                 cmd = ["/sbin/ip6tables-legacy", "-D", "SMARTSERVER_BLOCKER", "-s", "{}/128".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]
