@@ -83,6 +83,8 @@ limits_config:
   per_stream_rate_limit: 512M
   per_stream_rate_limit_burst: 1024M
   split_queries_by_interval: 0s
+  discover_service_name: []
+  discover_log_levels: false
 
 #period_config:
 #  object_store: filesystem
