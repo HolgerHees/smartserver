@@ -128,11 +128,11 @@ for systemd_service in services:
         #    notified_service.append(systemd_service)
         #    continue
 
-        m = re.search("Loaded:[^;]+; (enabled|static).*",state)
-        is_enabled = m is not None
+        m = re.search("Loaded:[^;]+; ([^\s;\)]+).*",state)
+        is_enabled = m.group(1) in ["enabled","static"]
 
         m = re.search("Active: ([^\s]+).*",state)
-        is_active = m.group(1) == "active"
+        is_active = m.group(1) in ["active","reloading"]
 
         m = re.search("TriggeredBy: .*",state)
         is_triggered = m is not None
@@ -164,7 +164,6 @@ for systemd_service in services:
 
             fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, msg, systemd_service))
             notified_service.append(systemd_service)
-
 
 result = subprocess.run([ "/usr/bin/systemctl list-units --type=service | grep failed" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
 lines = result.stdout.decode("utf-8").split("\n")
