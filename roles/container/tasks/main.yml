@@ -189,6 +189,14 @@
 
 ##### MACVLAN #####
 # to avoid message '(udev-worker)[19262]: veth20: Could not generate persistent MAC address: No data available'
+- name: check systemd network config direcory
+  file:
+    path: '/etc/systemd/network/'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
 - name: copy veth network config tools
   copy:
     src: "templates/etc/systemd/network/98-default.link"
