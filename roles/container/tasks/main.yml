@@ -188,6 +188,15 @@
   when: sysctlchanged.changed
 
 ##### MACVLAN #####
+# to avoid message '(udev-worker)[19262]: veth20: Could not generate persistent MAC address: No data available'
+- name: copy veth network config tools
+  copy:
+    src: "templates/etc/systemd/network/98-default.link"
+    dest: "/etc/systemd/network/98-default.link"
+    owner: root
+    group: root
+    mode: 0644
+
 - name: create macvlan network
   containers.podman.podman_network:
     name: 'macvlan'

@@ -1,7 +1,7 @@
 [Unit]
 Description={{container_name}}
-StartLimitBurst=20
-StartLimitIntervalSec=300
+StartLimitBurst=12
+StartLimitIntervalSec=180
 Wants=network-online.target
 After=network-online.target{% if container_after is defined and container_after != None %}{% for dependency_name in container_after %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif +%}
 
@@ -9,7 +9,9 @@ After=network-online.target{% if container_after is defined and container_after 
 TimeoutStartSec=0
 TimeoutStopSec={{container_stop_timeout | default('300')}}
 Restart=on-failure
-RestartSec=3
+RestartSec=10
+#RestartSteps=4
+#RestartMaxDelaySec=60
 {% if nftables_enabled %}Environment=NETAVARK_FW=none
 {% endif %}
 ExecStart=/usr/bin/podman start -a {{container_name}}

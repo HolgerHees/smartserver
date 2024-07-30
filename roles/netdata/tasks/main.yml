@@ -95,7 +95,7 @@
       - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro"
       - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro"
 
-      - "{{ global_etc }}netdata/cloud.d/cloud.conf:/etc/netdata/cloud.d/cloud.conf:ro"
+      - "{{ global_etc }}netdata/cloud.d/cloud.conf:/var/lib/netdata/cloud.d/cloud.conf:ro"
     exposed_ports:
      - "19999"
      - "8125"
