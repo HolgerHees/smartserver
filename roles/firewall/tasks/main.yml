@@ -92,15 +92,34 @@
   include_tasks: roles/_shared/service_check.yml
   when: "nftables_enabled"
 
+- name: set sysctl network related values
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^{{item.regex}}\s*='
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "net\\.netfilter\\.nf_conntrack_max", line: "net.netfilter.nf_conntrack_max = 524288" }
 
+    # https://security.stackexchange.com/questions/43205/nf-conntrack-table-full-dropping-packet
+    # fix connection track table full, because of a denial of service
 
+    #https://discuss.aerospike.com/t/how-to-handle-net-netfilter-nf-conntrack-count-max-exceeded/5051
 
+    #net.netfilter.nf_conntrack_tcp_timeout_close_wait = 60
+    #net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 60
+    #net.netfilter.nf_conntrack_tcp_timeout_time_wait = 60
+    #net.netfilter.nf_conntrack_max = 524288
+    #- { regex: "net\\.netfilter\\.nf_conntrack_generic_timeout", line: "net.netfilter.nf_conntrack_generic_timeout = 120" }
+    #- { regex: "net\\.netfilter\\.nf_conntrack_sctp_timeout_established", line: "net.netfilter.nf_conntrack_sctp_timeout_established = 54000" }
 
+    #sysctl -w net.netfilter.nf_conntrack_generic_timeout=120   => old was 600
+    #sysctl -w net.netfilter.nf_conntrack_sctp_timeout_established=54000    => old was 432000
+  register: sysctl_state
+  when: "nftables_enabled"
 
-
-
-
-
+- name: refresh sysctl to activate netfilter changes => sysctl_state changed
+  shell: "modprobe nf_conntrack && sysctl -p"
+  when: "nftables_enabled and sysctl_state.changed"
 
 # **** IPTABLES ****
 - name: set ferm version
@@ -150,7 +169,7 @@
   git:
     repo: 'https://github.com/MaxKellermann/ferm'
     dest: '{{global_build}}ferm'
-    version: 'v{{ferm_version}}'  
+    version: 'v{{ferm_version}}'
   register: ferm_git
   when: "not nftables_enabled"
 
@@ -189,10 +208,10 @@
     name: "ferm"
     type: "github"
     url: "https://github.com/MaxKellermann/ferm/releases"
-    config: { 
-      project: "MaxKellermann/ferm", 
+    config: {
+      project: "MaxKellermann/ferm",
       pattern: "^v([0-9\\.]+)$",
-      version: "v{{ferm_version}}" 
+      version: "v{{ferm_version}}"
     }
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
