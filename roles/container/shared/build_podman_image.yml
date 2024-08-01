@@ -6,17 +6,6 @@
     group: root
     mode: 0750
 
-- name: "container : build_podman_image : check podman local image exists"
-  shell: "podman images {{image_name}}:{{image_version}}"
-  register: image_local_exists
-  changed_when: "image_name not in image_local_exists.stdout"
-
-#- name: "container : check podman remote image exists"
-#  shell: "podman search {{dockerhub_username}}/{{image_name}}:{{image_version}}"
-#  register: image_remote_exists
-#  changed_when: "image_name not in image_remote_exists.stdout"
-#  when: "image_upload | default(False) and dockerhub_username is not defined"
-
 - name: "container : build_podman_image : copy dockerfiles"
   template:
     src: "{{item}}"
@@ -27,6 +16,38 @@
   register: file_status
   with_items: "{{image_files}}"
 
+- name: "container : build_podman_image : get container image id"
+  shell: "podman inspect --format '{{ '{{' }} .Image {{ '}}'}}' {{container_name}}"
+  register: "podman_container_image_state"
+  changed_when: "podman_container_image_state.rc != 0"
+  failed_when: no
+#  when: "file_status.changed"
+
+- name: "container : build_podman_image : get local image id"
+  shell: "podman image inspect {{image_name}}:{{image_version}} --format '{{ '{{' }} .Id {{ '}}'}}'"
+  register: "podman_named_image_state"
+  changed_when: "podman_named_image_state.rc != 0"
+  failed_when: no
+#  when: "file_status.changed"
+
+- name: "container : build_podman_image : stop systemd service"
+  systemd:
+    name: "{{container_name}}"
+    state: stopped
+    enabled: yes
+    masked: no
+  failed_when: no
+  when: "file_status.changed or podman_container_image_state.stdout != podman_named_image_state.stdout or podman_container_image_state.rc != 0 or podman_named_image_state.rc != 0"
+
+- name: "container : build_podman_image : clean old image"
+  shell: "podman image rm -f {{item}}"
+  with_items: |
+    [
+        {% if podman_container_image_state.rc == 0 %}'{{podman_container_image_state.stdout}}',{% endif %}
+        {% if podman_named_image_state.rc == 0 %}'{{podman_named_image_state.stdout}}',{% endif %}
+    ]
+  when: "file_status.changed or podman_container_image_state.stdout != podman_named_image_state.stdout or podman_container_image_state.rc != 0 or podman_named_image_state.rc != 0"
+
 # async podman build is used to show progress and prevent travisci killing our job because of inactivity
 - name: "container : build_podman_image : compose podman image => image does not exists"
   shell: "podman build --network host --no-cache -t {{image_name}}:{{image_version}} {{global_build}}{{container_name}}/"
@@ -34,7 +55,7 @@
   poll: 0
   register: podman_build
   changed_when: yes
-  when: "file_status.changed or image_local_exists.changed"
+  when: "file_status.changed or podman_container_image_state.stdout != podman_named_image_state.stdout or podman_container_image_state.rc != 0 or podman_named_image_state.rc != 0"
 
 - name: "container : build_podman_image : wait for podman image => image does not exists"
   async_status: jid={{ podman_build.ansible_job_id }}

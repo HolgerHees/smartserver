@@ -4,7 +4,10 @@ stop()
 {
     echo "Shutting down ci service"
     PID="$(pidof ci_service)"
-    kill -s TERM $PID
+    if [ "$PID" != "" ]
+    then
+        kill -s TERM $PID
+    fi
     wait
     exit
 }

@@ -29,6 +29,6 @@
     state: absent
   with_items:
     - "{{global_build}}loki"
-    - "{{global_build}}influxdb"
+    #- "{{global_build}}influxdb"
     - "{{global_build}}mysql"
 

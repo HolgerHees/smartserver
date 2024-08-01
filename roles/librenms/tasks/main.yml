@@ -88,9 +88,10 @@
   vars:
     container_name: "librenms"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "{{podman_librenms_ip}}", "port": "8000" }
     container_after: [ "redis", "mysql" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: allow service
   vars:

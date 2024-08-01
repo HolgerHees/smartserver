@@ -72,9 +72,10 @@
     container_changed: "{{podman_container_state.changed}}"
     container_pre_exec: "/opt/scripts/prometheus_generator {{ global_etc }}prometheus/"
     container_reload_exec: "/usr/bin/podman kill --signal=HUP prometheus"
+    container_readyness: { "ip": "{{podman_prometheus_ip}}", "port": "9090" }
     container_after: [ "alertmanager" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: allow service
   vars:

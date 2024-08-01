@@ -39,6 +39,7 @@
         "30000-30005:30000-30005",
         {% if default_server_ipv6 is defined %}
           "[::]:21:21",
+          "[::]:20:20",
           "[::]:30000-30005:30000-30005",
         {% endif %}
       ]
@@ -80,8 +81,9 @@
   vars:
     container_name: "vsftpd"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "{{podman_camera_ftp_ip}}", "port": "21" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: allow service
   vars:

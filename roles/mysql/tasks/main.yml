@@ -42,6 +42,14 @@
       - label=disable
 #    command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
     user: "{{system_users['mysql'].id}}:{{system_groups['mysql'].id}}"
+    healthcheck: "healthcheck.sh --connect --innodb_initialized"
+    #health_startup_cmd: "healthcheck.sh --connect --innodb_initialized"
+    #health_startup_interval: "1s"
+    #health_startup_timeout: "30s"
+    #healthcheck_start_period: 10s
+    #healthcheck_interval: 30s
+    #healthcheck_retries: 3
+    #healthcheck_timeout: 10s
     env:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
@@ -65,8 +73,9 @@
   vars:
     container_name: "mysql"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "cmd": "mysqladmin ping -h 127.0.0.1 --silent", "type": "container" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: add service name
   vars:

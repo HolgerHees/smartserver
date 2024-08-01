@@ -107,8 +107,9 @@
   vars:
     container_name: "netdata"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "127.0.0.1", "port": "19999" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 # ***** DEPENDENCY CONFIGS *****
 - name: copy helper

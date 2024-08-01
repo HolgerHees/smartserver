@@ -73,5 +73,6 @@
   vars:
     container_name: "minidlna"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "{{dlna_ip}}", "port": "8200" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']

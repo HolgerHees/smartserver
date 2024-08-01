@@ -59,9 +59,10 @@
   vars:
     container_name: "php"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "cmd": "/usr/bin/true", "type": "container" }
     container_after: [ "mysql", "redis", "postfix", "influxdb" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: allow service
   vars:

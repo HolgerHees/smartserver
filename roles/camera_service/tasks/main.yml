@@ -85,9 +85,10 @@
   vars:
     container_name: "camera_service"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "{{podman_camera_service_ip}}", "port": "80" }
     container_after: [ "camera_ftp" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: allow service
   vars:

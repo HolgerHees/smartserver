@@ -7,7 +7,14 @@
   failed_when: no
   when: "container_changed"
 
+#- name: "container : handle_podman_service : get pid file"
+#  shell: "podman inspect --format '{{ '{{' }} .PidFile {{ '}}'}}' {{container_name}}"
+#  register: "podman_pid_state"
+#  changed_when: "container_changed"
+
 - name: "container : add_podman_service : create systemd service"
+#  vars:
+#    container_pid: "{{podman_pid_state.stdout}}"
   copy:
     content: "{{ lookup('template', 'roles/container/templates/podman_service') }}"
     dest: "/etc/systemd/system/{{container_name}}.service"

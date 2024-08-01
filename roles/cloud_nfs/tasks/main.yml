@@ -124,8 +124,9 @@
     container_changed: "{{podman_container_state.changed}}"
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
+    container_readyness: { "cmd": "echo -n ''", "type": "container" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 # ***** FINALIZE *****
 - name: register loki rules

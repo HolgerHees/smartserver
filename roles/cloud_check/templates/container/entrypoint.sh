@@ -4,7 +4,10 @@ stop()
 {
     echo "Shutting down cloud check"
     PID="$(pidof cloud_check)"
-    kill -s TERM $PID
+    if [ "$PID" != "" ]
+    then
+        kill -s TERM $PID
+    fi
     wait
     exit
 }

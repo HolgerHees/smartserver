@@ -112,8 +112,9 @@
   vars:
     container_name: "ci_service"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "{{podman_ci_service_ip}}", "port": "80" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: allow service
   vars:

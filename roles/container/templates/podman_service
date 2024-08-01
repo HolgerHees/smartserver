@@ -4,31 +4,49 @@ StartLimitBurst=12
 StartLimitIntervalSec=180
 Wants=network-online.target
 After=network-online.target{% if container_after is defined and container_after != None %}{% for dependency_name in container_after %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif +%}
+#RequiresMountsFor={{global_tmp}}containers/storage/
 
 [Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+{% if container_readyness is defined %}
+Type=notify
+NotifyAccess=all
+{% else %}
+Type=forking
+{% endif %}
 TimeoutStartSec=0
 TimeoutStopSec={{container_stop_timeout | default('300')}}
 Restart=on-failure
 RestartSec=10
 #RestartSteps=4
 #RestartMaxDelaySec=60
-{% if nftables_enabled %}Environment=NETAVARK_FW=none
+Environment=NETAVARK_FW=none
+{% if container_readyness is defined %}
+    {%- if 'ip' in container_readyness and 'port' in container_readyness %}
+        {%- set readyness_cmd="nc -w 5 -z" + ( ' -u' if 'protocol' in container_readyness and container_readyness['protocol'] == 'udp' else '' ) + " " + container_readyness['ip'] + " " + container_readyness['port'] %}
+    {%- elif 'cmd' in container_readyness and 'type' in container_readyness %}
+        {%- if container_readyness['type'] == 'container' %}
+            {%- set readyness_cmd="podman exec " + container_name + " sh -c \\\"" + container_readyness['cmd'] + "\\\" 2> /dev/null" %}
+        {%- elif container_readyness['type'] == 'host' %}
+            {%- set readyness_cmd=container_readyness['cmd'] %}
+        {%- endif %}
+    {%- endif %}
+ExecStartPre=/bin/bash -c "echo 'Readyness check started' && while ! {{readyness_cmd}}; do sleep 0.5; done && systemd-notify --ready && echo 'Readyness detected' &"
 {% endif %}
-ExecStart=/usr/bin/podman start -a {{container_name}}
-{% if container_pre_exec is defined and container_pre_exec != None %}ExecStartPre={{container_pre_exec}}
+{% if container_pre_exec is defined and container_pre_exec != None %}
+ExecStartPre={{container_pre_exec}}
 {% endif %}
-{% if not nftables_enabled %}ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/clean_iptables.sh) &"
-{% endif %}
-ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/container/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined and container_routes != None %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %}) &"
-{% if container_post_exec is defined and container_post_exec != None %}ExecStartPost={{container_post_exec}}
+ExecStart=/usr/bin/podman start {{container_name}}
+ExecStartPost=/bin/bash -c "(sleep 1 && /opt/container/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined and container_routes != None %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %})"
+{% if container_post_exec is defined and container_post_exec != None %}
+ExecStartPost={{container_post_exec}}
 {% endif %}
 ExecStop=/usr/bin/podman stop {{container_name}}
 #ExecStop=/usr/bin/podman stop -t {{container_stop_timeout | default('300')}} {{container_name}}
-{% if container_reload_exec is defined and container_reload_exec != None %}ExecReload={{container_reload_exec}}
+{% if container_reload_exec is defined and container_reload_exec != None %}
+ExecReload={{container_reload_exec}}
 {% endif %}
-#SyslogIdentifier={{container_name}}
-StandardOutput=null
-StandardError=null
+SyslogIdentifier={{container_name}}
 
 [Install]
 WantedBy=multi-user.target

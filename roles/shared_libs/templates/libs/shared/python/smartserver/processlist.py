@@ -157,6 +157,10 @@ class Processlist():
         return os.path.exists('/proc/%s' % pid)
 
     @staticmethod
+    def getComm(pid):
+        return Processlist._getComm(pid)
+
+    @staticmethod
     def getCmdLine(pid):
         return Processlist._getCmdline(pid)
         

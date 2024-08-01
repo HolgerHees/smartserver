@@ -79,9 +79,11 @@
   vars:
     container_name: "system_service"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "127.0.0.1", "port": "8507" }
     container_after: [ "network-online.target", "mosquitto", "influxdb" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
-
+  tags: ['systemd_watcher_config','systemd_service_config']
+  
 - name: add container name
   vars:
     host_name: "system_service"

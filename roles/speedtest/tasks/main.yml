@@ -39,6 +39,8 @@
     exposed_ports:
      - "80"
     published_ports: "{{speedtest_published_ports}}"
+#    volumes:
+#      - "{{global_build}}speedtest/entrypoint.sh:/entrypoint.sh"
   register: "podman_container_state"
   notify: "restart speedtest"
 
@@ -47,8 +49,9 @@
   vars:
     container_name: "speedtest"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "{{podman_speedtest_ip}}", "port": "80" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: add container name
   vars:

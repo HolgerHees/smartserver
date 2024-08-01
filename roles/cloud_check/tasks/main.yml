@@ -62,9 +62,10 @@
   vars:
     container_name: "cloud_check"
     container_changed: "{{podman_container_state.changed}}"
+    container_readyness: { "ip": "{{podman_cloud_check_ip}}", "port": "80" }
     container_after: [ "cloud_mosquitto" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config']
+  tags: ['systemd_watcher_config','systemd_service_config']
 
 - name: allow service
   vars:

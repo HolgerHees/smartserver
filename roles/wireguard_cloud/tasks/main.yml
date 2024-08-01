@@ -139,8 +139,11 @@
     container_changed: "{{podman_container_state.changed}}"
     container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
+    container_readyness: { "cmd": "echo -n ''", "type": "container" }
+#    container_readyness: { "ip": "{{vpn_cloud_services.local.gateway}}", "port": "{{cloud_vpn.interface.port}}", "protocol": "udp" }
   include_tasks: roles/container/shared/handle_podman_service.yml
-
+  tags: ['systemd_watcher_config','systemd_service_config']
+  
 - name: allow service
   vars:
     service_name: "wireguard_cloud"

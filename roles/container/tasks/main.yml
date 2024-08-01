@@ -55,6 +55,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}containers/storage/" }      # podman
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}libpod/" }                  # podman
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/storage/" }      # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/pids/" }         # podman
   include_tasks: roles/_shared/create_directories.yml
 
 - name: set container selinux configuration => is_rhel or is_fedora
