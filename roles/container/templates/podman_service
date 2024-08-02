@@ -11,7 +11,7 @@ Environment=PODMAN_SYSTEMD_UNIT=%n
 Type=notify
 NotifyAccess=all
 TimeoutStartSec=0
-TimeoutStopSec={{container_stop_timeout | default('300')}}
+TimeoutStopSec=30
 Restart=on-failure
 RestartSec=10
 #RestartSteps=4
@@ -39,7 +39,7 @@ ExecStartPost=/bin/sh -c "echo 'Service - Set gateway' && /opt/container/update_
 {% if container_post_exec is defined and container_post_exec != None %}
 ExecStartPost=/bin/sh -c "echo 'Service - Run PostExec' && {{container_post_exec}}"
 {% endif %}
-ExecStop=/bin/sh -c "echo 'Service - Stopping container' && /usr/bin/podman stop -t 10 {{container_name}} | grep -v \"^{{container_name}}$\""
+ExecStop=/bin/sh -c "echo 'Service - Stopping container' && /usr/bin/podman stop -t 15 {{container_name}} | grep -v \"^{{container_name}}$\""
 {% if container_reload_exec is defined and container_reload_exec != None %}
 ExecReload=/bin/sh -c "echo 'Service - Run ReloadExec' && {{container_reload_exec}}"
 {% endif %}

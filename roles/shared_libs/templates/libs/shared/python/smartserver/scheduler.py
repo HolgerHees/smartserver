@@ -23,8 +23,14 @@ class Scheduler(threading.Thread):
         logging.info("Scheduler started")
         try:
             while self.is_running:
+                n = schedule.idle_seconds()
+                if n is None:
+                    n = 1
+                if n > 0:
+                    self.event.wait(n)
+
                 schedule.run_pending()
-                self.event.wait(1)
+
         except Exception as e:
             self.is_running = False
             raise e

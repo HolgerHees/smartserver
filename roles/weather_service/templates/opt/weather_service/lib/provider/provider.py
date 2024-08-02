@@ -32,8 +32,6 @@ class Provider:
         self.is_running = False
         self.is_fetching = False
 
-        self.event = threading.Event()
-
         self.config = config
         self.db = db
         self.mqtt = mqtt
@@ -53,17 +51,14 @@ class Provider:
 
         self.is_running = True
 
-        schedule.every().hour.at("05:00").do(self.fetch)
+        schedule.every().hour.at("05:00").do(self.fetchInterval)
         if time.time() - self.last_fetch > 60 * 60:
-            self.fetch(True)
-        #else:
-        #    self.fetch(True)
+            schedule.every().second.do(self.fetchOneTime)
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):
             self._dump()
         self.is_running = False
-        self.event.set()
 
     def _restore(self):
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
@@ -117,75 +112,85 @@ class Provider:
             else:
                 logging.info("Summery data skipped. Not enough data.")
 
-    def fetch(self, oneTime=False):
-        if self.is_fetching:
-            logging.warn("Skip fetching. Older job is still runing")
-            return
-
-        if not self.is_running:
-            return
-
+    def fetchOneTime(self):
         self.is_fetching = True
+        self.fetch()
+        self.is_fetching = False
 
-        error_count = 0
-        while self.is_running:
-            try:
-                fetcher = self._createFetcher(self.config)
+        return schedule.CancelJob
 
-                fetcher.fetchForecast(self.mqtt)
-                self.service_metrics["data_forecast"] = 1
-
-                fetcher.fetchCurrent(self.db, self.mqtt)
-                self.service_metrics["data_current"] = 1
-
-                self.triggerSummerizedItems(self.db, self.mqtt)
-
-                date = datetime.now()
-                target = date.replace(minute=5,second=0)
-                if target <= date:
-                    target = target + timedelta(hours=1)
-                diff = target - date
-
-                self.service_metrics["data_provider"] = 1
-                self.service_metrics["publish"] = 1
-
-                self.last_fetch = time.time()
-
-                self.is_fetching = False
+    def fetchInterval(self, repeat_count = 0):
+        if repeat_count == 0:
+            if self.is_fetching:
+                logging.warn("Skip fetching. Older job is still runing")
                 return
-            except ForecastDataException as e:
-                logging.info("{}: {}".format(str(e.__class__),str(e)))
-                self.service_metrics["data_forecast"] = 0
-                error_count += 1
-            except CurrentDataException as e:
-                logging.info("{}: {}".format(str(e.__class__),str(e)))
-                self.service_metrics["data_current"] = 0
-                error_count += 1
-            except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
-                logging.info("{}: {}".format(str(e.__class__),str(e)))
-                self.service_metrics["data_provider"] = 0
-                error_count += 1
-            except DBException:
-                error_count += 1
-            #except MQTT Exceptions?? as e:
-            #    logging.info("{}: {}".format(str(e.__class__),str(e)))
-            #    self.service_metrics["mqtt"] = 0
-            #    error_count += 1
-            except Exception as e:
-                logging.info("{}: {}".format(str(e.__class__),str(e)))
-                traceback.print_exc()
-                self.service_metrics["publish"] = 0
-                error_count += 1
+            self.is_fetching = True
 
-            if oneTime:
-                self.is_fetching = False
-                return
-
-            sleepTime = 600 * error_count if error_count < 6 else 3600
-
+        if not self.fetch() and self.is_running:
+            _repeat_count = repeat_count + 1
+            sleepTime = 600 * _repeat_count if _repeat_count < 6 else 3600
             logging.info("Sleep {} seconds".format(sleepTime))
-            self.event.wait(sleepTime)
-            self.event.clear()
+            schedule.every(sleepTime).second.do(self.fetchInterval, repeat_count=_repeat_count)
+        else:
+            self.is_fetching = False
+
+        if repeat_count > 0:
+            return schedule.CancelJob
+
+    def fetch(self):
+        try:
+            fetcher = self._createFetcher(self.config)
+
+            if not self.is_running:
+                return False
+
+            fetcher.fetchForecast(self.mqtt)
+            self.service_metrics["data_forecast"] = 1
+
+            if not self.is_running:
+                return False
+
+            fetcher.fetchCurrent(self.db, self.mqtt)
+            self.service_metrics["data_current"] = 1
+
+            if not self.is_running:
+                return False
+
+            self.triggerSummerizedItems(self.db, self.mqtt)
+
+            date = datetime.now()
+            target = date.replace(minute=5,second=0)
+            if target <= date:
+                target = target + timedelta(hours=1)
+            diff = target - date
+
+            self.service_metrics["data_provider"] = 1
+            self.service_metrics["publish"] = 1
+
+            self.last_fetch = time.time()
+
+            return True
+        except ForecastDataException as e:
+            logging.info("{}: {}".format(str(e.__class__),str(e)))
+            self.service_metrics["data_forecast"] = 0
+        except CurrentDataException as e:
+            logging.info("{}: {}".format(str(e.__class__),str(e)))
+            self.service_metrics["data_current"] = 0
+        except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
+            logging.info("{}: {}".format(str(e.__class__),str(e)))
+            self.service_metrics["data_provider"] = 0
+        except DBException:
+            pass
+        #except MQTT Exceptions?? as e:
+        #    logging.info("{}: {}".format(str(e.__class__),str(e)))
+        #    self.service_metrics["mqtt"] = 0
+        #    error_count += 1
+        except Exception as e:
+            logging.info("{}: {}".format(str(e.__class__),str(e)))
+            traceback.print_exc()
+            self.service_metrics["publish"] = 0
+
+        return False
 
     def getStateMetrics(self):
         state_metrics = []

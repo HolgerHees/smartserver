@@ -34,8 +34,6 @@ default_variables: {
 
     ipv6_enabled:                             { default: no },
 
-    nftables_enabled:                         { default: yes },
-
     intern_networks:                          { default: [] },                                                      # e.g. intern (trusted) ipv4 & ipv6 address ranges. Networks, based on production/staging ip and ansible server ip, be added additionally.
     public_networks:                          { default: [] },                                                      # e.g. public ipv6 address ranges
 
