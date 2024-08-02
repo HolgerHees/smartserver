@@ -76,7 +76,7 @@ class Fritzbox(_handler.Handler):
             self._setDeviceMetricState(fritzbox_ip, -1)
         
         for fritzbox_ip in self.fritzbox_devices:
-            while True:
+            while self._isRunning():
                 try:
                     self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
                     self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
@@ -88,6 +88,9 @@ class Fritzbox(_handler.Handler):
                     self._wait(self._getSuspendTimeout(fritzbox_ip))
 
                     self._setDeviceMetricState(fritzbox_ip, 0)
+
+            if not self._isRunning():
+                break
 
         while self._isRunning():
             events = []
