@@ -1,7 +1,11 @@
 #!/bin/sh
  
+is_running=0
+ 
 stop()
 {
+    is_running=0
+    
     echo "Shutting down ci service"
     PID="$(pidof ci_service)"
     if [ "$PID" != "" ]
@@ -9,11 +13,13 @@ stop()
         kill -s TERM $PID
     fi
     wait
-    exit
+    exit 0
 }
 
 start()
 {
+    is_running=1
+    
     /opt/shared/python/install.py
 
     {{global_opt}}ci_service/ci_service &
@@ -27,4 +33,6 @@ trap "stop" SIGTERM SIGINT
 #while :; do sleep 360 & wait; done
 while pidof ci_service > /dev/null; do sleep 5 & wait; done
 
-exit 1
+if [ "$is_running" -eq 1 ]; then
+    exit 1
+fi

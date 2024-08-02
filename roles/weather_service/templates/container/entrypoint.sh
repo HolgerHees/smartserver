@@ -1,7 +1,11 @@
 #!/bin/sh
  
+is_running=0
+
 stop()
 {
+    is_running=0
+    
     echo "Shutting down weather service"
     PID="$(pidof weather_service)"
     if [ "$PID" != "" ]
@@ -9,11 +13,13 @@ stop()
         kill -s TERM $PID
     fi
     wait
-    exit
+    exit 0
 }
 
 start()
 {
+    is_running=1
+    
     /opt/shared/python/install.py
 
     /opt/weather_service/weather_service &
@@ -27,4 +33,6 @@ trap "stop" SIGTERM SIGINT
 #while :; do sleep 360 & wait; done
 while pidof weather_service > /dev/null; do sleep 5 & wait; done
 
-exit 1
+if [ "$is_running" -eq 1 ]; then
+    exit 1
+fi

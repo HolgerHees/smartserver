@@ -1,7 +1,11 @@
 #!/bin/sh
+ 
+is_running=0
 
 stop()
 {
+    is_running=0
+    
     echo "Shutting down iperf3 service"
     PID="$(pidof iperf3)"
     if [ "$PID" != "" ]
@@ -15,7 +19,7 @@ stop()
         kill -s TERM $PID
     fi
     wait
-    exit
+    exit 0
 }
 
 start()
@@ -37,4 +41,6 @@ trap "stop" SIGTERM SIGINT
 while pidof node > /dev/null && pidof iperf3 > /dev/null; do sleep 5 & wait; done
 #while pidof node > /dev/null; do sleep 5 & wait; done
 
-exit 1
+if [ "$is_running" -eq 1 ]; then
+    exit 1
+fi
