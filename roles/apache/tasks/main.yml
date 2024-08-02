@@ -265,9 +265,8 @@
     service_name: "apache_letsencrypt"
     network_to_host_rules:
       - { iif: "{{default_network_interface}}", protocol: "tcp", dport: "80", comment: "external letsencrypt => apache" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
 
 # ***** SERVICE CONFIGS *****
 - name: disable old systemd service

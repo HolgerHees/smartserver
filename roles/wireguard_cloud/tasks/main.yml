@@ -155,37 +155,5 @@
         { "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "iif": "{{default_network_interface}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: prepare used ports
-  set_fact:
-    wireguard_cloud_ports: |
-      {
-      {% for peer in cloud_vpn.peers %}
-      "{{cloud_vpn.peers[peer].port}}": "{{cloud_vpn.peers[peer].port}}",
-      {% endfor %}
-      }
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
-
-- name: prepare ferm rules
-  set_fact:
-    wireguard_cloud_ferm_rules: |
-      [
-      {% for port in wireguard_cloud_ports %}
-        "saddr {{vpn_cloud_services.local.gateway}} proto udp dport {{port}} outerface {{default_network_interface}}",
-      {% endfor %}
-      "daddr {{vpn_cloud_services.local.gateway}} proto udp dport {{cloud_vpn.interface.port}}"
-      ]
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
-
-- name: allow cloud service
-  vars:
-    firewall_name: "wireguard_cloud"
-    firewall_rules: "{{wireguard_cloud_ferm_rules}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"

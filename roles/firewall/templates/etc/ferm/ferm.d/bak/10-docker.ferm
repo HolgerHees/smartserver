@@ -1,3 +1,0 @@
-domain (ip ip6) table filter chain DOCKER-USER {
-    mod conntrack ctstate (RELATED ESTABLISHED) ACCEPT;
-} 

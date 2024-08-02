@@ -101,30 +101,8 @@
       - { saddr: "{{podman_librenms_ip}}", daddr: "{{podman_redis_ip}}", protocol: "tcp", dport: "6379", comment: "librenms => redis" }
     container_to_outside_rules:
       - { saddr: "{{podman_librenms_ip}}", daddr: "{{intern_networks}}", comment: "librenms => internal networks (snmp scanner)" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: prepare ferm rules
-  set_fact:
-    librenms_ferm_rules: |
-      [
-      "saddr {{podman_librenms_ip}} daddr {{podman_mysql_ip}}",
-      "saddr {{podman_librenms_ip}} daddr {{podman_redis_ip}}",
-      {% for network in intern_networks %}
-        "saddr {{podman_librenms_ip}} daddr {{network}}",
-      {% endfor %}
-      ]
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
-
-- name: allow service
-  vars:
-    firewall_name: "librenms"
-    firewall_rules: "{{librenms_ferm_rules}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 - name: add service name
   vars:

@@ -18,12 +18,12 @@
   shell: "/usr/lib/podman/netavark version | grep 'version' | grep -Po '[0-9\\.]*'"
   changed_when: "netavark_version.stdout != '1.11.0'"
   register: netavark_version
-  when: "nftables_enabled and is_ubuntu"
+  when: "is_ubuntu"
 
   # With old netavark version, firewall_driver 'none' is not possible
 - name: upgrade netavark => is_ubuntu
   shell: "wget -O - https://github.com/containers/netavark/releases/download/v1.11.0/netavark.gz | gzip -d > /usr/lib/podman/netavark && chown root:root /usr/lib/podman/netavark && chmod 755 /usr/lib/podman/netavark"
-  when: "nftables_enabled and is_ubuntu and netavark_version.stdout != '1.11.0'"
+  when: "is_ubuntu and netavark_version.stdout != '1.11.0'"
 
 - name: install required packages => is_suse
   zypper:
@@ -87,7 +87,6 @@
     path: /etc/environment
     regexp: '^NETAVARK_FW\s*='
     line: 'NETAVARK_FW=none'
-  when: "nftables_enabled"
 
 - name: copy podman config
   template:
@@ -121,29 +120,6 @@
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F750"
-
-- name: copy nftables tools
-  copy:
-    src: "templates/{{item.src}}"
-    dest: "/opt/container/{{item.dest}}"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-      - { src: "nftables_visualizer", dest: "visualizer" }
-  when: "nftables_enabled"
-
-- name: copy legacy iptables tools
-  copy:
-    src: "templates/{{item.src}}"
-    dest: "/opt/container/{{item.dest}}"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-      - { src: "iptables_clean.sh", dest: "clean_iptables.sh" }
-      - { src: "iptables_visualizer", dest: "visualizer" }
-  when: "not nftables_enabled"
 
 - name: copy container tools config
   template:
@@ -271,17 +247,6 @@
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
-
-- name: create iptables rule cron job
-  vars:
-    name: "IPTables netavark leftover check"
-    cmd: "/opt/container/clean_iptables.sh check"
-    group: "container"
-    log: "iptables_check"
-    minute: "*/5"
-  include_tasks: roles/cron/shared/add_cronjob.yml
-  tags: ['cron_job']
-  when: "not nftables_enabled"
 
 - name: enable podman
   systemd:

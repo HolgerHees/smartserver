@@ -125,21 +125,9 @@
       - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", comment: "apache access" }
     container_to_outside_rules:
       - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", oif: "{{default_network_interface}}", comment: "ci_service => 'github'" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
   
-- name: allow service
-  vars:
-    firewall_name: "ci_service"
-    firewall_rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_ci_service_ip}}"
-      - "saddr {{podman_ci_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
-      - "saddr {{podman_ci_service_ip}} proto tcp dport 443 daddr {{default_server_ip}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
-
 - name: register service watcher
   vars:
     watcher_name: "vboxdrv"

@@ -2,7 +2,7 @@ FROM alpine:{{image_version}}
 
 COPY entrypoint.sh /usr/sbin/
 
-RUN apk add --no-cache --update wireguard-tools tzdata{{ ' iptables' if not nftables_enabled else '' }} \
+RUN apk add --no-cache --update wireguard-tools tzdata \
     && chmod +x /usr/sbin/entrypoint.sh
 
 ENTRYPOINT [ "/usr/sbin/entrypoint.sh" ]

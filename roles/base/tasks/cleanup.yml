@@ -17,11 +17,10 @@
   stat:
     path: "/etc/ferm/"
   register: cleanup_iptables_check
-  when: "nftables_enabled"
 
 - name: cleanup iptables
   include_tasks: cleanup_iptables.yml
-  when: "nftables_enabled and cleanup_iptables_check.stat.exists"
+  when: "cleanup_iptables_check.stat.exists"
 
 - name: clean old build folder
   file:

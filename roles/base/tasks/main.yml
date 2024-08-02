@@ -154,7 +154,7 @@
       , git                # used for ansible git module
 
 #      , gcc                # used for ansible gem module => to build native extension
-      , make               # used for installing ferm
+#      , make               # used for installing ferm
       
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 

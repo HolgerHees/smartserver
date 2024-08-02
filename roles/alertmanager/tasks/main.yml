@@ -67,18 +67,8 @@
     container_to_container_rules:
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_alertmanager_ip}}", protocol: "tcp", dport: "9093", comment: "prometheus => alertmanager" }
       - { saddr: "{{podman_alertmanager_ip}}", daddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "25", comment: "alertmanager => postfix" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
-  tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: allow service
-  vars:
-    firewall_name: "alertmanager"
-    firewall_rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_alertmanager_ip}}"
-      - "saddr {{podman_alertmanager_ip}} daddr {{podman_postfix_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  when: "not nftables_enabled"
+  tags: ['firewall_config']
 
 - name: add service name
   vars:

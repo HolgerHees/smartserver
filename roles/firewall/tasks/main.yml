@@ -18,22 +18,6 @@
 
 
 # **** NFTABLES ****
-#- name: install required packages => is_rhel
-#  yum:
-#    name: [
-#      iptables-legacy
-#    ]
-#    state: present
-#  when: "nftables_enabled and (is_rhel or is_fedora)"
-
-  # this will redirect podman network changes to iptables, which will be flushed later
-  # can be removed if podman frierwall_driver can be disabled in version 5.x
-#- name: set iptables-legacy to avoid podman conflicts with nftables => is_rhel or is_ubuntu
-#  community.general.alternatives:
-#    name: iptables
-#    path: /usr/sbin/iptables-legacy
-#  when: "nftables_enabled and (is_rhel or is_fedora or is_ubuntu)"
-
 - name: install required packages => is_suse
   zypper:
     name: [
@@ -41,14 +25,13 @@
     ]
     state: present
   notify: "restart nftables"
-  when: "nftables_enabled and is_suse"
+  when: "is_suse"
 
 - name: prepare needed directories
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/nftables" }
   include_tasks: roles/_shared/create_directories.yml
-  when: "nftables_enabled"
 
 - name: copy nftables config
   template:
@@ -60,10 +43,8 @@
   with_items:
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/00_init.nft" }
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/20_trusted_networks.nft" }
-#    - { mode: "u=rwx,g=rx,o=", path: "/etc/nftables/flush_iptables.sh" }
     - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/iptables-blacklist.conf" } # block iptables
   notify: "restart nftables"
-  when: "nftables_enabled"
 
 # ***** FINALIZE *****
 - name: copy nftables service
@@ -76,21 +57,19 @@
   with_items:
     - { mode: "u=rw,g=r,o=r", src: "/etc/systemd/nftables.service", dest: "/etc/systemd/system/nftables.service" }
   notify: "restart nftables"
-  when: "nftables_enabled"
 
 - name: register systemd service watcher
   vars:
     watcher_name: "nftables"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
   tags: ['systemd_watcher_config']
-  when: "nftables_enabled and monitoring_enabled"
+  when: "monitoring_enabled"
 
 - name: trigger nftables handler
   vars:
     notify: "restart nftables"
     service: "nftables"
   include_tasks: roles/_shared/service_check.yml
-  when: "nftables_enabled"
 
 - name: set sysctl network related values
   lineinfile:
@@ -115,111 +94,8 @@
     #sysctl -w net.netfilter.nf_conntrack_generic_timeout=120   => old was 600
     #sysctl -w net.netfilter.nf_conntrack_sctp_timeout_established=54000    => old was 432000
   register: sysctl_state
-  when: "nftables_enabled"
 
 - name: refresh sysctl to activate netfilter changes => sysctl_state changed
   shell: "modprobe nf_conntrack && sysctl -p"
-  when: "nftables_enabled and sysctl_state.changed"
+  when: "sysctl_state.changed"
 
-# **** IPTABLES ****
-- name: set ferm version
-  set_fact:
-    ferm_version: "2.7"
-  tags: [ 'update_notifier_config' ]
-  when: "not nftables_enabled"
-
-- name: prepare needed directories
-  vars:
-    directories:
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/ferm/ferm.d" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_build}}ferm" }
-  include_tasks: roles/_shared/create_directories.yml
-  when: "not nftables_enabled"
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-      iptables
-    ]
-    state: present
-  when: "not nftables_enabled and is_suse"
-
-- name: install required packages => is_rhel or is_fedora
-  yum:
-    name: [
-      perl-Pod-Html
-      ,iptables
-    ]
-    state: present
-  when: "not nftables_enabled and (is_rhel or is_fedora)"
-
-- name: load module ip_tables => is_rhel
-  modprobe:
-    name: ip_tables
-    state: present
-  register: iptables_result
-  when: "not nftables_enabled and (is_rhel or is_fedora)"
-
-- name: enable module ip_tables => is_rhel
-  shell: "echo \"ip_tables\" > /etc/modules-load.d/iptables.conf"
-  when: "not nftables_enabled and (is_rhel or is_fedora) and iptables_result.changed"
-
-- name: "clone ferm git"
-  git:
-    repo: 'https://github.com/MaxKellermann/ferm'
-    dest: '{{global_build}}ferm'
-    version: 'v{{ferm_version}}'
-  register: ferm_git
-  when: "not nftables_enabled"
-
-- name: "install ferm"
-  shell: "make install"
-  args:
-    chdir: "{{global_build}}ferm"
-  when: "not nftables_enabled and ferm_git.changed"
-
-- name: copy ferm config and service
-  template:
-    src: "templates{{item.src}}"
-    dest: "{{item.dest}}"
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rw,g=r,o=r", src: "/etc/systemd/ferm.service", dest: "/etc/systemd/system/ferm.service" }
-    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.conf", dest: "/etc/ferm/ferm.conf" }
-    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/00-container.ferm", dest: "/etc/ferm/ferm.d/00-container.ferm" }
-    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/20-in.trusted.ferm", dest: "/etc/ferm/ferm.d/20-in.trusted.ferm" }
-    - { mode: "u=rw,g=r,o=", src: "/etc/ferm/ferm.d/99-container.ferm", dest: "/etc/ferm/ferm.d/99-container.ferm" }
-  notify: "restart ferm"
-  when: "not nftables_enabled"
-
-# ***** FINALIZE *****
-- name: register systemd service watcher
-  vars:
-    watcher_name: "ferm"
-  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  tags: ['systemd_watcher_config']
-  when: "not nftables_enabled and monitoring_enabled"
-
-- name: register update notifier
-  vars:
-    name: "ferm"
-    type: "github"
-    url: "https://github.com/MaxKellermann/ferm/releases"
-    config: {
-      project: "MaxKellermann/ferm",
-      pattern: "^v([0-9\\.]+)$",
-      version: "v{{ferm_version}}"
-    }
-  include_tasks: roles/update_service/shared/add_software.yml
-  tags: ['update_notifier_config']
-  when: "not nftables_enabled and update_service_software_check_enabled"
-
-- name: trigger ferm handler
-  vars:
-    notify: "restart ferm"
-    service: "ferm"
-  include_tasks: roles/_shared/service_check.yml
-  when: "not nftables_enabled"

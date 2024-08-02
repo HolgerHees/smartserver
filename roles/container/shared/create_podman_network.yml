@@ -12,15 +12,5 @@
   vars:
     container_to_container_rules:
        - { saddr: "{{network_firewall_subnet}}", daddr: "{{network_firewall_subnet}}", comment: "{{network_name}} <=> {{network_name}}" }
-  include_tasks: roles/firewall/shared/allow_network_nftables.yml
-  tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: "container : create_podman_network : allow network {{network_name}}"
-  vars:
-    network_saddr: "{{network_firewall_subnet}}"
-    network_daddr: "{{network_firewall_subnet}}"
   include_tasks: roles/firewall/shared/allow_network.yml
   tags: ['firewall_config']
-  when: "not nftables_enabled"
-

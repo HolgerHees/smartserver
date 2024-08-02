@@ -19,7 +19,6 @@
         - '{{ global_etc }}named'
         - '/etc/systemd/system/named.service'
         - '{{global_etc}}systemd_watcher/services/named.conf'
-        - '/etc/ferm/ferm.d/30-dns.ferm'
     - name: stop named
       systemd:
         name: named
@@ -131,25 +130,8 @@
       - { saddr: "{{podman_dns_ip}}", daddr: "{{ dns_forward_ip_addresses }}", dport: "53", comment: "dnsmasq => forwarded dns" }
     nat_rules: { ip: "{{podman_dns_ip}}", ports: "{{dnsmasq_published_ports}}" }
     instant_activation: True
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: prepare iptables rules
-  set_fact:
-    dns_rules: "{{ (dns_rules | default([])) + [ 'saddr ' + podman_dns_ip + ' daddr ' + item ] }}"
-  with_items: "{{ dns_forward_ip_addresses }}"
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
-
-- name: allow service
-  vars:
-    firewall_name: "dnsmasq"
-    firewall_rules: "{{dns_rules}}"
-    instant_activation: True
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 - name: force dnsmasq restart
   systemd:

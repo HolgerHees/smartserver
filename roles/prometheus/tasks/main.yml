@@ -84,9 +84,8 @@
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_alertmanager_ip}}", protocol: "tcp", dport: "9093", comment: "prometheus => alertmanager" }
     container_to_host_rules:
       - { saddr: "{{podman_prometheus_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (openhab, netdata ...)" } # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
 
 - name: allow service
   vars:
@@ -96,7 +95,6 @@
       - "saddr {{podman_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 - name: add container name
   vars:

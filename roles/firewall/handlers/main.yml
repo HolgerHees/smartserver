@@ -1,12 +1,3 @@
-- name: restart ferm
-  systemd:
-    name: ferm
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart ferm"
-
 - name: restart nftables
   systemd:
     name: nftables

@@ -60,18 +60,8 @@
     service_name: "libreoffice"
     container_to_host_rules:
       - { saddr: "{{podman_libreoffice_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (nextcloud)" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: allow service
-  vars:
-    firewall_name: "libreoffice"
-    firewall_rules:
-      - "saddr {{podman_libreoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 - name: add container name
   vars:

@@ -63,9 +63,8 @@
   vars:
     service_name: "speedtest"
     nat_rules: { ip: "{{podman_speedtest_ip}}", ports: "{{speedtest_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: register webui

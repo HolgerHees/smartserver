@@ -193,26 +193,5 @@
               , { "saddr": "{{vpn_mobile_network}}/24", "oifname": "mac0" }
             {% endif %}
         ]
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: prepare mobile vpn admin ip rules
-  set_fact:
-    vpn_admin_ip_rules: |
-      [
-      {% for vpn_admin_ip in vpn_admin_ips %}
-        "saddr {{vpn_admin_ip}}",
-      {% endfor %}
-      "daddr {{default_server_ip}} proto udp dport {{mobile_vpn_internal_port}}"
-      ]
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
-
-- name: allow mobile vpn service
-  vars:
-    firewall_name: "wireguard_mobile"
-    firewall_rules: "{{vpn_admin_ip_rules}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"

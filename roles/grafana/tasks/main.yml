@@ -105,9 +105,8 @@
       - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_loki_ip}}", protocol: "tcp", dport: "3100", comment: "grafana => loki" }
       - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_prometheus_ip}}", protocol: "tcp", dport: "9090", comment: "grafana => prometheus" }
       - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_alertmanager_ip}}", protocol: "tcp", dport: "9093", comment: "grafana => alertmanager" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
 
 - name: allow service
   vars:
@@ -120,7 +119,6 @@
       - "saddr {{podman_grafana_ip}} daddr {{podman_alertmanager_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 - name: add service name
   vars:

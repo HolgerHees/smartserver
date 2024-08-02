@@ -4,7 +4,6 @@ Description=Handle nftables
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-#ExecStartPre=/etc/nftables/flush_iptables.sh
 ExecStart=/usr/sbin/nft -f /etc/nftables/00_init.nft
 ExecStop=/usr/sbin/nft flush ruleset
 

@@ -82,7 +82,6 @@
   vars:
     service_name: "samba"
     nat_rules: { ip: "{{podman_samba_ip}}", ports: "{{samba_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
 

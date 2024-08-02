@@ -1,22 +1,26 @@
-- name: "firewall : allow_service : {{'deny' if is_drop is defined else 'allow'}} service '{{firewall_name}}{{' ' if source is defined else ''}}{{source|default('')}}'"
+- name: "firewall : allow_service : service '{{service_name}}'"
   vars:
-    ferm_rules: "{{ firewall_rules }}"
-    ferm_type: "{{ 'DROP' if is_drop is defined else 'ACCEPT' }}"
-    ferm_prefix: "{{ '15' if is_drop is defined else '30' }}"
+    rule_name: "{{service_name}}"
+    tpl_network_to_host_rules: "{{network_to_host_rules | default([])}}"
+    tpl_container_to_host_rules: "{{container_to_host_rules | default([]) }}"
+    tpl_container_to_outside_rules: "{{container_to_outside_rules | default([])}}"
+    tpl_container_to_container_rules: "{{container_to_container_rules | default([])}}"
+    tpl_nat_rules: "{{nat_rules | default([])}}"
+    tpl_masquerading_rules: "{{masquerading_rules | default([])}}"
   template:
-    src: "roles/firewall/templates/ferm_service.template"
-    dest: "/etc/ferm/ferm.d/{{ferm_prefix}}-{{firewall_name}}.ferm"
+    src: "roles/firewall/templates/nftables.template"
+    dest: "/etc/nftables/30_{{service_name}}.nft"
     owner: root
     group: root
     mode: 0640
-  register: "firewall_allow_service_result"
+  register: "firewall_config_result"
   tags: [ 'firewall_config' ]
-  notify: "restart ferm"
+  notify: "restart nftables"
 
-- name: "firewall : allow_service : apply ferm changes => instant_activation"
+- name: "firewall : allow_service : apply nftables changes => instant_activation"
   systemd:
     state: restarted
     daemon_reload: yes
-    name: ferm
-  when: "instant_activation | default(False) and firewall_allow_service_result.changed"
+    name: nftables
+  when: "instant_activation | default(False) and firewall_config_result.changed"
 

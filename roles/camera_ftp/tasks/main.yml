@@ -91,23 +91,14 @@
     container_to_outside_rules:
       - { saddr: "{{podman_camera_ftp_ip}}", sport: "20", daddr: "{{intern_networks}}", protocol: "tcp", comment: "camera_ftp => internal networks" }
     nat_rules: { ip: "{{podman_camera_ftp_ip}}", ports: "{{camera_ftp_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
 
 - name: prepare firewall rules
   set_fact:
     ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + podman_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
   with_items: "{{ intern_networks }}"
   tags: ['firewall_config']
-
-- name: allow service
-  vars:
-    firewall_name: "ftp"
-    firewall_rules: "{{ftp_rules}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: create cron job

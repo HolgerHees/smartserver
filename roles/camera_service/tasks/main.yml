@@ -95,18 +95,8 @@
     service_name: "camera_service"
     container_to_container_rules:
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_camera_service_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => camera_service" }
-  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+  include_tasks: roles/firewall/shared/allow_services.yml
   tags: ['firewall_config']
-  when: "nftables_enabled"
-
-- name: allow service
-  vars:
-    firewall_name: "camera_service"
-    firewall_rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_camera_service_ip}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: synchronize htdocs

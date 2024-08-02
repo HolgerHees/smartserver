@@ -36,18 +36,8 @@
 #    service_name: "redis"
 #    container_to_container_rules:
 #      - { saddr: podman_redis_ip, daddr: podman_php_ip }
-#  include_tasks: roles/firewall/shared/allow_service_nftables.yml
+#  include_tasks: roles/firewall/shared/allow_services.yml
 #  tags: ['firewall_config']
-#  when: "nftables_enabled"
-
-- name: allow service
-  vars:
-    firewall_name: "redis"
-    firewall_rules:
-      - "saddr {{podman_redis_ip}} daddr {{podman_php_ip}}"
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-  when: "not nftables_enabled"
 
 # ***** DEPENDENCY CONFIGS *****
 - name: register update notifier
