@@ -51,7 +51,7 @@
   vars:
     container_name: "libreoffice"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_libreoffice_ip}}", "port": "9980" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_libreoffice_ip}}", "port": "9980" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
@@ -60,7 +60,7 @@
     service_name: "libreoffice"
     container_to_host_rules:
       - { saddr: "{{podman_libreoffice_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (nextcloud)" }
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add container name

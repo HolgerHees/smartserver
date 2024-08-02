@@ -119,7 +119,7 @@
   vars:
     container_name: "dnsmasq"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_dns_ip}}", "port": "53" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_dns_ip}}", "port": "53" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
@@ -130,7 +130,7 @@
       - { saddr: "{{podman_dns_ip}}", daddr: "{{ dns_forward_ip_addresses }}", dport: "53", comment: "dnsmasq => forwarded dns" }
     nat_rules: { ip: "{{podman_dns_ip}}", ports: "{{dnsmasq_published_ports}}" }
     instant_activation: True
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: force dnsmasq restart

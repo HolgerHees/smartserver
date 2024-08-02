@@ -139,8 +139,8 @@
     container_changed: "{{podman_container_state.changed}}"
     container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
-    container_readyness: { "cmd": "echo -n ''", "type": "container" }
-#    container_readyness: { "ip": "{{vpn_cloud_services.local.gateway}}", "port": "{{cloud_vpn.interface.port}}", "protocol": "udp" }
+    container_readyness: { "type": "ping_check", "ip": "{{vpn_cloud_services.local.gateway}}" }
+#    container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.gateway}}", "port": "{{cloud_vpn.interface.port}}", "protocol": "udp" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
   
@@ -155,5 +155,5 @@
         { "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "iif": "{{default_network_interface}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']

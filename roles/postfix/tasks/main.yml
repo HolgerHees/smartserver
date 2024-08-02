@@ -53,7 +53,7 @@
   vars:
     container_name: "postfix"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_postfix_ip}}", "port": "25" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_postfix_ip}}", "port": "25" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
@@ -64,15 +64,6 @@
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => postfix" }
     container_to_outside_rules:
       - { saddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "{{mailserver_port}}", oif: "{{default_network_interface}}", comment: "postfix => extern mailserver" }
-  include_tasks: roles/firewall/shared/allow_services.yml
-  tags: ['firewall_config']
-
-- name: allow service
-  vars:
-    firewall_name: "postfix"
-    firewall_rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_postfix_ip}}"
-      - "saddr {{podman_postfix_ip}} proto tcp dport {{mailserver_port}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

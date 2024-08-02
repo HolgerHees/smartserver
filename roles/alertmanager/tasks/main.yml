@@ -55,8 +55,8 @@
   vars:
     container_name: "alertmanager"
     container_changed: "{{podman_container_state.changed}}"
-    container_post_exec: "/bin/sh -c \"(sleep 15 && {{ global_etc }}alertmanager/silent_setup.py) &\""
-    container_readyness: { "ip": "{{podman_alertmanager_ip}}", "port": "9093" }
+    container_post_exec: "sleep 5 && {{ global_etc }}alertmanager/silent_setup.py &"
+    container_readyness: { "type": "port_check", "ip": "{{podman_alertmanager_ip}}", "port": "9093" }
     container_after: [ "postfix" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

@@ -57,7 +57,7 @@
   vars:
     container_name: "mosquitto"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_mosquitto_ip}}", "port": "1883" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_mosquitto_ip}}", "port": "1883" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
@@ -65,7 +65,7 @@
   vars:
     service_name: "mosquitto"
     nat_rules: { ip: "{{podman_mosquitto_ip}}", ports: "{{mosquitto_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: add service name

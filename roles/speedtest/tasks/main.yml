@@ -49,7 +49,7 @@
   vars:
     container_name: "speedtest"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_speedtest_ip}}", "port": "80" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_speedtest_ip}}", "port": "80" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
@@ -63,7 +63,7 @@
   vars:
     service_name: "speedtest"
     nat_rules: { ip: "{{podman_speedtest_ip}}", ports: "{{speedtest_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 # ***** DEPENDENCY CONFIGS *****

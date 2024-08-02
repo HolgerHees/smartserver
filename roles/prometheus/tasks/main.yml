@@ -72,7 +72,7 @@
     container_changed: "{{podman_container_state.changed}}"
     container_pre_exec: "/opt/scripts/prometheus_generator {{ global_etc }}prometheus/"
     container_reload_exec: "/usr/bin/podman kill --signal=HUP prometheus"
-    container_readyness: { "ip": "{{podman_prometheus_ip}}", "port": "9090" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_prometheus_ip}}", "port": "9090" }
     container_after: [ "alertmanager" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
@@ -84,15 +84,6 @@
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_alertmanager_ip}}", protocol: "tcp", dport: "9093", comment: "prometheus => alertmanager" }
     container_to_host_rules:
       - { saddr: "{{podman_prometheus_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (openhab, netdata ...)" } # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
-  include_tasks: roles/firewall/shared/allow_services.yml
-  tags: ['firewall_config']
-
-- name: allow service
-  vars:
-    firewall_name: "prometheus"
-    firewall_rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_alertmanager_ip}}"
-      - "saddr {{podman_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

@@ -112,7 +112,7 @@
   vars:
     container_name: "ci_service"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_ci_service_ip}}", "port": "80" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_ci_service_ip}}", "port": "80" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
@@ -125,7 +125,7 @@
       - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", comment: "apache access" }
     container_to_outside_rules:
       - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", oif: "{{default_network_interface}}", comment: "ci_service => 'github'" }
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
   
 - name: register service watcher

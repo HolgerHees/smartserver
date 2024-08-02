@@ -60,7 +60,7 @@
   vars:
     container_name: "influxdb"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "cmd": "wget -q http://{{podman_influxdb_ip}}:8086/ping", "type": "host" }
+    container_readyness: { "type": "url_check", "url": "http://{{podman_influxdb_ip}}:8086/ping" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

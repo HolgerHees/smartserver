@@ -81,7 +81,7 @@
   vars:
     container_name: "vsftpd"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_camera_ftp_ip}}", "port": "21" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_camera_ftp_ip}}", "port": "21" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
@@ -91,7 +91,7 @@
     container_to_outside_rules:
       - { saddr: "{{podman_camera_ftp_ip}}", sport: "20", daddr: "{{intern_networks}}", protocol: "tcp", comment: "camera_ftp => internal networks" }
     nat_rules: { ip: "{{podman_camera_ftp_ip}}", ports: "{{camera_ftp_published_ports}}" }
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
 - name: prepare firewall rules

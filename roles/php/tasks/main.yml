@@ -59,7 +59,7 @@
   vars:
     container_name: "php"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "cmd": "/usr/bin/true", "type": "container" }
+    container_readyness: { "type": "host_exec", "cmd": "ping -c 1 {{podman_php_ip}} > /dev/null" }
     container_after: [ "mysql", "redis", "postfix", "influxdb" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
@@ -76,19 +76,6 @@
       - { saddr: "{{podman_php_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (rest api's ...)" }
     container_to_outside_rules:
       - { saddr: "{{podman_php_ip}}", oif: "{{default_network_interface}}", comment: "php => all outgoing networks" }
-  include_tasks: roles/firewall/shared/allow_services.yml
-  tags: ['firewall_config']
-
-- name: allow service
-  vars:
-    firewall_name: "php"
-    firewall_rules:
-      - "saddr {{podman_php_ip}} daddr {{podman_mysql_ip}}"
-      - "saddr {{podman_php_ip}} daddr {{podman_influxdb_ip}}"
-      - "saddr {{podman_php_ip}} daddr {{podman_redis_ip}}"
-      - "saddr {{podman_php_ip}} daddr {{podman_postfix_ip}}"
-      - "saddr {{podman_php_ip}} daddr {{default_server_ip}} proto tcp dport 443"
-      - "saddr {{podman_php_ip}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

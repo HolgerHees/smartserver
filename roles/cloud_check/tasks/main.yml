@@ -62,7 +62,7 @@
   vars:
     container_name: "cloud_check"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_cloud_check_ip}}", "port": "80" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_cloud_check_ip}}", "port": "80" }
     container_after: [ "cloud_mosquitto" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
@@ -77,7 +77,7 @@
       - { saddr: "{{podman_cloud_check_ip}}", protocol: "tcp", dport: "80", oif: "{{default_network_interface}}", comment: "cloud_check => http endpoint of other clouds" }
       - { saddr: "{{podman_cloud_check_ip}}", protocol: "icmp", oif: "{{default_network_interface}}", comment: "cloud_check => icmp endpoint of other clouds" }
       - { saddr: "{{podman_cloud_check_ip}}", daddr: "{{vpn_cloud_services['local']['mosquitto']}}", protocol: "tcp", dport: "1883", comment: "cloud_check => cloud mosquitto" }
-  include_tasks: roles/firewall/shared/allow_services.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
   
 # ***** DEPENDENCY CONFIGS *****

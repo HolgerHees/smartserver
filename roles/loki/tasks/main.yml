@@ -48,7 +48,7 @@
   vars:
     container_name: "loki"
     container_changed: "{{podman_container_state.changed}}"
-    container_readyness: { "ip": "{{podman_loki_ip}}", "port": "3100" }
+    container_readyness: { "type": "port_check", "ip": "{{podman_loki_ip}}", "port": "3100" }
     container_after: [ "alertmanager" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
@@ -59,15 +59,6 @@
     container_to_container_rules:
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_loki_ip}}", protocol: "tcp", dport: "3100", comment: "prometheus => loki" }
       - { saddr: "{{podman_loki_ip}}", daddr: "{{podman_alertmanager_ip}}", protocol: "tcp", dport: "9093", comment: "prometheus => alertmanager" }
-  include_tasks: roles/firewall/shared/allow_services.yml
-  tags: ['firewall_config']
-
-- name: allow service
-  vars:
-    firewall_name: "loki"
-    firewall_rules:
-      - "saddr {{podman_prometheus_ip}} daddr {{podman_loki_ip}}"
-      - "saddr {{podman_loki_ip}} daddr {{podman_alertmanager_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

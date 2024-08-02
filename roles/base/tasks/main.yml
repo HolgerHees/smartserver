@@ -50,6 +50,9 @@
       
       , wireguard-tools
       
+      , netcat
+      , wget
+
       , curl
       , bzip2
       , lsof
@@ -60,7 +63,7 @@
       , git
 
 #      , gcc
-      , make
+#      , make
 
       , sshpass
       
@@ -98,6 +101,9 @@
 
       , wireguard-tools
       
+      , netcat
+      , wget
+
       , curl
       , bzip2
       , lsof
@@ -108,7 +114,7 @@
       , git
 
 #      , gcc
-      , make
+#      , make
 
       , sshpass
 
@@ -142,6 +148,9 @@
       , arp-scan           # useful for network exploring
 
       , wireguard-tools
+
+      , netcat             # used for readyness checks
+      , wget               # used for readyness checks
 
       , curl               # used to fetch e.g. picture of the day
       , bzip2              # used to import databases with bzcat
