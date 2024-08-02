@@ -30,11 +30,11 @@ Environment=NETAVARK_FW=none
 {% elif container_readyness['type'] == 'host_exec' %}
     {%- set readyness_cmd=container_readyness['cmd'] %}
 {% endif %}
-ExecStartPre=/bin/sh -c "echo 'Readyness check started' && while ! {{readyness_cmd}}; do sleep {{ '1.0' if container_readyness['type'] in ['url_check','container_exec','host_exec'] else '0.5' }}; done && systemd-notify --ready && echo 'Readyness detected' &"
+ExecStartPre=/bin/sh -c "echo 'Starting readyness check' && while ! {{readyness_cmd}}; do sleep {{ '1.0' if container_readyness['type'] in ['url_check','container_exec','host_exec'] else '0.5' }}; done && systemd-notify --ready && echo 'Readyness detected' &"
 {% if container_pre_exec is defined and container_pre_exec != None %}
 ExecStartPre=/bin/sh -c "echo 'Run PreExec' && {{container_pre_exec}}"
 {% endif %}
-ExecStart=/bin/sh -c "/usr/bin/podman start {{container_name}} | grep -v \"^{{container_name}}$\""
+ExecStart=/bin/sh -c "echo 'Starting container' && /usr/bin/podman start {{container_name}} | grep -v \"^{{container_name}}$\""
 ExecStartPost=/bin/sh -c "(echo 'Set gateway' && /opt/container/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined and container_routes != None %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %})"
 {% if container_post_exec is defined and container_post_exec != None %}
 ExecStartPost=/bin/sh -c "echo 'Run PostExec' && {{container_post_exec}}"
