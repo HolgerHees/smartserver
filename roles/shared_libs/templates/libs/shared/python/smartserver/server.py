@@ -255,6 +255,8 @@ class Server():
             if len(self.socket_rooms[room]) == 0:
                 logging.info("Websocket: close room '{}'".format(room))
                 del self.socket_rooms[room]
+        except ValueError:
+            logging.error("Websocket: client '{}' not in room '{}'".format(sid, room))
         except KeyError:
             logging.error("Websocket: room '{}' not registered".format(room))
         leave_room(room)

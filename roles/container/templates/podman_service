@@ -13,7 +13,7 @@ NotifyAccess=all
 TimeoutStartSec=0
 TimeoutStopSec=30
 Restart=on-failure
-RestartSec=10
+RestartSec=60
 #RestartSteps=4
 #RestartMaxDelaySec=60
 Environment=NETAVARK_FW=none
@@ -22,7 +22,7 @@ Environment=NETAVARK_FW=none
 {% elif container_readyness['type'] == 'ping_check' %}
     {%- set readyness_cmd="ping -c 1 " + container_readyness['ip'] + " > /dev/null" %}
 {% elif container_readyness['type'] == 'port_check' %}
-    {%- set readyness_cmd="nc -w 5 -z" + ( ' -u' if 'protocol' in container_readyness and container_readyness['protocol'] == 'udp' else '' ) + " " + container_readyness['ip'] + " " + container_readyness['port'] %}
+    {%- set readyness_cmd="nc -w 1 -z" + ( ' -u' if 'protocol' in container_readyness and container_readyness['protocol'] == 'udp' else '' ) + " " + container_readyness['ip'] + " " + container_readyness['port'] %}
 {% elif container_readyness['type'] == 'url_check' %}
     {%- set readyness_cmd="wget -q " + container_readyness['url'] %}
 {% elif container_readyness['type'] == 'container_exec' %}
@@ -34,12 +34,12 @@ ExecStartPre=/bin/sh -c "echo 'Service - Starting readyness check' && while ! {{
 {% if container_pre_exec is defined and container_pre_exec != None %}
 ExecStartPre=/bin/sh -c "echo 'Service - Run PreExec' && {{container_pre_exec}}"
 {% endif %}
-ExecStart=/bin/sh -c "echo 'Service - Starting container' && /usr/bin/podman start {{container_name}} | grep -v \"^{{container_name}}$\""
+ExecStart=/bin/sh -c "echo 'Service - Starting container' && /usr/bin/podman start {{container_name}} > /dev/null"
 ExecStartPost=/bin/sh -c "echo 'Service - Set gateway' && /opt/container/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined and container_routes != None %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %}"
 {% if container_post_exec is defined and container_post_exec != None %}
 ExecStartPost=/bin/sh -c "echo 'Service - Run PostExec' && {{container_post_exec}}"
 {% endif %}
-ExecStop=/bin/sh -c "echo 'Service - Stopping container' && /usr/bin/podman stop -t 15 {{container_name}} | grep -v \"^{{container_name}}$\""
+ExecStop=/bin/sh -c "echo 'Service - Stopping container' && /usr/bin/podman stop -t 15 {{container_name}} > /dev/null"
 {% if container_reload_exec is defined and container_reload_exec != None %}
 ExecReload=/bin/sh -c "echo 'Service - Run ReloadExec' && {{container_reload_exec}}"
 {% endif %}
