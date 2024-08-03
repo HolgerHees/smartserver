@@ -54,6 +54,12 @@ class Fritzbox(_handler.Handler):
 
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
+    def terminate(self):
+        with self.delayed_lock:
+            if self.delayed_wakeup_timer is not None:
+                self.delayed_wakeup_timer.cancel()
+        super().terminate()
+
     def _initNextRuns(self):
         now = datetime.now()
         for fritzbox_ip in self.fritzbox_devices:

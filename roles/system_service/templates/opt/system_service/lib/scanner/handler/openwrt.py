@@ -45,6 +45,12 @@ class OpenWRT(_handler.Handler):
 
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
+    def terminate(self):
+        with self.delayed_lock:
+            if self.delayed_wakeup_timer is not None:
+                self.delayed_wakeup_timer.cancel()
+        super().terminate()
+
     def _initNextRuns(self, limit_openwrt_ip = None):
         now = datetime.now()
         for openwrt_ip in self.openwrt_devices:

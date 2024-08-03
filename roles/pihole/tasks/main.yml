@@ -102,6 +102,11 @@
     log_driver: journald
     log_options:
       tag: pihole
+    no_healthcheck: yes # disable healthcheck for now, because systemd is producing startup errors related to not successful first healthcheck
+    #healthcheck: "dig +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"
+    #healthcheck_start_period: 30s
+    #healthcheck_timeout: 30s
+    #healthcheck_interval: 30s
     network: "macvlan"
     ip: "{{pihole_ip}}"
     ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"

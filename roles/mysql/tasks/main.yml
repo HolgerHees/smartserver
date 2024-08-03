@@ -42,7 +42,8 @@
       - label=disable
 #    command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
     user: "{{system_users['mysql'].id}}:{{system_groups['mysql'].id}}"
-    healthcheck: "healthcheck.sh --connect --innodb_initialized"
+    # !!! DISABLED HEALTHCHECK => see pihole healthcheck
+    #healthcheck: "healthcheck.sh --connect --innodb_initialized"
     #health_startup_cmd: "healthcheck.sh --connect --innodb_initialized"
     #health_startup_interval: "1s"
     #health_startup_timeout: "30s"

@@ -4,34 +4,6 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}dnsmasq" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: check named service
-  stat:
-    path: "{{ global_etc }}named/"
-  register: named_service
-
-- name: cleanup named
-  block:
-    - name: cleanup named configs
-      file:
-        path: "{{item}}"
-        state: absent
-      with_items:
-        - '{{ global_etc }}named'
-        - '/etc/systemd/system/named.service'
-        - '{{global_etc}}systemd_watcher/services/named.conf'
-    - name: stop named
-      systemd:
-        name: named
-        state: stopped
-        enabled: false
-    - name: cleanup named podman
-      shell: "podman rm named"
-    - name: temporary enable public dns
-      copy:
-        content: "nameserver 8.8.8.8"
-        dest: "/etc/resolv.conf"
-  when: "named_service.stat.exists"
-
 - name: copy config
   template:
     src: "templates/etc/{{item}}"
