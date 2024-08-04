@@ -1,4 +1,4 @@
-FROM alpine:{{alpine_version}}
+FROM alpine:{{image_version}}
 
 # Entrypoint
 COPY entrypoint.sh /entrypoint.sh

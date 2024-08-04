@@ -15,12 +15,11 @@
     mode: 0600
   register: file_status
   with_items: "{{image_files + (['roles/container/templates/entrypoint.sh'] if entrypoint_services is defined else [] )}}"
-  tags: ['container_entrypoint_config']
-  
+
 - name: "container : build_podman_image : get container image id"
   shell: "podman inspect --format '{{ '{{' }} .Image {{ '}}'}}' {{container_name}}"
   register: "podman_container_image_state"
-  changed_when: "podman_container_image_state.rc != 0"
+  changed_when: no #"podman_container_image_state.rc != 0"
   failed_when: no
 #  when: "file_status.changed"
 
@@ -38,7 +37,7 @@
     enabled: yes
     masked: no
   failed_when: no
-  when: "file_status.changed or podman_container_image_state.stdout != podman_named_image_state.stdout or podman_container_image_state.rc != 0 or podman_named_image_state.rc != 0"
+  when: "file_status.changed or podman_named_image_state.rc != 0 or ( podman_container_image_state.rc == 0 and podman_container_image_state.stdout != podman_named_image_state.stdout )"
 
 - name: "container : build_podman_image : clean old image"
   shell: "podman image rm -f {{item}}"
@@ -47,7 +46,7 @@
         {% if podman_container_image_state.rc == 0 %}'{{podman_container_image_state.stdout}}',{% endif %}
         {% if podman_named_image_state.rc == 0 and podman_container_image_state.stdout != podman_named_image_state.stdout %}'{{podman_named_image_state.stdout}}',{% endif %}
     ]
-  when: "file_status.changed or podman_container_image_state.stdout != podman_named_image_state.stdout or podman_container_image_state.rc != 0 or podman_named_image_state.rc != 0"
+  when: "file_status.changed or podman_named_image_state.rc != 0 or ( podman_container_image_state.rc == 0 and podman_container_image_state.stdout != podman_named_image_state.stdout )"
 
 # async podman build is used to show progress and prevent travisci killing our job because of inactivity
 - name: "container : build_podman_image : compose podman image => image does not exists"
@@ -56,7 +55,7 @@
   poll: 0
   register: podman_build
   changed_when: yes
-  when: "file_status.changed or podman_container_image_state.stdout != podman_named_image_state.stdout or podman_container_image_state.rc != 0 or podman_named_image_state.rc != 0"
+  when: "file_status.changed or podman_named_image_state.rc != 0 or ( podman_container_image_state.rc == 0 and podman_container_image_state.stdout != podman_named_image_state.stdout )"
 
 - name: "container : build_podman_image : wait for podman image => image does not exists"
   async_status: jid={{ podman_build.ansible_job_id }}

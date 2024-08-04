@@ -1,4 +1,4 @@
-FROM alpine:{{alpine_version}}
+FROM alpine:{{image_version}}
 
 RUN apk --no-cache add cmake eudev-dev libusb-compat-dev libxml2-dev linux-headers git make gcc musl-dev shadow python3 py3-pip py3-paho-mqtt tzdata inetutils-telnet
 

@@ -80,7 +80,7 @@
       - roles/ci_service/templates/container/Dockerfile
     entrypoint_services:
       - "/opt/shared/python/install.py"
-      - "/opt/ci_service/ci_service &"
+      - "{{global_opt}}ci_service/ci_service &"
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create podman container
@@ -100,12 +100,12 @@
     network: "isolated"
     ip: "{{podman_ci_service_ip}}"
     volumes:
-      - '{{global_opt}}shared/python:/opt/shared/python:ro'
-      - '{{global_opt}}ci_service/:/opt/ci_service:ro'
-      - "{{global_build}}ci_job/:/opt/ci_job/:rw"
-      - "{{global_tmp}}:/tmp/ci_service/:rw"
-      - "{{global_lib}}ci_service/:/var/lib/ci_service/:rw"
-      - "{{global_log}}ci_service/:/var/log/ci_service/:rw"
+      - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
+      - '{{global_opt}}ci_service/:{{global_opt}}ci_service:ro,z' # needs to be same path as on host, because inside the container we use 'with nsenter.Host():'
+      - "{{global_build}}ci_job/:{{global_build}}ci_job/:rw,z"
+      - "{{global_tmp}}:{{global_tmp}}:rw,z"
+      - "{{global_lib}}ci_service/:{{global_lib}}ci_service/:rw,z"
+      - "{{global_log}}ci_service/:{{global_log}}ci_service/:rw,z"
   register: "podman_container_state"
   notify: "restart ci_service"
 
