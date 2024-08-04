@@ -80,14 +80,12 @@
      - "8000/tcp"
      - "162"
      - "514"
-  register: "podman_container_state"
   notify: "restart librenms"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "librenms"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_librenms_ip}}", "port": "8000" }
     container_after: [ "redis", "mysql" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

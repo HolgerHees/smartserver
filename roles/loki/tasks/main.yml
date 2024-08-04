@@ -40,14 +40,12 @@
       - '{{global_lib}}loki:/loki'
     exposed_ports:
      - "3100"
-  register: "podman_container_state"
   notify: "restart loki"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "loki"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_loki_ip}}", "port": "3100" }
     container_after: [ "alertmanager" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

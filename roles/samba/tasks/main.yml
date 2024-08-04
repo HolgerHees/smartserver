@@ -66,14 +66,12 @@
       - '/etc/passwd:/etc/passwd:ro'
 #      - '/etc/shadow:/etc/shadow:ro'
     published_ports: "{{samba_published_ports}}"
-  register: "podman_container_state"
   notify: "restart samba"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "samba"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_samba_ip}}", "port": "445" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

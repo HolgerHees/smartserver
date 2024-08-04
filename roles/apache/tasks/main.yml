@@ -257,17 +257,8 @@
       - "80"
       - "443"
       - "10114"
-  register: "podman_container_state"
   notify: "restart apache2"
   
-- name: allow letsencrypt service
-  vars:
-    service_name: "apache_letsencrypt"
-    network_to_host_rules:
-      - { iif: "{{default_network_interface}}", protocol: "tcp", dport: "80", comment: "external letsencrypt => apache" }
-  include_tasks: roles/firewall/shared/allow_service.yml
-  tags: ['firewall_config']
-
 # ***** SERVICE CONFIGS *****
 - name: disable old systemd service
   shell: "if [ -f /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service ]; then mv /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service.org; echo \"1\"; else echo \"0\"; fi"
@@ -277,11 +268,18 @@
 - name: handle systemd service
   vars:
     container_name: "apache2"
-    container_changed: "{{podman_container_state.changed}}"
     container_reload_exec: "/usr/bin/podman exec apache2 sh -c \"apachectl -k graceful\""
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "80" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
+
+- name: allow letsencrypt service
+  vars:
+    service_name: "apache_letsencrypt"
+    network_to_host_rules:
+      - { iif: "{{default_network_interface}}", protocol: "tcp", dport: "80", comment: "external letsencrypt => apache" }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
 
 # ***** DEPENDENCY CONFIGS *****
 - name: set logrotate job

@@ -47,14 +47,12 @@
       - '{{global_lib}}alertmanager:/alertmanager'
     exposed_ports:
      - "9093"
-  register: "podman_container_state"
   notify: "restart alertmanager"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "alertmanager"
-    container_changed: "{{podman_container_state.changed}}"
     container_post_exec: "sleep 5 && {{ global_etc }}alertmanager/silent_setup.py &"
     container_readyness: { "type": "port_check", "ip": "{{podman_alertmanager_ip}}", "port": "9093" }
     container_after: [ "postfix" ]

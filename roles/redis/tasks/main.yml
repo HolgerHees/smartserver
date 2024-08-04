@@ -19,14 +19,12 @@
     ip: "{{podman_redis_ip}}"
     exposed_ports:
      - "6379"
-  register: "podman_container_state"
   notify: "restart redis"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "redis"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_redis_ip}}", "port": "6379" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

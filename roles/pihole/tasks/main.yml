@@ -120,14 +120,12 @@
     # - "67:67/udp"
       - "80/tcp"
       - "443/tcp"
-  register: "podman_container_state"
   notify: "restart pihole"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "pihole"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{pihole_ip}}", "port": "80" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

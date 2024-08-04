@@ -73,14 +73,12 @@
     network: "isolated"
     ip: "{{podman_camera_ftp_ip}}"
     published_ports: "{{camera_ftp_published_ports}}"
-  register: "podman_container_state"
   notify: "restart vsftpd"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "vsftpd"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_camera_ftp_ip}}", "port": "21" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

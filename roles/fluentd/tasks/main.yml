@@ -82,14 +82,12 @@
       - '{{ global_etc }}fluentd:/fluentd/etc/'
       - '{{ global_log }}:{{ global_log }}'
       - '/run/log/journal:/run/log/journal'
-  register: "podman_container_state"
   notify: "restart fluentd"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "fluentd"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "ping_check", "ip": "{{podman_fluentd_ip}}" }
     container_after: [ "loki" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

@@ -120,14 +120,12 @@
     volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard'
     published_ports: "{{wireguard_cloud_published_ports}}"
-  register: "podman_container_state"
   notify: "restart wireguard_cloud"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "wireguard_cloud"
-    container_changed: "{{podman_container_state.changed}}"
     container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
     container_readyness: { "type": "ping_check", "ip": "{{vpn_cloud_services.local.gateway}}" }

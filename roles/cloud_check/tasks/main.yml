@@ -57,14 +57,12 @@
     volumes:
       - '{{global_opt}}cloud_check/:/opt/cloud_check'
       - '{{cloud_path}}/remote:/cloud/remote:rshared'
-  register: "podman_container_state"
   notify: "restart cloud_check"
 
 # ***** SERVICE CONFIGS *****
 - name: handle systemd service
   vars:
     container_name: "cloud_check"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_cloud_check_ip}}", "port": "80" }
     container_after: [ "cloud_mosquitto" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

@@ -386,7 +386,6 @@
 - name: handle systemd service
   vars:
     container_name: "openhab"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8080" }
     container_after: [ "mysql", "influxdb", "mosquitto" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
