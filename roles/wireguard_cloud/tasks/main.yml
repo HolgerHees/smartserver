@@ -22,15 +22,6 @@
     mode: 0600
   when: "is_production and key_directory.matched > 0"
 
-- name: copy startup script
-  template:
-    src: "roles/wireguard_cloud/templates/util/startup.sh"
-    dest: "{{global_etc}}wireguard_cloud/util/startup.sh"
-    owner: root
-    group: root
-    mode: 0700
-  notify: "restart wireguard_cloud"
-
 - name: generate server keys if not exists
   shell: "cd {{global_etc}}wireguard_cloud/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
   register: stat_server_key_result
