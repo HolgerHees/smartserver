@@ -218,7 +218,7 @@
 
 - name: "create systemd service for 'macvlan_bridge'"
   template:
-    src: "templates/macvlan_bridge_service"
+    src: "templates/macvlan_bridge.service"
     dest: "/etc/systemd/system/macvlan_bridge.service"
     owner: root
     group: root

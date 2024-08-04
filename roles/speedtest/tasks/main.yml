@@ -10,9 +10,11 @@
     image_version: "v{{speedtest_version}}"
     image_files:
       - roles/speedtest/templates/container/Dockerfile
-      - roles/speedtest/templates/container/entrypoint.sh
       - roles/speedtest/templates/container/patches/ipInfo.js
       - roles/speedtest/templates/container/patches/gzip.js
+    entrypoint_services:
+      - "iperf3 --server --forceflush &"
+      - "node server.js &"
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: prepare published_ports
@@ -39,8 +41,6 @@
     exposed_ports:
      - "80"
     published_ports: "{{speedtest_published_ports}}"
-#    volumes:
-#      - "{{global_build}}speedtest/entrypoint.sh:/entrypoint.sh"
   register: "podman_container_state"
   notify: "restart speedtest"
 

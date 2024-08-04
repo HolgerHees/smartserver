@@ -3,7 +3,6 @@
     directories:
       - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{global_etc}}wireguard_cloud" }
       - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{global_etc}}wireguard_cloud/keys" }
-      - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{global_etc}}wireguard_cloud/util" }
       - { mode: "u=rwx,g=,o=", owner: "root", group: "root", path: "{{config_path}}vault/wireguard_cloud/" }
   include_tasks: roles/_shared/create_directories.yml
 
@@ -81,6 +80,7 @@
     image_version: "{{alpine_version}}"
     image_files:
       - roles/wireguard_cloud/templates/container/Dockerfile
+      - roles/wireguard_cloud/templates/container/entrypoint.sh
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create podman network

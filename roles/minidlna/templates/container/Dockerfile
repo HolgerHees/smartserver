@@ -1,12 +1,11 @@
 FROM alpine:{{alpine_version}}
 
-# Install
-RUN apk --no-cache add bash curl minidlna tini shadow su-exec tzdata
-
 # Entrypoint
-COPY entrypoint.sh /
+COPY entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
+RUN chmod 755 /entrypoint.sh \
+    && apk --update --no-cache add bash curl minidlna tini shadow su-exec tzdata
 
-ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
+#ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
 #ENTRYPOINT ["sleep", "500000"]

@@ -49,7 +49,9 @@
     image_version: "{{alpine_version}}"
     image_files:
       - roles/weather_service/templates/container/Dockerfile
-      - roles/weather_service/templates/container/entrypoint.sh
+    entrypoint_services:
+      - "/opt/shared/python/install.py"
+      - "/opt/weather_service/weather_service &"
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create podman container

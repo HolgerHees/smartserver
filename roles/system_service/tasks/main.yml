@@ -45,7 +45,9 @@
     image_version: "{{alpine_version}}"
     image_files:
       - roles/system_service/templates/container/Dockerfile
-      - roles/system_service/templates/container/entrypoint.sh
+    entrypoint_services:
+      - "/opt/shared/python/install.py"
+      - "/opt/system_service/system_service &"
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create podman container
@@ -68,6 +70,7 @@
       - "8507"
       - "2055/udp"
     volumes:
+#      - '{{global_build}}system_service/entrypoint.sh:/entrypoint.sh:rw'
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
       - '{{global_opt}}system_service/:/opt/system_service:ro'
       - "{{global_lib}}system_service/:/var/lib/system_service:rw"

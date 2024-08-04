@@ -57,21 +57,26 @@ echo "}" >> /etc/logrotate.d/vsftpd
 touch $LOG_FILE
 tail -F $LOG_FILE &
 
+PID=""
+exitcode=1
+
 stop()
 {
-    echo "Shutting down server"
-    killall vsftpd
-    exit
+    echo "Entrypoint - Shutting down server"
+    exitcode=0
+
+    kill -s TERM $PID
+    exit $exitcode
 }
 
 trap "stop" SIGTERM SIGINT
 
 /usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf &
-pid=$!
+PID=$!
 
-echo "Server started"
+echo "Entrypoint - Server started"
 
 #while :; do sleep 360 & wait; done
-while `ps -p $pid >/dev/null`; do sleep 15 & wait; done
+while test -d /proc/$PID/; do sleep 5; done
 
-exit 1
+exit $exitcode

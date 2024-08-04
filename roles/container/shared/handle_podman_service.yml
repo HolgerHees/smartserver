@@ -16,7 +16,7 @@
 #  vars:
 #    container_pid: "{{podman_pid_state.stdout}}"
   copy:
-    content: "{{ lookup('template', 'roles/container/templates/podman_service') }}"
+    content: "{{ lookup('template', 'roles/container/templates/podman.service') }}"
     dest: "/etc/systemd/system/{{container_name}}.service"
     owner: root
     group: root

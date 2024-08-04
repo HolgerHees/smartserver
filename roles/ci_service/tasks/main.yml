@@ -78,7 +78,9 @@
     image_version: "{{alpine_version}}"
     image_files:
       - roles/ci_service/templates/container/Dockerfile
-      - roles/ci_service/templates/container/entrypoint.sh
+    entrypoint_services:
+      - "/opt/shared/python/install.py"
+      - "/opt/ci_service/ci_service &"
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create podman container
@@ -99,11 +101,11 @@
     ip: "{{podman_ci_service_ip}}"
     volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
-      - '{{global_opt}}ci_service/:{{global_opt}}ci_service:ro'
-      - "{{global_build}}ci_job/:{{global_build}}ci_job/:rw"
-      - "{{global_tmp}}:{{global_tmp}}:rw"
-      - "{{global_lib}}ci_service/:{{global_lib}}ci_service/:rw"
-      - "{{global_log}}ci_service/:{{global_log}}ci_service/:rw"
+      - '{{global_opt}}ci_service/:/opt/ci_service:ro'
+      - "{{global_build}}ci_job/:/opt/ci_job/:rw"
+      - "{{global_tmp}}:/tmp/ci_service/:rw"
+      - "{{global_lib}}ci_service/:/var/lib/ci_service/:rw"
+      - "{{global_log}}ci_service/:/var/log/ci_service/:rw"
   register: "podman_container_state"
   notify: "restart ci_service"
 

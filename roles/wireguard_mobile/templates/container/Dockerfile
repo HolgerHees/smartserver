@@ -1,10 +1,8 @@
 FROM alpine:{{image_version}}
 
-COPY entrypoint.sh /usr/sbin/
+COPY entrypoint.sh /entrypoint.sh
 
-RUN apk add --no-cache --update wireguard-tools tzdata \
-    && chmod +x /usr/sbin/entrypoint.sh
+RUN chmod 755 /entrypoint.sh \
+    && apk add --no-cache --update wireguard-tools tzdata
 
-ENTRYPOINT [ "/usr/sbin/entrypoint.sh" ]
-
-EXPOSE {{mobile_vpn_internal_port}}/udp
+ENTRYPOINT [ "/entrypoint.sh" ]

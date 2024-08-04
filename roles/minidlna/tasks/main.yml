@@ -30,7 +30,8 @@
     image_version: "{{alpine_version}}"
     image_files:
       - roles/minidlna/templates/container/Dockerfile
-      - roles/minidlna/templates/container/entrypoint.sh
+    entrypoint_services:
+      - "/usr/sbin/minidlnad -f /etc/minidlna/minidlna.conf -S &"
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: prepare volumes
@@ -53,8 +54,7 @@
       - label=disable
     env:
       TZ: "{{timezone}}"
-      PGID: "{{system_groups['www'].id}}"
-      PUID: "{{system_users['www'].id}}"
+    user: "{{system_users['www'].id}}:{{system_groups['www'].id}}"
     log_driver: journald
     log_options:
       tag: minidlna
