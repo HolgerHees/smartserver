@@ -16,6 +16,7 @@
       - "iperf3 --server --forceflush &"
       - "node server.js &"
   include_tasks: roles/container/shared/build_podman_image.yml
+  tags: ['container_entrypoint_config']
 
 - name: prepare published_ports
   set_fact:

@@ -29,6 +29,7 @@
       - "/build/postfix_exporter/postfix_exporter --postfix.logfile_path /dev/stdout --web.listen-address :80 2>&1 &"
       - "postfix -c /etc/postfix start-fg 2>&1 &"
   include_tasks: roles/container/shared/build_podman_image.yml
+  tags: ['container_entrypoint_config']
 
 - name: create podman container
   containers.podman.podman_container:
