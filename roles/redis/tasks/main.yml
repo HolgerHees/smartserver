@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    redis_version: '7.2.5'
+    redis_version: '7.4.0'
   tags: [ 'update_notifier_config' ]
   
 - name: create podman container
@@ -44,7 +44,7 @@
   vars:
     name: "redis"
     type: "docker"
-    url: "https://raw.githubusercontent.com/antirez/redis/7.0/00-RELEASENOTES"
+    url: "https://raw.githubusercontent.com/antirez/redis/{{redis_version | regex_replace('\\.[0-9]+$', '') }}/00-RELEASENOTES"
     config: {
       repository: "redis",
       pattern: "^([0-9\\.]+)-alpine$"
