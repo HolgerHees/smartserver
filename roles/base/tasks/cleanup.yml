@@ -30,4 +30,5 @@
     - "{{global_build}}loki"
     #- "{{global_build}}influxdb"
     - "{{global_build}}mysql"
+    - "{{global_etc}}wireguard_cloud/util/startup.sh"
 
