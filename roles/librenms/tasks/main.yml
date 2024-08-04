@@ -86,6 +86,7 @@
 - name: handle systemd service
   vars:
     container_name: "librenms"
+    container_ip: "{{podman_librenms_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_librenms_ip}}", "port": "8000" }
     container_after: [ "redis", "mysql" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

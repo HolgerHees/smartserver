@@ -58,6 +58,7 @@
 - name: handle systemd service
   vars:
     container_name: "influxdb"
+    container_ip: "{{podman_influxdb_ip}}"
     container_readyness: { "type": "url_check", "url": "http://{{podman_influxdb_ip}}:8086/ping" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

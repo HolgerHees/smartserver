@@ -126,6 +126,7 @@
 - name: handle systemd service
   vars:
     container_name: "pihole"
+    container_ip: "{{pihole_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{pihole_ip}}", "port": "80" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

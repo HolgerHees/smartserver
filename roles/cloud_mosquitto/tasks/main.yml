@@ -41,6 +41,7 @@
 - name: handle systemd service
   vars:
     container_name: "cloud_mosquitto"
+    container_ip: "{{vpn_cloud_services.local.mosquitto}}"
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
     container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.mosquitto}}", "port": "1883" }

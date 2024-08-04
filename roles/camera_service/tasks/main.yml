@@ -86,6 +86,7 @@
 - name: handle systemd service
   vars:
     container_name: "camera_service"
+    container_ip: "{{podman_camera_service_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_camera_service_ip}}", "port": "80" }
     container_after: [ "camera_ftp" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

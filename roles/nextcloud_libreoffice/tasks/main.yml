@@ -49,6 +49,7 @@
 - name: handle systemd service
   vars:
     container_name: "libreoffice"
+    container_ip: "{{podman_libreoffice_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_libreoffice_ip}}", "port": "9980" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

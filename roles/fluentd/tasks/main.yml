@@ -88,6 +88,7 @@
 - name: handle systemd service
   vars:
     container_name: "fluentd"
+    container_ip: "{{podman_fluentd_ip}}"
     container_readyness: { "type": "ping_check", "ip": "{{podman_fluentd_ip}}" }
     container_after: [ "loki" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

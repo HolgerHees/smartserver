@@ -71,6 +71,7 @@
 - name: handle systemd service
   vars:
     container_name: "vcontrold"
+    container_ip: "{{podman_vcontrold_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_vcontrold_ip}}", "port": "3002" }
     container_after: [ "mosquitto" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

@@ -46,6 +46,7 @@
 - name: handle systemd service
   vars:
     container_name: "loki"
+    container_ip: "{{podman_loki_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_loki_ip}}", "port": "3100" }
     container_after: [ "alertmanager" ]
   include_tasks: roles/container/shared/handle_podman_service.yml

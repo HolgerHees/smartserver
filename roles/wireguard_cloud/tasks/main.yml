@@ -126,6 +126,7 @@
 - name: handle systemd service
   vars:
     container_name: "wireguard_cloud"
+    container_ip: "{{vpn_cloud_services.local.gateway}}"
     container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
     container_readyness: { "type": "ping_check", "ip": "{{vpn_cloud_services.local.gateway}}" }

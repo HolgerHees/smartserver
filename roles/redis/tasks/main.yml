@@ -25,6 +25,7 @@
 - name: handle systemd service
   vars:
     container_name: "redis"
+    container_ip: "{{podman_redis_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_redis_ip}}", "port": "6379" }
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

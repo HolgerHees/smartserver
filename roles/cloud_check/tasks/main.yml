@@ -63,6 +63,7 @@
 - name: handle systemd service
   vars:
     container_name: "cloud_check"
+    container_ip: "{{podman_cloud_check_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_cloud_check_ip}}", "port": "80" }
     container_after: [ "cloud_mosquitto" ]
   include_tasks: roles/container/shared/handle_podman_service.yml
