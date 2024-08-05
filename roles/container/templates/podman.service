@@ -10,7 +10,7 @@ After=network-online.target{% if container_after is defined and container_after 
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Type=notify
 NotifyAccess=all
-TimeoutStartSec=0
+TimeoutStartSec=120
 TimeoutStopSec=30
 Restart=on-failure
 RestartSec=60
