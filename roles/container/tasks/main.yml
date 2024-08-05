@@ -45,7 +45,13 @@
     - "apparmor_parser -R /etc/apparmor.d/podman"
   when: is_ubuntu
 
-##### DOCKER #####
+# https://bugzilla.redhat.com/show_bug.cgi?id=2121229
+# https://www.findbugzero.com/operational-defect-database/vendors/rh/defects/RHEL-25605
+- name: fix systemd-notify "permission denied" problem
+  shell: "semanage permissive -a systemd_notify_t"
+  when: is_rhel or is_fedora
+
+##### PODMAN #####
 - name: prepare needed directories
   vars:
     directories:
