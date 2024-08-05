@@ -101,7 +101,7 @@
 
       , wireguard-tools
       
-      , netcat
+      , netcat-openbsd
       , wget
 
       , curl
@@ -149,7 +149,7 @@
 
       , wireguard-tools
 
-      , netcat             # used for readyness checks
+      , netcat-openbsd     # used for readyness checks
       , wget               # used for readyness checks
 
       , curl               # used to fetch e.g. picture of the day
