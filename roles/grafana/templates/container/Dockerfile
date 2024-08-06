@@ -7,7 +7,7 @@ RUN sed -i '/\[auth.proxy\].*/a enabled = true\nheader_name = X-WEBAUTH-USER' /e
     sed -i 's/;reporting_enabled.*/reporting_enabled = false/' /etc/grafana/grafana.ini && \
     sed -i 's/;check_for_updates.*/check_for_updates = false/' /etc/grafana/grafana.ini && \
     sed -i 's/;check_for_plugin_updates.*/check_for_plugin_updates = false/' /etc/grafana/grafana.ini && \
-    sed -i 's/;public_key_retrieval_disabled.*/public_key_retrieval_disabled = true' /etc/grafana/grafana.ini && \
+    sed -i 's/;public_key_retrieval_disabled.*/public_key_retrieval_disabled = true/' /etc/grafana/grafana.ini && \
     sed -i 's/;disable_gravatar.*/disable_gravatar = true/' /etc/grafana/grafana.ini && \
     sed -i 's/;disable_sanitize_html.*/disable_sanitize_html = true/' /etc/grafana/grafana.ini
 
