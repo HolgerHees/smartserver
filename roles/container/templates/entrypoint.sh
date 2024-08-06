@@ -35,8 +35,14 @@ start()
     echo "Entrypoint - Service started with pid(s) '$watched_pids'"
 }
 
-start
+#ignore()
+#{
+#    echo "Entrypoint - Ignoring SIGHUP"
+#}
 
+#start
+
+#trap "ignore" SIGHUP
 trap "stop" SIGTERM SIGINT
 
 if [ ! -z "$watched_pids" ]; then

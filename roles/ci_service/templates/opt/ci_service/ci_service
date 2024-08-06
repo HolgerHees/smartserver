@@ -5,7 +5,6 @@ import json
 from datetime import datetime
 
 from smartserver.server import Server, serverWeb
-from smartserver.scheduler import Scheduler
 from smartserver.github import GitHub
 from smartserver.filewatcher import FileWatcher
 from smartserver import info
@@ -40,8 +39,6 @@ class Handler(Server):
         self.job_watcher = job_watcher.JobWatcher(self, config)
         self.job_executor = job_runner.JobExecutor(self, self.job_state, config)
 
-        self.scheduler = Scheduler("ci_service")
-
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
 
         self.has_leftovers = False
@@ -54,15 +51,14 @@ class Handler(Server):
     
     def start(self):
         self.cleanup()
-        self.scheduler.start()
         super().start()
 
     def terminate(self):
-        self.scheduler.terminate()
         self.job_state.terminate()
         super().terminate()
 
     def cleanup(self):
+        cleaned = False
         vid = self.job_state.getVID()
         if vid is not None:
             name = virtualbox.destroyMachine(vid)
@@ -71,11 +67,16 @@ class Handler(Server):
             else:
                 logging.info(u"Crashed VM - vid: '{}', not found.".format(vid))
             self.job_state.setVID(None)
+            cleaned = True
 
-        if self.job_state.getState() in ["running","crashed"] :
-            logging.info(u"Set job '{}' state to 'stopped'".format(vid,name))
-            self.job_state.setState("stopped")
+        if self.job_state.getState() == "running":
+            logging.info(u"Set job '{}' state to 'finished'".format(vid,name))
             self.job_executor.cleanLogfile()
+            self.job_state.setState("finished")
+            cleaned = True
+
+        if cleaned:
+            self.job_state.save()
 
         self.job_executor.cleanLeftoversLogfiles()
 
@@ -216,7 +217,7 @@ class Handler(Server):
             cmd = self.getRequestValue("cmd")
             start_os = self.getRequestValue("start_os")
 
-            if self.job_state.getState() in ["running","crashed"]:
+            if self.job_state.getState() == "running":
                 result.append(u"Can't start check. Unexpected state {} for commit '{}' was crashing.".format(self.job_state.getState(), self.job_state.getGitHash()))
                 return "\n".join(result)
             processed_git_hash = self.job_state.getGitHash()

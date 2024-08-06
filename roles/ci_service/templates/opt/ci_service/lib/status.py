@@ -2,7 +2,6 @@ import os
 import logging
 import json
 import threading
-import schedule
 
 from smartserver.confighelper import ConfigHelper
 
@@ -17,9 +16,6 @@ class State():
         self.lock = threading.Lock()
 
         self._restore()
-
-    def start(self):
-        schedule.every().day.at("05:00").do(self._dump)
 
     def terminate(self):
         if os.path.exists(self.dump_path):
@@ -39,6 +35,9 @@ class State():
             with self.lock:
                 ConfigHelper.saveConfig(self.dump_path, self.version, { "data": self.data } )
                 logging.info("Saved state")
+
+    def save(self):
+        self._dump()
 
     def setState(self, status):
         with self.lock:

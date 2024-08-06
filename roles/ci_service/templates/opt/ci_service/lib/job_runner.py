@@ -215,6 +215,7 @@ class JobRunner:
                             statuscode = "failed"
                     else:
                         self.job_state.setVID(None)
+                        self.job_state.save()
                         msg = u"Cleaning for commit '{}' successful".format(self.git_hash)
                         logging.info(msg)
                         self._writeWrapppedLog(lf, msg)
@@ -248,6 +249,7 @@ class JobRunner:
         diff = set(registered_machines.keys()) - set(self.registered_machines.keys())
         if len(diff) > 0:
             self.job_state.setVID(diff.pop())
+            self.job_state.save()
         # max 10 min. Long startup time is possible after an image upgrade.
         elif duration > 600:
             self.max_starttime_exceeded = True
@@ -337,14 +339,14 @@ class JobExecutor():
 
     def cleanLogfile(self):
         logging.info(u"State for commit '{}' changed to '{}'.".format(self.job_state.getGitHash(), self.job_state.getState()))
-        self.job_state.setState("finished")
-        files = glob.glob("{}*-{}-{}-{}-{}-*.log".format(self.config.log_dir, self.job_state.getConfig(), self.job_state.getDeployment(), self.config.branch, self.job_state.getGitHash() ) )
+        if len(files) > 0:
+            logging.info(u"Clean logfiles.")
         self._cleanedFiles(files)
 
     def cleanLeftoversLogfiles(self):
         files = glob.glob("{}*-[0-9]*-running-*.log".format(self.config.log_dir) )
         if len(files) > 0:
-            logging.info(u"Clean leftover files.")
+            logging.info(u"Clean leftover logfiles.")
         self._cleanedFiles(files)
 
     def _cleanedFiles(self, files):
@@ -375,6 +377,7 @@ class JobExecutor():
 
             self.job_state.setState("running")
             self.job_state.setGitHash(self.current_git_hash)
+            self.job_state.save()
 
             commit = git.getLog(self.config.repository_dir,self.current_git_hash)
 
@@ -405,6 +408,7 @@ class JobExecutor():
             for deployment in deployments:
                 self.job_state.setConfig(deployment['config'])
                 self.job_state.setDeployment(deployment['os'])
+                self.job_state.save()
 
                 successful, start_time_str, error_reason = self.job_runner.startCheck( deployment['config'], deployment['os'] )
                 if self.is_terminated:
@@ -434,8 +438,6 @@ class JobExecutor():
                     if self.config.auth_token != "":
                         GitHub.setState(repository_owner,self.config.auth_token,self.current_git_hash,"success",deployment['os'],"Build succeeded")
 
-            self.job_state.setState("finished")
-
             if is_failed_job and self.config.auth_token != "":
                 GitHub.cancelPendingStates(repository_owner, self.config.auth_token, self.current_git_hash, "Build skipped")
 
@@ -446,6 +448,9 @@ class JobExecutor():
 
             if self.config.auth_token != "":
                 GitHub.cancelPendingStates(repository_owner, self.config.auth_token, self.current_git_hash, "Build crashed")
+
+        self.job_state.setState("finished")
+        self.job_state.save()
 
         self.executor_thread = self.job_runner = None
 
