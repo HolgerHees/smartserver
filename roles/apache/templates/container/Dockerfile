@@ -1,4 +1,4 @@
-FROM httpd:{{image_version}}
+FROM httpd:{{apache_version}}
 
 RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
   && useradd -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -r -s /bin/false {{system_users['www'].name}} \

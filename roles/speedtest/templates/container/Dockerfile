@@ -1,4 +1,4 @@
-FROM e7db/speedtest:{{image_version}}
+FROM e7db/speedtest:{{speedtest_version}}
 
 COPY --chmod=644 ipInfo.js /app/src/ipInfo.js
 COPY --chmod=644 ipInfo.js /app/src/gzip.js

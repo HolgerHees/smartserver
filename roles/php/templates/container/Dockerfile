@@ -1,4 +1,4 @@
-FROM php:{{image_version}}-fpm
+FROM php:{{php_version}}-fpm
 
 RUN apt-get update && \
   apt-get install -y sudo \

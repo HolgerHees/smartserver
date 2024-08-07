@@ -1,4 +1,4 @@
-FROM grafana/grafana:{{image_version}}
+FROM grafana/grafana:{{grafana_version}}
 
 USER root
 RUN sed -i '/\[auth.proxy\].*/a enabled = true\nheader_name = X-WEBAUTH-USER' /etc/grafana/grafana.ini && \

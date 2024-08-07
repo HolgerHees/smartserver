@@ -1,4 +1,4 @@
-FROM httpd:{{image_version}}-alpine
+FROM httpd:{{apache_version}}-alpine
 
 RUN addgroup -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
   && adduser -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -S -s /bin/false {{system_users['www'].name}}

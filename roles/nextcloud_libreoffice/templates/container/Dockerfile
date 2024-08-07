@@ -1,4 +1,4 @@
-FROM onlyoffice/documentserver:{{image_version}}
+FROM onlyoffice/documentserver:{{libreoffice_version}}
 
 RUN sed -i 's/APT::Periodic::Update-Package-Lists.*/APT::Periodic::Update-Package-Lists "0";/' /etc/apt/apt.conf.d/10periodic && \
     sed -i 's/APT::Periodic::Update-Package-Lists.*/APT::Periodic::Update-Package-Lists "0";/' /etc/apt/apt.conf.d/20auto-upgrades && \
