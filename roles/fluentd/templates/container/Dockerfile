@@ -1,4 +1,4 @@
-FROM fluent/fluentd:v{{image_version}}
+FROM fluent/fluentd:v{{fluentd_version}}
 
 USER root
 
