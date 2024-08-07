@@ -1,12 +1,12 @@
 - name: set version
   set_fact:
-    speedtest_version: '0.5.3'
+    speedtest_version: 'v0.5.3'
   tags: [ 'update_notifier_config' ]    
 
 - name: build podman image
   vars:
     container_name: "speedtest"
-    image_name: "custom_speedtest:v{{speedtest_version}}"
+    image_name: "custom_speedtest:{{speedtest_version}}"
     image_files:
       - roles/speedtest/templates/container/Dockerfile
       - roles/speedtest/templates/container/patches/ipInfo.js
@@ -26,7 +26,7 @@
 - name: create podman container
   containers.podman.podman_container:
     name: speedtest
-    image: "custom_speedtest:v{{speedtest_version}}"
+    image: "custom_speedtest:{{speedtest_version}}"
     state: present
     security_opt:
       - label=disable
