@@ -30,8 +30,7 @@
 - name: build podman image
   vars:
     container_name: "cloud_check"
-    image_name: "custom_cloud_check"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_cloud_check:{{alpine_version}}"
     image_files:
       - roles/cloud_check/templates/container/Dockerfile
     entrypoint_services:

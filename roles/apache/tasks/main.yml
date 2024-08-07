@@ -223,8 +223,7 @@
 - name: build podman image
   vars:
     container_name: "apache2"
-    image_name: "custom_apache2"
-    image_version: "{{apache_version}}"
+    image_name: "custom_apache2:{{apache_version}}"
     image_files:
       - roles/apache/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml

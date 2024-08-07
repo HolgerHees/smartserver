@@ -44,8 +44,7 @@
 - name: build podman image
   vars:
     container_name: "dnsmasq"
-    image_name: "custom_dnsmasq"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_dnsmasq:{{alpine_version}}"
     image_files:
       - roles/dnsmasq/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml

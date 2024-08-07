@@ -319,8 +319,7 @@
 - name: build podman image
   vars:
     container_name: "openhab"
-    image_name: "custom_openhab"
-    image_version: "{{openhab_version}}"
+    image_name: "custom_openhab:{{openhab_version}}"
     image_files:
       - roles/openhab/templates/container/Dockerfile
       - roles/openhab/templates/container/init.sh

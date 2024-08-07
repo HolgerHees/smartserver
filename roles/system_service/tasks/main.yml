@@ -41,8 +41,7 @@
 - name: build podman image
   vars:
     container_name: "system_service"
-    image_name: "custom_system_service"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_system_service:{{alpine_version}}"
     image_files:
       - roles/system_service/templates/container/Dockerfile
     entrypoint_services:

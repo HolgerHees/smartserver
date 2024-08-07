@@ -23,8 +23,7 @@
 - name: build podman image
   vars:
     container_name: "vsftpd"
-    image_name: "custom_vsftpd"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_vsftpd:{{alpine_version}}"
     image_files:
       - roles/camera_ftp/templates/container/Dockerfile
       - roles/camera_ftp/templates/container/entrypoint.sh

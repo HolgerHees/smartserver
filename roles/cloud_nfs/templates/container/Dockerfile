@@ -1,4 +1,4 @@
-FROM alpine:{{image_version}}
+FROM alpine:{{alpine_version}}
 
 RUN apk add --no-cache --update nfs-utils tzdata
 

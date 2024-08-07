@@ -1,4 +1,4 @@
-FROM alpine:{{image_version}}
+FROM alpine:{{alpine_version}}
 
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 

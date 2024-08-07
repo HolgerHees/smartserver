@@ -1,4 +1,4 @@
-FROM alpine:{{image_version}}
+FROM alpine:{{alpine_version}}
 
 RUN apk add --update samba-common-tools samba-client samba-server tzdata \
   && addgroup -g {{system_groups['www'].id}} -S {{system_groups['www'].name}} \

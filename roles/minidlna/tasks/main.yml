@@ -26,8 +26,7 @@
 - name: build podman image
   vars:
     container_name: "minidlna"
-    image_name: "custom_minidlna"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_minidlna:{{alpine_version}}"
     image_files:
       - roles/minidlna/templates/container/Dockerfile
     entrypoint_services:

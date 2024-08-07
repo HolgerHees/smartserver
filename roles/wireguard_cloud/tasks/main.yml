@@ -67,8 +67,7 @@
 - name: build podman image
   vars:
     container_name: "wireguard_cloud"
-    image_name: "custom_wireguard_cloud"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_wireguard_cloud:{{alpine_version}}"
     image_files:
       - roles/wireguard_cloud/templates/container/Dockerfile
       - roles/wireguard_cloud/templates/container/entrypoint.sh

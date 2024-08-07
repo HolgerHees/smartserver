@@ -1,4 +1,4 @@
-FROM alpine:{{image_version}}
+FROM alpine:{{alpine_version}}
 
 EXPOSE {{ssh_vpn_internal_port}}
 #COPY rootfs /

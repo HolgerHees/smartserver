@@ -56,8 +56,7 @@
 - name: build podman image
   vars:
     container_name: "fluentd"
-    image_name: "custom_fluentd"
-    image_version: "{{fluentd_version}}"
+    image_name: "custom_fluentd:{{fluentd_version}}"
     image_files:
       - roles/fluentd/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml

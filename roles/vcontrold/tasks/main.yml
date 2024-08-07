@@ -37,8 +37,7 @@
 - name: build podman image
   vars:
     container_name: "vcontrold"
-    image_name: "custom_vcontrold"
-    image_version: "{{alpine_version}}-{{vcontrold_version}}"
+    image_name: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
     image_files:
       - roles/vcontrold/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml

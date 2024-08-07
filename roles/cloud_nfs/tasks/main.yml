@@ -84,8 +84,7 @@
 - name: build podman image
   vars:
     container_name: "cloud_nfs"
-    image_name: "custom_cloud_nfs"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_cloud_nfs:{{alpine_version}}"
     image_files:
       - roles/cloud_nfs/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml

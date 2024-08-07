@@ -7,8 +7,7 @@
 - name: build podman image
   vars:
     container_name: "php"
-    image_name: "custom_php"
-    image_version: "{{php_version}}"
+    image_name: "custom_php:{{php_version}}"
     image_files:
       - roles/php/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml

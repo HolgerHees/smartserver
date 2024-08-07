@@ -135,8 +135,7 @@
 - name: build podman image
   vars:
     container_name: "wireguard_mobile"
-    image_name: "custom_wireguard_mobile"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_wireguard_mobile:{{alpine_version}}"
     image_files:
       - roles/wireguard_mobile/templates/container/Dockerfile
       - roles/wireguard_mobile/templates/container/entrypoint.sh

@@ -24,7 +24,7 @@
 #  when: "file_status.changed"
 
 - name: "container : build_podman_image : get local image id"
-  shell: "podman image inspect {{image_name}}:{{image_version}} --format '{{ '{{' }} .Id {{ '}}'}}'"
+  shell: "podman image inspect {{image_name}} --format '{{ '{{' }} .Id {{ '}}'}}'"
   register: "podman_named_image_state"
   changed_when: "podman_named_image_state.rc != 0"
   failed_when: no
@@ -41,7 +41,7 @@
 
 # async podman build is used to show progress and prevent travisci killing our job because of inactivity
 - name: "container : build_podman_image : compose podman image => image does not exists"
-  shell: "podman build --network host --no-cache -t {{image_name}}:{{image_version}} {{global_build}}{{container_name}}/"
+  shell: "podman build --network host --no-cache -t {{image_name}} {{global_build}}{{container_name}}/"
   async: 1800
   poll: 0
   register: podman_build
@@ -57,5 +57,5 @@
   when: "podman_build.changed"
 
 #- name: "container : push image to podman registry"
-#  shell: "podman push {{dockerhub_username}}/{{image_name}}:{{image_version}}"
+#  shell: "podman push {{dockerhub_username}}/{{image_name}}"
 #  when: "podman_build.changed or ( image_remote_exists.skipped | default(False) and image_name not in image_remote_exists.stdout )"

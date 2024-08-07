@@ -45,8 +45,7 @@
 - name: build podman image
   vars:
     container_name: "weather_service"
-    image_name: "custom_weather_service"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_weather_service:{{alpine_version}}"
     image_files:
       - roles/weather_service/templates/container/Dockerfile
     entrypoint_services:

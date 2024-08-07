@@ -1,4 +1,4 @@
-FROM alpine:{{image_version}}
+FROM alpine:{{alpine_version}}
 
 RUN apk --no-cache add dnsmasq tzdata
 #RUN apk --no-cache add dnsmasq-dnssec

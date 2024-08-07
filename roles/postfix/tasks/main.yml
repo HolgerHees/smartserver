@@ -19,8 +19,7 @@
 - name: build podman image
   vars:
     container_name: "postfix"
-    image_name: "custom_postfix"
-    image_version: "{{alpine_version}}"
+    image_name: "custom_postfix:{{alpine_version}}"
     image_files:
       - roles/postfix/templates/container/Dockerfile
     entrypoint_services:

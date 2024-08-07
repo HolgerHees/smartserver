@@ -1,5 +1,9 @@
 FROM fluent/fluentd:v{{image_version}}
 
+USER root
+
+#COPY out_loki.rb /out_loki.rb
+
 RUN buildDeps="sudo make gcc g++ libc-dev" \
  && apt-get update \
  && apt-get install -y --no-install-recommends $buildDeps \
@@ -17,3 +21,5 @@ RUN buildDeps="sudo make gcc g++ libc-dev" \
  
 #RUN locale-gen en_US.UTF-8
 #ENV LANG en_US.UTF-8
+
+#USER fluent

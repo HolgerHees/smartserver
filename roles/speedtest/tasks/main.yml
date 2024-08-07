@@ -6,8 +6,7 @@
 - name: build podman image
   vars:
     container_name: "speedtest"
-    image_name: "custom_speedtest"
-    image_version: "v{{speedtest_version}}"
+    image_name: "custom_speedtest:v{{speedtest_version}}"
     image_files:
       - roles/speedtest/templates/container/Dockerfile
       - roles/speedtest/templates/container/patches/ipInfo.js
