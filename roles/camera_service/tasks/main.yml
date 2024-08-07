@@ -51,7 +51,7 @@
 - name: build podman image
   vars:
     container_name: "camera_service"
-    image_name: "custom_camera_service:{alpine_version}}"
+    image_name: "custom_camera_service:{{alpine_version}}"
     image_files:
       - roles/camera_service/templates/container/Dockerfile
     entrypoint_services:
