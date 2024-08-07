@@ -3,7 +3,7 @@ FROM alpine:{{alpine_version}}
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
 RUN apk --update --no-cache add python3 py3-pip py3-paho-mqtt py3-websocket-client coreutils tcpdump arping arp-scan fping nmap nmap-scripts nftables wireguard-tools-wg-quick tzdata \
-    && pip3 install --break-system-packages --upgrade pip \
+#    && pip3 install --break-system-packages --upgrade pip \
     && pip3 install --break-system-packages flask=={{flask_version}} flask-socketio=={{flask_socketio_version}} simple-websocket fritzconnection netflow schedule \
     && mkdir /build \
     && cd /build \
