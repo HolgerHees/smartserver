@@ -1,9 +1,8 @@
 FROM alpine:{{image_version}}
 
-COPY entrypoint.sh /usr/sbin/
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
-RUN apk --update --no-cache add procps vsftpd tzdata \
-    && chmod +x /usr/sbin/entrypoint.sh
+RUN apk --update --no-cache add procps vsftpd tzdata
 
 RUN echo "local_enable=YES" >> /etc/vsftpd/vsftpd.conf \
   && echo "chroot_local_user=YES" >> /etc/vsftpd/vsftpd.conf \
@@ -16,9 +15,8 @@ RUN echo "local_enable=YES" >> /etc/vsftpd/vsftpd.conf \
   && echo "passwd_chroot_enable=yes" >> /etc/vsftpd/vsftpd.conf \
   && echo "listen_ipv6=NO" >> /etc/vsftpd/vsftpd.conf \
   && echo "seccomp_sandbox=NO" >> /etc/vsftpd/vsftpd.conf \
-  && sed -i "s/anonymous_enable=YES/anonymous_enable=NO/" /etc/vsftpd/vsftpd.conf \
-  && cp /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_or \
-  && chmod +x /usr/sbin/entrypoint.sh
+  && sed -i "s/anonymous_enable=YES/anonymous_enable=NO/" /etc/vsftpd/vsftpd.conf
+#  && cp /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_or
 
-ENTRYPOINT [ "/usr/sbin/entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
  

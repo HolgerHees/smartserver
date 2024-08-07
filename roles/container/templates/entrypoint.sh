@@ -3,6 +3,13 @@
 exitcode=1
 watched_pids=""
 
+ignore()
+{
+    echo "Entrypoint - Ignoring SIGHUP"
+}
+
+trap "ignore" SIGHUP
+
 stop()
 {
     echo "Entrypoint - Shutting down service"
@@ -18,6 +25,8 @@ stop()
     echo "Entrypoint - Exit $exitcode"
     exit $exitcode
 }
+
+trap "stop" SIGTERM SIGINT
 
 start()
 {
@@ -35,15 +44,7 @@ start()
     echo "Entrypoint - Service started with pid(s) '$watched_pids'"
 }
 
-#ignore()
-#{
-#    echo "Entrypoint - Ignoring SIGHUP"
-#}
-
-#start
-
-#trap "ignore" SIGHUP
-trap "stop" SIGTERM SIGINT
+start
 
 if [ ! -z "$watched_pids" ]; then
     echo "Entrypoint - Observe pid(s) '$watched_pids'"

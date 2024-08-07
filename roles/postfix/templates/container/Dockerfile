@@ -1,9 +1,8 @@
 FROM alpine:{{image_version}}
 
-COPY entrypoint.sh /entrypoint.sh
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
-RUN chmod 755 /entrypoint.sh \
-    && apk --no-cache add ca-certificates libintl postfix cyrus-sasl-login tzdata git go \
+RUN apk --no-cache add ca-certificates libintl postfix cyrus-sasl-login tzdata git go \
     && mkdir /build \
     && cd /build \
     && git clone https://github.com/kumina/postfix_exporter.git \

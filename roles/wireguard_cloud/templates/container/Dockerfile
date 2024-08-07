@@ -1,8 +1,7 @@
 FROM alpine:{{image_version}}
 
-COPY entrypoint.sh /entrypoint.sh
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
-RUN chmod 755 /entrypoint.sh \
-    && apk add --no-cache --update wireguard-tools iperf3 tzdata
+RUN apk add --no-cache --update wireguard-tools iperf3 tzdata
  
 ENTRYPOINT [ "/entrypoint.sh" ]
