@@ -13,7 +13,7 @@ class MQTT(threading.Thread):
     def __init__(self, config):
         threading.Thread.__init__(self)
 
-        self.is_running = True
+        self.is_running = False
         self.config = config
 
         self.event = threading.Event()
@@ -28,7 +28,11 @@ class MQTT(threading.Thread):
         self.subscriber = {}
 
     def start(self):
-        while True:
+        self.is_running = True
+        super().start()
+
+    def run(self):
+        while self.is_running:
             try:
                 logging.info("Connection to mqtt ...")
                 self.mqtt_client.connect(self.config.mosquitto_host, 1883, 60)
@@ -38,9 +42,6 @@ class MQTT(threading.Thread):
                 logging.info("MQTT {}. Retry in 5 seconds".format(str(e)))
                 time.sleep(5)
 
-        super().start()
-
-    def run(self):
         while self.is_running:
             self.event.wait(60)
             self.event.clear()
