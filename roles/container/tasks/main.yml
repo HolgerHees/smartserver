@@ -1,7 +1,8 @@
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: [
-        podman
+        podman,
+        crun
     ]
     state: present
   when: is_rhel or is_fedora
@@ -9,7 +10,8 @@
 - name: install required packages => is_ubuntu
   apt:
     name: [
-        podman
+        podman,
+        crun
     ]
     state: present
   when: is_ubuntu
@@ -28,7 +30,8 @@
 - name: install required packages => is_suse
   zypper:
     name: [
-        podman
+        podman,
+        crun
     ]
     state: present
   when: is_suse
