@@ -129,10 +129,12 @@ for systemd_service in services:
         #    continue
 
         m = re.search("Loaded:[^;]+; ([^\s;\)]+).*",state)
-        is_enabled = m.group(1) in ["enabled","static"]
+        loading_state = m.group(1)
+        is_enabled = loading_state in ["enabled","static"]
 
         m = re.search("Active: ([^\s]+).*",state)
-        is_active = m.group(1) in ["active","reloading"]
+        activation_state = m.group(1)
+        is_active = activation_state in ["active","reloading"]
 
         m = re.search("TriggeredBy: .*",state)
         is_triggered = m is not None
@@ -158,11 +160,9 @@ for systemd_service in services:
                     state_flags.append("active")
 
         if len(state_flags) > 0:
-            msg = "Service is not {}".format(" and ".join(state_flags))
-
-            info(msg)
-            info(state)
-
+            msg = "Service is not {}. Loading: {}, Active: {}".format(" and ".join(state_flags), loading_state, activation_state)
+            #info(msg)
+            #info(state)
             fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, msg, systemd_service))
             notified_service.append(systemd_service)
 
