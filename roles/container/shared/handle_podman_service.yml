@@ -2,6 +2,7 @@
   systemd:
     name: "{{container_name}}"
     state: stopped
+  failed_when: no
   when: "container_changed"
 
 - name: "container : add_podman_service : create systemd service"

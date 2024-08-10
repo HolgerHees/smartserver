@@ -34,6 +34,7 @@
   systemd:
     name: "{{container_name}}"
     state: stopped
+  failed_when: no
   when: "file_status.changed or podman_named_image_state.rc != 0 or ( podman_container_image_state.rc == 0 and podman_container_image_state.stdout != podman_named_image_state.stdout )"
 
 - name: "container : build_podman_image : clean old image"
