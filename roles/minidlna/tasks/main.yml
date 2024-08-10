@@ -65,6 +65,7 @@
     exposed_ports:
      - "8200/tcp"  
      - "1900/udp"  
+  register: "podman_container_state"
   notify: "restart minidlna"
 
 # ***** SERVICE CONFIGS *****
@@ -73,5 +74,6 @@
     container_name: "minidlna"
     container_ip: "{{dlna_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{dlna_ip}}", "port": "8200" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']

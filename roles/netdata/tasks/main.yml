@@ -99,6 +99,7 @@
     exposed_ports:
      - "19999"
      - "8125"
+  register: "podman_container_state"
   notify: "restart netdata"
 
 # ***** SERVICE CONFIGS *****
@@ -106,6 +107,7 @@
   vars:
     container_name: "netdata"
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "19999" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

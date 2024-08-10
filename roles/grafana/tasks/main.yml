@@ -82,6 +82,7 @@
       - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning'
     exposed_ports:
      - "3000"
+  register: "podman_container_state"
   notify: "restart grafana"
 
 # ***** SERVICE CONFIGS *****
@@ -91,6 +92,7 @@
     container_ip: "{{podman_grafana_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_grafana_ip}}", "port": "3000" }
     container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
       

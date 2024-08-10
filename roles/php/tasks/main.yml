@@ -50,6 +50,7 @@
     volumes: "{{php_mounted_folders}}"
     exposed_ports:
       - "9000"
+  register: "podman_container_state"
   notify: "restart php"
 
 # ***** SERVICE CONFIGS *****
@@ -59,6 +60,7 @@
     container_ip: "{{podman_php_ip}}"
     container_readyness: { "type": "host_exec", "cmd": "ping -c 1 {{podman_php_ip}} > /dev/null" }
     container_after: [ "mysql", "redis", "postfix", "influxdb" ]
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

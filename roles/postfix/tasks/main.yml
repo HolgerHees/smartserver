@@ -49,6 +49,7 @@
       - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient'
     exposed_ports:
       - "25/tcp"
+  register: "podman_container_state"
   notify: "restart postfix"
 
 # ***** SERVICE CONFIGS *****
@@ -57,6 +58,7 @@
     container_name: "postfix"
     container_ip: "{{podman_postfix_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_postfix_ip}}", "port": "25" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

@@ -256,6 +256,7 @@
       - "80"
       - "443"
       - "10114"
+  register: "podman_container_state"
   notify: "restart apache2"
   
 # ***** SERVICE CONFIGS *****
@@ -269,6 +270,7 @@
     container_name: "apache2"
     container_reload_exec: "/usr/bin/podman exec apache2 sh -c \"apachectl -k graceful\""
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "80" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

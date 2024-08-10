@@ -47,6 +47,7 @@
       - '{{global_lib}}alertmanager:/alertmanager'
     exposed_ports:
      - "9093"
+  register: "podman_container_state"
   notify: "restart alertmanager"
 
 # ***** SERVICE CONFIGS *****
@@ -57,6 +58,7 @@
     container_post_exec: "sleep 5 && {{ global_etc }}alertmanager/silent_setup.py &"
     container_readyness: { "type": "port_check", "ip": "{{podman_alertmanager_ip}}", "port": "9093" }
     container_after: [ "postfix" ]
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

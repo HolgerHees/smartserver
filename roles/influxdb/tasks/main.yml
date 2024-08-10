@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    influxdb_version: '2.7.8'
+    influxdb_version: '2.7.9'
   tags: [ 'update_notifier_config' ]    
 
 - name: "create user and group => user or group does not exists"
@@ -60,6 +60,7 @@
     container_name: "influxdb"
     container_ip: "{{podman_influxdb_ip}}"
     container_readyness: { "type": "url_check", "url": "http://{{podman_influxdb_ip}}:8086/ping" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

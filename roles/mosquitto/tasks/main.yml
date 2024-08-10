@@ -49,6 +49,7 @@
     volumes:
       - '{{global_etc}}mosquitto:/mosquitto/config'
     published_ports: "{{mosquitto_published_ports}}"
+  register: "podman_container_state"
   notify: "restart mosquitto"
 
 # ***** SERVICE CONFIGS *****
@@ -57,6 +58,7 @@
     container_name: "mosquitto"
     container_ip: "{{podman_mosquitto_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_mosquitto_ip}}", "port": "1883" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

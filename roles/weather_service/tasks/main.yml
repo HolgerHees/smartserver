@@ -72,6 +72,7 @@
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
       - '{{global_opt}}weather_service/:/opt/weather_service:ro'
       - "{{global_lib}}weather_service/:/var/lib/weather_service:rw"
+  register: "podman_container_state"
   notify: "restart weather_service"
 
 # ***** SERVICE CONFIGS *****
@@ -81,6 +82,7 @@
     container_ip: "{{podman_weather_service_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_weather_service_ip}}", "port": "80" }
     container_after: [ "cloud_mosquitto", "mysql" ]
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
   

@@ -91,6 +91,7 @@
     container_name: "dnsmasq"
     container_ip: "{{podman_dns_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_dns_ip}}", "port": "53" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

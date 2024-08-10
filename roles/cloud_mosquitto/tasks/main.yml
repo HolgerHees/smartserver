@@ -35,6 +35,7 @@
     ip: "{{vpn_cloud_services.local.mosquitto}}"
     volumes:
       - '{{global_etc}}cloud_mosquitto:/mosquitto/config'
+  register: "podman_container_state"
   notify: "restart cloud_mosquitto"
     
 # ***** SERVICE CONFIGS *****
@@ -45,6 +46,7 @@
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
     container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.mosquitto}}", "port": "1883" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

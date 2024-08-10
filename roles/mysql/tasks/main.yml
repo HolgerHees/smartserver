@@ -75,6 +75,7 @@
     container_name: "mysql"
     container_ip: "{{podman_mysql_ip}}"
     container_readyness: { "type": "container_exec", "cmd": "mysqladmin ping -h 127.0.0.1 --silent" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

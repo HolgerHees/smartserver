@@ -164,6 +164,7 @@
       - '{{global_etc}}wireguard_mobile:/etc/wireguard'
 #    exposed_ports:
 #      - "{{mobile_vpn_internal_port}}/udp"
+  register: "podman_container_state"
   notify: "restart wireguard_mobile"
 
 # ***** SERVICE CONFIGS *****
@@ -172,7 +173,7 @@
     container_name: "wireguard_mobile"
     container_pre_exec: "modprobe wireguard"
     container_readyness: { "type": "state_check" }
-#    container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "{{mobile_vpn_internal_port}}", "protocol": "udp" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
   

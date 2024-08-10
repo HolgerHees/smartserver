@@ -113,6 +113,7 @@
       - '{{global_etc}}cloud_nfs:/etc/cloud_nfs'
       - '{{global_etc}}cloud_nfs/exports:/etc/exports'
       - '{{cloud_path}}local:/cloud/local:rshared'
+  register: "podman_container_state"
   notify: "restart cloud_nfs"
   
 # ***** SERVICE CONFIGS *****
@@ -123,6 +124,7 @@
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
     container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.nfs}}", "port": "2049" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

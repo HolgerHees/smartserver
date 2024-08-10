@@ -119,6 +119,7 @@
     volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard'
     published_ports: "{{wireguard_cloud_published_ports}}"
+  register: "podman_container_state"
   notify: "restart wireguard_cloud"
 
 # ***** SERVICE CONFIGS *****
@@ -129,7 +130,7 @@
     container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
     container_readyness: { "type": "ping_check", "ip": "{{vpn_cloud_services.local.gateway}}" }
-#    container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.gateway}}", "port": "{{cloud_vpn.interface.port}}", "protocol": "udp" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
   

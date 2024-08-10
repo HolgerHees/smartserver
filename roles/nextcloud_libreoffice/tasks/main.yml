@@ -43,6 +43,7 @@
 #      - '{{global_lib}}libreoffice:/var/www/libreoffice/Data'
     exposed_ports:
       - "9980"
+  register: "podman_container_state"
   notify: "restart libreoffice"
 
 # ***** SERVICE CONFIGS *****
@@ -51,6 +52,7 @@
     container_name: "libreoffice"
     container_ip: "{{podman_libreoffice_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_libreoffice_ip}}", "port": "9980" }
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 

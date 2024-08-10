@@ -79,6 +79,7 @@
       - '{{global_opt}}camera_service/:/opt/camera_service:ro'
       - "{{global_lib}}camera_service/:/var/lib/camera_service:rw"
       - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw'
+  register: "podman_container_state"
   notify: "restart camera_service"
 
 # ***** SERVICE CONFIGS *****
@@ -88,6 +89,7 @@
     container_ip: "{{podman_camera_service_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_camera_service_ip}}", "port": "80" }
     container_after: [ "camera_ftp" ]
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
 
