@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    loki_version: '3.1.0'
+    loki_version: '3.1.1'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed directories
@@ -40,6 +40,7 @@
       - '{{global_lib}}loki:/loki'
     exposed_ports:
      - "3100"
+  register: "podman_container_state"
   notify: "restart loki"
 
 # ***** SERVICE CONFIGS *****
@@ -49,6 +50,7 @@
     container_ip: "{{podman_loki_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_loki_ip}}", "port": "3100" }
 #    container_after: [ "alertmanager" ] # => skipped dependency, because loki & fluentd should start as soon as possible
+    container_changed: "{{podman_container_state.changed}}"
   include_tasks: roles/container/shared/handle_podman_service.yml
   tags: ['systemd_watcher_config','systemd_service_config']
       
