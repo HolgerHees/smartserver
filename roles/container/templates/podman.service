@@ -40,7 +40,7 @@ ExecStartPost=/bin/sh -c "echo 'Service - Set gateway' && /opt/container/update_
 {% if container_post_exec is defined and container_post_exec != None %}
 ExecStartPost=/bin/sh -c "echo 'Service - Run PostExec' && {{container_post_exec}}"
 {% endif %}
-ExecStop=/bin/sh -c "echo 'Service - Stopping container' && ( ! /usr/bin/podman container exists {{container_name}} || /usr/bin/podman stop -t 15 {{container_name}} > /dev/null ){% if container_ip is defined %} && ip neigh flush {{container_ip}}{% endif %}"
+ExecStop=/bin/sh -c "echo 'Service - Stopping container' && /usr/bin/podman stop --ignore -t 15 {{container_name}} > /dev/null {% if container_ip is defined %} && ip neigh flush {{container_ip}}{% endif %}"
 {% if container_reload_exec is defined and container_reload_exec != None %}
 ExecReload=/bin/sh -c "echo 'Service - Run ReloadExec' && {{container_reload_exec}}"
 {% endif %}

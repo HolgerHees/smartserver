@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mysql_version: "10.11.8"
+    mysql_version: "10.11.9"
   tags: [ 'update_notifier_config' ]
   
 - name: "create user and group => user or group does not exists"
@@ -40,6 +40,7 @@
     state: present
     security_opt:
       - label=disable
+    recreate: yes
 #    command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
     user: "{{system_users['mysql'].id}}:{{system_groups['mysql'].id}}"
     # !!! DISABLED HEALTHCHECK => see pihole healthcheck
