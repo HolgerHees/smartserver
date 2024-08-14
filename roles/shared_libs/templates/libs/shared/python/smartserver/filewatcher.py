@@ -112,7 +112,7 @@ class FileWatcher():
         if parent not in self.watched_parents:
             self.watched_parents[parent] = True
             #self.inotify.add_watch(parent, inotify.Constants.IN_OPEN | inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CLOSE_NOWRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
-            self.inotify.add_watch(parent, inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
+            self.inotify.add_watch(parent, inotify.Constants.IN_OPEN | inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
 
         if os.path.exists(path):
             self.addPath(path)
@@ -125,7 +125,7 @@ class FileWatcher():
         self.modified_time[path] = os.stat(path).st_mtime
 
         if os.path.isdir(path):
-            self.inotify.add_watch(path, inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
+            self.inotify.add_watch(path, inotify.Constants.IN_OPEN | inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
 
     def removePath(self, path):
         #logging.info("removePath " + path)
