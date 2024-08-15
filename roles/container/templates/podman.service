@@ -4,7 +4,8 @@ StartLimitBurst=12
 StartLimitIntervalSec=180
 #Wants=network-online.target
 After={% if container_name in ['fluentd','loki'] %}systemd-journald.service{% else %}network-online.target fluentd.service{% endif %}
-{% if container_after is defined and container_after != None %}{% for dependency_name in container_after %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif +%}
+{% if container_after is defined and container_after != None %}{% for dependency_name in container_after %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif %}
+
 RequiresMountsFor={{base_path}}
 
 [Service]
