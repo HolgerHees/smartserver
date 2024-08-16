@@ -20,7 +20,8 @@ smtp_sasl_security_options = noanonymous
 smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 smtp_tls_security_level = encrypt
 #smtp_enforce_tls = yes
-smtp_use_tls = yes
+#smtpd_tls_security_level = encrypt
+smtpd_tls_security_level = may
 
 # some tweaks
 biff = no
