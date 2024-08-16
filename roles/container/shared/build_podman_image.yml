@@ -14,7 +14,7 @@
     group: root
     mode: 0600
   register: file_status
-  with_items: "{{image_files + (['roles/container/templates/entrypoint.sh'] if entrypoint_services is defined else [] )}}"
+  with_items: "{{image_files + (['roles/container/templates/entrypoint.sh'] if entrypoint_startup is defined else [] )}}"
 
 - name: "container : build_podman_image : get container image id"
   shell: "podman inspect --format '{{ '{{' }} .Image {{ '}}'}}' {{container_name}}"

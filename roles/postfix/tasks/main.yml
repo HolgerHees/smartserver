@@ -22,7 +22,7 @@
     image_name: "custom_postfix:{{alpine_version}}"
     image_files:
       - roles/postfix/templates/container/Dockerfile
-    entrypoint_services:
+    entrypoint_startup:
       - "newaliases"
       - "rm -f /var/spool/postfix/pid/*.pid"
       - "/build/postfix_exporter/postfix_exporter --postfix.logfile_path /dev/stdout --web.listen-address :80 2>&1 &"

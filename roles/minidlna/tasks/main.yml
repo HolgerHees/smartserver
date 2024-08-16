@@ -29,7 +29,7 @@
     image_name: "custom_minidlna:{{alpine_version}}"
     image_files:
       - roles/minidlna/templates/container/Dockerfile
-    entrypoint_services:
+    entrypoint_startup:
       - "/usr/sbin/minidlnad -f /etc/minidlna/minidlna.conf -S &"
   include_tasks: roles/container/shared/build_podman_image.yml
   tags: ['container_entrypoint_config']

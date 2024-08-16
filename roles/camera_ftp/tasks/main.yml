@@ -41,7 +41,25 @@
     image_name: "custom_vsftpd:{{alpine_version}}"
     image_files:
       - roles/camera_ftp/templates/container/Dockerfile
-      - roles/camera_ftp/templates/container/entrypoint.sh
+    entrypoint_pre: |
+      if ! id -g "$FTP_USER" >/dev/null 2>&1; then
+          addgroup -g $FTP_GID -S $FTP_USER
+      fi
+
+      if ! id -u "$FTP_USER" >/dev/null 2>&1; then
+          adduser -u $FTP_UID -D -G $FTP_USER -h /home/upload -s /bin/false --no-create-home $FTP_USER
+      fi
+
+      chown $FTP_USER:$FTP_USER /home/upload/ -R
+
+      echo "$FTP_USER:$FTP_PASS" | /usr/sbin/chpasswd > /dev/null 2>&1
+
+      export LOG_FILE=`grep xferlog_file /etc/vsftpd/vsftpd.conf|cut -d= -f2`
+
+      /bin/ln -sf /proc/$$/fd/1 $LOG_FILE
+      #/bin/ln -sf /proc/1/fd/1 $LOG_FILE
+    entrypoint_startup:
+      - "/usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf &"
   include_tasks: roles/container/shared/build_podman_image.yml
   
 - name: prepare published_ports

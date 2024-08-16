@@ -138,7 +138,12 @@
     image_name: "custom_wireguard_mobile:{{alpine_version}}"
     image_files:
       - roles/wireguard_mobile/templates/container/Dockerfile
-      - roles/wireguard_mobile/templates/container/entrypoint.sh
+    entrypoint_startup:
+      - "ip link del dev wg0 > /dev/null 2>&1"
+      - "wg-quick up /etc/wireguard/wg0.conf 2>&1"
+    entrypoint_shutdown:
+      - "wg-quick down wg0 2>&1"
+    entrypoint_check: "while wg show | grep -q 'wg0'; do sleep 60 & wait $!; done"
   include_tasks: roles/container/shared/build_podman_image.yml
   
 - name: create podman container
