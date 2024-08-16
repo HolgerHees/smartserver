@@ -19,11 +19,12 @@ stop()
     echo "Entrypoint - Send 'TERM' to pid(s) '$watched_pids'"
     kill -s TERM $watched_pids
 
-    echo "Entrypoint - Wait for pid(s) '$watched_pids'"
-    wait $watched_pids
+    # No need to wait. Otherwise "Terminated" log message will occur in journald
+    #echo "Entrypoint - Wait for pid(s) '$watched_pids'"
+    #wait $watched_pids
 
-    echo "Entrypoint - Exit $exitcode"
-    exit $exitcode
+    #echo "Entrypoint - Exit $exitcode"
+    #exit $exitcode
 }
 
 trap "stop" SIGTERM SIGINT
@@ -60,12 +61,14 @@ if [ ! -z "$watched_pids" ]; then
     done
 
     #echo "Entrypoint - CMD: '$CMD'"
-    while eval "$CMD"; do sleep 5 & wait $!; done
+    while eval "$CMD"; do sleep 1 & wait; done
     #while true; do wait $watched_pids; break; done
 fi
 
 if [ $exitcode -ne 0 ]; then
     echo "Entrypoint - Unexpected interruption with code '$exitcode'"
+else
+    echo "Entrypoint - Stopped with code '$exitcode'"
 fi
 
 exit $exitcode
