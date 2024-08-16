@@ -1,46 +1,16 @@
 #!/bin/sh
 
+{% set watch_pids=(entrypoint_startup | select('match', '^.* &$') | length > 0) %}
 exitcode=1
 watched_pids=""
 
 {% if entrypoint_pre is defined %}
 {{entrypoint_pre}}
 {% endif %}
-ignore()
-{
-    echo "Entrypoint - Ignoring SIGHUP"
-}
-
-trap "ignore" SIGHUP
-
-stop()
-{
-    echo "Entrypoint - Shutting down service"
-
-    exitcode=0
-
-{% if entrypoint_shutdown is defined %}{% for cmdline in entrypoint_shutdown %}
-    {{ cmdline }}
-{% endfor %}{% endif %}
-
-    if [ ! -z "$watched_pids" ]; then
-        echo "Entrypoint - Send 'TERM' to pid(s) '$watched_pids'"
-        kill -s TERM $watched_pids
-
-        # No need to wait. Otherwise "Terminated" log message will occur in journald
-        #echo "Entrypoint - Wait for pid(s) '$watched_pids'"
-        #wait $watched_pids
-    fi
-
-    #echo "Entrypoint - Exit $exitcode"
-    #exit $exitcode
-}
-
-trap "stop" SIGTERM SIGINT
-
 start()
 {
     echo "Entrypoint - Starting service"
+
 {% for cmdline in entrypoint_startup %}
     {{ cmdline }}
 {% if cmdline[-2:] == ' &' %}
@@ -49,19 +19,51 @@ start()
 {% endif %}
 {% endfor %}
 
-    if [ ! -z "$watched_pids" ]; then
-        watched_pids=$(echo $watched_pids | xargs)
-        echo "Entrypoint - Service started with pid(s) '$watched_pids'"
-    else
-        echo "Entrypoint - Service started"
-    fi
+{% if watch_pids %}
+    watched_pids=$(echo $watched_pids | xargs)
+    echo "Entrypoint - Service started with pid(s) '$watched_pids'"
+{% else %}
+    echo "Entrypoint - Service started"
+{% endif %}
 }
+
+stop()
+{
+    exitcode=0
+
+    echo "Entrypoint - Shutting down service"
+
+{% if entrypoint_shutdown is defined %}{% for cmdline in entrypoint_shutdown %}
+    {{ cmdline }}
+{% endfor %}{% endif %}
+{% if watch_pids %}
+    if [ ! -z "$watched_pids" ]; then
+        echo "Entrypoint - Send 'TERM' to pid(s) '$watched_pids'"
+        kill -s TERM $watched_pids
+
+        # No need to wait. Otherwise "Terminated" log message will occur in journald
+        #echo "Entrypoint - Wait for pid(s) '$watched_pids'"
+        #wait $watched_pids
+    fi
+{% endif %}
+
+    #echo "Entrypoint - Exit $exitcode"
+    #exit $exitcode
+}
+
+ignore()
+{
+    echo "Entrypoint - Ignoring SIGHUP"
+}
+
+trap "stop" SIGTERM SIGINT
+trap "ignore" SIGHUP
 
 start
 
 {% if entrypoint_check is defined %}
-    {{entrypoint_check}}
-{% else %}
+{{entrypoint_check}}
+{% elif watch_pids %}
 if [ ! -z "$watched_pids" ]; then
     echo "Entrypoint - Observe pid(s) '$watched_pids'"
 
