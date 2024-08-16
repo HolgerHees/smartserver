@@ -13,12 +13,27 @@
   vars:
     directories: |
       [
+        { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{global_etc}}vsftpd/" },
         { "mode": "u=rwx,g=rx,o=", "owner": "{{system_users['ftp'].name}}", "group": "{{system_groups['ftp'].name}}", "path": "{{global_lib}}camera_service/upload/" },
         {% for item in camera_devices %}{% if 'ftp_upload_name' in item %}
           { "mode": "u=rwx,g=rx,o=", "owner": "{{system_users['ftp'].name}}", "group": "{{system_groups['ftp'].name}}", "path": "{{global_lib}}camera_service/upload/{{item['ftp_upload_name']}}/" },
         {% endif %}{% endfor %}
       ]
   include_tasks: roles/_shared/create_directories.yml
+
+- name: copy config
+  vars:
+      PASV_ADDRESS: "127.0.0.1"
+      PASV_MIN: "30000"
+      PASV_MAX: "30005"
+      UMASK: "022"
+  template:
+    src: "templates/etc/vsftpd/vsftpd.conf"
+    dest: "{{global_etc}}vsftpd/vsftpd.conf"
+    owner: "root"
+    group: "root"
+    mode: 0750
+  notify: "restart vsftpd"
 
 - name: build podman image
   vars:
@@ -43,7 +58,7 @@
         {% endif %}
       ]
   tags: ['firewall_config']
-  
+
 - name: create podman container
   containers.podman.podman_container:
     name: vsftpd
@@ -56,18 +71,12 @@
       FTP_PASS: "{{camera_ftp_password}}"
       FTP_UID: "{{system_users['ftp'].id}}"
       FTP_GID: "{{system_groups['ftp'].id}}"
-      ONLY_UPLOAD: "YES"
-      ONLY_DOWNLOAD: "NO"
-      PASV_ENABLE: "YES"
-      PASV_ADDRESS: "127.0.0.1"
-      PASV_MIN: "30000"
-      PASV_MAX: "30005"
-      UMASK: "022"
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: vsftpd
     volumes:
+      - '{{global_etc}}vsftpd/:/etc/vsftpd'
       - '{{global_lib}}/camera_service/upload/:/home/upload'
     network: "isolated"
     ip: "{{podman_camera_ftp_ip}}"
