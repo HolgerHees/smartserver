@@ -12,8 +12,7 @@ chown $FTP_USER:$FTP_USER /home/upload/ -R
 
 echo "$FTP_USER:$FTP_PASS" | /usr/sbin/chpasswd > /dev/null 2>&1
 
-cp /etc/vsftpd/vsftpd.conf_or /etc/vsftpd/vsftpd.conf
-
+#cp /etc/vsftpd/vsftpd.conf_or /etc/vsftpd/vsftpd.conf
 #echo "log_ftp_protocol=YES" >> /etc/vsftpd/vsftpd.conf
 
 if [[ "$PASV_ENABLE" == "YES" ]]; then
@@ -42,20 +41,21 @@ echo "local_umask=$UMASK" >> /etc/vsftpd/vsftpd.conf
 
 export LOG_FILE=`grep xferlog_file /etc/vsftpd/vsftpd.conf|cut -d= -f2`
 
-echo "$LOG_FILE" >> /etc/logrotate.d/vsftpd
-echo "{" >> /etc/logrotate.d/vsftpd
-echo "	create 640 root adm" >> /etc/logrotate.d/vsftpd
-echo "	# ftpd doesn't handle SIGHUP properly" >> /etc/logrotate.d/vsftpd
-echo "	missingok" >> /etc/logrotate.d/vsftpd
-echo "	notifempty" >> /etc/logrotate.d/vsftpd
-echo "	rotate 0" >> /etc/logrotate.d/vsftpd
-echo "	daily" >> /etc/logrotate.d/vsftpd
-echo "}" >> /etc/logrotate.d/vsftpd
+#echo "$LOG_FILE" >> /etc/logrotate.d/vsftpd
+#echo "{" >> /etc/logrotate.d/vsftpd
+#echo "	create 640 root adm" >> /etc/logrotate.d/vsftpd
+#echo "	# ftpd doesn't handle SIGHUP properly" >> /etc/logrotate.d/vsftpd
+#echo "	missingok" >> /etc/logrotate.d/vsftpd
+#echo "	notifempty" >> /etc/logrotate.d/vsftpd
+#echo "	rotate 0" >> /etc/logrotate.d/vsftpd
+#echo "	daily" >> /etc/logrotate.d/vsftpd
+#echo "}" >> /etc/logrotate.d/vsftpd
 
-#/bin/ln -sf /dev/stdout $LOG_FILE
+/bin/ln -sf /proc/$$/fd/1 $LOG_FILE
+#/bin/ln -sf /proc/1/fd/1 $LOG_FILE
 
-touch $LOG_FILE
-tail -F $LOG_FILE &
+#touch $LOG_FILE
+#tail -F $LOG_FILE &
 
 PID=""
 exitcode=1
@@ -65,8 +65,15 @@ stop()
     echo "Entrypoint - Shutting down server"
     exitcode=0
 
+    echo "Entrypoint - Send 'TERM' to pid '$PID'"
     kill -s TERM $PID
-    exit $exitcode
+
+    # No need to wait. Otherwise "Terminated" log message will occur in journald
+    #echo "Entrypoint - Wait for pid '$PID'"
+    #wait $PID
+
+    #echo "Entrypoint - Exit $exitcode"
+    #exit $exitcode
 }
 
 trap "stop" SIGTERM SIGINT
@@ -77,6 +84,12 @@ PID=$!
 echo "Entrypoint - Server started"
 
 #while :; do sleep 360 & wait; done
-while test -d /proc/$PID/; do sleep 5; done
+while test -d /proc/$PID/; do sleep 1 & wait; done
+
+if [ $exitcode -ne 0 ]; then
+    echo "Entrypoint - Unexpected interruption with code '$exitcode'"
+else
+    echo "Entrypoint - Stopped with code '$exitcode'"
+fi
 
 exit $exitcode
