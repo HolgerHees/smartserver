@@ -2,7 +2,6 @@
   vars:
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_nfs/" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}cloud_nfs//util/" }
   include_tasks: roles/_shared/create_directories.yml
 
 - name: prepare cloud folder
@@ -62,15 +61,6 @@
   shell: "systemctl --all start *remote*.automount"
   when: "fstab_result.changed"
 
-- name: copy startup script
-  template:
-    src: "templates/util/startup.sh"
-    dest: "{{global_etc}}cloud_nfs/util/startup.sh"
-    owner: root
-    group: root
-    mode: 0750
-  notify: "restart cloud_nfs"
-  
 - name: copy server config
   template:
     src: "templates/{{item}}"
@@ -78,15 +68,54 @@
     mode: 0640
   notify: "restart cloud_nfs"
   with_items:
-    - "peers"
     - "exports"
 
+
+#https://wiki.archlinux.org/index.php/NFS/Troubleshooting
+
+#rpcdebug -m nfsd all
+
+#https://www.heise.de/ct/artikel/NFSv4-unter-Linux-221582.html?seite=all
+# check cat /proc/net/rpc/auth.unix.ip/content
+
+#echo "open nlockmgr ports"
+#mount -t nfsd nfsd /proc/fs/nfsd
+#echo 'fs.nfs.nlm_tcpport=32768' >> /etc/sysctl.conf
+#echo 'fs.nfs.nlm_udpport=32768' >> /etc/sysctl.conf
+#sysctl -p > /dev/null
+
+# Normally only required if v3 will be used
+# But currently enabled to overcome an NFS bug around opening an IPv6 socket
+#echo "starting rpcbind"
+#/sbin/rpcbind -w
+#echo "starting idmapd"
+#/usr/sbin/rpc.idmapd
+#echo "starting statd"
+#/sbin/rpc.statd
+##-p 32765 -o 32766
+
+# Kerberos
+#/usr/sbin/rpc.svcgssd -v
+#/usr/sbin/rpc.gssd -v
 - name: build podman image
   vars:
     container_name: "cloud_nfs"
     image_name: "custom_cloud_nfs:{{alpine_version}}"
     image_files:
       - roles/cloud_nfs/templates/container/Dockerfile
+    entrypoint_startup:
+      - "/usr/sbin/rpc.nfsd --debug --no-nfs-version 3 2>&1"
+      - "FS_RESULT=$(/usr/sbin/exportfs -arv)"
+      - "if [ -z \"$FS_RESULT\" ]"
+      - "then"
+      - "    echo \"Entrypoint - Export validation failed\""
+      - "    return"
+      - "fi"
+      - "echo $FS_RESULT"
+      - "/usr/sbin/rpc.mountd --no-nfs-version 2 --no-nfs-version 3 -F 2>&1 &"
+    entrypoint_shutdown:
+      - "/usr/sbin/exportfs -uav"
+      - "/usr/sbin/rpc.nfsd 0"
   include_tasks: roles/container/shared/build_podman_image.yml
 
 - name: create podman container

@@ -1,5 +1,7 @@
 FROM alpine:{{alpine_version}}
 
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
+
 RUN apk add --no-cache --update nfs-utils tzdata
 
 #RUN echo 'hosts: files dns' >> /etc/nsswitch.conf
@@ -25,7 +27,7 @@ RUN mkdir /var/lib/nfs/v4recovery
 
 # -DUSE_RADOS_RECOV=OFF -DRADOS_URLS=OFF 
  
-ENTRYPOINT [ "/etc/cloud_nfs/util/startup.sh" ]
+ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 2049/tcp
 EXPOSE 2049/udp
