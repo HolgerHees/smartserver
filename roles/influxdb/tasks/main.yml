@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    influxdb_version: '2.7.9'
+    influxdb_version: '2.7.10'
   tags: [ 'update_notifier_config' ]    
 
 - name: "create user and group => user or group does not exists"
