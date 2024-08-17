@@ -1,4 +1,4 @@
-- name: "container : build_podman_image : stop service"
+- name: "container : add_podman_service : stop service"
   systemd:
     name: "{{container_name}}"
     state: stopped
