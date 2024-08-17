@@ -361,7 +361,6 @@
       TZ: "{{timezone}}"
       USER_ID: "{{system_users['openhab'].id}}"
       GROUP_ID: "{{system_groups['openhab'].id}}"
-      #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
       EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
       #EXTRA_SHELL_OPTS: "-x"
