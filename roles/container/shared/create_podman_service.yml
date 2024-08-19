@@ -11,6 +11,7 @@
       [
         "podman container create --name {{container_name}}",
         "--security-opt label=disable",
+        "--cgroups=split",
       {% for value in container_security_opt | default([]) %}
         "--security-opt {{value}}",
       {% endfor %}
