@@ -18,15 +18,26 @@
     mode: 0750
   notify: "restart mosquitto"
 
+- name: prepare published_ports
+  set_fact:
+    mosquitto_published_ports:  |
+      [
+        "1883:1883/tcp",
+        "9001:9001/tcp",
+        {% if default_server_ipv6 is defined %}
+          "[::]:1883:1883/tcp",
+          "[::]:9001:9001/tcp",
+        {% endif %}
+      ]
+  tags: ['firewall_config']
+
 - name: create container service
   vars:
     container_name: "mosquitto"
     container_image: "eclipse-mosquitto:{{mosquitto_version}}"
     container_network: "isolated"
     container_ip: "{{podman_mosquitto_ip}}"
-    container_ports:
-      - "1883/tcp"
-      - "9001/tcp"
+    container_published_ports: "{{mosquitto_published_ports}}"
     container_volumes:
       - '{{global_etc}}mosquitto:/mosquitto/config'
     container_readyness: { "type": "port_check", "ip": "{{podman_mosquitto_ip}}", "port": "1883" }
@@ -36,17 +47,7 @@
 - name: allow container service
   vars:
     service_name: "mosquitto"
-    nat_rules:
-      ip: "{{podman_mosquitto_ip}}"
-      ports: |
-        [
-          "1883:1883",
-          "9001:9001",
-          {% if default_server_ipv6 is defined %}
-            "[::]:1883:1883",
-            "[::]:9001:9001",
-          {% endif %}
-        ]
+    nat_rules: { ip: "{{podman_mosquitto_ip}}", ports: "{{mosquitto_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

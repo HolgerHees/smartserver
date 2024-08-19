@@ -17,15 +17,26 @@
   include_tasks: roles/container/shared/build_podman_image.yml
   tags: ['container_entrypoint_config']
 
+- name: prepare published_ports
+  set_fact:
+    speedtest_published_ports:  |
+      [
+        "5201:5201",
+        {% if default_server_ipv6 is defined %}
+          "[::]:5201:5201",
+        {% endif %}
+      ]
+  tags: ['firewall_config']
+
 - name: create container service
   vars:
     container_name: "speedtest"
     container_image: "custom_speedtest:{{speedtest_version}}"
     container_network: "isolated"
     container_ip: "{{podman_speedtest_ip}}"
-    container_ports:
+    container_exposed_ports:
      - "80/tcp"
-     - "5201"
+    container_published_ports: "{{speedtest_published_ports}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_speedtest_ip}}", "port": "80" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
@@ -39,10 +50,7 @@
 - name: allow container service
   vars:
     service_name: "speedtest"
-    nat_rules:
-      ip: "{{podman_speedtest_ip}}"
-      ports:
-        - "5201:5201"
+    nat_rules: { ip: "{{podman_speedtest_ip}}", ports: "{{speedtest_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

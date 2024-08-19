@@ -88,6 +88,17 @@
   include_tasks: roles/container/shared/create_podman_network.yml
   tags: ['firewall_config']
 
+- name: prepare published_ports
+  set_fact:
+    wireguard_cloud_published_ports:  |
+      [
+        "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+        {% if default_server_ipv6 is defined %}
+          "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+        {% endif %}
+      ]
+  tags: ['firewall_config']
+
 - name: create container service
   vars:
     container_name: "wireguard_cloud"
@@ -95,8 +106,7 @@
     container_privileged: yes
     container_network: "cloud_vpn"
     container_ip: "{{vpn_cloud_services.local.gateway}}"
-    container_ports:
-      - "{{cloud_vpn.interface.port}}/udp"
+    container_published_ports: "{{wireguard_cloud_published_ports}}"
     container_volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard'
     container_pre_exec: "modprobe wireguard"
@@ -115,14 +125,6 @@
       {% endfor %}
         { "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "iif": "{{default_network_interface}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
-    nat_rules:
-      ip: "{{vpn_cloud_services.local.gateway}}"
-      ports: |
-        [
-          "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
-          {% if default_server_ipv6 is defined %}
-            "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
-          {% endif %}
-        ]
+    nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']

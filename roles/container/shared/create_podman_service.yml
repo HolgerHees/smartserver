@@ -31,8 +31,11 @@
         "--no-healthcheck",
       {% endif %}
         "--network {{container_network}}{% if container_network != "host" %} --ip {{container_ip}}{% if container_ip6 | default(false) %} --ipv6 {{container_ip6}}{% endif %}{% endif %}",
-      {% for value in container_ports | default([]) %}
+      {% for value in container_exposed_ports | default([]) %}
         "--expose {{value}}",
+      {% endfor %}
+      {% for value in container_published_ports | default([]) %}
+        "--publish {{value}}",
       {% endfor %}
       {% for key in container_etc_hosts | default({}) %}
         "--add-host {{key}}:{{container_etc_hosts[key]}}",
