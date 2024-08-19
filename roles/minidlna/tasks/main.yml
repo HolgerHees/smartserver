@@ -23,7 +23,7 @@
     mode: 0750
   notify: "restart minidlna"
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "minidlna"
     image_name: "custom_minidlna:{{alpine_version}}"
@@ -34,46 +34,25 @@
   include_tasks: roles/container/shared/build_podman_image.yml
   tags: ['container_entrypoint_config']
 
-- name: prepare volumes
-  set_fact:
-    minidlna_volumes: |
-      [
-      "{{global_etc}}minidlna:/etc/minidlna",
-      "{{global_lib}}minidlna:/minidlna",
-      {% for dlna_volume in dlna_volumes %}
-      "{{dlna_volume}}:{{dlna_volumes[dlna_volume]}}/",
-      {% endfor %}
-      ]
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: minidlna
-    image: "custom_minidlna:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    user: "{{system_users['www'].id}}:{{system_groups['www'].id}}"
-    log_driver: journald
-    log_options:
-      tag: minidlna
-    network: "macvlan"
-    ip: "{{dlna_ip}}"
-    ip6: "{{dlna_ipv6 if dlna_ipv6 is defined else ''}}"
-    volumes: "{{minidlna_volumes}}"
-    exposed_ports:
-     - "8200/tcp"  
-     - "1900/udp"  
-  register: "podman_container_state"
-  notify: "restart minidlna"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "minidlna"
+    container_image: "custom_minidlna:{{alpine_version}}"
+    container_user: "{{system_users['www'].id}}:{{system_groups['www'].id}}"
+    container_network: "macvlan"
     container_ip: "{{dlna_ip}}"
+    container_ip6: "{{dlna_ipv6 if dlna_ipv6 is defined else ''}}"
+    container_ports:
+      - "1900/udp"
+      - "8200/tcp"
+    container_volumes: |
+      [
+        "{{global_etc}}minidlna:/etc/minidlna",
+        "{{global_lib}}minidlna:/minidlna",
+        {% for dlna_volume in dlna_volumes %}
+        "{{dlna_volume}}:{{dlna_volumes[dlna_volume]}}/",
+        {% endfor %}
+      ]
     container_readyness: { "type": "port_check", "ip": "{{dlna_ip}}", "port": "8200" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']

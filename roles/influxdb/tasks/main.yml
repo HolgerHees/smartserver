@@ -19,16 +19,14 @@
       - { mode: "u=rwx,g=rwx,o=", owner: "root", group: "root", path: "{{ global_build }}influxdb" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: influxdb
-    image: "influxdb:{{influxdb_version}}-alpine"
-    state: present
-    security_opt:
-      - label=disable
-    entrypoint: '["sh", "-c", "/entrypoint.sh influxd 2>&1" ]'
-    user: "{{system_users['influxdb'].id}}:{{system_groups['influxdb'].id}}"
-    env:
+# ***** SERVICE CONFIGS *****
+- name: create container service
+  vars:
+    container_name: "influxdb"
+    container_image: "influxdb:{{influxdb_version}}-alpine"
+    container_entrypoint: '["sh", "-c", "/entrypoint.sh influxd 2>&1"]'
+    container_user: "{{system_users['influxdb'].id}}:{{system_groups['influxdb'].id}}"
+    container_env:
       DOCKER_INFLUXDB_INIT_MODE: "setup"
       DOCKER_INFLUXDB_INIT_USERNAME: "{{influxdb_admin_username}}"
       DOCKER_INFLUXDB_INIT_PASSWORD: "{{influxdb_admin_password}}"
@@ -39,30 +37,17 @@
       INFLUXD_REPORTING_DISABLED: "true"
 #      INFLUXDB_LOGGING_FORMAT: "json"
 #      INFLUXDB_DATA_WAL_FSYNC_DELAY: "1s"
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: influxdb
-    network: "isolated"
-    ip: "{{podman_influxdb_ip}}"
-    volumes:
+    container_network: "isolated"
+    container_ip: "{{podman_influxdb_ip}}"
+    container_ports:
+      - "8086/tcp"
+    container_volumes:
       - '{{ global_etc }}influxdb:/etc/influxdb2'
       - '{{ global_lib }}influxdb:/var/lib/influxdb2'
       - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup'
-    exposed_ports:
-     - "8086"
-  register: "podman_container_state"
-  notify: "restart influxdb"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "influxdb"
-    container_ip: "{{podman_influxdb_ip}}"
     container_readyness: { "type": "url_check", "url": "http://{{podman_influxdb_ip}}:8086/ping" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 - name: add service name
   vars:
@@ -122,14 +107,14 @@
 # CHECK local cli token => only needed if a new container is created and data folder already exists
 - name: check influxdb service
   include_tasks: roles/influxdb/shared/wait_until_ready.yml
-  when: "podman_container_state.changed"
+  when: "podman_service_container_changed"
   
 - name: check cli config
   shell: "podman exec influxdb sh -c \"influx config list\""
   register: influxdb_config_result
   changed_when: False
-  when: "podman_container_state.changed"
+  when: "podman_service_container_changed"
   
 - name: create cli config token => config does not exists
   shell: "podman exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active\""
-  when: "podman_container_state.changed and '\tdefault\t' not in influxdb_config_result.stdout"
+  when: "podman_service_container_changed and '\tdefault\t' not in influxdb_config_result.stdout"

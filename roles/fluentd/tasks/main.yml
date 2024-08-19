@@ -53,7 +53,7 @@
     - "_.ansible.d/fluentd.conf"
   notify: "restart fluentd"
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "fluentd"
     image_name: "custom_fluentd:{{fluentd_version}}"
@@ -61,41 +61,25 @@
       - roles/fluentd/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: fluentd
-    image: "custom_fluentd:{{fluentd_version}}"
-    state: present
-    user: "root:root"
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
+- name: create container service
+  vars:
+    container_name: "fluentd"
+    container_image: "custom_fluentd:{{fluentd_version}}"
+    container_user: "root:root"
+    container_env:
       LD_PRELOAD: "" # fix SEGFAULT => https://github.com/fluent/fluentd-docker-image/issues/378
-    log_driver: journald
-    log_options:
-      tag: fluentd
-    network: "isolated"
-    ip: "{{podman_fluentd_ip}}"
-    volumes:
+    container_network: "isolated"
+    container_ip: "{{podman_fluentd_ip}}"
+    container_volumes:
       - '{{ global_etc }}fluentd:/fluentd/etc/'
       - '{{ global_log }}:{{ global_log }}'
       - '/run/log/journal:/run/log/journal'
-  register: "podman_container_state"
-  notify: "restart fluentd"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "fluentd"
-    container_ip: "{{podman_fluentd_ip}}"
-    container_readyness: { "type": "ping_check", "ip": "{{podman_fluentd_ip}}" }
     container_after: [ "loki" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "ping_check", "ip": "{{podman_fluentd_ip}}" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "fluentd"
     container_to_container_rules:

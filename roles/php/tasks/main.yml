@@ -4,7 +4,7 @@
 #    php_version: "8.3.3" => https://github.com/Imagick/imagick/issues/640
   tags: [ 'update_notifier_config' ]
   
-- name: build podman image
+- name: build container image
   vars:
     container_name: "php"
     image_name: "custom_php:{{php_version}}"
@@ -12,9 +12,20 @@
       - roles/php/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: collect mounted folder
-  set_fact:
-    php_mounted_folders: |
+# php fpm is always listening only to 127.0.0.1 by default
+- name: create container service
+  vars:
+    container_name: "php"
+    container_image: "custom_php:{{php_version}}"
+    container_user: "{{system_users['www'].id}}:{{system_groups['www'].id}}"
+    container_network: "isolated"
+    container_ip: "{{podman_php_ip}}"
+    container_ports:
+      - "9000"
+    container_etc_hosts:
+      openhab: "{{default_server_ip}}" # fix to make openhab reachable
+      netdata: "{{default_server_ip}}" # fix to make netdata reachable
+    container_volumes: |
       [
         '{{htdocs_path}}:{{htdocs_path}}'
         {% if nextcloud_enabled %}
@@ -25,46 +36,12 @@
           , '{{projects_path}}toolbox:{{projects_path}}toolbox'     # needed by openhab_toolbox role
         {% endif %}
       ]
-
-
-# network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
-# php fpm is always listening only to 127.0.0.1 by default
-- name: create podman container
-  containers.podman.podman_container:
-    name: php
-    image: "custom_php:{{php_version}}"
-    state: present
-    user: "{{system_users['www'].id}}:{{system_groups['www'].id}}"
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: php
-    network: "isolated"
-    ip: "{{podman_php_ip}}"
-    etc_hosts:
-      openhab: "{{default_server_ip}}" # fix to make openhab reachable
-      netdata: "{{default_server_ip}}" # fix to make netdata reachable
-    volumes: "{{php_mounted_folders}}"
-    exposed_ports:
-      - "9000"
-  register: "podman_container_state"
-  notify: "restart php"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "php"
-    container_ip: "{{podman_php_ip}}"
-    container_readyness: { "type": "host_exec", "cmd": "ping -c 1 {{podman_php_ip}} > /dev/null" }
     container_after: [ "mysql", "redis", "postfix", "influxdb" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "host_exec", "cmd": "ping -c 1 {{podman_php_ip}} > /dev/null" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "php"
     container_to_container_rules:

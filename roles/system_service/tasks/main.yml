@@ -38,7 +38,7 @@
     mode: 0750
   notify: "restart system_service"
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "system_service"
     image_name: "custom_system_service:{{alpine_version}}"
@@ -50,42 +50,26 @@
   include_tasks: roles/container/shared/build_podman_image.yml
   tags: ['container_entrypoint_config']
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: system_service
-    image: "custom_system_service:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    capabilities:
+- name: create container service
+  vars:
+    container_name: "system_service"
+    container_image: "custom_system_service:{{alpine_version}}"
+    container_capabilities:
       - NET_ADMIN
       - NET_RAW
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: system_service
-    network: "host"
-    exposed_ports:
+    container_network: "host"
+    container_ports:
       - "8507"
       - "2055/udp"
-    volumes:
+    container_volumes:
 #      - '{{global_build}}system_service/entrypoint.sh:/entrypoint.sh:rw'
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
       - '{{global_opt}}system_service/:/opt/system_service:ro'
       - "{{global_lib}}system_service/:/var/lib/system_service:rw"
-  register: "podman_container_state"
-  notify: "restart system_service"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "system_service"
-    container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8507" }
     container_after: [ "network-online.target", "mosquitto", "influxdb" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8507" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
   
 - name: add container name
   vars:

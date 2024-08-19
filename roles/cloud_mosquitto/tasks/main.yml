@@ -18,37 +18,23 @@
     mode: 0750
   notify: "restart cloud_mosquitto"
   
-- name: create podman container
-  containers.podman.podman_container:
-    name: cloud_mosquitto
-    image: "eclipse-mosquitto:{{mosquitto_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    user: "{{system_users['nobody'].name}}:{{system_groups['nobody'].name}}"
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: cloud_mosquitto
-    network: "cloud_vpn"
-    ip: "{{vpn_cloud_services.local.mosquitto}}"
-    volumes:
-      - '{{global_etc}}cloud_mosquitto:/mosquitto/config'
-  register: "podman_container_state"
-  notify: "restart cloud_mosquitto"
-    
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "cloud_mosquitto"
+    container_image: "eclipse-mosquitto:{{mosquitto_version}}"
+    container_user: "{{system_users['nobody'].name}}:{{system_groups['nobody'].name}}"
+    container_network: "cloud_vpn"
     container_ip: "{{vpn_cloud_services.local.mosquitto}}"
+    container_ports:
+      - "1883/tcp"
+      - "9001/tcp"
+    container_volumes:
+      - '{{global_etc}}cloud_mosquitto:/mosquitto/config'
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
     container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.mosquitto}}", "port": "1883" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 - name: add container name
   vars:

@@ -41,13 +41,22 @@
     - "netdata.conf"
   notify: "restart netdata"
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: netdata
-    image: "netdata/netdata:v{{netdata_version}}"
-    state: present
-    env:
-      TZ: "{{timezone}}"
+- name: create container service
+  vars:
+    container_name: "netdata"
+    container_image: "netdata/netdata:v{{netdata_version}}"
+    container_pid_mode: "host"
+    container_privileged: yes
+    container_capabilities:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    container_security_opt:
+      - "apparmor:unconfined"
+    container_network: "host"
+    container_ports:
+     - "8125"
+     - "19999"
+    container_env:
 #      PGID: "473"
     #  NETDATA_PORT: "29999"
 #      NETDATA_PORT: "19999"
@@ -56,19 +65,7 @@
       DOCKER_USR: "root"
       DOCKER_GRP: "root"
       NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors"
-    log_driver: journald
-    log_options:
-      tag: netdata
-    capabilities:
-      - SYS_PTRACE
-      - SYS_ADMIN
-    security_opt:
-      - "apparmor:unconfined"
-      - label=disable
-    pid_mode: "host"
-    privileged: yes
-    network: "host"
-    volumes:
+    container_volumes:
       - '/etc/passwd:/host/etc/passwd:ro'
       - '/etc/group:/host/etc/group:ro'
       - '/etc/localtime:/etc/localtime:ro'
@@ -96,20 +93,9 @@
       - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro"
 
       - "{{ global_etc }}netdata/cloud.d/cloud.conf:/var/lib/netdata/cloud.d/cloud.conf:ro"
-    exposed_ports:
-     - "19999"
-     - "8125"
-  register: "podman_container_state"
-  notify: "restart netdata"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "netdata"
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "19999" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 # ***** DEPENDENCY CONFIGS *****
 - name: copy helper

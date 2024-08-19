@@ -64,7 +64,7 @@
   with_items:
     - "wg0.conf"
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "wireguard_cloud"
     image_name: "custom_wireguard_cloud:{{alpine_version}}"
@@ -88,58 +88,24 @@
   include_tasks: roles/container/shared/create_podman_network.yml
   tags: ['firewall_config']
 
-- name: prepare published_ports
-  set_fact:
-    wireguard_cloud_published_ports: |
-      [
-        "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
-        {% if default_server_ipv6 is defined %}
-          "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
-        {% endif %}
-      ]
-  tags: ['firewall_config']
-  
-- name: create podman container
-  containers.podman.podman_container:
-    name: "wireguard_cloud"
-    image: "custom_wireguard_cloud:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: "wireguard_cloud"
-    #capabilities:
-    #  - NET_ADMIN
-    #  - SYS_MODULE
-    #  - SYS_ADMIN
-    #  - SETPCAP
-    privileged: yes
-    #domainname : "cloud"
-    #hostname: "nfsd"
-    network: "cloud_vpn"
-    ip: "{{vpn_cloud_services.local.gateway}}"
-    volumes:
-      - '{{global_etc}}wireguard_cloud:/etc/wireguard'
-    published_ports: "{{wireguard_cloud_published_ports}}"
-  register: "podman_container_state"
-  notify: "restart wireguard_cloud"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "wireguard_cloud"
+    container_image: "custom_wireguard_cloud:{{alpine_version}}"
+    container_privileged: yes
+    container_network: "cloud_vpn"
     container_ip: "{{vpn_cloud_services.local.gateway}}"
+    container_ports:
+      - "{{cloud_vpn.interface.port}}/udp"
+    container_volumes:
+      - '{{global_etc}}wireguard_cloud:/etc/wireguard'
     container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
     container_readyness: { "type": "ping_check", "ip": "{{vpn_cloud_services.local.gateway}}" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
   
-- name: allow service
+- name: allow container service
   vars:
     service_name: "wireguard_cloud"
     container_to_outside_rules: |
@@ -149,6 +115,14 @@
       {% endfor %}
         { "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "iif": "{{default_network_interface}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
-    nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
+    nat_rules:
+      ip: "{{vpn_cloud_services.local.gateway}}"
+      ports: |
+        [
+          "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+          {% if default_server_ipv6 is defined %}
+            "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+          {% endif %}
+        ]
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']

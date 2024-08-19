@@ -48,7 +48,7 @@
   with_items:
     - "provisioning/dashboards/provider.yaml"
     
-- name: build podman image
+- name: build container image
   vars:
     container_name: "grafana"
     image_name: "custom_grafana:{{grafana_version}}"
@@ -56,47 +56,31 @@
       - roles/grafana/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
     
-- name: create podman container
-  containers.podman.podman_container:
-    name: grafana
-    image: "custom_grafana:{{grafana_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    user: "root:root"
-    env:
-      GF_SERVER_DOMAIN: "grafana.{{server_domain}}"
+- name: create container service
+  vars:
+    container_name: "grafana"
+    container_image: "custom_grafana:{{grafana_version}}"
+    container_user: "root:root"
+    container_env:
+      GF_SERVER_DOMAIN: "https://%(domain)s/"
 #      GF_SERVER_HTTP_ADDR: "127.0.0.1"
-      GF_SERVER_ROOT_URL: "https://%(domain)s/"
+      GF_SERVER_ROOT_URL: "https://grafana.{{server_domain}}/"
 #      GF_LOG_MODE: "syslog"
 #      GF_LOG_SYSLOG_TAG: "grafana"
       GF_SECURITY_ALLOW_EMBEDDING: "true"
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: grafana
-    network: "isolated"
-    ip: "{{podman_grafana_ip}}"
-    volumes:
+    container_network: "isolated"
+    container_ip: "{{podman_grafana_ip}}"
+    container_ports:
+      - "3000/tcp"
+    container_volumes:
       - '{{global_lib}}grafana:/var/lib/grafana'
       - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning'
-    exposed_ports:
-     - "3000"
-  register: "podman_container_state"
-  notify: "restart grafana"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "grafana"
-    container_ip: "{{podman_grafana_ip}}"
-    container_readyness: { "type": "port_check", "ip": "{{podman_grafana_ip}}", "port": "3000" }
     container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "{{podman_grafana_ip}}", "port": "3000" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
       
-- name: allow service
+- name: allow container service
   vars:
     service_name: "grafana"
     container_to_container_rules:

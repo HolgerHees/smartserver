@@ -3,7 +3,7 @@
     speedtest_version: 'v0.5.3'
   tags: [ 'update_notifier_config' ]    
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "speedtest"
     image_name: "custom_speedtest:{{speedtest_version}}"
@@ -17,42 +17,18 @@
   include_tasks: roles/container/shared/build_podman_image.yml
   tags: ['container_entrypoint_config']
 
-- name: prepare published_ports
-  set_fact:
-    speedtest_published_ports:
-     - "5201:5201"
-  tags: ['firewall_config']
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: speedtest
-    image: "custom_speedtest:{{speedtest_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: speedtest
-#    ipc: "private" # needed to avoid ansible change flag
-    network: "isolated"
-    ip: "{{podman_speedtest_ip}}"
-    exposed_ports:
-     - "80"
-    published_ports: "{{speedtest_published_ports}}"
-  register: "podman_container_state"
-  notify: "restart speedtest"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "speedtest"
+    container_image: "custom_speedtest:{{speedtest_version}}"
+    container_network: "isolated"
     container_ip: "{{podman_speedtest_ip}}"
+    container_ports:
+     - "80/tcp"
+     - "5201"
     container_readyness: { "type": "port_check", "ip": "{{podman_speedtest_ip}}", "port": "80" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 - name: add container name
   vars:
@@ -60,10 +36,13 @@
     host_ip_address: "{{podman_speedtest_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "speedtest"
-    nat_rules: { ip: "{{podman_speedtest_ip}}", ports: "{{speedtest_published_ports}}" }
+    nat_rules:
+      ip: "{{podman_speedtest_ip}}"
+      ports:
+        - "5201:5201"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

@@ -20,41 +20,24 @@
     - "loki/local-config.yaml"
   notify: "restart loki"
   
-- name: create podman container
-  containers.podman.podman_container:
-    name: loki
-    image: "grafana/loki:{{loki_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    user: "{{system_users['loki'].id}}:{{system_groups['loki'].id}}"
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: loki
-    network: "isolated"
-    ip: "{{podman_loki_ip}}"
-    volumes:
-      - '{{global_etc}}loki:/etc/loki'
-      - '{{global_lib}}loki:/loki'
-    exposed_ports:
-     - "3100"
-  register: "podman_container_state"
-  notify: "restart loki"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "loki"
+    container_image: "grafana/loki:{{loki_version}}"
+    container_user: "{{system_users['loki'].id}}:{{system_groups['loki'].id}}"
+    container_network: "isolated"
     container_ip: "{{podman_loki_ip}}"
+    container_ports:
+      - "3100/tcp"
+    container_volumes:
+      - '{{global_etc}}loki:/etc/loki'
+      - '{{global_lib}}loki:/loki'
     container_readyness: { "type": "port_check", "ip": "{{podman_loki_ip}}", "port": "3100" }
 #    container_after: [ "alertmanager" ] # => skipped dependency, because loki & fluentd should start as soon as possible
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
       
-- name: allow service
+- name: allow container service
   vars:
     service_name: "loki"
     container_to_container_rules:

@@ -3,36 +3,19 @@
     redis_version: '7.4.0'
   tags: [ 'update_notifier_config' ]
   
-- name: create podman container
-  containers.podman.podman_container:
-    name: redis
-    image: "redis:{{redis_version}}-alpine"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: redis
-    network: "isolated"
-    ip: "{{podman_redis_ip}}"
-    exposed_ports:
-     - "6379"
-  register: "podman_container_state"
-  notify: "restart redis"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "redis"
+    container_image: "redis:{{redis_version}}-alpine"
+    container_network: "isolated"
     container_ip: "{{podman_redis_ip}}"
+    container_ports:
+     - "6379"
     container_readyness: { "type": "port_check", "ip": "{{podman_redis_ip}}", "port": "6379" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-#- name: allow service
+#- name: allow container service
 #  vars:
 #    service_name: "redis"
 #    container_to_container_rules:

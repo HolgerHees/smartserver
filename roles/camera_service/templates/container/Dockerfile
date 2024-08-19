@@ -8,5 +8,3 @@ RUN apk --update --no-cache add python3 py3-pip py3-paho-mqtt py3-requests py3-t
 
 #ENTRYPOINT ["/bin/sleep","3000000"]
 ENTRYPOINT ["/entrypoint.sh"]
-
-EXPOSE 80/tcp

@@ -36,15 +36,16 @@
     - "config.php"
   notify: "restart librenms"
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: librenms
-    image: "librenms/librenms:{{librenms_version}}"
-    state: present
-    security_opt:
-      - label=disable
-#    user: "{{system_users['librenms'].id}}:{{system_groups['librenms'].id}}"
-    env:
+- name: create container service
+  vars:
+    container_name: "librenms"
+    container_image: "librenms/librenms:{{librenms_version}}"
+    container_network: "isolated"
+    container_ip: "{{podman_librenms_ip}}"
+    container_capabilities:
+#      - NET_ADMIN
+      - NET_RAW
+    container_env:
 #      OBSERVIUM_ADMIN_USER: "admin"
 #      OBSERVIUM_ADMIN_PASS: "admin"
       PUID: "{{system_users['librenms'].id}}"
@@ -58,16 +59,11 @@
       REDIS_DB: "1"
 #      APP_URL: "https://librenms.{{server_domain}}/"
 #      LIBRENMS_BASE_URL: "https://librenms.{{server_domain}}/"
-      TZ: "{{timezone}}"
-    capabilities:
-#      - NET_ADMIN
-      - NET_RAW
-    log_driver: journald
-    log_options:
-      tag: librenms
-    network: "isolated"
-    ip: "{{podman_librenms_ip}}"
-    volumes:
+    container_ports:
+      - "162"
+      - "514"
+      - "8000/tcp"
+    container_volumes:
       - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/'
       - '{{global_etc}}librenms:/data/config'
       - '{{global_log}}librenms:/data/logs'
@@ -76,25 +72,12 @@
       - '{{global_lib}}librenms/plugins:/data/plugins'
       - '{{global_lib}}librenms/rrd:/data/rrd'
       - '{{global_lib}}librenms/weathermap:/data/weathermap'
-    exposed_ports:
-     - "8000/tcp"
-     - "162"
-     - "514"
-  register: "podman_container_state"
-  notify: "restart librenms"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "librenms"
-    container_ip: "{{podman_librenms_ip}}"
-    container_readyness: { "type": "port_check", "ip": "{{podman_librenms_ip}}", "port": "8000" }
     container_after: [ "redis", "mysql" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "{{podman_librenms_ip}}", "port": "8000" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "librenms"
     container_to_container_rules:

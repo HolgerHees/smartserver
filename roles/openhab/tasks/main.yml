@@ -316,7 +316,7 @@
   with_indexed_items: "{{device_result.stdout_lines}}"
   when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
   
-- name: build podman image
+- name: build container image
   vars:
     container_name: "openhab"
     image_name: "custom_openhab:{{openhab_version}}"
@@ -330,9 +330,27 @@
   register: conf_folder_result
   changed_when: no
 
-- name: prepare volumes
-  set_fact:
-    openhab_volumes: |
+- name: create container service
+  vars:
+    container_name: "openhab"
+    container_image: "custom_openhab:{{openhab_version}}"
+    container_network: "host"
+    container_ports:
+      - "8080"
+      - "8443"
+      - "5007"
+      - "8101"
+    container_device: "{{openhab_device_mounts | default([])}}"
+    container_env:
+      USER_ID: "{{system_users['openhab'].id}}"
+      GROUP_ID: "{{system_groups['openhab'].id}}"
+      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
+      EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
+      #EXTRA_SHELL_OPTS: "-x"
+      #EXTRA_SHELL_OPTS: "-v"
+      OPENHAB_HTTP_ADDRESS: "127.0.0.1"
+      CRYPTO_POLICY: "unlimited"
+    container_volumes: |
       [
         '{{projects_path}}openhab_config:{{projects_path}}openhab_config',
         '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared',
@@ -345,51 +363,10 @@
             '{{global_etc}}openhab/conf/{{name}}:/openhab/conf/{{name}}',
         {% endfor %}
       ]
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: openhab
-    image: "custom_openhab:{{openhab_version}}"
-    state: present
-#    capabilities:
-#      - NET_ADMIN
-#      - NET_RAW
-#    recreate: true
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-      USER_ID: "{{system_users['openhab'].id}}"
-      GROUP_ID: "{{system_groups['openhab'].id}}"
-      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
-      EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
-      #EXTRA_SHELL_OPTS: "-x"
-      #EXTRA_SHELL_OPTS: "-v"
-      OPENHAB_HTTP_ADDRESS: "127.0.0.1"
-      CRYPTO_POLICY: "unlimited"
-    log_driver: journald
-    log_options:
-      tag: openhab
-    device: "{{openhab_device_mounts | default([])}}"
-    network: "host"
-    volumes: "{{openhab_volumes}}"
-    exposed_ports:
-      - "8080"  
-      - "8443"  
-      - "5007"  
-      - "8101" 
-  register: "podman_container_state"
-  notify: "restart openhab"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "openhab"
-    container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8080" }
     container_after: [ "mysql", "influxdb", "mosquitto" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8080" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 - name: add service name
   vars:
@@ -403,11 +380,11 @@
   register: ssh_key_result
   changed_when: no
   failed_when: no
-  when: podman_container_state.changed
+  when: "podman_service_container_changed"
    
 - name: clean ssh key
   command: "ssh-keygen -R [openhab]:8101 -f /root/.ssh/known_hosts"
-  when: "podman_container_state.changed and ssh_key_result.rc == 0"
+  when: "podman_service_container_changed and ssh_key_result.rc == 0"
 
 # ***** MYSQL DATABASE ****
 - name: create database

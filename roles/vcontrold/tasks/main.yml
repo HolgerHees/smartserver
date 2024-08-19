@@ -34,7 +34,7 @@
     udev_rules_trigger: "restart vcontrold"
   include_tasks: roles/_shared/synchronize_udev_rules.yml
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "vcontrold"
     image_name: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
@@ -42,43 +42,25 @@
       - roles/vcontrold/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: vcontrold
-    image: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: vcontrold
-#    ipc: "private" # needed to avoid ansible change flag
-    network: "isolated"
-    ip: "{{podman_vcontrold_ip}}"
-    volumes:
-      - '{{global_etc}}vcontrold/:/etc/vcontrold:ro'
-      - '{{global_log}}vcontrold/:{{global_log}}vcontrold'
-    device:
-      - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"
-    exposed_ports:
-      - "3002"
-  register: "podman_container_state"
-  notify: "restart vcontrold"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "vcontrold"
+    container_image: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
+    container_network: "isolated"
     container_ip: "{{podman_vcontrold_ip}}"
-    container_readyness: { "type": "port_check", "ip": "{{podman_vcontrold_ip}}", "port": "3002" }
+    container_ports:
+      - "3002"
+    container_device:
+      - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"
+    container_volumes:
+      - '{{global_etc}}vcontrold/:/etc/vcontrold:ro'
+      - '{{global_log}}vcontrold/:{{global_log}}vcontrold'
     container_after: [ "mosquitto" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "{{podman_vcontrold_ip}}", "port": "3002" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
   
-- name: allow service
+- name: allow container service
   vars:
     service_name: "vcontrold"
     container_to_container_rules:

@@ -23,46 +23,29 @@
     - { mode: "u=rwx,g=rx,o=", src: "silent_setup.py", dest: "silent_setup.py"}
   notify: "restart alertmanager"
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: alertmanager
-    image: "prom/alertmanager:v{{alertmanager_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    command:
+- name: create container service
+  vars:
+    container_name: "alertmanager"
+    container_image: "prom/alertmanager:v{{alertmanager_version}}"
+    container_command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
       - "--storage.path=/alertmanager"
       - "--web.external-url=https://alertmanager.{{server_domain}}/"
       - "--log.format=json"
-    log_driver: journald
-    log_options:
-      tag: alertmanager
-    network: "isolated"
-    ip: "{{podman_alertmanager_ip}}"
-    volumes:
+    container_network: "isolated"
+    container_ip: "{{podman_alertmanager_ip}}"
+    container_ports:
+      - "9093/tcp"
+    container_volumes:
       - '{{global_etc}}alertmanager:/etc/alertmanager'
       - '{{global_lib}}alertmanager:/alertmanager'
-    exposed_ports:
-     - "9093"
-  register: "podman_container_state"
-  notify: "restart alertmanager"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "alertmanager"
-    container_ip: "{{podman_alertmanager_ip}}"
     container_post_exec: "sleep 5 && {{ global_etc }}alertmanager/silent_setup.py &"
-    container_readyness: { "type": "port_check", "ip": "{{podman_alertmanager_ip}}", "port": "9093" }
     container_after: [ "postfix" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "{{podman_alertmanager_ip}}", "port": "9093" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "alertmanager"
     container_to_container_rules:

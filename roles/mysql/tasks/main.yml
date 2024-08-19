@@ -33,16 +33,11 @@
       - "--chmod=D750,F640"
   notify: "restart mysql"
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: mysql
-    image: "mariadb:{{mysql_version}}"
-    state: present
-    security_opt:
-      - label=disable
-#    recreate: yes
-#    command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
-    user: "{{system_users['mysql'].id}}:{{system_groups['mysql'].id}}"
+- name: create container service
+  vars:
+    container_name: "mysql"
+    container_image: "mariadb:{{mysql_version}}"
+    container_user: "{{system_users['mysql'].id}}:{{system_groups['mysql'].id}}"
     # !!! DISABLED HEALTHCHECK => see pihole healthcheck
     #healthcheck: "healthcheck.sh --connect --innodb_initialized"
     #health_startup_cmd: "healthcheck.sh --connect --innodb_initialized"
@@ -52,33 +47,22 @@
     #healthcheck_interval: 30s
     #healthcheck_retries: 3
     #healthcheck_timeout: 10s
-    env:
+    #command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
+    container_network: "isolated"
+    container_ip: "{{podman_mysql_ip}}"
+    container_ports:
+      - "3306"
+    container_env:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "true"
       TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: mysql
-    volumes:
+    container_volumes:
       - '{{ global_etc }}mysql:/etc/mysql'
       - '{{ global_lib }}mysql:/var/lib/mysql'
-    network: "isolated"
-    ip: "{{podman_mysql_ip}}"
-    exposed_ports:
-      - "3306"  
-  register: "podman_container_state"
-  notify: "restart mysql"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "mysql"
-    container_ip: "{{podman_mysql_ip}}"
     container_readyness: { "type": "container_exec", "cmd": "mysqladmin ping -h 127.0.0.1 --silent" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 - name: add service name
   vars:
@@ -131,11 +115,11 @@
 
 - name: check mysql service
   include_tasks: roles/mysql/shared/wait_until_ready.yml
-  when: podman_container_state.changed
+  when: "podman_service_container_changed"
 
 - name: check mysql upgrade
   shell: "podman exec mysql sh -c \"/usr/bin/mysql_upgrade\""
-  when: podman_container_state.changed
+  when: "podman_service_container_changed"
   
 # ***** SHARED DATABASE ****
 - name: create database

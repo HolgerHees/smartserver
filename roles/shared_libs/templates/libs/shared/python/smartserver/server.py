@@ -75,6 +75,7 @@ class Server():
         self.socketio_client_lock = threading.Lock()
 
         def shutdown(signum, frame):
+            logging.info("Server shutdown")
             self.terminate()
             
         signal.signal(signal.SIGTERM, shutdown)
@@ -164,8 +165,6 @@ class Server():
         logging.info("Server stopped")
 
     def terminate(self):
-        logging.info("Server shutdown")
-
         if self.filewatcher is not None:
             self.filewatcher.terminate()
         raise ShutdownException()

@@ -339,6 +339,7 @@ class JobExecutor():
 
     def cleanLogfile(self):
         logging.info(u"State for commit '{}' changed to '{}'.".format(self.job_state.getGitHash(), self.job_state.getState()))
+        files = glob.glob("{}*-{}-{}-{}-{}-*.log".format(self.config.log_dir, self.job_state.getConfig(), self.job_state.getDeployment(), self.config.branch, self.job_state.getGitHash() ) )
         if len(files) > 0:
             logging.info(u"Clean logfiles.")
         self._cleanedFiles(files)

@@ -12,51 +12,24 @@
 #      - { mode: "u=rwx,g=rx,o=", owner: "109", group: "112", path: "{{global_etc}}libreoffice" }
 #  include_tasks: roles/_shared/create_directories.yml
 
-
 # https://github.com/CollaboraOnline/online/issues/9534
 # FIX --o=mount_namespaces=false
-- name: create podman container
-  containers.podman.podman_container:
-    name: libreoffice
-    image: "collabora/code:{{libreoffice_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-      extra_params: "--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o=mount_namespaces=false" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"
-      server_name: "libreoffice.{{server_domain}}"
-    #capabilities:
-    #  - SYS_PTRACE
-    #  - SYS_ADMIN
-    #  - MKNOD
-    #  - CAP_CHOWN
-    privileged: yes
-    log_driver: journald
-    log_options:
-      tag: libreoffice
-    network: "isolated"
-    ip: "{{podman_libreoffice_ip}}"
-#    volumes:
-#      - '{{global_etc}}libreoffice/fonts:/usr/share/fonts/truetype/custom'
-#      - '{{global_log}}libreoffice:/var/log/libreoffice'
-#      - '{{global_lib}}libreoffice:/var/www/libreoffice/Data'
-    exposed_ports:
-      - "9980"
-  register: "podman_container_state"
-  notify: "restart libreoffice"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "libreoffice"
+    container_image: "collabora/code:{{libreoffice_version}}"
+    container_network: "isolated"
     container_ip: "{{podman_libreoffice_ip}}"
+    container_ports:
+      - "9980"
+    container_env:
+      extra_params: "--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o=mount_namespaces=false" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"
+      server_name: "libreoffice.{{server_domain}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_libreoffice_ip}}", "port": "9980" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "libreoffice"
     container_to_host_rules:

@@ -37,48 +37,31 @@
   tags: ['prometheus_config']
   when: "monitoring_enabled and custom_rules_result.rc == 0"
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: prometheus
-    image: "prom/prometheus:v{{prometheus_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    command:
+- name: create container service
+  vars:
+    container_name: "prometheus"
+    container_image: "prom/prometheus:v{{prometheus_version}}"
+    container_command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
       - "--log.format=json"
-    log_driver: journald
-    log_options:
-      tag: prometheus
-    network: "isolated"
-    ip: "{{podman_prometheus_ip}}"
-    volumes:
+    container_network: "isolated"
+    container_ip: "{{podman_prometheus_ip}}"
+    container_ports:
+     - "9090"
+    container_volumes:
       - '{{ global_etc }}prometheus:/etc/prometheus'
       - '{{ global_lib }}prometheus:/prometheus'
-    exposed_ports:
-     - "9090"
-  register: "podman_container_state"
-  notify: "restart prometheus"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "prometheus"
-    container_ip: "{{podman_prometheus_ip}}"
     container_pre_exec: "/opt/scripts/prometheus_generator {{ global_etc }}prometheus/"
     container_reload_exec: "/usr/bin/podman kill --signal=HUP prometheus"
-    container_readyness: { "type": "port_check", "ip": "{{podman_prometheus_ip}}", "port": "9090" }
     container_after: [ "alertmanager" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "{{podman_prometheus_ip}}", "port": "9090" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "prometheus"
     container_to_container_rules:

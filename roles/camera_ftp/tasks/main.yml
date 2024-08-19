@@ -35,7 +35,7 @@
     mode: 0750
   notify: "restart vsftpd"
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "vsftpd"
     image_name: "custom_vsftpd:{{alpine_version}}"
@@ -62,62 +62,47 @@
       - "/usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf &"
   include_tasks: roles/container/shared/build_podman_image.yml
   
-- name: prepare published_ports
-  set_fact:
-    camera_ftp_published_ports:  |
-      [
-        "21:21",
-        "20:20",
-        "30000-30005:30000-30005",
-        {% if default_server_ipv6 is defined %}
-          "[::]:21:21",
-          "[::]:20:20",
-          "[::]:30000-30005:30000-30005",
-        {% endif %}
-      ]
-  tags: ['firewall_config']
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: vsftpd
-    image: "custom_vsftpd:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
+# ***** SERVICE CONFIGS *****
+- name: create container service
+  vars:
+    container_name: "vsftpd"
+    container_image: "custom_vsftpd:{{alpine_version}}"
+    container_env:
       FTP_USER: "{{camera_ftp_username}}"
       FTP_PASS: "{{camera_ftp_password}}"
       FTP_UID: "{{system_users['ftp'].id}}"
       FTP_GID: "{{system_groups['ftp'].id}}"
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: vsftpd
-    volumes:
+    container_network: "isolated"
+    container_ip: "{{podman_camera_ftp_ip}}"
+    container_ports:
+      - "21"
+      - "20"
+      - "30000-30005"
+    container_volumes:
       - '{{global_etc}}vsftpd/:/etc/vsftpd'
       - '{{global_lib}}/camera_service/upload/:/home/upload'
-    network: "isolated"
-    ip: "{{podman_camera_ftp_ip}}"
-    published_ports: "{{camera_ftp_published_ports}}"
-  register: "podman_container_state"
-  notify: "restart vsftpd"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "vsftpd"
-    container_ip: "{{podman_camera_ftp_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_camera_ftp_ip}}", "port": "21" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "vsftpd"
     container_to_outside_rules:
       - { saddr: "{{podman_camera_ftp_ip}}", sport: "20", daddr: "{{intern_networks}}", protocol: "tcp", comment: "camera_ftp => internal networks" }
-    nat_rules: { ip: "{{podman_camera_ftp_ip}}", ports: "{{camera_ftp_published_ports}}" }
+    nat_rules:
+      ip: "{{podman_camera_ftp_ip}}"
+      ports: |
+        [
+          "21:21",
+          "20:20",
+          "30000-30005:30000-30005",
+          {% if default_server_ipv6 is defined %}
+            "[::]:21:21",
+            "[::]:20:20",
+            "[::]:30000-30005:30000-30005",
+          {% endif %}
+        ]
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

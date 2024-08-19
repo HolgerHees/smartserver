@@ -54,7 +54,37 @@
 
 - name: prepare pihole environment variables
   set_fact:
-    pihole_env: |
+    pihole_env:
+
+- name: copy config
+  copy:
+    src: "templates/pihole-FTL.conf"
+    dest: "{{ global_etc }}pihole/pihole-FTL.conf"
+    owner: "{{system_users['pihole'].name}}"
+    group: "{{system_groups['pihole'].name}}"
+    mode: 0640
+
+- name: create container service
+  vars:
+    container_name: "pihole"
+    container_image: "pihole/pihole:{{pihole_version}}"
+    container_capabilities:
+      - net_admin
+    container_network: "macvlan"
+    container_ip: "{{pihole_ip}}"
+    container_ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"
+    container_ports:
+      - "53/tcp"
+      - "53/udp"
+    # - "67:67/udp"
+      - "80/tcp"
+      - "443/tcp"
+    container_no_healthcheck: yes # disable healthcheck for now, because systemd is producing startup errors related to not successful first healthcheck
+    #healthcheck: "dig +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"
+    #healthcheck_start_period: 30s
+    #healthcheck_timeout: 30s
+    #healthcheck_interval: 30s
+    container_env: |
       {
         "TZ": "{{timezone}}",
         "PIHOLE_UID": "{{system_users['pihole'].id}}",
@@ -79,59 +109,13 @@
             , "DHCP_LEASETIME": "24"
         {% endif %}
       }
-
-- name: copy config
-  copy:
-    src: "templates/pihole-FTL.conf"
-    dest: "{{ global_etc }}pihole/pihole-FTL.conf"
-    owner: "{{system_users['pihole'].name}}"
-    group: "{{system_groups['pihole'].name}}"
-    mode: 0640
-
-- name: create podman container
-  containers.podman.podman_container:
-    name: pihole
-    image: "pihole/pihole:{{pihole_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env: "{{pihole_env}}"
-    capabilities:
-      - net_admin
-    shm_size: 256m
-    log_driver: journald
-    log_options:
-      tag: pihole
-    no_healthcheck: yes # disable healthcheck for now, because systemd is producing startup errors related to not successful first healthcheck
-    #healthcheck: "dig +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"
-    #healthcheck_start_period: 30s
-    #healthcheck_timeout: 30s
-    #healthcheck_interval: 30s
-    network: "macvlan"
-    ip: "{{pihole_ip}}"
-    ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"
-    volumes:
+    container_volumes:
       - '{{ global_etc }}pihole/:/etc/pihole/'
       - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/'
       - '{{ global_lib }}pihole/:/var/lib/pihole/'
-    exposed_ports:
-      - "53/tcp"
-      - "53/udp"
-    # - "67:67/udp"
-      - "80/tcp"
-      - "443/tcp"
-  register: "podman_container_state"
-  notify: "restart pihole"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "pihole"
-    container_ip: "{{pihole_ip}}"
     container_readyness: { "type": "port_check", "ip": "{{pihole_ip}}", "port": "80" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 # ***** DEPENDENCY CONFIGS *****
 - name: register webui

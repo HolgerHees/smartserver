@@ -48,7 +48,7 @@
     mode: 0750
   notify: "restart camera_service"
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "camera_service"
     image_name: "custom_camera_service:{{alpine_version}}"
@@ -60,40 +60,26 @@
   include_tasks: roles/container/shared/build_podman_image.yml
   tags: ['container_entrypoint_config']
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: camera_service
-    image: "custom_camera_service:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: camera_service
-    network: "isolated"
-    ip: "{{podman_camera_service_ip}}"
-    volumes:
+# ***** SERVICE CONFIGS *****
+- name: create container service
+  vars:
+    container_name: "camera_service"
+    container_image: "custom_camera_service:{{alpine_version}}"
+    container_network: "isolated"
+    container_ip: "{{podman_camera_service_ip}}"
+    container_ports:
+      - "80/tcp"
+    container_volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
       - '{{global_opt}}camera_service/:/opt/camera_service:ro'
       - "{{global_lib}}camera_service/:/var/lib/camera_service:rw"
       - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw'
-  register: "podman_container_state"
-  notify: "restart camera_service"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "camera_service"
-    container_ip: "{{podman_camera_service_ip}}"
-    container_readyness: { "type": "port_check", "ip": "{{podman_camera_service_ip}}", "port": "80" }
     container_after: [ "camera_ftp" ]
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+    container_readyness: { "type": "port_check", "ip": "{{podman_camera_service_ip}}", "port": "80" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "camera_service"
     container_to_container_rules:

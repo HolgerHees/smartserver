@@ -71,7 +71,7 @@
     mode: 0750
   notify: "restart ci_service"
 
-- name: build podman image
+- name: build container image
   vars:
     container_name: "ci_service"
     image_name: "custom_ci_service:{{alpine_version}}"
@@ -82,42 +82,28 @@
       - "{{global_opt}}ci_service/ci_service &"
   include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: ci_service
-    image: "custom_ci_service:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: ci_service
-    pid_mode: "host"
-    privileged: "true"
-    network: "isolated"
-    ip: "{{podman_ci_service_ip}}"
-    volumes:
+- name: create container service
+  vars:
+    container_name: "ci_service"
+    container_image: "custom_ci_service:{{alpine_version}}"
+    container_network: "isolated"
+    container_ip: "{{podman_ci_service_ip}}"
+    container_ports:
+      - "80/tcp"
+    container_pid_mode: "host"
+    container_privileged: "true"
+    container_volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}ci_service/:{{global_opt}}ci_service:ro,z' # needs to be same path as on host, because inside the container we use 'with nsenter.Host():'
       - "{{global_build}}ci_job/:{{global_build}}ci_job/:rw,z"
       - "{{global_tmp}}:{{global_tmp}}:rw,z"
       - "{{global_lib}}ci_service/:{{global_lib}}ci_service/:rw,z"
       - "{{global_log}}ci_service/:{{global_log}}ci_service/:rw,z"
-  register: "podman_container_state"
-  notify: "restart ci_service"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "ci_service"
-    container_changed: "{{podman_container_state.changed}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_ci_service_ip}}", "port": "80" }
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-- name: allow service
+- name: allow container service
   vars:
     service_name: "ci_service"
     container_to_container_rules:

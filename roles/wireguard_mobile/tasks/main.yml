@@ -132,7 +132,7 @@
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]
   
-- name: build podman image
+- name: build container image
   vars:
     container_name: "wireguard_mobile"
     image_name: "custom_wireguard_mobile:{{alpine_version}}"
@@ -146,41 +146,22 @@
     entrypoint_check: "while wg show | grep -q 'wg0'; do sleep 60 & wait $!; done"
   include_tasks: roles/container/shared/build_podman_image.yml
   
-- name: create podman container
-  containers.podman.podman_container:
-    name: wireguard_mobile
-    image: "custom_wireguard_mobile:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: wireguard_mobile
-    capabilities:
-      - NET_ADMIN
-      - SYS_MODULE
-    network: "host"
-#    networks:
-#      - name: "mobile_vpn"
-#    networks_cli_compatible: yes
-    volumes:
-      - '{{global_etc}}wireguard_mobile:/etc/wireguard'
-#    exposed_ports:
-#      - "{{mobile_vpn_internal_port}}/udp"
-  register: "podman_container_state"
-  notify: "restart wireguard_mobile"
-
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
+- name: create container service
   vars:
     container_name: "wireguard_mobile"
+    container_image: "custom_wireguard_mobile:{{alpine_version}}"
+    container_capabilities:
+      - NET_ADMIN
+      - SYS_MODULE
+    container_network: "host"
+    container_ports:
+      - "{{mobile_vpn_internal_port}}/udp"
+    container_volumes:
+      - '{{global_etc}}wireguard_mobile:/etc/wireguard'
     container_pre_exec: "modprobe wireguard"
     container_readyness: { "type": "state_check" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
   
 - name: allow wireguard_mobile service
   vars:

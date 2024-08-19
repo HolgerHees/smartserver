@@ -144,7 +144,9 @@ for container_json in containers_json:
     else:
         sandboxKey = container_json['NetworkSettings']['SandboxKey']
         interfaceResult = execCommand("nsenter --net={} ip a".format(sandboxKey))
-        pids = [ str(container_json["State"]["Pid"]), str(container_json["State"]["ConmonPid"]) ]
+        pids = [ str(container_json["State"]["Pid"]) ]
+        if "ConmonPid" in container_json["State"]:
+            pids.append( str(container_json["State"]["ConmonPid"]) )
 
         container = Container("Container", name, sandboxKey, pids, interfaceResult.stdout.decode("utf-8").strip())
         container_r[name] = container

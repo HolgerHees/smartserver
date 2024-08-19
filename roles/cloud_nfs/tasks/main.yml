@@ -97,7 +97,7 @@
 # Kerberos
 #/usr/sbin/rpc.svcgssd -v
 #/usr/sbin/rpc.gssd -v
-- name: build podman image
+- name: build container image
   vars:
     container_name: "cloud_nfs"
     image_name: "custom_cloud_nfs:{{alpine_version}}"
@@ -118,44 +118,24 @@
       - "/usr/sbin/rpc.nfsd 0"
   include_tasks: roles/container/shared/build_podman_image.yml
 
-- name: create podman container
-  containers.podman.podman_container:
-    name: "cloud_nfs"
-    image: "custom_cloud_nfs:{{alpine_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: "cloud_nfs"
-    #capabilities:
-    #  - NET_ADMIN
-    #  - SYS_MODULE
-    #  - SYS_ADMIN
-    #  - SETPCAP
-    privileged: yes
-    network: "cloud_vpn"
-    ip: "{{vpn_cloud_services.local.nfs}}"
-    volumes:
+- name: create container service
+  vars:
+    container_name: "cloud_nfs"
+    container_image: "custom_cloud_nfs:{{alpine_version}}"
+    container_privileged: "true"
+    container_network: "cloud_vpn"
+    container_ip: "{{vpn_cloud_services.local.nfs}}"
+    container_ports:
+      - "2049/tcp"
+    container_volumes:
       - '{{global_etc}}cloud_nfs:/etc/cloud_nfs'
       - '{{global_etc}}cloud_nfs/exports:/etc/exports'
       - '{{cloud_path}}local:/cloud/local:rshared'
-  register: "podman_container_state"
-  notify: "restart cloud_nfs"
-  
-# ***** SERVICE CONFIGS *****
-- name: handle systemd service
-  vars:
-    container_name: "cloud_nfs"
-    container_ip: "{{vpn_cloud_services.local.nfs}}"
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
     container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.nfs}}", "port": "2049" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 # ***** FINALIZE *****
 - name: register loki rules

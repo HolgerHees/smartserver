@@ -70,7 +70,7 @@ class Handler(Server):
             cleaned = True
 
         if self.job_state.getState() == "running":
-            logging.info(u"Set job '{}' state to 'finished'".format(vid,name))
+            logging.info(u"Set job '{}' state to 'finished'".format(vid))
             self.job_executor.cleanLogfile()
             self.job_state.setState("finished")
             cleaned = True

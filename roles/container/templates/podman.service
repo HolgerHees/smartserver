@@ -15,7 +15,7 @@ NotifyAccess=all
 TimeoutStartSec=120
 TimeoutStopSec=30
 Restart=on-failure
-RestartSec=60
+RestartSec=900
 #RestartSteps=4
 #RestartMaxDelaySec=60
 Environment=NETAVARK_FW=none

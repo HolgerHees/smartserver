@@ -1,0 +1,124 @@
+- name: "container : create_podman_service : get create cmd"
+  shell: "podman inspect {{container_name}} --format '{{ '{{' }} .Config.CreateCommand {{ '}}'}}'"
+  register: "podman_create_cmd_state"
+  changed_when: no
+  failed_when: no
+  tags: ['podman_container']
+
+- name: "container : create_podman_service : prepare create cmd"
+  set_fact:
+    podman_create_cmd_new: |
+      [
+        "podman container create --name {{container_name}}",
+        "--security-opt label=disable",
+      {% for value in container_security_opt | default([]) %}
+        "--security-opt {{value}}",
+      {% endfor %}
+        "--log-driver journald --log-opt tag={{container_name}}",
+      {% if container_privileged | default(false) %}
+        "--privileged=True",
+      {% endif %}
+      {% if container_pid_mode is defined %}
+        "--pid {{container_pid_mode}}",
+      {% endif %}
+      {% if container_user is defined %}
+        "--user {{container_user}}",
+      {% endif %}
+      {% for value in container_capabilities | default([]) %}
+        "--cap-add {{value}}",
+      {% endfor %}
+      {% if container_no_healthcheck is defined and container_no_healthcheck %}
+        "--no-healthcheck",
+      {% endif %}
+        "--network {{container_network}}{% if container_network != "host" %} --ip {{container_ip}}{% if container_ip6 | default(false) %} --ipv6 {{container_ip6}}{% endif %}{% endif %}",
+      {% for value in container_ports | default([]) %}
+        "--expose {{value}}",
+      {% endfor %}
+      {% for key in container_etc_hosts | default({}) %}
+        "--add-host {{key}}:{{container_etc_hosts[key]}}",
+      {% endfor %}
+      {% for value in container_device | default({}) %}
+        "--device {{value}}",
+      {% endfor %}
+      {% if container_stop_signal is defined %}
+        "--stop-signal {{container_stop_signal}}",
+      {% endif %}
+        "--env TZ={{timezone}}",
+      {% for key in container_env | default({}) %}
+        "--env '{{key}}={{ container_env[key] | replace('"', '\"') }}'",
+      {% endfor %}
+      {% for value in container_volumes | default([]) %}
+        "--volume {{value}}",
+      {% endfor %}
+      {% if container_entrypoint is defined %}
+        "--entrypoint '{{container_entrypoint | replace('"', '\"') }}'",
+      {% endif %}
+        "{{container_image}}",
+      {% for value in container_command | default([]) %}
+        "{{ value | replace('"', '\"') }}",
+      {% endfor %}
+      ]
+    podman_create_cmd_old: "{% if podman_create_cmd_state.rc == 0 %}{{podman_create_cmd_state.stdout[1:-1]}}{% endif %}"
+  tags: ['podman_container']
+
+- name: "container : create_podman_service : prepare changed flag"
+  set_fact:
+    podman_service_container_changed: "{{ true if podman_create_cmd_old != ( podman_create_cmd_new | join(' ') | regex_replace(\"--(env|entrypoint) '(.*?)' \",\"--\\1 \\2 \") ) else false }}"
+  tags: ['podman_container']
+
+#- name: debug
+#  debug:
+#    msg: "{{ podman_create_cmd_new | join(' ')}}"
+
+#- name: debug
+#  debug:
+#    msg: "{{ podman_create_cmd_new | join(' ') | regex_replace(\"--(env|entrypoint) '(.*?)' \",\"--\\1 \\2 \") }}"
+
+#- name: debug
+#  debug:
+#    msg: "{{ podman_create_cmd_old }}"
+
+#- name: debug
+#  debug:
+#    msg: "{{ podman_service_container_changed }}"
+
+- name: "container : create_podman_service : stop service"
+  systemd:
+    name: "{{container_name}}"
+    state: stopped
+  failed_when: no
+  tags: ['podman_container']
+  when: "podman_service_container_changed"
+
+- name: "container : create_podman_service : remove old container"
+  shell: "podman rm --force --ignore {{container_name}}"
+  tags: ['podman_container']
+  when: "podman_service_container_changed"
+
+- name: "container : create_podman_service : create new container"
+  shell: "{{ podman_create_cmd_new | join(' ') }}"
+  tags: ['podman_container']
+  when: "podman_service_container_changed"
+
+- name: "container : create_podman_service : create systemd service"
+  copy:
+    content: "{{ lookup('template', 'roles/container/templates/podman.service') }}"
+    dest: "/etc/systemd/system/{{container_name}}.service"
+    owner: root
+    group: root
+    mode: 0644
+  tags: ['systemd_service_config']
+  notify: "restart {{trigger_name | default(container_name)}}"
+
+- name: "container : create_podman_service : register systemd service watcher"
+  vars:
+    watcher_name: "{{container_name}}"
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
+  when: "monitoring_enabled"
+
+- name: "container : create_podman_service : trigger systemd service"
+  vars:
+    notify: "restart {{container_name}}"
+    service: "{{container_name}}"
+  include_tasks: roles/_shared/service_check.yml

@@ -220,7 +220,12 @@
     - auth_user_fullnames.txt
     - auth_user_groups.txt
 
-- name: build podman image
+- name: disable old systemd service
+  shell: "if [ -f /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service ]; then mv /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service.org; echo \"1\"; else echo \"0\"; fi"
+  register: service_change
+  changed_when: "'1' in service_change.stdout"
+
+- name: build container image
   vars:
     container_name: "apache2"
     image_name: "custom_apache2:{{apache_version}}"
@@ -228,20 +233,17 @@
       - roles/apache/templates/container/Dockerfile
   include_tasks: roles/container/shared/build_podman_image.yml
   
-- name: create podman container
-  containers.podman.podman_container:
-    name: apache2
-    image: "custom_apache2:{{apache_version}}"
-    state: present
-    security_opt:
-      - label=disable
-    env:
-      TZ: "{{timezone}}"
-    log_driver: journald
-    log_options:
-      tag: apache2
-    network: "host"
-    volumes:
+- name: create container service
+  vars:
+    container_name: "apache2"
+    container_image: "custom_apache2:{{apache_version}}"
+    container_stop_signal: "SIGTERM" # by default SIGWINCH is used for apache
+    container_network: "host"
+    container_ports:
+      - "80/tcp"
+      - "443/tcp"
+      - "10114/tcp"
+    container_volumes:
       - '{{global_etc}}apache2/_.ansible.auth:/etc/apache2/_.ansible.auth'
       - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d'
       - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d'
@@ -252,27 +254,10 @@
       - '{{global_log}}:{{global_log}}'
 
       - '{{htdocs_path}}:{{htdocs_path}}'
-    exposed_ports:
-      - "80"
-      - "443"
-      - "10114"
-  register: "podman_container_state"
-  notify: "restart apache2"
-  
-# ***** SERVICE CONFIGS *****
-- name: disable old systemd service
-  shell: "if [ -f /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service ]; then mv /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service.org; echo \"1\"; else echo \"0\"; fi"
-  register: service_change
-  changed_when: "'1' in service_change.stdout"
-
-- name: handle systemd service
-  vars:
-    container_name: "apache2"
     container_reload_exec: "/usr/bin/podman exec apache2 sh -c \"apachectl -k graceful\""
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "80" }
-    container_changed: "{{podman_container_state.changed}}"
-  include_tasks: roles/container/shared/handle_podman_service.yml
-  tags: ['systemd_watcher_config','systemd_service_config']
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
 - name: allow letsencrypt service
   vars:
