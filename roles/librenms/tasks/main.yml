@@ -59,7 +59,7 @@
       REDIS_DB: "1"
 #      APP_URL: "https://librenms.{{server_domain}}/"
 #      LIBRENMS_BASE_URL: "https://librenms.{{server_domain}}/"
-    container_ports:
+    container_exposed_ports:
       - "162"
       - "514"
       - "8000/tcp"

@@ -125,7 +125,7 @@
     container_privileged: "true"
     container_network: "cloud_vpn"
     container_ip: "{{vpn_cloud_services.local.nfs}}"
-    container_ports:
+    container_exposed_ports:
       - "2049/tcp"
     container_volumes:
       - '{{global_etc}}cloud_nfs:/etc/cloud_nfs'

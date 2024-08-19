@@ -42,7 +42,7 @@
     container_network: "macvlan"
     container_ip: "{{dlna_ip}}"
     container_ip6: "{{dlna_ipv6 if dlna_ipv6 is defined else ''}}"
-    container_ports:
+    container_exposed_ports:
       - "1900/udp"
       - "8200/tcp"
     container_volumes: |

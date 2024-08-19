@@ -53,7 +53,7 @@
     container_security_opt:
       - "apparmor:unconfined"
     container_network: "host"
-    container_ports:
+    container_exposed_ports:
      - "8125"
      - "19999"
     container_env:

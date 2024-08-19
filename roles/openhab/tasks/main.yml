@@ -335,7 +335,7 @@
     container_name: "openhab"
     container_image: "custom_openhab:{{openhab_version}}"
     container_network: "host"
-    container_ports:
+    container_exposed_ports:
       - "8080"
       - "8443"
       - "5007"

@@ -58,7 +58,7 @@
       - NET_ADMIN
       - NET_RAW
     container_network: "host"
-    container_ports:
+    container_exposed_ports:
       - "8507"
       - "2055/udp"
     container_volumes:

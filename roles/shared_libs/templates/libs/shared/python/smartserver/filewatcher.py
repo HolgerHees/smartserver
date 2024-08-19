@@ -25,7 +25,6 @@ class FileWatcher():
         self.watched_parents = {}
 
         self.inotify = inotify.INotify(self.inotifyEvent)
-        self.inotify.start()
 
         self.inotify_lock = threading.Lock()
         self.inotify_in_progress = {}
@@ -138,6 +137,9 @@ class FileWatcher():
     def getModifiedTime(self,path):
         return self.modified_time[path.rstrip("/")]
       
+    def start(self):
+        self.inotify.start()
+
     def terminate(self):
         self.inotify.stop()
         self.inotify.join()

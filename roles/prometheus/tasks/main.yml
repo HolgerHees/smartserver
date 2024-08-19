@@ -49,7 +49,7 @@
       - "--log.format=json"
     container_network: "isolated"
     container_ip: "{{podman_prometheus_ip}}"
-    container_ports:
+    container_exposed_ports:
      - "9090"
     container_volumes:
       - '{{ global_etc }}prometheus:/etc/prometheus'

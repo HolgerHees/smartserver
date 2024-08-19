@@ -127,6 +127,9 @@ class Server():
                 logger.error(row)
 
     def start(self):
+        if self.filewatcher is not None:
+            self.filewatcher.start()
+
         try:
             Server.serverHandler = self
 

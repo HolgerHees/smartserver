@@ -20,7 +20,7 @@
     container_image: "collabora/code:{{libreoffice_version}}"
     container_network: "isolated"
     container_ip: "{{podman_libreoffice_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "9980"
     container_env:
       extra_params: "--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o=mount_namespaces=false" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"

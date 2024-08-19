@@ -154,7 +154,7 @@
       - NET_ADMIN
       - SYS_MODULE
     container_network: "host"
-    container_ports:
+    container_exposed_ports:
       - "{{mobile_vpn_internal_port}}/udp"
     container_volumes:
       - '{{global_etc}}wireguard_mobile:/etc/wireguard'

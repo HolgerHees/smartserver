@@ -36,7 +36,7 @@
     container_image: "custom_postfix:{{alpine_version}}"
     container_network: "isolated"
     container_ip: "{{podman_postfix_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "25/tcp"
     container_volumes:
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf'

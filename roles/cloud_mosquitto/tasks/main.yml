@@ -25,7 +25,7 @@
     container_user: "{{system_users['nobody'].name}}:{{system_groups['nobody'].name}}"
     container_network: "cloud_vpn"
     container_ip: "{{vpn_cloud_services.local.mosquitto}}"
-    container_ports:
+    container_exposed_ports:
       - "1883/tcp"
       - "9001/tcp"
     container_volumes:

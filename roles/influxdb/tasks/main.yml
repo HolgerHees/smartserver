@@ -39,7 +39,7 @@
 #      INFLUXDB_DATA_WAL_FSYNC_DELAY: "1s"
     container_network: "isolated"
     container_ip: "{{podman_influxdb_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "8086/tcp"
     container_volumes:
       - '{{ global_etc }}influxdb:/etc/influxdb2'

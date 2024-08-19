@@ -50,7 +50,7 @@
     #command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
     container_network: "isolated"
     container_ip: "{{podman_mysql_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "3306"
     container_env:
       MYSQL_ROOT_HOST: "%"

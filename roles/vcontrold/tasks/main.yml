@@ -48,7 +48,7 @@
     container_image: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
     container_network: "isolated"
     container_ip: "{{podman_vcontrold_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "3002"
     container_device:
       - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"

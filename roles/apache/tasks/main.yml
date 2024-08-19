@@ -239,7 +239,7 @@
     container_image: "custom_apache2:{{apache_version}}"
     container_stop_signal: "SIGTERM" # by default SIGWINCH is used for apache
     container_network: "host"
-    container_ports:
+    container_exposed_ports:
       - "80/tcp"
       - "443/tcp"
       - "10114/tcp"

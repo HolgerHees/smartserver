@@ -70,7 +70,7 @@
       GF_SECURITY_ALLOW_EMBEDDING: "true"
     container_network: "isolated"
     container_ip: "{{podman_grafana_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "3000/tcp"
     container_volumes:
       - '{{global_lib}}grafana:/var/lib/grafana'

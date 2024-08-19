@@ -73,7 +73,7 @@
     container_network: "macvlan"
     container_ip: "{{pihole_ip}}"
     container_ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"
-    container_ports:
+    container_exposed_ports:
       - "53/tcp"
       - "53/udp"
     # - "67:67/udp"

@@ -20,7 +20,7 @@
     container_user: "{{system_users['www'].id}}:{{system_groups['www'].id}}"
     container_network: "isolated"
     container_ip: "{{podman_php_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "9000"
     container_etc_hosts:
       openhab: "{{default_server_ip}}" # fix to make openhab reachable

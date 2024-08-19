@@ -45,7 +45,7 @@
     container_image: "custom_cloud_check:{{alpine_version}}"
     container_network: "isolated"
     container_ip: "{{podman_cloud_check_ip}}"
-    container_ports:
+    container_exposed_ports:
       - "80/tcp"
     container_volumes:
       - '{{global_opt}}cloud_check/:/opt/cloud_check'
