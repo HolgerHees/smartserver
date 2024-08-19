@@ -57,9 +57,9 @@
   set_fact:
     dnsmasq_published_ports:  |
       [
-        "53:53/tcp",
+        "53:53",
         {% if default_server_ipv6 is defined %}
-          "[::]:53:53/tcp",
+          "[::]:53:53",
         {% endif %}
       ]
   tags: ['firewall_config']
