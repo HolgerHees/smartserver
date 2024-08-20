@@ -5,6 +5,8 @@
   failed_when: no
   tags: ['podman_container']
 
+#        "--log-driver passthrough",
+#"--log-driver journald --log-opt tag={{container_name}}",
 - name: "container : create_podman_service : prepare create cmd"
   set_fact:
     podman_create_cmd_new: |
