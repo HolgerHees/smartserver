@@ -124,9 +124,9 @@ class INotify(threading.Thread):
     def __init__(self, callback):
         super(INotify, self).__init__()
 
-        self._inotify_fd = inotify_init()
+        self.is_running = False
 
-        self._event = threading.Event()
+        self._inotify_fd = inotify_init()
 
         self.callback = callback
 
@@ -155,7 +155,7 @@ class INotify(threading.Thread):
         del self._path_for_wd[wd]
 
     def run(self):
-        while not self._event.isSet():
+        while self.is_running:
             bytes_avail = c_int()
             ioctl(self._inotify_fd, FIONREAD, bytes_avail)
             if not bytes_avail.value:
@@ -174,8 +174,12 @@ class INotify(threading.Thread):
         except OSError:
             pass
 
+    def start(self):
+        self.is_running = True
+        super().start()
+
     def stop(self):
-        self._event.set()
+        self.is_running = False
 
     @staticmethod
     def _raise_error():

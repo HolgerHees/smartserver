@@ -29,9 +29,8 @@ class MQTT(threading.Thread):
 
     def start(self):
         self.is_running = True
-        super().start()
 
-    def run(self):
+        # must run as first, otherwise subscribe and publish from other services will fail
         while self.is_running:
             try:
                 logging.info("Connection to mqtt ...")
@@ -42,6 +41,9 @@ class MQTT(threading.Thread):
                 logging.info("MQTT {}. Retry in 5 seconds".format(str(e)))
                 time.sleep(5)
 
+        super().start()
+
+    def run(self):
         while self.is_running:
             self.event.wait(60)
             self.event.clear()

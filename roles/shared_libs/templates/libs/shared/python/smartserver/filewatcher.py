@@ -141,5 +141,6 @@ class FileWatcher():
         self.inotify.start()
 
     def terminate(self):
-        self.inotify.stop()
-        self.inotify.join()
+        if self.inotify.is_alive():
+            self.inotify.stop()
+            self.inotify.join()
