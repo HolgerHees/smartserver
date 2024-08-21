@@ -17,7 +17,7 @@ class ProcessWatcher(watcher.Watcher):
         "apt": "system_update",
         "dnf": "system_update",
         "zypper": "system_update",
-        "systemctl": "service_restart",
+        "systemctl restart": "service_restart",
     }
 
     def __init__(self, handler, operating_system ):
