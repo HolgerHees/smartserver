@@ -8,23 +8,19 @@
 
 - name: copy cmd's
   template:
-    src: "templates/opt/{{item}}"
-    dest: "/opt/{{item}}"
+    src: "templates/opt/heating_sensors/sensoren.bash"
+    dest: "/opt/heating_sensors/sensoren.bash"
     owner: root
     group: root
     mode: 0750
-  with_items:
-    - "heating_sensors/sensoren.bash"
   
 - name: copy cmd binaries
   copy:
-    src: "templates/opt/{{item}}"
-    dest: "/opt/{{item}}"
+    src: "templates/opt/heating_sensors/TempCmd"
+    dest: "/opt/heating_sensors/TempCmd"
     owner: root
     group: root
     mode: 0750
-  with_items:
-    - "heating_sensors/TempCmd"
 
 - name: create cron job => is_production
   vars:

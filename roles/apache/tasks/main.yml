@@ -194,15 +194,15 @@
     - domain/style.css
 
 - name: copy public files
-  copy:
-    src: "templates/htdocs/_public/{{item}}"
-    dest: "{{htdocs_path}}_public/{{item}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  with_items:
-   - state
-   - robots.txt
+  synchronize:
+    src: "templates/htdocs/_public/"
+    dest: "{{htdocs_path}}_public/"
+    archive: no
+    checksum: yes
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D750,F640"
+    recursive: yes
 
 - name: prepare auth files
   copy:
@@ -271,8 +271,8 @@
 - name: set logrotate job
   vars:
     logrotate_path: "{{global_log}}apache2/*.log"
-  copy:
-    content: "{{ lookup('template', 'roles/apache/templates/logrotate') }}"
+  template:
+    src: "templates/logrotate"
     dest: "/etc/logrotate.d/ansible_apache"
     owner: root
     group: root

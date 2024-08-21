@@ -107,8 +107,8 @@
   when: "podman_service_container_changed"
 
 - name: "container : create_podman_service : create systemd service"
-  copy:
-    content: "{{ lookup('template', 'roles/container/templates/podman.service') }}"
+  template:
+    src: "roles/container/templates/podman.service"
     dest: "/etc/systemd/system/{{container_name}}.service"
     owner: root
     group: root

@@ -17,7 +17,7 @@
   when: is_suse
 
 - name: copy crony cmd
-  template:
+  copy:
     src: "templates/crony.sh"
     dest: "/usr/bin/crony.sh"
     owner: root

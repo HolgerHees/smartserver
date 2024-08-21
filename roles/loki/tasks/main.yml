@@ -11,13 +11,11 @@
   
 - name: copy config
   template:
-    src: "templates/etc/{{item}}"
-    dest: "{{ global_etc }}/{{item}}"
+    src: "templates/etc/loki/local-config.yaml"
+    dest: "{{ global_etc }}/loki/local-config.yaml"
     owner: "{{system_users['loki'].name}}"
     group: "{{system_groups['loki'].name}}"
     mode: 0640
-  with_items:
-    - "loki/local-config.yaml"
   notify: "restart loki"
   
 - name: create container service

@@ -32,13 +32,11 @@
   vars:
     netdata_container: yes
   template:
-    src: "templates/{{item}}"
-    dest: "{{ global_etc }}netdata/{{item}}"
+    src: "templates/netdata.conf"
+    dest: "{{ global_etc }}netdata/netdata.conf"
     owner: root
     group: root
     mode: 0640
-  with_items:
-    - "netdata.conf"
   notify: "restart netdata"
 
 - name: create container service
@@ -100,13 +98,11 @@
 # ***** DEPENDENCY CONFIGS *****
 - name: copy helper
   template:
-    src: "templates{{item}}"
-    dest: "{{item}}"
+    src: "templates/opt/scripts/netdata_to_alertmanager"
+    dest: "/opt/scripts/netdata_to_alertmanager"
     owner: root
     group: root
     mode: 0750
-  with_items:
-    - "/opt/scripts/netdata_to_alertmanager"
   when: "monitoring_enabled"
 
 - name: register webui

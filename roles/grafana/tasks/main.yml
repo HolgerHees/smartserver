@@ -39,14 +39,12 @@
 
 - name: copy grafana provisioning
   template:
-    src: "templates/{{item}}"
-    dest: "{{ global_etc }}grafana/{{item}}"
+    src: "templates/provisioning/dashboards/provider.yaml"
+    dest: "{{ global_etc }}grafana/provisioning/dashboards/provider.yaml"
     owner: "root"
     group: "root"
     mode: 0640
   notify: "restart grafana"
-  with_items:
-    - "provisioning/dashboards/provider.yaml"
     
 - name: build container image
   vars:

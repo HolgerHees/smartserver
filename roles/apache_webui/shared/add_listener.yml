@@ -9,8 +9,8 @@
   tags: ['apache_webui_config']
 
 - name: "apache_listener : copy apache subdomain listener for '{{name}}'"
-  copy:
-    content: "{{ lookup('template', 'roles/apache_webui/templates/listener.inc') }}"
+  template:
+    src: "roles/apache_webui/templates/listener.inc"
     dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{listener.sub_domain | default('default')}}-{{listener.prefix + '-' if listener.prefix is defined else ''}}listener.inc"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"

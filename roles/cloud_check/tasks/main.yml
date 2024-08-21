@@ -7,24 +7,20 @@
 
 - name: copy config
   template:
-    src: "templates{{item.src}}"
-    dest: "{{item.dest}}"
+    src: "templates/config.py"
+    dest: "{{global_opt}}cloud_check/config/config.py"
     owner: root
     group: root
     mode: 0640
-  with_items:
-    - { src: "/config.py", dest: "{{global_opt}}cloud_check/config/config.py" }
   notify: "restart cloud_check"
 
 - name: copy service
   copy:
-    src: "templates{{item.src}}"
-    dest: "{{item.dest}}"
+    src: "templates/opt/cloud_check/cloud_check"
+    dest: "{{global_opt}}cloud_check/cloud_check"
     owner: root
     group: root
     mode: 0750
-  with_items:
-    - { src: "/opt/cloud_check/cloud_check", dest: "{{global_opt}}cloud_check/cloud_check" }
   notify: "restart cloud_check"
 
 - name: build container image

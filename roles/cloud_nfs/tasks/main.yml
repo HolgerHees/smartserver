@@ -61,15 +61,12 @@
   shell: "systemctl --all start *remote*.automount"
   when: "fstab_result.changed"
 
-- name: copy server config
+- name: copy exports config
   template:
-    src: "templates/{{item}}"
-    dest: "{{ global_etc }}cloud_nfs/{{item}}"
+    src: "templates/exports"
+    dest: "{{ global_etc }}cloud_nfs/exports"
     mode: 0640
   notify: "restart cloud_nfs"
-  with_items:
-    - "exports"
-
 
 #https://wiki.archlinux.org/index.php/NFS/Troubleshooting
 

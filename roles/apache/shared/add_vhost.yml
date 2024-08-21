@@ -1,19 +1,12 @@
-- name: "apache : add_vhost : copy include for '{{sub_domain}}.{{server_domain}}'"
+- name: "apache : add_vhost : copy config for '{{sub_domain}}.{{server_domain}}'"
   template:
-    src: "{{include}}"
-    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{sub_domain}}-config.inc"
+    src: "{{item.src}}"
+    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{item.dest_name}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640
-  notify: "restart apache2"
-  tags: ['apache_config']
-
-- name: "apache : add_vhost : copy vhost for '{{sub_domain}}.{{server_domain}}'"
-  copy:
-    content: "{{ lookup('template', 'roles/apache/templates/vhost-ssl.conf') }}"
-    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{sub_domain}}-ssl.conf"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
+  with_items:
+    - { "src": "{{include}}", "dest_name": "{{sub_domain}}-config.inc" }
+    - { "src": "roles/apache/templates/vhost-ssl.conf", "dest_name": "{{sub_domain}}-ssl.conf" }
   notify: "restart apache2"
   tags: ['apache_config']

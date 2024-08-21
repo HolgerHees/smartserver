@@ -98,8 +98,8 @@
 - name: set logrotate job
   vars:
     logrotate_path: "{{global_log}}backup_sync/*.log"
-  copy:
-    content: "{{ lookup('template', 'templates/logrotate') }}"
+  template:
+    src: "templates/logrotate"
     dest: "/etc/logrotate.d/ansible_backup_sync"
     owner: root
     group: root

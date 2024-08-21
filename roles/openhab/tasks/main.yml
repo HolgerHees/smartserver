@@ -184,7 +184,6 @@
 #    owner: yes
 #    perms: yes
     recursive: yes
-  changed_when: no
 
 # SERVICES
 # have to fetch files before, because ansible template module works only with local files

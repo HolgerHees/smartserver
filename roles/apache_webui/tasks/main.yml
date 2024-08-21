@@ -31,13 +31,11 @@
 
 - name: copy manifest config
   copy:
-    src: "templates/etc/apache2/{{item}}"
-    dest: "{{global_etc}}apache2/{{item}}"
+    src: "templates/etc/apache2/_.ansible.conf.d/default_manifest.conf"
+    dest: "{{global_etc}}apache2/_.ansible.conf.d/default_manifest.conf"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640
-  with_items:
-    - _.ansible.conf.d/default_manifest.conf
   notify: "restart apache2"
   tags: ['apache_config']
 
