@@ -99,7 +99,7 @@
 - name: "container : create_podman_service : remove old container"
   shell: "podman rm --force --ignore {{container_name}}"
   tags: ['podman_container']
-  when: "podman_service_container_changed"
+  when: "podman_service_container_changed and podman_create_cmd_old != ''"
 
 - name: "container : create_podman_service : create new container"
   shell: "{{ podman_create_cmd_new | join(' ') }}"
