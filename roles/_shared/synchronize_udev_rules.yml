@@ -1,35 +1,12 @@
-- name: "_shared : check udev folder"
-  shell: "ls -1 {{udev_rules_path}}"
-  register: udev_result
-  changed_when: no
-
-# have to fetch files before, because ansible template module works only with local files
-- name: "_shared : prepare udev configs"
-  synchronize:
-    src: "{{udev_rules_path}}"
-    dest: "/tmp/ansible/udev/"
-    mode: "pull"
-    archive: no
-    checksum: yes
-    rsync_opts:
-      - "--chown=root:root"
-      - "--chmod=D755,F644"
-#    group: yes
-#    owner: yes
-#    perms: yes
-    recursive: yes
-  changed_when: no
-  when: "udev_result.rc == 0"
-
 - name: "_shared : copy udev rules"
   template:
-    src: "/tmp/ansible/udev/{{item}}"
-    dest: "/etc/udev/rules.d/{{item}}"
+    src: "{{item}}"
+    dest: "/etc/udev/rules.d/{{item | basename}}"
     owner: root
     group: root
     mode: 0644
   register: udev_rules
-  with_items: "{{udev_result.stdout_lines}}"
+  with_fileglob: "{{udev_rules_path}}*"
 
 - name: "_shared : reload udev rules"
   shell: "udevadm control --reload-rules && udevadm trigger"

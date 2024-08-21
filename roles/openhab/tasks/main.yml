@@ -90,17 +90,6 @@
   with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
   notify: "restart openhab"
 
-- name: copy conf folder
-  file:
-    src: "{{projects_path}}openhab_config/conf/{{item}}"
-    dest: "{{global_etc}}openhab/conf/{{item}}"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
-  notify: "restart openhab"
-
 # custom conf sub folder (html & icons)
 - name: check custom html & icons conf folder
   shell: "ls -1 {{projects_path}}openhab_config/conf/{{item}}/"
@@ -181,31 +170,27 @@
   when: "habpanel_result.rc == 0"
 
 # addons folder
-- name: check addons folder
-  shell: "ls -1 {{projects_path}}openhab_config/addons/"
-  register: addons_result
-  changed_when: no
-
 - name: copy addons folder
-  copy:
-    src: "{{projects_path}}openhab_config/addons/{{item}}"
-    dest: "{{global_etc}}openhab/addons/{{item}}"
-    remote_src: yes
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-    mode: 0640
-  with_items: "{{addons_result.stdout_lines}}"
-  
-# SERVICES
-- name: check service folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates/services/"
-  register: services_result
+  synchronize:
+    src: "{{projects_path}}openhab_config/addons/"
+    dest: "{{global_etc}}openhab/addons/"
+    mode: "pull"
+    archive: no
+    checksum: yes
+    rsync_opts:
+      - "--chown={{system_users['openhab'].name}}:{{system_groups['openhab'].name}}"
+      - "--chmod=D750,F640"
+#    group: yes
+#    owner: yes
+#    perms: yes
+    recursive: yes
   changed_when: no
 
+# SERVICES
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare service configs
   synchronize:
-    src: "{{projects_path}}openhab_config/templates/services"
+    src: "{{projects_path}}openhab_config/templates/"
     dest: "/tmp/ansible/openhab/"
     mode: "pull"
     archive: no
@@ -218,56 +203,32 @@
 #    perms: yes
     recursive: yes
   changed_when: no
-  when: "services_result.rc == 0"
 
 - name: copy service configs
   template:
-    src: "/tmp/ansible/openhab/services/{{item}}"
-    dest: "{{ global_etc }}openhab/conf/services/{{item}}"
+    src: "{{item}}"
+    dest: "{{ global_etc }}openhab/conf/services/{{item | basename}}"
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
     mode: 0640
-  with_items: "{{services_result.stdout_lines}}"
+  with_fileglob: "/tmp/ansible/openhab/services/*"
   notify: "restart openhab"
 
 # THINGS
-- name: check things folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates/things/"
-  register: things_result
-  changed_when: no
-
-# have to fetch files before, because ansible template module works only with local files
-- name: prepare things configs
-  synchronize:
-    src: "{{projects_path}}openhab_config/templates/things"
-    dest: "/tmp/ansible/openhab/"
-    mode: "pull"
-    archive: no
-    checksum: yes
-    rsync_opts:
-      - "--chown=root:root"
-      - "--chmod=D755,F644"
-#    group: yes
-#    owner: yes
-#    perms: yes
-    recursive: yes
-  changed_when: no
-  when: "things_result.rc == 0"
-
 - name: copy things configs
   template:
-    src: "/tmp/ansible/openhab/things/{{item}}"
-    dest: "{{ global_etc }}openhab/conf/things/{{item}}"
+    src: "{{item}}"
+    dest: "{{ global_etc }}openhab/conf/things/{{item | basename}}"
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
     mode: 0640
-  with_items: "{{things_result.stdout_lines}}"
+  with_fileglob: "/tmp/ansible/openhab/things/*"
   notify: "restart openhab"
   
 # UDEV
 - name: copy udev rules
   vars:
-    udev_rules_path: "{{projects_path}}openhab_config/templates/udev/rules.d/"
+    udev_rules_path: "/tmp/ansible/openhab/udev/rules.d/"
     udev_rules_trigger: "restart openhab"
   include_tasks: roles/_shared/synchronize_udev_rules.yml
 
@@ -456,15 +417,6 @@
   when: "habpanel_result.rc == 0"
   tags: ['apache_webui_config']
 
-#- name: add admin web user
-#  vars:
-#    username: "{{openhab_tablet_username}}"
-#    password: "{{openhab_tablet_password}}"
-#    fullname: "Openhab Tablet User"
-#    usergroups: []
-#  include_tasks: roles/user/shared/add_web_user.yml
-#  tags: [ 'user' ]
-
 - name: copy apache vhost
   vars:
     sub_domain: "openhab"
@@ -474,16 +426,6 @@
     include: "templates/etc/apache2/_.ansible.vhost.d/openhab.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
   tags: ['apache_config']
-
-#- name: copy special vhosts
-#  template:
-#    src: "templates/etc/apache2/_.ansible.vhost.d/default-127.0.0.0-80-openhab.conf"
-#    dest: "{{global_etc}}apache2/_.ansible.vhost.d/default-127.0.0.0-80-openhab.conf"
-#    owner: root
-#    group: root
-#    mode: 0644
-#  notify: "restart apache2"
-#  tags: ['apache_config']
 
 - name: create cleanup cron job
   vars:
