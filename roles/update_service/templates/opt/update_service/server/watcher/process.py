@@ -44,8 +44,7 @@ class ProcessWatcher(watcher.Watcher):
         self.outdated_services = []
         self.outdated_processes = {}
         
-        self.external_cmd_type = None
-        self.external_cmd_type_pid = None
+        self.external_cmd_pids = {}
         self.current_pids = []
 
         self.event = threading.Event()
@@ -156,57 +155,36 @@ class ProcessWatcher(watcher.Watcher):
             self.forced_reboot_state_refresh_after_reboot = None
 
     def refreshExternalCmdType(self, daemon_job_is_running):
+        cleaned = False
+
         if not daemon_job_is_running:
-            if self.external_cmd_type_pid is None or not Processlist.checkPid(self.external_cmd_type_pid):
+            # 10 times faster then Processlist.getPids(" |".join( ProcessWatcher.process_mapping.keys()))
+            current_pids = Processlist.getPids()
+            if current_pids is not None and current_pids != self.current_pids:
+                for pid in set(current_pids) - set(self.current_pids):
+                    cmdline = Processlist.getCmdLine(pid)
+                    if not cmdline:
+                        continue
+                    for term in ProcessWatcher.process_mapping:
+                        if "{} ".format(term) in cmdline and not self.operating_system.isRunning(cmdline):
+                            self.external_cmd_pids[pid] = ProcessWatcher.process_mapping[term]
+                    #logging.info("check {} {}".format(pid,cmdline))
 
-                external_cmd_type = None
-                external_cmd_type_pid = None
+                for pid in set(self.current_pids) - set(current_pids):
+                    if pid in self.external_cmd_pids:
+                        del self.external_cmd_pids[pid]
+                        cleaned = True
 
-                # 10 times faster then Processlist.getPids(" |".join( ProcessWatcher.process_mapping.keys()))
-                current_pids = Processlist.getPids()
-                if current_pids is not None and current_pids != self.current_pids:
-                    for pid in set(current_pids) - set(self.current_pids):
-                        cmdline = Processlist.getCmdLine(pid)
-                        if not cmdline:
-                            continue
-                        for term in ProcessWatcher.process_mapping:
-                            if "{} ".format(term) in cmdline and not self.operating_system.isRunning(cmdline):
-                                external_cmd_type_pid = pid
-                                external_cmd_type = ProcessWatcher.process_mapping[term]
-                                break
-                        if external_cmd_type is not None:
-                            break
-                        #logging.info("check {} {}".format(pid,cmdline))
-                    self.current_pids = current_pids
-
-                #pids = Processlist.getPids(" |".join( ProcessWatcher.process_mapping.keys()))
-                #if pids is not None:
-                #    for pid in pids:
-                #        cmdline = Processlist.getCmdLine(pid)
-                #        if cmdline is not None:
-                #            for term in ProcessWatcher.process_mapping:
-                #                if "{} ".format(term) in cmdline:
-                #                    external_cmd_type_pid = pid
-                #                    external_cmd_type = ProcessWatcher.process_mapping[term]
-                #                    break
-                #            if external_cmd_type is not None:
-                #                break
-            else:
-                self.current_pids = []
-                external_cmd_type = self.external_cmd_type
-                external_cmd_type_pid = self.external_cmd_type_pid
+                self.current_pids = current_pids
         else:
             self.current_pids = []
-            external_cmd_type = None
-            external_cmd_type_pid = None
 
-        if self.external_cmd_type != external_cmd_type:
-            if self.external_cmd_type != None:
-                self.event.set()
-            self.external_cmd_type = external_cmd_type
-            self.external_cmd_type_pid = external_cmd_type_pid
+        if cleaned and len(self.external_cmd_pids) == 0:
+            self.event.set()
 
-        return self.external_cmd_type
+        #logging.info(str(daemon_job_is_running) + " " + str(self.external_cmd_pids))
+
+        return None if len(self.external_cmd_pids) == 0 else next(iter(self.external_cmd_pids.values()))
 
     def getOutdatedProcesses(self):
         return list(self.outdated_processes.values())
