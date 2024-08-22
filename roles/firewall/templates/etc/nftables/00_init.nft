@@ -49,6 +49,7 @@ table inet filter {
         ip daddr 224.0.0.1 drop                                                                     comment "silently ignore multicasts"
         ip daddr 239.255.255.250 drop                                                               comment "silently ignore service (1900:ssdp, 3702:ws-discovery) broadcast"
         meta l4proto udp ip daddr 255.255.255.255 th sport { 67, 68 } th dport { 67, 68 } drop      comment "silently ignore dhcp broadcasts"
+        meta l4proto udp th dport 9 drop                                                            comment "silently ignore wol (wake on lan) events"
 
         #meta l4proto udp ip saddr 0.0.0.0 th dport 68 drop                                          comment "silently ignore dhcp broadcasts"
         #meta l4proto udp ip daddr 224.0.0.251 th dport 5353 drop                                    comment "silently ignore multicasts"
