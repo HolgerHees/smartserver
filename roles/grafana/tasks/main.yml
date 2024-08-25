@@ -109,7 +109,8 @@
 - name: copy apache vhost
   vars:
     sub_domain: "grafana"
-    usergroup: "admin"
+    usergroup: "user"
+    additional_env: yes
     include: "templates/etc/apache2/_.ansible.vhost.d/grafana.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
   tags: ['apache_config']

@@ -204,6 +204,8 @@
 
     - { import_role: { name: influxdb, tasks_from: create_users, handlers_from: empty },     tags: [ 'influxdb', 'influxdb_users' ],                         when: "influxdb_enabled"}                          # create influxdb users
 
+    - { import_role: { name: grafana, tasks_from: create_users, handlers_from: empty },      tags: [ 'grafana', 'grafana_users' ],                           when: "grafana_enabled"}                           # create grafana users
+
     - { import_role: { name: openhab, tasks_from: create_users, handlers_from: empty },      tags: [ 'openhab', 'openhab_users' ],                           when: "openhab_enabled" }                          # create openhab users
 
     - { import_role: { name: update_service, tasks_from: collect_deployment_tags, handlers_from: empty }, tags: [ 'all', 'collect_deployment_tags' ],        when: "update_service_system_check_enabled" }      # get ansible tags

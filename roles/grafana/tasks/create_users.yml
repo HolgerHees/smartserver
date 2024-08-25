@@ -1,0 +1,61 @@
+# ***** CHECK *****
+- name: "check service"
+  include_tasks: roles/grafana/shared/wait_until_ready.yml
+
+- name: "fetch existing user"
+  shell: "curl --header 'X-Forwarded-User: admin' http://grafana:3000/api/users"
+  register: grafana_user_result
+  changed_when: False
+  tags: [ 'user' ]
+
+- name: "prepare existing user"
+  set_fact:
+    curl_request_prefix: 'curl --header "X-Forwarded-User: admin" -s --header "content-type: application/json"'
+    grafana_userdata: |
+      {
+        {% for user_result in ( grafana_user_result.stdout | from_json ) %}
+          "{{user_result['login']}}": { "id": {{ user_result['id'] }}, "name": "{{ user_result['name'] }}", "email": "{{ user_result['email'] }}", "is_admin": {{ 'true' if user_result['isAdmin'] else 'false' }} },
+        {% endfor %}
+      }
+
+# password is never used, because authentification is done by apache.
+- name: "set user"
+  shell: |
+    {% if item not in grafana_userdata %}
+      {{curl_request_prefix}} --data "{\"login\":\"{{item}}\",\"name\":\"{{userdata[item].name}}\",\"email\":\"{{userdata[item].email}}\",\"password\":\"123+456*890\",\"OrgId\":1}" http://grafana:3000/api/admin/users
+    {% else %}
+      {{curl_request_prefix}} -X PUT --data "{\"name\":\"{{userdata[item].name}}\",\"email\":\"{{userdata[item].email}}\"}" http://grafana:3000/api/users/{{ grafana_userdata[item].id }}
+    {% endif %}
+  when: "item not in grafana_userdata or grafana_userdata[item]['name'] != userdata[item].name or grafana_userdata[item]['email'] != userdata[item].email"
+  loop_control:
+    label: "{{item}}"
+  register: grafana_user_state
+  with_items: "{{userdata}}"
+  tags: [ 'user' ]
+
+- name: "refresh existing user"
+  shell: "curl --header 'X-Forwarded-User: admin' http://grafana:3000/api/users"
+  register: grafana_user_result
+  changed_when: False
+  when: "grafana_user_state.changed"
+  tags: [ 'user' ]
+
+- name: "prepare existing usera"
+  set_fact:
+    grafana_userdata: |
+      {
+        {% for user_result in ( grafana_user_result.stdout | from_json ) %}
+          "{{user_result['login']}}": { "id": {{ user_result['id'] }}, "name": "{{ user_result['name'] }}", "email": "{{ user_result['email'] }}", "is_admin": {{ 'true' if user_result['isAdmin'] else 'false' }} },
+        {% endfor %}
+      }
+  when: "grafana_user_state.changed"
+
+- name: "set org role"
+  shell: |
+    {{curl_request_prefix}} -X PATCH --data "{\"role\":\"{{ "Admin" if "admin" in userdata[item].groups else "Viewer" }}\"}" http://grafana:3000/api/orgs/1/users/{{ grafana_userdata[item].id }}
+    {{curl_request_prefix}} -X PUT --data "{\"isGrafanaAdmin\":{{ "true" if "admin" in userdata[item].groups else "false" }}}" http://grafana:3000/api/admin/users/{{ grafana_userdata[item].id }}/permissions
+  when: "grafana_userdata[item]['is_admin'] != ( 'admin' in userdata[item].groups )"
+  loop_control:
+    label: "{{item}}"
+  with_items: "{{userdata}}"
+  tags: [ 'user' ]
