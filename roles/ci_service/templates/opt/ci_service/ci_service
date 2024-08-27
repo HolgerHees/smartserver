@@ -80,6 +80,9 @@ class Handler(Server):
 
         self.job_executor.cleanLeftoversLogfiles()
 
+        self._checkLeftovers()
+
+    def _checkLeftovers(self):
         leftovers = virtualbox.getMachineLeftovers(config.lib_dir, {})
         if len(leftovers) > 0:
             self.has_leftovers = True
@@ -190,6 +193,9 @@ class Handler(Server):
 
             if len(destroyed_machines) == 0 and len(destroyed_leftovers) == 0:
                 result.append(u"Nothing to clean")
+
+        self._checkLeftovers()
+
         return "\n".join(result)
 
     def processStop(self):
