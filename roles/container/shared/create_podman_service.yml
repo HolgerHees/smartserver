@@ -67,11 +67,6 @@
     podman_create_cmd_old: "{% if podman_create_cmd_state.rc == 0 %}{{podman_create_cmd_state.stdout[1:-1]}}{% endif %}"
   tags: ['podman_container']
 
-- name: "container : create_podman_service : prepare changed flag"
-  set_fact:
-    podman_service_container_changed: "{{ true if podman_create_cmd_old != ( podman_create_cmd_new | join(' ') | regex_replace(\"--(env|entrypoint) '(.*?)' \",\"--\\1 \\2 \") ) else false }}"
-  tags: ['podman_container']
-
 #- name: debug
 #  debug:
 #    msg: "{{ podman_create_cmd_new | join(' ')}}"
@@ -84,27 +79,15 @@
 #  debug:
 #    msg: "{{ podman_create_cmd_old }}"
 
-#- name: debug
-#  debug:
-#    msg: "{{ podman_service_container_changed }}"
-
-- name: "container : create_podman_service : stop service"
-  systemd:
-    name: "{{container_name}}"
-    state: stopped
-  failed_when: no
+- name: "container : create_podman_service : prepare changed flag"
+  set_fact:
+    podman_service_container_changed: "{{ true if podman_create_cmd_old != ( podman_create_cmd_new | join(' ') | regex_replace(\"--(env|entrypoint) '(.*?)' \",\"--\\1 \\2 \") ) else false }}"
   tags: ['podman_container']
+
+- name: "container : create_podman_service_container_task"
+  include_tasks: "roles/container/shared/_create_podman_service_container_task.yml"
   when: "podman_service_container_changed"
-
-- name: "container : create_podman_service : remove old container"
-  shell: "podman rm --force --ignore {{container_name}}"
   tags: ['podman_container']
-  when: "podman_service_container_changed and podman_create_cmd_old != ''"
-
-- name: "container : create_podman_service : create new container"
-  shell: "{{ podman_create_cmd_new | join(' ') }}"
-  tags: ['podman_container']
-  when: "podman_service_container_changed"
 
 - name: "container : create_podman_service : create systemd service"
   template:
