@@ -145,6 +145,13 @@
     - { meta: flush_handlers } # Previous roles are independent from upcoming roles, But lot of upcoming roles are depending from previous roles
     # **************************************
 
+    - { import_role: { name: openhab },                                                      tags: [ 'openhab' ],                                            when: "openhab_enabled" }                          # openhab iot server
+    - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools
+
+    # ************ FLUSH HANDLER ***********
+    - { meta: flush_handlers } # Flush to start openhab as soon as possible, because initialisation does several instance restarts
+    # **************************************
+
     - { import_role: { name: user },                                                         tags: [ 'user' ] }                                                                                                 # users (linux, samba, web ...)
     
     - { import_role: { name: apache_webui },                                                 tags: [ 'apache_webui' ] }                                                                                         # responsive web ui
@@ -157,19 +164,16 @@
 
     - { import_role: { name: grafana },                                                      tags: [ 'grafana' ],                                            when: "grafana_enabled" }                          # graphical dashboards
 
-    - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mysql_enabled" }                            # phpMyAdmin
-    #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mysql_enabled" }                           # Adminer
-
-    - { import_role: { name: camera_service },                                               tags: [ 'camera_service', 'alpine' ],                           when: "camera_enabled" }                           # camera image gallery
-    - { import_role: { name: camera_ftp },                                                   tags: [ 'camera_ftp', 'alpine' ],                               when: "camera_enabled" }                           # ftp file server
-
     - { import_role: { name: nextcloud },                                                    tags: [ 'nextcloud' ],                                          when: "nextcloud_enabled" }                        # private cloud
     - { import_role: { name: nextcloud_libreoffice },                                        tags: [ 'nextcloud_libreoffice' ],                              when: "nextcloud_enabled" }                        # office editor
 
+    - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mysql_enabled" }                            # phpMyAdmin
+    #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mysql_enabled" }                           # Adminer
+
     - { import_role: { name: minidlna },                                                     tags: [ 'minidlna', 'alpine' ],                                 when: "dlna_enabled" }                             # dlna media server
      
-    - { import_role: { name: openhab },                                                      tags: [ 'openhab' ],                                            when: "openhab_enabled" }                          # openhab iot server
-    - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools
+    - { import_role: { name: camera_service },                                               tags: [ 'camera_service', 'alpine' ],                           when: "camera_enabled" }                           # camera image gallery
+    - { import_role: { name: camera_ftp },                                                   tags: [ 'camera_ftp', 'alpine' ],                               when: "camera_enabled" }                           # ftp file server
 
     - { import_role: { name: speedtest },                                                    tags: [ 'speedtest' ],                                          when: "speedtest_enabled" }                        # inhouse network performance test
 
