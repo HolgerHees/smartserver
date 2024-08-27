@@ -1,0 +1,9 @@
+- name: "disable: copy resolv.conf (external)"
+  vars:
+    local_resolv_server: "8.8.8.8"
+  template:
+    src: templates/resolv.conf
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: 0755

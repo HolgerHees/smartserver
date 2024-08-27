@@ -1,12 +1,12 @@
 # ***** ENABLE USAGE OF LOCAL DNS *****
-- name: disable systemd-resolved => is_rhel or is_fedora or is_ubuntu
+- name: "enable : disable systemd-resolved => is_rhel or is_fedora or is_ubuntu"
   systemd:
     state: stopped
     enabled: no
     name: systemd-resolved
   when: "is_rhel or is_fedora or is_ubuntu"
 
-- name: disable NetworkManager dns handling => is_rhel or is_fedora
+- name: "enable : disable NetworkManager dns handling => is_rhel or is_fedora"
   lineinfile:
     path: /etc/NetworkManager/NetworkManager.conf
     insertafter: '^\[main\]'
@@ -17,7 +17,7 @@
     - { field: "dns", value: "none" }
   when: is_rhel or is_fedora
 
-- name: disable netconfig dns handling => is_suse
+- name: "enable : disable netconfig dns handling => is_suse"
   lineinfile:
     path: /etc/sysconfig/network/config
     regexp: '^{{item.field}}\s*='
@@ -27,7 +27,7 @@
     - { field: "NETCONFIG_DNS_POLICY", value: "" }
   when: is_suse
 
-- name: netconfig update => is_suse and netconfig changed
+- name: "enable : netconfig update => is_suse and netconfig changed"
   shell: "netconfig update -f"
   when: "is_suse and netconfig_status.changed"
   
@@ -42,8 +42,10 @@
 #    state: absent
 #  when: "resolv_link_status.stat.islnk"
 
-- name: copy resolv.conf
-  copy:
+- name: "enable : copy resolv.conf (127.0.0.1)"
+  vars:
+    local_resolv_server: "127.0.0.1"
+  template:
     src: templates/resolv.conf
     dest: /etc/resolv.conf
     owner: root

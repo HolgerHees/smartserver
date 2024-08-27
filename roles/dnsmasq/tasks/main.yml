@@ -47,6 +47,7 @@
     image_name: "custom_dnsmasq:{{alpine_version}}"
     image_files:
       - roles/dnsmasq/templates/container/Dockerfile
+    container_shutdown_hook: "roles/dnsmasq/tasks/disable.yml"
   include_tasks: roles/container/shared/build_podman_image.yml
   
 # must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
