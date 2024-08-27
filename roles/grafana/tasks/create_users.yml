@@ -40,7 +40,7 @@
   when: "grafana_user_state.changed"
   tags: [ 'user' ]
 
-- name: "prepare existing usera"
+- name: "prepare existing user"
   set_fact:
     grafana_userdata: |
       {
