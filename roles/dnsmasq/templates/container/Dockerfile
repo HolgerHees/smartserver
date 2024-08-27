@@ -1,6 +1,6 @@
 FROM alpine:{{alpine_version}}
 
-RUN apk --no-cache add dnsmasq tzdata
-#RUN apk --no-cache add dnsmasq-dnssec
+RUN {{alpine_build_cache}} && \
+    apk --update add dnsmasq tzdata
 
 ENTRYPOINT ["dnsmasq", "-k"]

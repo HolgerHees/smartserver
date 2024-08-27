@@ -236,6 +236,26 @@
   when: "macvlan_range | length > 0"
 
 # ***** FINALIZE *****
+- name: register update notifier
+  vars:
+    name: "alpine"
+    type: "docker"
+    url: "https://alpinelinux.org/"
+    config: {
+      repository: "alpine",
+      pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$"
+    }
+  include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
+  when: "update_service_software_check_enabled"
+
+- name: register systemd service watcher
+  vars:
+    watcher_name: "podman"
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
+  when: "monitoring_enabled"
+
 - name: register systemd service watcher
   vars:
     watcher_name: "macvlan_bridge"
@@ -249,13 +269,6 @@
     service: "macvlan_bridge"
   include_tasks: roles/_shared/service_check.yml
   when: "macvlan_range | length > 0"
-
-- name: register systemd service watcher
-  vars:
-    watcher_name: "podman"
-  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  tags: ['systemd_watcher_config']
-  when: "monitoring_enabled"
 
 - name: enable podman
   systemd:

@@ -7,6 +7,11 @@
     mode: 0750
 
 - name: "container : build_podman_image : copy dockerfiles"
+  vars:
+    alpine_build_cache: |-
+      --mount=type=cache,id=alpine-{{alpine_version}}-pip,sharing=locked,target=/root/.cache/pip/ \
+          --mount=type=cache,id=alpine-{{alpine_version}}-apk,sharing=locked,target=/var/cache/apk \
+          ln -s /var/cache/apk /etc/apk/cache
   template:
     src: "{{item}}"
     dest: "{{global_build}}{{container_name}}/{{item | basename}}"

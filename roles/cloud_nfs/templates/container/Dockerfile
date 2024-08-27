@@ -2,11 +2,9 @@ FROM alpine:{{alpine_version}}
 
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
-RUN apk add --no-cache --update nfs-utils tzdata
-
-#RUN echo 'hosts: files dns' >> /etc/nsswitch.conf
-
-RUN mkdir /var/lib/nfs/v4recovery
+RUN {{alpine_build_cache}} && \
+    apk --update add nfs-utils tzdata && \
+    mkdir /var/lib/nfs/v4recovery
 
 #openrc musl-nscd
 #openrc

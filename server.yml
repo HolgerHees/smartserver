@@ -106,8 +106,7 @@
     - { import_role: { name: hardware_smartd },                                              tags: [ 'hardware_smartd' ],                                    when: "monitoring_enabled" }                       # disk monitoring & checks
     - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ],                                   when: "monitoring_enabled or netdata_enabled" }    # sensors setups
 
-    - { import_role: { name: container },                                                    tags: [ 'container', 'macvlan' ] }                                                                                 # container env (docker & podman)
-    - { import_role: { name: container, tasks_from: register_alpine, handlers_from: empty }, tags: [ 'alpine' ],                                             when: "update_service_system_check_enabled" }      # update notifier for alpine image
+    - { import_role: { name: container },                                                    tags: [ 'container', 'macvlan', 'alpine' ] }                                                                       # container env
 
     - { import_role: { name: ssh },                                                          tags: [ 'ssh' ] }                                                                                                  # setup allowed ssh user
 

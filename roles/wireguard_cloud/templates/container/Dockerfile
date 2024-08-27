@@ -2,6 +2,7 @@ FROM alpine:{{alpine_version}}
 
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
-RUN apk add --no-cache --update wireguard-tools iperf3 tzdata
+RUN {{alpine_build_cache}} && \
+    apk --update add wireguard-tools tzdata
  
 ENTRYPOINT [ "/entrypoint.sh" ]
