@@ -128,3 +128,11 @@
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
+
+# otherwise mounted nfs folder will block
+- name: force wireguard_cloud restart
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: wireguard_cloud
+  when: "podman_service_container_changed"
