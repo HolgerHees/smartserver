@@ -53,7 +53,8 @@
 
 # async podman build is used to show progress and prevent travisci killing our job because of inactivity
 - name: "container : build_podman_image : compose podman image => image does not exists"
-  shell: "podman build --network host --no-cache -t {{image_name}} {{global_build}}{{container_name}}/"
+#  shell: "podman build --network host --no-cache -t {{image_name}} {{global_build}}{{container_name}}/"
+  shell: "podman build --network host -t {{image_name}} {{global_build}}{{container_name}}/"
   async: 1800
   poll: 0
   register: podman_build

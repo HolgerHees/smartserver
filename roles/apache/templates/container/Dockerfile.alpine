@@ -11,7 +11,7 @@ RUN addgroup -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
   # - after, we just compile and overwrite the module
   #RUN apt-get install -y libapache2-mod-auth-openidc
 
-RUN apk --update --no-cache add git autoconf automake pkgconfig libtool g++ apr-dev apr-util-dev curl-dev jansson-dev \
+RUN apk --update add git autoconf automake pkgconfig libtool g++ apr-dev apr-util-dev curl-dev jansson-dev \
   && git clone https://github.com/zmartzone/mod_auth_openidc.git \
   && cd mod_auth_openidc/ \
   && git checkout v{{openidc_version}} \

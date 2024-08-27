@@ -14,7 +14,7 @@ RUN {{alpine_build_cache}} && \
 #    echo "rpc_pipefs  /var/lib/nfs/rpc_pipefs  rpc_pipefs  defaults  0  0" >> /etc/fstab && \
 #    echo "nfsd        /proc/fs/nfsd            nfsd        defaults  0  0" >> /etc/fstab
 
-#RUN apk add --no-cache --update git cmake make g++ bison flex krb5-dev userspace-rcu-dev nfs-utils-dev libnsl-dev
+#RUN apk add --update git cmake make g++ bison flex krb5-dev userspace-rcu-dev nfs-utils-dev libnsl-dev
 #RUN git clone --recursive https://github.com/nfs-ganesha/nfs-ganesha.git
 #RUN git checkout tags/V3.2
 #RUN git submodule update --init
