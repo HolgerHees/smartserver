@@ -10,7 +10,7 @@
   register: cleanup_docker_check
 
 - name: cleanup docker
-  include_tasks: cleanup_docker.yml
+  include_tasks: _cleanup_docker.yml
   when: "cleanup_docker_check.rc == 0"
 
 - name: check for iptables
@@ -19,7 +19,7 @@
   register: cleanup_iptables_check
 
 - name: cleanup iptables
-  include_tasks: cleanup_iptables.yml
+  include_tasks: _cleanup_iptables.yml
   when: "cleanup_iptables_check.stat.exists"
 
 - name: clean old build folder

@@ -8,7 +8,7 @@
 - name: process obsolete docker container
   vars:
     container_name: "{{item}}"
-  include_tasks: cleanup_docker_container.yml
+  include_tasks: _cleanup_docker_container.yml
   with_items: "{{container_names.stdout_lines}}"
   when: "docker_container_check.rc == 0"
 
