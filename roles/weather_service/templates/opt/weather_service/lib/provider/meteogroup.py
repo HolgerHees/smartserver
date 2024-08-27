@@ -141,7 +141,13 @@ class Fetcher(object):
             if missing_field not in currentFallbacks:
                 continue
 
-            logging.warn("Use fallback data for field {}".format(missing_field))
+            msg = "Use fallback data for field {}".format(missing_field)
+
+            if missing_field == "effectiveCloudCoverInOcta" and ( datetime.now().hour >= 16 or datetime.now().hour <= 8 ):
+                # can happen during night, because it is based in observed clouds from ground
+                logging.info(msg)
+            else:
+                logging.warn(msg)
 
             _data["observation"][current_fields[missing_field]] = currentFallbacks[missing_field]
             _data["missing_fields"].remove(missing_field)
