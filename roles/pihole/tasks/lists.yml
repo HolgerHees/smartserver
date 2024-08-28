@@ -1,6 +1,3 @@
-- name: check pihole service
-  include_tasks: roles/pihole/shared/wait_until_ready.yml
-  
 - name: add whitelist domains
   shell: "podman exec pihole sh -c \"pihole {{ '--white-wild ' + item[2:] if item.startswith('*.') else '-w ' + item }}\" && sleep 1"
   register: whitelist_result

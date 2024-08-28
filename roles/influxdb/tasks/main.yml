@@ -103,18 +103,3 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
-
-# CHECK local cli token => only needed if a new container is created and data folder already exists
-- name: check influxdb service
-  include_tasks: roles/influxdb/shared/wait_until_ready.yml
-  when: "podman_service_container_changed"
-  
-- name: check cli config
-  shell: "podman exec influxdb sh -c \"influx config list\""
-  register: influxdb_config_result
-  changed_when: False
-  when: "podman_service_container_changed"
-  
-- name: create cli config token => config does not exists
-  shell: "podman exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active\""
-  when: "podman_service_container_changed and '\tdefault\t' not in influxdb_config_result.stdout"

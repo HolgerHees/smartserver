@@ -91,10 +91,6 @@
   tags: ['firewall_config']
 
 # ***** DEPENDENCY CONFIGS *****
-- name: check mysql service
-  include_tasks: roles/mysql/shared/wait_until_ready.yml
-  when: "mysql_enabled"
-
 - name: check mysql table
   shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
   register: mysql_table_exists

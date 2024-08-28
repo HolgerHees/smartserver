@@ -5,5 +5,6 @@
     owner: "{{system_users['loki'].name}}"
     group: "{{system_groups['loki'].name}}"
     mode: 0640
-  notify: "restart loki"
+  # no restart needed
+  #notify: "restart loki"
   tags: ['loki_config']

@@ -6,3 +6,12 @@
     enabled: yes
     masked: no
   listen: "restart fluentd"
+
+- name: refresh fluentd
+  systemd:
+    name: fluentd
+    state: reloaded
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "refresh fluentd"

@@ -3,12 +3,13 @@
     name: "{{container_name}}"
     state: stopped
   failed_when: no
+  when: "podman_create_cmd_old != ''"
   tags: ['podman_container']
 
 - name: "container : create_podman_service_container_task : remove old container"
   shell: "podman rm --force --ignore {{container_name}}"
-  tags: ['podman_container']
   when: "podman_create_cmd_old != ''"
+  tags: ['podman_container']
 
 - name: "container : create_podman_service_container_task : create new container"
   shell: "{{ podman_create_cmd_new | join(' ') }}"

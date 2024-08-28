@@ -1,18 +1,4 @@
 # ***** CHECK *****
-- name: "check mysql service"
-  include_tasks: roles/mysql/shared/wait_until_ready.yml
-  when: "mysql_enabled"
-    
-- name: "check redis service"
-  include_tasks: roles/redis/shared/wait_until_ready.yml
-  when: "redis_enabled"
-
-- name: "check apache service"
-  include_tasks: roles/apache/shared/wait_until_ready.yml
-
-- name: "check librenms service"
-  include_tasks: roles/librenms/shared/wait_until_ready.yml
-
 - name: "add devices"
   shell: "podman exec librenms sh -c \"lnms device:add --force --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.host}}\""
   register: device_register_result

@@ -52,19 +52,6 @@
   tags: ['cron_job','backup_restore']
   when: "mysql_enabled"
 
-# ***** REDIS ****
-- name: check redis service => database does not exists
-  include_tasks: roles/redis/shared/wait_until_ready.yml
-  when: "redis_enabled and database_added"
-
-# ***** APACHE *****  
-- name: check apache service
-  include_tasks: roles/apache/shared/wait_until_ready.yml
-  when: "database_added or not nextcloud_version_exists.stat.exists"
-
-  
-  
-  
 # ***** INITIALIZE NEW *****
 - name: clean unused config.php => database does not exists
   file:

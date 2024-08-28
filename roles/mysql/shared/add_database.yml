@@ -1,6 +1,3 @@
-- name: "mysql : add_database : check service"
-  include_tasks: roles/mysql/shared/wait_until_ready.yml
-  
 - name: "mysql : add_database : check databases"
   shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
   register: mysql_database_exists

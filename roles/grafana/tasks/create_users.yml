@@ -1,7 +1,3 @@
-# ***** CHECK *****
-- name: "check service"
-  include_tasks: roles/grafana/shared/wait_until_ready.yml
-
 - name: "fetch existing user"
   shell: "curl --header 'X-Forwarded-User: admin' http://grafana:3000/api/users"
   register: grafana_user_result

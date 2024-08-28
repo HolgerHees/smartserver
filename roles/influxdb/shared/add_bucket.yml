@@ -1,6 +1,3 @@
-- name: "influxdb : add_bucket : check service"
-  include_tasks: roles/influxdb/shared/wait_until_ready.yml
-
 # BUCKETS
 - name: "influxdb : add_bucket : check bucket"
   shell: "podman exec influxdb sh -c \"influx bucket list --org default-org\""

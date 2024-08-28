@@ -74,6 +74,7 @@
       - '{{ global_etc }}fluentd:/fluentd/etc/'
       - '{{ global_log }}:{{ global_log }}'
       - '/run/log/journal:/run/log/journal'
+    container_reload_exec: "/usr/bin/podman kill --signal=USR2 fluentd"
     container_after: [ "loki" ]
     container_readyness: { "type": "ping_check", "ip": "{{podman_fluentd_ip}}" }
   include_tasks: roles/container/shared/create_podman_service.yml

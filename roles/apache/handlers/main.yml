@@ -6,3 +6,12 @@
     enabled: yes
     masked: no
   listen: "restart apache2"
+
+- name: refresh apache2
+  systemd:
+    name: "apache2"
+    state: reloaded
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "refresh apache2"

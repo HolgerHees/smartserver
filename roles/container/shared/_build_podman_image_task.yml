@@ -1,12 +1,13 @@
 - name: "container : build_podman_image_task : run shutdown hook"
   include_tasks: "{{container_shutdown_hook}}"
-  when: "container_shutdown_hook is defined"
+  when: "podman_container_image_state.rc == 0 and container_shutdown_hook is defined"
 
 - name: "container : build_podman_image_task : stop service"
   systemd:
     name: "{{container_name}}"
     state: stopped
   failed_when: no
+  when: "podman_container_image_state.rc == 0"
 
 - name: "container : build_podman_image_task : clean old image"
   shell: "podman image rm --force {{item}}"

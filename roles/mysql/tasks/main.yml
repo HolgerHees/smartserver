@@ -113,8 +113,11 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-- name: check mysql service
-  include_tasks: roles/mysql/shared/wait_until_ready.yml
+- name: force mysql restart
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: mysql
   when: "podman_service_container_changed"
 
 - name: check mysql upgrade

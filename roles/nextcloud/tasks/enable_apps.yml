@@ -3,18 +3,6 @@
     nextcloud_keeweb_version: '0.6.13'
 #    nextcloud_keeweb_version: '0.6.15'
 
-# ***** CHECK *****
-- name: check mysql service
-  include_tasks: roles/mysql/shared/wait_until_ready.yml
-  when: "mysql_enabled"
-
-- name: check redis service
-  include_tasks: roles/redis/shared/wait_until_ready.yml
-  when: "redis_enabled"
-
-- name: check apache service
-  include_tasks: roles/apache/shared/wait_until_ready.yml
-
 # ***** DISABLE APPS *****
 - name: disable apps
   shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:disable {{item}}\""

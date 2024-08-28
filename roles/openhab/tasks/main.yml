@@ -18,6 +18,8 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/html" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/icons" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/services" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/things" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/python" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/jsondb" }
@@ -37,20 +39,6 @@
     git_mode:  "u=rwX,g=rX,o="
   include_tasks: roles/_shared/git_clone.yml
 
-- name: set symbolic link to shared python scripts
-  file:
-    src: "{{projects_path}}openhab_shared/{{item}}"
-    dest: "{{global_etc}}/openhab/{{item}}"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  with_items:
-    - "python/shared"
-    - "conf/html/shared"
-    - "conf/icons/classic"
-#    - "conf/icons"
-
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
   vars:
@@ -62,36 +50,14 @@
     git_mode:  "u=rwX,g=rX,o="
   include_tasks: roles/_shared/git_clone.yml
 
-# => custom python
-- name: link custom python
-  file:
-    src: "{{projects_path}}openhab_config/python/custom"
-    dest: "{{global_etc}}openhab/python/custom"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  notify: "restart openhab"
-
 # conf folder
 - name: check conf folder
   shell: "ls -1 {{projects_path}}openhab_config/conf/"
   register: config_result
   changed_when: no
   
-- name: link conf folder
-  file:
-    src: "{{projects_path}}openhab_config/conf/{{item}}"
-    dest: "{{global_etc}}openhab/conf/{{item}}"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
-  notify: "restart openhab"
-
 # custom conf sub folder (html & icons)
-- name: check custom html & icons conf folder
+- name: check html & icons folder
   shell: "ls -1 {{projects_path}}openhab_config/conf/{{item}}/"
   register: config_sub_folder_result
   changed_when: no
@@ -100,50 +66,38 @@
     - html
     - icons
     
-- name: collect custom html & icons conf folder
+- name: collect conf folder
   set_fact:
-    config_sub_folders: |
+    config_link_folders: |
       [
-      {% for result in config_sub_folder_result.results %}
-      {% if result.stdout_lines is defined %}
-      {% for line in result.stdout_lines %}
-      "{{result.item}}/{{line}}",
-      {% endfor %}
-      {% endif %}
-      {% endfor %}
+        { "src": "{{projects_path}}openhab_shared/python/shared"        , "dest": "{{global_etc}}/openhab/python/shared" },
+        { "src": "{{projects_path}}openhab_shared/conf/html/shared"     , "dest": "{{global_etc}}/openhab/conf/html/shared" },
+        { "src": "{{projects_path}}openhab_shared/conf/icons/classic"   , "dest": "{{global_etc}}/openhab/conf/icons/classic" },
+
+        { "src": "{{projects_path}}openhab_config/python/custom"        , "dest": "{{global_etc}}openhab/python/custom" },
+
+        {% for line in config_result.stdout_lines | difference(['html','icons','services','things']) %}
+          { "src": "{{projects_path}}openhab_config/conf/{{line}}"    , "dest": "{{global_etc}}openhab/conf/{{line}}" },
+        {% endfor %}
+
+        {% for result in config_sub_folder_result.results %}
+        {% if result.stdout_lines is defined %}
+        {% for line in result.stdout_lines %}
+          { "src": "{{projects_path}}openhab_config/conf/{{result.item}}/{{line}}", "dest": "{{global_etc}}openhab/conf/{{result.item}}/{{line}}" },
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
       ]
-    
-- name: link custom html & icons conf folder
+
+- name: link conf folder
   file:
-    src: "{{projects_path}}openhab_config/conf/{{item}}"
-    dest: "{{global_etc}}openhab/conf/{{item}}"
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
     state: link
     follow: no
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
-  with_items: "{{config_sub_folders}}"
-  notify: "restart openhab"
-
-# create missing folder
-- name: prepare missing config folder
-  file:
-    path:  "{{global_etc}}openhab{{item}}"
-    state: directory
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-    mode: 0750
-  with_items:
-    - /conf/automation
-#    - /conf/html
-#    - /conf/icons
-    - /conf/items
-    - /conf/persistence
-    - /conf/rules
-    - /conf/scripts
-    - /conf/services
-    - /conf/sitemaps
-    - /conf/transform
-    - /conf/things
+  with_items: "{{config_link_folders}}"
   notify: "restart openhab"
     
 # habpanel if exists
@@ -158,6 +112,7 @@
   synchronize:
     src: "{{projects_path}}openhab_config/jsondb/uicomponents_habpanel_panelconfig.json"
     dest: "{{global_lib}}openhab/jsondb/uicomponents_habpanel_panelconfig.json"
+    mode: "pull"
     archive: no
     checksum: yes
     group: yes
@@ -323,6 +278,7 @@
             '{{global_etc}}openhab/conf/{{name}}:/openhab/conf/{{name}}',
         {% endfor %}
       ]
+    container_timeout_stop_sec: 60
     container_after: [ "mysql", "influxdb", "mosquitto" ]
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8080" }
   include_tasks: roles/container/shared/create_podman_service.yml

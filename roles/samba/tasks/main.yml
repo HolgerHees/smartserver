@@ -53,7 +53,7 @@
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}'
 #      - '{{base_path}}:{{base_path}}'
 #      - '{{data_path}}:{{data_path}}'
-#      - '/etc/group:/etc/group:ro'
+      - '/etc/group:/etc/group:ro'
       - '/etc/passwd:/etc/passwd:ro'
 #      - '/etc/shadow:/etc/shadow:ro'
     container_readyness: { "type": "port_check", "ip": "{{podman_samba_ip}}", "port": "445" }

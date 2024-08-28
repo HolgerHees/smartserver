@@ -149,7 +149,7 @@
     - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools
 
     # ************ FLUSH HANDLER ***********
-    - { meta: flush_handlers } # Flush to start openhab as soon as possible, because initialisation does several instance restarts
+    - { meta: flush_handlers } # Flush to start openhab as soon as possible, because initialisation does several instance restarts and takes a while
     # **************************************
 
     - { import_role: { name: user },                                                         tags: [ 'user' ] }                                                                                                 # users (linux, samba, web ...)

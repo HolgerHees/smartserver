@@ -1,8 +1,13 @@
 # ***** CHECK *****
-- name: check service
-  include_tasks: roles/openhab/shared/wait_until_ready.yml
-
-# ***** DISABLE APPS *****
+- name: "wait to become ready"
+  shell: "sshpass -v -p \"habopen\" ssh -o \"StrictHostKeyChecking no\" -p 8101 openhab@openhab \"users list\""
+  register: check_result
+  until: "'Password' in check_result.stderr and check_result.rc == 0"
+  retries: 300
+  delay: 1
+  changed_when: "service_result.rc != 0"
+  
+# ***** CREATE USER *****
 - name: check users
   shell: "sshpass -p \"habopen\" ssh -p 8101 openhab@openhab \"users list\""
   register: openhab_user_result
