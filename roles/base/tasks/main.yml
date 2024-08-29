@@ -179,6 +179,16 @@
     state: present
   when: is_suse
 
+# to avoid service restarts on "apt-get install"
+# DPkg::Post-Invoke {"test -x /usr/lib/needrestart/apt-pinvoke && /usr/lib/needrestart/apt-pinvoke -m u || true"; };
+- name: disable auto service restart after apg-get (needsrestart) => is_ubuntu
+  lineinfile:
+    path: /etc/apt/apt.conf.d/99needrestart
+    regexp: '^DPkg::Post-Invoke (.*)'
+    line: '#DPkg::Post-Invoke \1'
+    backrefs: yes
+  when: is_ubuntu
+
 - name: set sysctl inotify related values
   lineinfile:
     path: /etc/sysctl.conf

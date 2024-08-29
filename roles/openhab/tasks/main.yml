@@ -28,17 +28,6 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{database_backup_path}}openhab" }
   include_tasks: roles/_shared/create_directories.yml
 
-# to avoid service restarts on "apt-get install"
-- name: exclude openhab from needrestart
-  copy:
-    src: "templates/etc/needrestart/conf.d/openhab.conf"
-    dest: "/etc/needrestart/conf.d/openhab.conf"
-    force: no
-    owner: "root"
-    group: "root"
-    mode: 0644
-  when: is_ubuntu
-
 # ****** GITHUB SHARED PROJECT ******
 - name: clone shared git
   vars:
