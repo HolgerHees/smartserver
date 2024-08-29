@@ -17,12 +17,11 @@
     state: present
   when: "(is_rhel or is_fedora) and update_service_system_check_enabled"
   
-# already installed during /roles/base/tasks/main.yml
-#- name: install required packages => is_ubuntu
-#  apt:
-#    name: "python3-venv"
-#    state: present
-#  when: is_ubuntu
+- name: install required packages => is_ubuntu
+  apt:
+    name: "python3-venv"
+    state: present
+  when: is_ubuntu
 
 - name: install needed python packages
   pip:

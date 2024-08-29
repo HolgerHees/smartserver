@@ -124,8 +124,6 @@
       , python3-passlib
 
       , python3-requests   # used by various system scripts like 'systemd_watcher_service_check'
-
-      , python3-venv       # used by update_service and will force a service restart of openhab and vboxadd, that why it is installed so early
     ]
     state: present
   when: is_ubuntu
