@@ -16,5 +16,5 @@
     group: "{{system_groups['www'].name}}"
     mode: 0640
   when: "listener is defined"
-  notify: "restart apache2"
+  notify: "refresh apache2"
   tags: ['apache_webui_config']

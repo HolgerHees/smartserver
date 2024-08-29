@@ -134,7 +134,7 @@
     - _.ansible.vhost.d/default-ssl.conf
     - _.ansible.server.conf
     - _.ansible.httpd.conf
-  notify: "restart apache2"
+  notify: "refresh apache2"
   tags: ['apache_config']
 
 - name: copy auth config
@@ -151,7 +151,7 @@
     - _.ansible.vhost.d/auth/basic.inc
     - _.ansible.vhost.d/auth/form1.inc
     - _.ansible.vhost.d/auth/openidc1.inc
-  notify: "restart apache2"
+  notify: "refresh apache2"
   tags: ['user']
 
 - name: copy auth users
@@ -164,7 +164,7 @@
   with_items:
     - "admin"
     - "user"
-  notify: "restart apache2"
+  notify: "refresh apache2"
   tags: ['user']
 
 - name: synchronize login form

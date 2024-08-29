@@ -31,7 +31,7 @@
 
 #- name: create certificates => certificate_mode = 'create'
 #  shell: "podman exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
-#  notify: "restart apache2"
+#  notify: "refresh apache2"
 #  when: "certificate_mode == 'create'"
 
 - name: copy letsencrypt check script
@@ -44,7 +44,7 @@
 
 - name: create certificates => certificate_mode = 'create'
   shell: "/opt/scripts/apache_check_letsencrypt.sh update"
-  notify: "restart apache2"
+  notify: "refresh apache2"
   when: "certificate_mode == 'create'"
 
 - name: create cron job
