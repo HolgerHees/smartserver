@@ -17,13 +17,14 @@ if len(sys.argv) >= 2:
     is_quite = sys.argv[1] == "-q"
 
 class Container:
-    def __init__(self, id, name, image_id, image_repository, image_tag, is_stopped_since):
+    def __init__(self, id, name, image_id, image_repository, image_tag, is_stopped_since, state):
         self.id = id
         self.name = name
         self.image_id = image_id
         self.image_repository = image_repository
         self.image_tag = image_tag
         self.is_stopped_since = is_stopped_since
+        self.state = state
 
 class Image:
     def __init__(self, id, repository, tag, created):
@@ -103,23 +104,23 @@ def collectImages():
 def collectContainers():
     # Collect all containers
     containers = {}
-    result = command.exec(["podman", "ps", "-a", "--format", "'{{json .}}'"])
+    result = command.exec(["podman", "ps", "-a", "--external", "--format", "'{{json .}}'"])
     lines = result.stdout.decode("utf-8").split("\n")
     for line in lines[0:-1]:
         obj = json.loads(line[1:-1])
 
         is_stopped_since = None
         if obj["State"] == "exited":
-            result = command.exec(["podman", "inspect", obj["Id"]])
-            _obj = json.loads(result.stdout.decode("utf-8"))
-            state = _obj[0]["State"]
-            finished_at = datetime.fromtimestamp(state["ExitedAt"])
+            #result = command.exec(["podman", "inspect", obj["Id"]])
+            #_obj = json.loads(result.stdout.decode("utf-8"))
+            #state = _obj[0]["State"]
+            finished_at = datetime.fromtimestamp(obj["ExitedAt"])
             is_stopped_since = (datetime.utcnow() - finished_at)
 
         name = obj["Names"][0].split("/", 1)[-1]
         image_repository, image_tag = obj["Image"].split(':', 1)
 
-        containers[obj["Id"]] = Container(obj["Id"], name, obj["ImageID"], image_repository, image_tag, is_stopped_since)
+        containers[obj["Id"]] = Container(obj["Id"], name, obj["ImageID"], image_repository, image_tag, is_stopped_since, obj["State"])
 
     return containers
 
