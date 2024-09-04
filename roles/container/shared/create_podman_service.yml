@@ -5,6 +5,14 @@
   failed_when: no
   tags: ['podman_container']
 
+#      {% if container_networks is defined %}
+#      {% for container_network in container_networks %}
+#        "--network {{container_network}}{% if 'ip' in container_networks[container_network] %}:ip={{container_networks[container_network]['ip']}}{% endif %}",
+#      {% endfor %}
+#      {% else %}
+#        "--network {{container_network}}{% if container_network != "host" %} --ip {{container_ip}}{% if container_ip6 | default(false) %} --ipv6 {{container_ip6}}{% endif %}{% endif %}",
+#      {% endif %}
+
 #        "--log-driver passthrough",
 #"--log-driver journald --log-opt tag={{container_name}}",
 - name: "container : create_podman_service : prepare create cmd"

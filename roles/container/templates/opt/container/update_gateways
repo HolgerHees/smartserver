@@ -28,34 +28,29 @@ if container_id == "0":
     exit(0)
 
 for gateway in args_values["gateway"]:
-    #if gateway == "default":
-    #    result = exec(["podman", "inspect", container])
-    #    json_result = result.stdout.decode("utf-8")
-    #    data = json.loads(json_result)
+    if gateway.startswith("default"):
+        _, gateway = gateway.split(":")
 
-    #    for network in data[0]["NetworkSettings"]["Networks"].values():
-    #        #if network["IPAMConfig"] is None:
-    #        #    continue
+        found = False
+        result = exec(["nsenter", "-n", "-t", container_id, "ip", "route", "list"])
+        container_routes = result.stdout.decode("utf-8").strip()
+        for container_route in container_routes.split("\n"):
+            if container_route.startswith("default"):
+                if container_route.startswith("default via {}".format(gateway)):
+                    found = True
+                else:
+                    print("ip route del {}".format(container_route))
+                    exec(["nsenter", "-n", "-t", container_id, "ip", "route", "del"] + container_route.strip().split(" "))
 
-    #        default_gateway = network["Gateway"]
+            if not found:
+                print("ip route add default via {}".format(gateway))
+                exec(["nsenter", "-n", "-t", container_id, "ip", "route", "add", "default", "via", gateway])
+    else:
+        subnet, gateway = gateway.split(":")
 
-    #        result = exec(["nsenter", "-n", "-t", container_id, "ip", "route", "list"])
-    #        container_routes = result.stdout.decode("utf-8").strip()
+        result = exec(["nsenter", "-n", "-t", container_id, "ip", "route", "list"])
+        container_routes = result.stdout.decode("utf-8").strip()
 
-    #        if "default via {}".format(default_gateway) not in container_routes:
-    #            if "default via" in container_routes:
-    #                print("ip route del default")
-    #                exec(["nsenter", "-n", "-t", container_id, "ip", "route", "del", "default"])
-
-    #            exec(["nsenter", "-n", "-t", container_id, "ip", "route", "add", "default", "via", default_gateway])
-
-    #        break
-    #else:
-    subnet, gateway = gateway.split(":")
-
-    result = exec(["nsenter", "-n", "-t", container_id, "ip", "route", "list"])
-    container_routes = result.stdout.decode("utf-8").strip()
-
-    if "{} via {}".format(subnet, gateway) not in container_routes:
-        print("ip route add {} via {}".format(subnet,gateway))
-        exec(["nsenter", "-n", "-t", container_id, "ip", "route", "add", subnet, "via", gateway])
+        if "{} via {}".format(subnet, gateway) not in container_routes:
+            print("ip route add {} via {}".format(subnet,gateway))
+            exec(["nsenter", "-n", "-t", container_id, "ip", "route", "add", subnet, "via", gateway])

@@ -1,6 +1,7 @@
 - name: set version
   set_fact:
     grafana_version: '11.2.0'
+#    grafana_mqtt_plugin_version: '1.1.0-beta.2'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed directories
@@ -45,6 +46,18 @@
     group: "root"
     mode: 0640
   notify: "restart grafana"
+
+#- name: install plugins
+#  unarchive:
+#    src: "{{item.src}}"
+#    dest: "{{ global_lib }}grafana/plugins/"
+#    creates: "{{ global_lib }}grafana/plugins/{{item.creates}}/"
+#    remote_src: yes
+#    owner: "root"
+#    group: "root"
+#  with_items:
+#    - { src: "https://grafana.com/api/plugins/grafana-mqtt-datasource/versions/{{grafana_mqtt_plugin_version}}/download?os=linux&arch=amd64", creates: "grafana-mqtt-datasource" }
+#  notify: "restart grafana"
     
 - name: build container image
   vars:
@@ -66,6 +79,7 @@
 #      GF_LOG_MODE: "syslog"
 #      GF_LOG_SYSLOG_TAG: "grafana"
       GF_SECURITY_ALLOW_EMBEDDING: "true"
+#      GF_INSTALL_PLUGINS: "grafana-mqtt-datasource"
     container_network: "isolated"
     container_ip: "{{podman_grafana_ip}}"
     container_exposed_ports:
@@ -77,7 +91,7 @@
     container_readyness: { "type": "port_check", "ip": "{{podman_grafana_ip}}", "port": "3000" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
-      
+
 - name: allow container service
   vars:
     service_name: "grafana"

@@ -25,6 +25,9 @@
     container_user: "{{system_users['nobody'].name}}:{{system_groups['nobody'].name}}"
     container_network: "cloud_vpn"
     container_ip: "{{vpn_cloud_services.local.mosquitto}}"
+#    container_networks:
+#        "cloud_vpn": { ip: "{{vpn_cloud_services.local.mosquitto}}" }
+#        "isolated": { ip: "{{podman_cloud_mosquitto_ip}}" }
     container_exposed_ports:
       - "1883/tcp"
       - "9001/tcp"
@@ -32,9 +35,18 @@
       - '{{global_etc}}cloud_mosquitto:/mosquitto/config'
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
+#      - { "subnet": "default", "gateway": "{{vpn_cloud_services.local.bridge}}"}
     container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.mosquitto}}", "port": "1883" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+#- name: allow container service
+#  vars:
+#    service_name: "cloud_mosquitto"
+#    container_to_outside_rules:
+#      - { saddr: "{{podman_grafana_ip}}", daddr: "{{vpn_cloud_services.local.mosquitto}}", protocol: "tcp", dport: "9001", comment: "grafana => cloud_mosquitto" }
+#  include_tasks: roles/firewall/shared/allow_service.yml
+#  tags: ['firewall_config']
 
 - name: add container name
   vars:
