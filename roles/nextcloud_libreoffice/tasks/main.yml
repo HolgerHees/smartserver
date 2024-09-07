@@ -1,9 +1,8 @@
 - name: set version
   set_fact:
-    libreoffice_version: "24.04.6.2.1" # "24.04.7.1.1"
-    libreoffice_changelog_version: "23-05"
+    libreoffice_version: "24.04.7.1.2"
   tags: [ 'update_notifier_config' ]
-  
+
 #- name: prepare needed directories
 #  vars:
 #    directories:
@@ -70,7 +69,7 @@
   vars:
     name: "libreoffice"
     type: "docker"
-    url: "https://www.collaboraoffice.com/collabora-online-{{libreoffice_changelog_version}}-release-notes/"
+    url: "https://www.collaboraoffice.com/collabora-online-{{ (libreoffice_version | split('.') )[:2] | join('-') }}-release-notes/"
     config: { 
       repository: "collabora/code",
       pattern: "^([0-9\\.]+)$" 
