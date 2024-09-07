@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '29.0.5' # patches in "enable_apps" beim nächsten Update überprüfen
+    nextcloud_version: '29.0.6' # patches in "enable_apps" beim nächsten Update überprüfen
 
     # 1. check for news update (blocker)
     # 2. upgrade keeweb at the same time
