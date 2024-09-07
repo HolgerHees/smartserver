@@ -159,14 +159,7 @@ for systemd_service in services:
                 if not ignore:
                     state_flags.append("active")
 
-        if systemd_service == 'macvlan_bridge':
-            info("---------------------------------------------")
-            info("{} {}".format(loading_state, activation_state))
-            info(state)
-
         if len(state_flags) > 0:
-            info("Alerting For: {}".format(systemd_service))
-
             msg = "Service is not {}. Loading: {}, Active: {}".format(" and ".join(state_flags), loading_state, activation_state)
             #info(msg)
             fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, msg, systemd_service))
