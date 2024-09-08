@@ -44,14 +44,14 @@
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
 
-#- name: allow container service
-#  vars:
-#    service_name: "mosquitto"
+- name: allow container service
+  vars:
+    service_name: "mosquitto"
 #    container_to_container_rules:
 #      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_mosquitto_ip}}", protocol: "tcp", dport: "9001", comment: "grafana => mosquitto" }
-#    nat_rules: { ip: "{{podman_mosquitto_ip}}", ports: "{{mosquitto_published_ports}}" }
-#  include_tasks: roles/firewall/shared/allow_service.yml
-#  tags: ['firewall_config']
+    nat_rules: { ip: "{{podman_mosquitto_ip}}", ports: "{{mosquitto_published_ports}}" }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
 
 - name: add service name
   vars:
