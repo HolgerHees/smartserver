@@ -130,7 +130,7 @@ class Provider:
             _repeat_count = repeat_count + 1
             sleepTime = 600 * _repeat_count if _repeat_count < 6 else 3600
             logging.info("Sleep {} seconds".format(sleepTime))
-            schedule.every(sleepTime).second.do(self.fetchInterval, repeat_count=_repeat_count)
+            schedule.every(sleepTime).seconds.do(self.fetchInterval, repeat_count=_repeat_count)
         else:
             self.is_fetching = False
 
