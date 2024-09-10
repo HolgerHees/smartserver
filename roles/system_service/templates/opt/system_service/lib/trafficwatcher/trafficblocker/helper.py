@@ -31,13 +31,13 @@ class Helper():
     def getBlockedIps(config):
         result = []
         Helper._fetchBlockedIps(result, ["/usr/sbin/nft", "list", "chain", "inet", "filter", "SMARTSERVER_BLOCKER"], r"^\s*ip saddr ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) drop")
-        Helper._fetchBlockedIps(result, ["/usr/sbin/nft", "list", "chain", "inet", "filter", "SMARTSERVER_BLOCKER"], r"^\s*ip saddr ([0-9a-z:]*) drop")
+        Helper._fetchBlockedIps(result, ["/usr/sbin/nft", "list", "chain", "inet", "filter", "SMARTSERVER_BLOCKER"], r"^\s*ip6 saddr ([0-9a-z:]*) drop")
         return result
 
     @staticmethod
     def blockIp(config, ip):
         #ip = "{}/128".format(ip) if ":" in ip else "{}/32".format(ip)
-        cmd = ["/usr/sbin/nft", "add", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "ip saddr", ip, "drop", "comment", "\"trafficblocker\""]
+        cmd = ["/usr/sbin/nft", "add", "rule", "inet", "filter", "SMARTSERVER_BLOCKER", "ip6" if ":" in ip else "ip", "saddr", ip, "drop", "comment", "\"trafficblocker\""]
         Helper._executeCmd(cmd)
 
     @staticmethod
