@@ -11,7 +11,7 @@ RUN apt-get update && \
 # ZIP
   zlib1g-dev libzip-dev \
 # ImageMagick
-  libmagickwand-dev \
+  libmagickwand-dev git \
 # GD Image library with freetype support
   libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev && \
 
@@ -37,7 +37,15 @@ RUN apt-get update && \
   docker-php-ext-enable apcu && \
 
 # ImageMagick
-  pecl install imagick && \
+# pecl install imagick
+#    https://github.com/Imagick/imagick/issues/640
+#    https://github.com/Imagick/imagick/pull/641
+#    28f27044e435a2b203e32675e942eb8de620ee58 => 10.09.2024
+  cd /tmp && \
+  git clone https://github.com/Imagick/imagick.git && \
+  cd /tmp/imagick && \
+  git checkout 28f27044e435a2b203e32675e942eb8de620ee58 && \
+  pecl install /tmp/imagick/package.xml && \
   docker-php-ext-enable imagick && \
 
 # GD Image library with freetype support
