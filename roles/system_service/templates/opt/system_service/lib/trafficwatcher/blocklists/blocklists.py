@@ -149,7 +149,7 @@ class Blocklists(threading.Thread):
                 continue
 
             amount = int(columns[1])
-            if amount < 2:
+            if amount < 4:
                 continue
 
             if columns[0] not in self.map_data[name]:
