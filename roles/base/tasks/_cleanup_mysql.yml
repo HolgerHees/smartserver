@@ -15,6 +15,7 @@
 - name: "clean mysql container"
   shell:
     cmd: "podman rm mysql"
+  failed_when: no
 
 - name: clean files
   file:
