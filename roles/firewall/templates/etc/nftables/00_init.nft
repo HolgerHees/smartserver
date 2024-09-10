@@ -45,6 +45,8 @@ table inet filter {
 
         jump SMARTSERVER_INPUT
 
+        ip6 daddr ff02:0000:0000:0000:0000:0000:0000:00fb drop                                      comment "silently ignore multicasts"
+
         ip daddr 224.0.0.251 drop                                                                   comment "silently ignore multicasts"
         ip daddr 224.0.0.1 drop                                                                     comment "silently ignore multicasts"
         ip daddr 239.255.255.250 drop                                                               comment "silently ignore service (1900:ssdp, 3702:ws-discovery) broadcast"
