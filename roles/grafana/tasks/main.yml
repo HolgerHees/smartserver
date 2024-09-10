@@ -87,7 +87,7 @@
     container_volumes:
       - '{{global_lib}}grafana:/var/lib/grafana'
       - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning'
-    container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
+    container_after: [ "mariadb", "influxdb", "loki", "prometheus", "alertmanager" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_grafana_ip}}", "port": "3000" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
@@ -96,7 +96,7 @@
   vars:
     service_name: "grafana"
     container_to_container_rules:
-      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_mysql_ip}}", protocol: "tcp", dport: "3306", comment: "grafana => mysql" }
+      - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_mariadb_ip}}", protocol: "tcp", dport: "3306", comment: "grafana => mariadb" }
       - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_influxdb_ip}}", protocol: "tcp", dport: "8086", comment: "grafana => influxdb" }
       - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_loki_ip}}", protocol: "tcp", dport: "3100", comment: "grafana => loki" }
       - { saddr: "{{podman_grafana_ip}}", daddr: "{{podman_prometheus_ip}}", protocol: "tcp", dport: "9090", comment: "grafana => prometheus" }

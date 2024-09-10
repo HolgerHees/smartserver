@@ -22,6 +22,15 @@
   include_tasks: _cleanup_iptables.yml
   when: "cleanup_iptables_check.stat.exists"
 
+- name: check for mysql
+  stat:
+    path: "{{global_etc}}mysql"
+  register: cleanup_mysql_check
+
+- name: cleanup mysql
+  include_tasks: _cleanup_mysql.yml
+  when: "cleanup_mysql_check.stat.exists"
+
 - name: clean old build folder
   file:
     path: "{{item}}"

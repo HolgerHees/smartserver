@@ -164,12 +164,12 @@ default_variables: {
     # Roles:
     # - 'librenms'
     librenms_enabled:                         { default: "{{librenms_devices | length > 0}}",
-                                                requirement: "mysql_enabled,redis_enabled" },                       # enabled if there are network_devices with attribute 'snmp_method'
+                                                requirement: "mariadb_enabled,redis_enabled" },                     # enabled if there are network_devices with attribute 'snmp_method'
     librenms_poller_interval:                 { default: 5,                                                         # interval in minutes
                                                 dependency: "{{librenms_enabled}}" },
-    librenms_mysql_username:                  { default: "librenms",
+    librenms_mariadb_username:                { default: "librenms",
                                                 dependency: "{{librenms_enabled}}" },
-    librenms_mysql_password:                  { dependency: "{{librenms_enabled}}" },
+    librenms_mariadb_password:                { dependency: "{{librenms_enabled}}" },
     librenms_api_token:                       { dependency: "{{librenms_enabled}}" },
     # **** END LIBRENMS                                                                ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -256,11 +256,11 @@ default_variables: {
     influxdb_admin_token:                     { dependency: "{{influxdb_enabled}}" },                               # "lkjfdh7123kjas" => token used for internal command line operations
 
     # Roles:
-    # - 'mysql'
-    mysql_enabled:                            { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
-    shared_mysql_username:                    { default: "shared",                                                  # used for internal data
-                                                dependency: "{{mysql_enabled}}" },
-    shared_mysql_password:                    { dependency: "{{mysql_enabled}}" },
+    # - 'mariadb'
+    mariadb_enabled:                          { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
+    shared_mariadb_username:                  { default: "shared",                                                  # used for internal data
+                                                dependency: "{{mariadb_enabled}}" },
+    shared_mariadb_password:                  { dependency: "{{mariadb_enabled}}" },
 
     # Roles:
     # - 'redis'
@@ -291,13 +291,13 @@ default_variables: {
     # - 'nextcloud'
     # - 'nextcloud_libreoffice'
     nextcloud_enabled:                        { default: yes,                                                       # enabled by default
-                                                requirement: "mysql_enabled,redis_enabled" },
+                                                requirement: "mariadb_enabled,redis_enabled" },
     nextcloud_instance_id:                    { dependency: "{{nextcloud_enabled}}" },                              # "234sdgzw87399443s" => used internally
     nextcloud_password_salt:                  { dependency: "{{nextcloud_enabled}}" },                              # "9ad9aus92z4ij20j20idj928912hd1jd0"
     nextcloud_secret:                         { dependency: "{{nextcloud_enabled}}" },                              # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
-    nextcloud_mysql_username:                 { default: "nextcloud",                                               # used for nextcloud data
+    nextcloud_mariadb_username:               { default: "nextcloud",                                               # used for nextcloud data
                                                 dependency: "{{nextcloud_enabled}}" },
-    nextcloud_mysql_password:                 { dependency: "{{nextcloud_enabled}}" },
+    nextcloud_mariadb_password:               { dependency: "{{nextcloud_enabled}}" },
     nextcloud_admin_username:                 { default: "admin",                                                   # used to login as a nextcloud data
                                                 dependency: "{{nextcloud_enabled}}" },
     nextcloud_admin_password:                 { dependency: "{{nextcloud_enabled}}" },
@@ -325,11 +325,11 @@ default_variables: {
     # - 'openhab'
     # - 'openhab_toolbox'
     openhab_enabled:                          { default: yes,                                                       # enabled by default
-                                                requirement: "mysql_enabled,influxdb_enabled,mosquitto_enabled" },
+                                                requirement: "mariadb_enabled,influxdb_enabled,mosquitto_enabled" },
     openhab_config_git:                       { dependency: "{{openhab_enabled}}" },                                # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
-    openhab_mysql_username:                   { default: "openhab",                                                 # used for openhab data
+    openhab_mariadb_username:                 { default: "openhab",                                                 # used for openhab data
                                                 dependency: "{{openhab_enabled}}" },
-    openhab_mysql_password:                   { dependency: "{{openhab_enabled}}" },
+    openhab_mariadb_password:                 { dependency: "{{openhab_enabled}}" },
     # *** END OPENHAB                                                                  ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -533,7 +533,7 @@ default_variables: {
     # Roles:
     # - 'weather_service'
     weather_service_enabled:                  { default: yes,                                                       # enabled by default
-                                                requirement: "mysql_enabled" },
+                                                requirement: "mariadb_enabled" },
     weather_api_provider:                     { default: "openmeteo",                                               # 'openmeteo' (https://open-meteo.com/), 'meteogroup' (https://api.weather.mg/ => needs credentials) or 'listener'
                                                 dependency: "{{weather_service_enabled}}" },
     weather_mqtt_server:                      { default: "{{'mosquitto' if mosquitto_enabled else 'dummy'}}",       # 'mosquitto', 'cloud_mosquitto' or 'dummy'
@@ -706,7 +706,7 @@ podman_dns_ip:                    "172.16.0.100"
 podman_postfix_ip:                "172.16.0.101"
 podman_influxdb_ip:               "172.16.0.103"
 podman_redis_ip:                  "172.16.0.104"
-podman_mysql_ip:                  "172.16.0.105"
+podman_mariadb_ip:                "172.16.0.105"
 podman_mosquitto_ip:              "172.16.0.106"
 podman_speedtest_ip:              "172.16.0.107"
 podman_libreoffice_ip:            "172.16.0.108"

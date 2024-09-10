@@ -1,8 +1,8 @@
-- name: restart mysql
+- name: restart mariadb
   systemd:
-    name: mysql
+    name: mariadb
     state: restarted
     daemon_reload: yes
     enabled: yes
     masked: no
-  listen: "restart mysql"
+  listen: "restart mariadb"

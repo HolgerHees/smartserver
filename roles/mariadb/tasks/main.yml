@@ -1,0 +1,152 @@
+- name: set version
+  set_fact:
+    mariadb_version: "11.4.3"
+  tags: [ 'update_notifier_config' ]
+  
+- name: "create user and group => user or group does not exists"
+  vars:
+    user: { name: "mariadb", system: true, home: "{{ global_etc }}mariadb" }
+    group: { name: "mariadb", system: true }
+  include_tasks: roles/user/shared/add_system_user.yml
+  when: "'mariadb' not in system_users or 'mariadb' not in system_groups"
+
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['mariadb'].name}}", group: "{{system_groups['mariadb'].name}}", path: "{{ global_etc }}mariadb" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['mariadb'].name}}", group: "{{system_groups['mariadb'].name}}", path: "{{ global_lib }}mariadb" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{database_backup_path}}mariadb" }
+  include_tasks: roles/_shared/create_directories.yml
+
+- name: synchronize config
+  synchronize:
+    src: "templates/etc/mariadb/"
+    dest: "{{ global_etc }}mariadb/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown={{system_users['mariadb'].name}}:{{system_groups['mariadb'].name}}"
+      - "--chmod=D750,F640"
+  notify: "restart mariadb"
+
+- name: create container service
+  vars:
+    container_name: "mariadb"
+    container_image: "mariadb:{{mariadb_version}}"
+    container_user: "{{system_users['mariadb'].id}}:{{system_groups['mariadb'].id}}"
+    # !!! DISABLED HEALTHCHECK => see pihole healthcheck
+    #healthcheck: "healthcheck.sh --connect --innodb_initialized"
+    #health_startup_cmd: "healthcheck.sh --connect --innodb_initialized"
+    #health_startup_interval: "1s"
+    #health_startup_timeout: "30s"
+    #healthcheck_start_period: 10s
+    #healthcheck_interval: 30s
+    #healthcheck_retries: 3
+    #healthcheck_timeout: 10s
+    #command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
+    container_network: "isolated"
+    container_ip: "{{podman_mariadb_ip}}"
+    container_exposed_ports:
+      - "3306"
+    container_env:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+      TZ: "{{timezone}}"
+    container_volumes:
+      - '{{ global_etc }}mariadb:/etc/mysql'
+      - '{{ global_lib }}mariadb:/var/lib/mysql'
+    container_readyness: { "type": "container_exec", "cmd": "mariadb-admin ping -h 127.0.0.1 --silent" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+- name: add service name
+  vars:
+    host_name: "mariadb"
+    host_ip_address: "{{podman_mariadb_ip}}"
+  include_tasks: roles/_shared/add_to_hosts.yml
+
+# ***** DEPENDENCY CONFIGS *****
+- name: create cron job
+  vars:
+    name: "MariaDB Clean Backup"
+    cmd: "find {{database_backup_path}}mariadb/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
+    group: "mariadb"
+    log: "dump_cleanup"
+    hour: "0"
+    minute: "45"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
+
+- name: create cron job
+  vars:
+    name: "MariaDB Core Backup"
+    cmd: "set -o pipefail && podman exec mariadb sh -c \"/usr/bin/mariadb-dump mysql -u root --quick --single-transaction -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mariadb/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    group: "mariadb"
+    log: "dump_mysql"
+    hour: "1"
+    minute: "0"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/mariadb.conf"
+  include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
+  when: "monitoring_enabled"
+    
+- name: register update notifier
+  vars:
+    name: "mariadb"
+    type: "docker"
+    url: "https://mariadb.com/kb/en/release-notes/"
+    config: {
+      repository: "mariadb",
+      pattern: "^([0-9\\.]+)$"
+    }
+  include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
+  when: "update_service_software_check_enabled"
+
+- name: force mariadb restart
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: mariadb
+  when: "podman_service_container_changed"
+
+- name: check mariadb upgrade
+  shell: "podman exec mariadb sh -c \"/usr/bin/mariadb-upgrade\""
+  when: "podman_service_container_changed"
+  
+# ***** SHARED DATABASE ****
+- name: create database
+  vars:
+    database: "shared"
+    username: "{{shared_mariadb_username}}"
+    password: "{{shared_mariadb_password}}"
+    backup: yes
+  include_tasks: roles/mariadb/shared/add_database.yml
+  tags: ['cron_job','backup_restore']
+  
+- name: "check healthcheck user"
+  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e 'SELECT User FROM mysql.user'\""
+  register: mariadb_user_exists
+  changed_when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"
+
+- name: "create healthcheck user => user does not exists"
+  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{system_users['mariadb'].name}}'@'%'\\\"\""
+  when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"
+
+- name: "refresh privileges => user does not exists"
+  shell: "podman exec mariadb sh -c \"mariadb-admin -u root -h 127.0.0.1 flush-privileges\""
+  when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"
+
+#- name: "grant healthcheck user permissions => user does not exists"
+#  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e \\\"GRANT USAGE TO '{{system_users['mariadb'].name}}'@'%';\\\"\""
+#  when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"

@@ -64,7 +64,7 @@
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
       - '{{global_opt}}weather_service/:/opt/weather_service:ro'
       - "{{global_lib}}weather_service/:/var/lib/weather_service:rw"
-    container_after: [ "cloud_mosquitto", "mysql" ]
+    container_after: [ "cloud_mosquitto", "mariadb" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_weather_service_ip}}", "port": "80" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
@@ -75,7 +75,7 @@
     container_to_container_rules: |
       [
         { "saddr": "{{podman_prometheus_ip}}", "daddr": "{{podman_weather_service_ip}}", "protocol": "tcp", "dport": "80", "comment": "prometheus => weather_service" },
-        { "saddr": "{{podman_weather_service_ip}}", "daddr": "{{podman_mysql_ip}}", "protocol": "tcp", "dport": "3306", "comment": "weather_service => mysql" },
+        { "saddr": "{{podman_weather_service_ip}}", "daddr": "{{podman_mariadb_ip}}", "protocol": "tcp", "dport": "3306", "comment": "weather_service => mariadb" },
         {% if weather_mqtt_server == 'mosquitto' %}
           { "saddr": "{{podman_weather_service_ip}}", "daddr": "{{podman_mosquitto_ip}}", "protocol": "tcp", "dport": [ "1883", "9001" ], "comment": "weather_service => mosquitto }}" }
         {% endif %}
@@ -91,11 +91,11 @@
   tags: ['firewall_config']
 
 # ***** DEPENDENCY CONFIGS *****
-- name: check mysql table
-  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
-  register: mysql_table_exists
-  changed_when: "'weather_forecast' not in mysql_table_exists.stdout"
-  when: "mysql_enabled"
+- name: check database table
+  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
+  register: mariadb_table_exists
+  changed_when: "'weather_forecast' not in mariadb_table_exists.stdout"
+  when: "mariadb_enabled"
 
 - name: synchronize table config
   synchronize:
@@ -111,11 +111,11 @@
       - "--chown=root:root"
       - "--chmod=F600"
   changed_when: no
-  when: "'weather_forecast' not in mysql_table_exists.stdout"
+  when: "'weather_forecast' not in mariadb_table_exists.stdout"
   
 - name: create missing table 'weather_service' => does not exists in database
-  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | podman exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
-  when: "mysql_enabled and 'weather_forecast' not in mysql_table_exists.stdout"
+  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | podman exec -i mariadb sh -c \"mariadb -u root -h 127.0.0.1 shared\""
+  when: "mariadb_enabled and 'weather_forecast' not in mariadb_table_exists.stdout"
 
 - name: synchronize htdocs
   synchronize:

@@ -7,11 +7,11 @@
   with_items: "{{librenms_devices}}"
   
 - name: "set api token"
-  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO api_tokens (user_id,token_hash,description,disabled) VALUES (1,'{{librenms_api_token | replace('$', '\\\\\\$') }}','web app usage',0);\\\"\""
+  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO api_tokens (user_id,token_hash,description,disabled) VALUES (1,'{{librenms_api_token | replace('$', '\\\\\\$') }}','web app usage',0);\\\"\""
   changed_when: no
   
 - name: "set http user"
-  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO users (user_id, auth_type, auth_id, username, password, realname, email, descr, can_modify_passwd, remember_token, enabled) VALUES (46, 'http-auth', '46', 'librenms', NULL, '', '{{root_email}}', '', 1, NULL, 1);\\\"\""
+  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO users (user_id, auth_type, auth_id, username, password, realname, email, descr, can_modify_passwd, remember_token, enabled) VALUES (46, 'http-auth', '46', 'librenms', NULL, '', '{{root_email}}', '', 1, NULL, 1);\\\"\""
   changed_when: no
 
 - name: "create discovery all cron job"

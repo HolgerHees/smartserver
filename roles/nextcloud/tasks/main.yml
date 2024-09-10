@@ -44,13 +44,13 @@
 - name: create database
   vars:
     database: "nextcloud"
-    username: "{{nextcloud_mysql_username}}"
-    password: "{{nextcloud_mysql_password}}"
+    username: "{{nextcloud_mariadb_username}}"
+    password: "{{nextcloud_mariadb_password}}"
     backup: yes
-    backup_cleanup: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
-  include_tasks: roles/mysql/shared/add_database.yml
+    backup_cleanup: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
+  include_tasks: roles/mariadb/shared/add_database.yml
   tags: ['cron_job','backup_restore']
-  when: "mysql_enabled"
+  when: "mariadb_enabled"
 
 # ***** INITIALIZE NEW *****
 - name: clean unused config.php => database does not exists
@@ -66,7 +66,7 @@
   when: "database_added"
 
 - name: initialise nextcloud => database does not exists
-  shell: "podman exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mysql' --database-name 'nextcloud'  --database-user '{{nextcloud_mysql_username}}' --database-pass '{{nextcloud_mysql_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'\""
+  shell: "podman exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'\""
   when: "database_added"
 
 - name: disable password policy => database does not exists

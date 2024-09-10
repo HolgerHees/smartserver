@@ -196,7 +196,7 @@ class ProviderConsumer():
             self.consume_errors[state_name] = time.time()
         #except MySQLdb._exceptions.OperationalError as e:
         #    logging.info("{}: {}".format(str(e.__class__),str(e)))
-        #    self.service_metrics["mysql"] = 0
+        #    self.service_metrics["mariadb"] = 0
         #    self.consume_errors[state_name] = time.time()
         except Exception as e:
             logging.info("{}: {}".format(str(e.__class__),str(e)))

@@ -124,7 +124,7 @@
 
     - { import_role: { name: samba },                                                        tags: [ 'samba', 'alpine' ],                                    when: "samba_enabled" }                            # smb file server
 
-    - { import_role: { name: mysql },                                                        tags: [ 'mysql' ],                                              when: "mysql_enabled" }                            # mysql db
+    - { import_role: { name: mariadb },                                                      tags: [ 'mariadb' ],                                            when: "mariadb_enabled" }                          # mariadb db
 
     - { import_role: { name: influxdb },                                                     tags: [ 'influxdb' ],                                           when: "influxdb_enabled" }                         # influxdb
     
@@ -160,8 +160,8 @@
     - { import_role: { name: nextcloud },                                                    tags: [ 'nextcloud' ],                                          when: "nextcloud_enabled" }                        # private cloud
     - { import_role: { name: nextcloud_libreoffice },                                        tags: [ 'nextcloud_libreoffice' ],                              when: "nextcloud_enabled" }                        # office editor
 
-    - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mysql_enabled" }                            # phpMyAdmin
-    #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mysql_enabled" }                           # Adminer
+    - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mariadb_enabled" }                            # phpMyAdmin
+    #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mariadb_enabled" }                           # Adminer
 
     - { import_role: { name: openhab },                                                      tags: [ 'openhab' ],                                            when: "openhab_enabled" }                          # openhab iot server
     - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools

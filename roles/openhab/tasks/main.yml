@@ -279,7 +279,7 @@
         {% endfor %}
       ]
     container_timeout_stop_sec: 60
-    container_after: [ "mysql", "influxdb", "mosquitto" ]
+    container_after: [ "mariadb", "influxdb", "mosquitto" ]
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8080" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
@@ -306,12 +306,12 @@
 - name: create database
   vars:
     database: "openhab"
-    username: "{{openhab_mysql_username}}"
-    password: "{{openhab_mysql_password}}"
+    username: "{{openhab_mariadb_username}}"
+    password: "{{openhab_mariadb_password}}"
     backup: yes
-  include_tasks: roles/mysql/shared/add_database.yml
+  include_tasks: roles/mariadb/shared/add_database.yml
   tags: ['cron_job','backup_restore']
-  when: "mysql_enabled"
+  when: "mariadb_enabled"
     
 # ***** INFLUXDB DATABASE ****
 - name: create values database
@@ -347,7 +347,7 @@
     name: "openhab"
     datasources: 
       - "templates/grafana/datasources/openhab_influxdb.yaml"
-      - "templates/grafana/datasources/openhab_mysql.yaml"
+      - "templates/grafana/datasources/openhab_mariadb.yaml"
     dashboards:
       - "templates/grafana/dashboards/OpenHAB metrics.json"
   include_tasks: roles/grafana/shared/add_datasource.yml

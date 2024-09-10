@@ -75,7 +75,7 @@
 
 # ***** CONFIGURE apps *****
 - name: read app configs
-  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"SELECT appid,configkey,configvalue FROM oc_appconfig;\\\"\""
+  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 nextcloud -e \\\"SELECT appid,configkey,configvalue FROM oc_appconfig;\\\"\""
   changed_when: no
   register: app_config_result
 
@@ -112,7 +112,7 @@
 
 # ***** CONFIGURE user_saml *****
 - name: read user_saml configs
-  shell: "podman exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"SELECT configuration FROM oc_user_saml_configurations WHERE id = 1;\\\"\""
+  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 nextcloud -e \\\"SELECT configuration FROM oc_user_saml_configurations WHERE id = 1;\\\"\""
   changed_when: no
   register: user_saml_config_result
 

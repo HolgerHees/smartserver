@@ -20,7 +20,7 @@ groups:
       summary: "Weather service mqtt"
 
   - alert: Weather database availability
-    expr: 'weather_service_state{job="weather_service", type="mysql"} == 0'
+    expr: 'weather_service_state{job="weather_service", type="mariadb"} == 0'
     for: 0m
     labels:
       notifyGroup: "weather_service"

@@ -11,11 +11,11 @@ publish_provider_topic   = {% if weather_mqtt_publish_provider_topic is defined 
 station_consumer_topic   = {% if weather_mqtt_station_consumer_topic is defined %}"{{weather_mqtt_station_consumer_topic}}"{% else %}False{% endif %}
 
 
-db_host         = "mysql"
+db_host         = "mariadb"
 db_name         = "shared"
 db_table        = "weather_forecast"
-db_username     = "{{shared_mysql_username}}"
-db_password     = "{{shared_mysql_password}}"
+db_username     = "{{shared_mariadb_username}}"
+db_password     = "{{shared_mariadb_password}}"
 
 location        = "{{location}}"
 timezone        = "{{timezone}}"

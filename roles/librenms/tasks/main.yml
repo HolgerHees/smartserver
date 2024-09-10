@@ -50,9 +50,9 @@
 #      OBSERVIUM_ADMIN_PASS: "admin"
       PUID: "{{system_users['librenms'].id}}"
       PGID: "{{system_groups['librenms'].id}}"
-      DB_HOST: "mysql"
-      DB_USERNAME: "{{librenms_mysql_username}}"
-      DB_PASSWORD: "{{librenms_mysql_password}}"
+      DB_HOST: "mariadb"
+      DB_USERNAME: "{{librenms_mariadb_username}}"
+      DB_PASSWORD: "{{librenms_mariadb_password}}"
       DB_DATABASE: "librenms"
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
@@ -72,7 +72,7 @@
       - '{{global_lib}}librenms/plugins:/data/plugins'
       - '{{global_lib}}librenms/rrd:/data/rrd'
       - '{{global_lib}}librenms/weathermap:/data/weathermap'
-    container_after: [ "redis", "mysql" ]
+    container_after: [ "redis", "mariadb" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_librenms_ip}}", "port": "8000" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
@@ -81,7 +81,7 @@
   vars:
     service_name: "librenms"
     container_to_container_rules:
-      - { saddr: "{{podman_librenms_ip}}", daddr: "{{podman_mysql_ip}}", protocol: "tcp", dport: "3306", comment: "librenms => mysql" }
+      - { saddr: "{{podman_librenms_ip}}", daddr: "{{podman_mariadb_ip}}", protocol: "tcp", dport: "3306", comment: "librenms => mariadb" }
       - { saddr: "{{podman_librenms_ip}}", daddr: "{{podman_redis_ip}}", protocol: "tcp", dport: "6379", comment: "librenms => redis" }
     container_to_outside_rules:
       - { saddr: "{{podman_librenms_ip}}", daddr: "{{intern_networks}}", comment: "librenms => internal networks (snmp scanner)" }
@@ -94,16 +94,16 @@
     host_ip_address: "{{podman_librenms_ip}}"
   include_tasks: roles/_shared/add_to_hosts.yml
 
-# ***** MYSQL DATABASE ****
+# ***** MARIADB DATABASE ****
 - name: create database
   vars:
     database: "librenms"
-    username: "{{librenms_mysql_username}}"
-    password: "{{librenms_mysql_password}}"
+    username: "{{librenms_mariadb_username}}"
+    password: "{{librenms_mariadb_password}}"
     backup: yes
-  include_tasks: roles/mysql/shared/add_database.yml
+  include_tasks: roles/mariadb/shared/add_database.yml
   tags: ['cron_job','backup_restore']
-  when: "mysql_enabled"
+  when: "mariadb_enabled"
   
 # ***** DEPENDENCY CONFIGS *****
 - name: register webui

@@ -36,7 +36,7 @@
           , '{{projects_path}}toolbox:{{projects_path}}toolbox'     # needed by openhab_toolbox role
         {% endif %}
       ]
-    container_after: [ "mysql", "redis", "postfix", "influxdb" ]
+    container_after: [ "mariadb", "redis", "postfix", "influxdb" ]
     container_readyness: { "type": "host_exec", "cmd": "ping -c 1 {{podman_php_ip}} > /dev/null" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']
@@ -45,7 +45,7 @@
   vars:
     service_name: "php"
     container_to_container_rules:
-      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_mysql_ip}}", protocol: "tcp", dport: "3306", comment: "php => mysql" }
+      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_mariadb_ip}}", protocol: "tcp", dport: "3306", comment: "php => mariadb" }
       - { saddr: "{{podman_php_ip}}", daddr: "{{podman_influxdb_ip}}", protocol: "tcp", dport: "8086", comment: "php => influxdb" }
       - { saddr: "{{podman_php_ip}}", daddr: "{{podman_redis_ip}}", protocol: "tcp", dport: "6379", comment: "php => redis" }
       - { saddr: "{{podman_php_ip}}", daddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "25", comment: "php => postfix" }

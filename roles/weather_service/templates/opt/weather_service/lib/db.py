@@ -146,7 +146,7 @@ class DB():
         return DBConnection(self, self.config)
 
     def getStateMetrics(self):
-        return ["weather_service_state{{type=\"mysql\"}} {}".format(self.state)]
+        return ["weather_service_state{{type=\"mariadb\"}} {}".format(self.state)]
 
 #    def connect(self):
 #        return MySQLdb.connect(host=self.config.db_host,user=self.config.db_username,passwd=self.config.db_password,db=self.config.db_name)

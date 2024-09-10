@@ -8,7 +8,7 @@ class SystemConfig
     
 	public static function getOpenHabMysql()
 	{
-		return new DBConnectorOpenhab( "mysql", "{{openhab_mysql_username}}", "{{openhab_mysql_password}}", "openhab" );
+		return new DBConnectorOpenhab( "mariadb", "{{openhab_mariadb_username}}", "{{openhab_mariadb_password}}", "openhab" );
 	}
 	
 	public static function getOpenHabInfluxDB()
