@@ -28,7 +28,8 @@
     - "{{backup_path}}mysql_nextcloud.sh"
     - "{{backup_path}}mysql_openhab.sh"
     - "{{backup_path}}mysql_shared.sh"
-    - "{{global_etc}}systemd_watcher/services/"
+    - "{{global_etc}}systemd_watcher/services/mysql.conf"
+    - "{{global_etc}}update_service/software/mysql.conf"
     - "{{global_etc}}grafana/provisioning/datasources/openhab_mysql.yaml"
 
 - name: "rename directories"
