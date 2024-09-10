@@ -36,6 +36,9 @@ class Dummy():
     def subscribe(self, topic, callback):
         self.subscriber[topic] = callback
 
+    def isConnected(self):
+        return True
+
     def getStateMetrics(self):
         return ["weather_service_state{{type=\"mqtt\"}} {}".format(self.state)]
 

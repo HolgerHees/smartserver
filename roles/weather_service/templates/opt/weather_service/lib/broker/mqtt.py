@@ -18,6 +18,8 @@ class MQTT(threading.Thread):
 
         self.event = threading.Event()
 
+        self.lock = threading.Lock()
+
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
         self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
@@ -29,7 +31,9 @@ class MQTT(threading.Thread):
 
     def start(self):
         self.is_running = True
+        super().start()
 
+    def run(self):
         # must run as first, otherwise subscribe and publish from other services will fail
         while self.is_running:
             try:
@@ -41,20 +45,18 @@ class MQTT(threading.Thread):
                 logging.info("MQTT {}. Retry in 5 seconds".format(str(e)))
                 time.sleep(5)
 
-        super().start()
-
-    def run(self):
         while self.is_running:
             self.event.wait(60)
             self.event.clear()
 
     def on_connect(self,client,userdata,flags,rc):
         logging.info("Connected to mqtt with result code:"+str(rc))
-        if self.state == 0:
-            for topic in self.subscriber:
-                self.mqtt_client.subscribe(topic)
-        #for topic in self.subscriber.keys():
-        self.state = 1
+        with self.lock:
+            if self.state == 0:
+                for topic in self.subscriber:
+                    self.mqtt_client.subscribe(topic)
+            #for topic in self.subscriber.keys():
+            self.state = 1
 
     def on_disconnect(self,client, userdata, rc):
         logging.info("Disconnect from mqtt with result code:"+str(rc))
@@ -68,11 +70,17 @@ class MQTT(threading.Thread):
                 self.subscriber[topic](client,userdata,msg)
 
     def subscribe(self, topic, callback):
-        self.subscriber[topic] = callback
-        self.mqtt_client.subscribe(topic)
+        with self.lock:
+            self.subscriber[topic] = callback
+            if self.state == 1:
+                self.mqtt_client.subscribe(topic)
 
     def publish(self, topic, payload=None, qos=0, retain=False):
-        self.mqtt_client.publish(topic, payload,qos,retain)
+        if self.state == 1:
+            self.mqtt_client.publish(topic, payload,qos,retain)
+
+    def isConnected(self):
+        return self.state == 1
 
     def getStateMetrics(self):
         return ["weather_service_state{{type=\"mqtt\"}} {}".format(self.state)]

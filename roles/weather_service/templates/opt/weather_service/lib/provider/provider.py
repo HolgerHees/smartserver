@@ -113,11 +113,15 @@ class Provider:
                 logging.info("Summery data skipped. Not enough data.")
 
     def fetchOneTime(self):
-        self.is_fetching = True
-        self.fetch()
-        self.is_fetching = False
+        if self.mqtt.isConnected():
+            self.is_fetching = True
+            self.fetch()
+            self.is_fetching = False
 
-        return schedule.CancelJob
+            return schedule.CancelJob
+        else:
+            if time.time() - self.last_fetch > 60 * 60:
+                schedule.every(60).seconds.do(self.fetchOneTime)
 
     def fetchInterval(self, repeat_count = 0):
         if repeat_count == 0:
