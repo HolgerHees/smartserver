@@ -16,7 +16,6 @@
       - { mode: "u=rwx,g=rwx,o=rx", owner: "{{system_users['influxdb'].name}}", group: "{{system_groups['influxdb'].name}}", path: "{{ global_etc }}influxdb" } # mode sync with influxdb entrypoint.sh
       - { mode: "u=rwx,g=,o=", owner: "{{system_users['influxdb'].name}}", group: "{{system_groups['influxdb'].name}}", path: "{{ global_lib }}influxdb" }      # mode sync with influxdb entrypoint.sh
       - { mode: "u=rwx,g=rx,o=",  owner: "{{system_users['influxdb'].name}}", group: "{{system_groups['influxdb'].name}}", path: "{{database_backup_path}}influxdb" }
-      - { mode: "u=rwx,g=rwx,o=", owner: "root", group: "root", path: "{{ global_build }}influxdb" }
   include_tasks: roles/_shared/create_directories.yml
 
 # ***** SERVICE CONFIGS *****
