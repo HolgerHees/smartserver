@@ -9,7 +9,7 @@
   vars:
     container_name: "{{item}}"
   include_tasks: _cleanup_docker_container.yml
-  with_items: "{{container_names.stdout_lines}}"
+  with_items: "{{docker_container_check.stdout_lines}}"
   when: "docker_container_check.rc == 0"
 
 - name: remove obsolete docker networks
