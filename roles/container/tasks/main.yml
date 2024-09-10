@@ -31,7 +31,8 @@
   zypper:
     name: [
         podman,
-        crun
+        crun,
+        netavark
     ]
     state: present
   when: is_suse
