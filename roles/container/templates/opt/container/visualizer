@@ -519,7 +519,7 @@ for row in rows:
     else:
         _colors = colors[TYPE_CONTAINER]
         if row[1] != "":
-            active_background = ";48;2;⟨50⟩;⟨50⟩;⟨50⟩" if active_background == "" else ""
+            active_background = ";48;2;50;50;50" if active_background == "" else ""
 
     print("\033[{}{}m {} \033[0m".format(_colors[1], active_background, row[1].ljust(columnLength[1])),end="")
     print("\033[{}{}m {} \033[0m".format(_colors[2], active_background, row[2].ljust(columnLength[2])),end="")
