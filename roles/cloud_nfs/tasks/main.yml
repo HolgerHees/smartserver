@@ -16,8 +16,8 @@
 #    register: cloud_nfs_folder_check
   with_items:
     - "{{cloud_path}}"
-    - "{{cloud_path}}/local"
-    - "{{cloud_path}}/remote"
+    - "{{cloud_path}}local"
+    - "{{cloud_path}}remote"
     
 - name: prepare nfs exported folder
   file:
@@ -30,15 +30,24 @@
     label: "{{item}}"
   with_items: "{{cloud_vpn.peers}}"
 
+- name: check nfs mount points
+  shell: "mount | grep {{cloud_path}}remote/{{item}}"
+  register: "nfs_mount_result"
+  changed_when: "nfs_mount_result.rc == 1"
+  failed_when: no
+  with_items: "{{cloud_vpn.peers}}"
+
 - name: prepare nfs mount points
   file:
-    path: "{{cloud_path}}/remote/{{item}}"
+    path: "{{cloud_path}}remote/{{item}}"
     state: directory
     owner: "root"
     group: "root"
     mode: 0750
   loop_control:
     label: "{{item}}"
+    index_var: "index"
+  when: "nfs_mount_result['results'][index].changed"
   with_items: "{{cloud_vpn.peers}}"
 
 - name: create fstab mount entries
