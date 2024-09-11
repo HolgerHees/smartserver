@@ -53,7 +53,7 @@ class Provider:
 
         schedule.every().hour.at("05:00").do(self.fetchInterval)
         if time.time() - self.last_fetch > 60 * 60:
-            schedule.every().second.do(self.fetchOneTime)
+            schedule.every(5).seconds.do(self.fetchOneTime)
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):

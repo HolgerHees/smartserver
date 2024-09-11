@@ -25,9 +25,9 @@ class MQTT(threading.Thread):
         self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
         self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg)
 
-        self.state = -1
-
         self.subscriber = {}
+
+        self.state = -1
 
     def start(self):
         self.is_running = True
@@ -52,11 +52,10 @@ class MQTT(threading.Thread):
     def on_connect(self,client,userdata,flags,rc):
         logging.info("Connected to mqtt with result code:"+str(rc))
         with self.lock:
-            if self.state == 0:
-                for topic in self.subscriber:
-                    self.mqtt_client.subscribe(topic)
-            #for topic in self.subscriber.keys():
-            self.state = 1
+            for topic in self.subscriber:
+                logging.info("Activate subscription for '{}'".format(topic))
+                self.mqtt_client.subscribe(topic)
+        self.state = 1
 
     def on_disconnect(self,client, userdata, rc):
         logging.info("Disconnect from mqtt with result code:"+str(rc))
@@ -72,15 +71,17 @@ class MQTT(threading.Thread):
     def subscribe(self, topic, callback):
         with self.lock:
             self.subscriber[topic] = callback
-            if self.state == 1:
+            if self.mqtt_client.is_connected():
+                logging.info("Subscribe for '{}'".format(topic))
                 self.mqtt_client.subscribe(topic)
+            else:
+                logging.info("Save subscribtion for '{}'".format(topic))
 
     def publish(self, topic, payload=None, qos=0, retain=False):
-        if self.state == 1:
-            self.mqtt_client.publish(topic, payload,qos,retain)
+        self.mqtt_client.publish(topic, payload,qos,retain)
 
     def isConnected(self):
-        return self.state == 1
+        return self.mqtt_client.is_connected()
 
     def getStateMetrics(self):
         return ["weather_service_state{{type=\"mqtt\"}} {}".format(self.state)]
