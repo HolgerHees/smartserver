@@ -82,8 +82,13 @@
 - name: allow container service
   vars:
     service_name: "dnsmasq"
-    container_to_outside_rules:
-      - { saddr: "{{podman_dns_ip}}", daddr: "{{ dns_forward_ip_addresses }}", dport: "53", comment: "dnsmasq => forwarded dns" }
+    container_to_outside_rules: |
+        [
+          { "saddr": "{{podman_dns_ip}}", "daddr": [ '{{ dns_forward_ip_addresses | join("','") }}' ], "dport": "53", "comment": "dnsmasq => forwarded dns" }
+          {% if dhcp_enabled and dhcp_type == 'pihole' %}
+            , { "saddr": "{{podman_dns_ip}}", "daddr": "{{ pihole_ip }}", "dport": "53", "comment": "dnsmasq => pihole reverse dns" }
+          {% endif %}
+        ]
     nat_rules: { ip: "{{podman_dns_ip}}", ports: "{{dnsmasq_published_ports}}" }
     instant_activation: True
   include_tasks: roles/firewall/shared/allow_service.yml
