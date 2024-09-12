@@ -406,7 +406,7 @@ for network in network_r:
                 if rule['sourceIp'] is not None:
                     if rule['targetIp'] is None:
                         targetIp = "host" if chain == 'SMARTSERVER_INPUT' and network.name not in ['host','macvlan'] else '*'
-                        access = "extern"
+                        access = "extern" if targetIp != "host" else "intern"
                     else:
                         targetIp = rule['targetIp']
                         if targetIp in dns_reverse_r:
