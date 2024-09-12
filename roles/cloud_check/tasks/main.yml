@@ -56,11 +56,11 @@
     service_name: "cloud_check"
     container_to_container_rules:
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_cloud_check_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => cloud_check" }
-      - { saddr: "{{podman_cloud_check_ip}}", daddr: "{{vpn_cloud_services.local.mosquitto}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "cloud_check => cloud_mosquitto" }
+    #  - { saddr: "{{podman_cloud_check_ip}}", daddr: "{{vpn_cloud_services['local']['mosquitto']}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "cloud_check => cloud_mosquitto" }
     container_to_outside_rules:
       - { saddr: "{{podman_cloud_check_ip}}", protocol: "tcp", dport: "80", oif: "{{default_network_interface}}", comment: "cloud_check => http endpoint of other clouds" }
       - { saddr: "{{podman_cloud_check_ip}}", protocol: "icmp", oif: "{{default_network_interface}}", comment: "cloud_check => icmp endpoint of other clouds" }
-      - { saddr: "{{podman_cloud_check_ip}}", daddr: "{{vpn_cloud_services['local']['mosquitto']}}", protocol: "tcp", dport: "1883", comment: "cloud_check => cloud mosquitto" }
+      - { saddr: "{{podman_cloud_check_ip}}", daddr: "{{vpn_cloud_services['local']['mosquitto']}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "cloud_check => cloud mosquitto" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
   

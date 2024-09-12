@@ -6,6 +6,7 @@ table bridge filter {
         {%- if 'saddr' in rule %}ip saddr {{ rule['saddr'] if rule['saddr'] is string else '{ ' + rule['saddr'] | join(', ') + ' }' }} {% endif %}
         {%- if 'daddr' in rule %}ip daddr {{ rule['daddr'] if rule['daddr'] is string else '{ ' + rule['daddr'] | join(', ') + ' }' }} {% endif %}
         {%- if 'dport' in rule %}th dport {{ rule['dport'] if rule['dport'] is string else '{ ' + rule['dport'] | join(', ') + ' }' }} {% endif %} 
+        {%- if 'dport' not in rule and 'protocol' in rule %}ip protocol {{ rule['protocol'] }} {% endif %}
         {%- if true %}accept comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
 
 {% endfor %}
@@ -21,6 +22,7 @@ table inet filter {
         {% if 'dport' in rule %}meta l4proto {{ rule['protocol'] if 'protocol' in rule else '{ udp, tcp }' }} {% endif %}
         {%- if 'saddr' in rule %}ip saddr {{ rule['saddr'] if rule['saddr'] is string else '{ ' + rule['saddr'] | join(', ') + ' }' }} {% endif %}
         {%- if 'dport' in rule %}th dport {{ rule['dport'] if rule['dport'] is string else '{ ' + rule['dport'] | join(', ') + ' }' }} {% endif %} 
+        {%- if 'dport' not in rule and 'protocol' in rule %}ip protocol {{ rule['protocol'] }} {% endif %}
         {%- if 'iif' in rule %}iif "{{ rule['iif'] }}" {% endif %}
         {%- if true %}accept comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
 
@@ -35,6 +37,7 @@ table inet filter {
         {%- if 'sport' in rule %}th sport {{ rule['sport'] if rule['sport'] is string else '{ ' + rule['sport'] | join(', ') + ' }' }} {% endif %}
         {%- if 'daddr' in rule %}ip daddr {{ rule['daddr'] if rule['daddr'] is string else '{ ' + rule['daddr'] | join(', ') + ' }' }} {% endif %}
         {%- if 'dport' in rule %}th dport {{ rule['dport'] if rule['dport'] is string else '{ ' + rule['dport'] | join(', ') + ' }' }} {% endif %}
+        {%- if 'dport' not in rule and 'sport' not in rule and 'protocol' in rule %}ip protocol {{ rule['protocol'] }} {% endif %}
         {%- if 'oif' in rule %}oif "{{ rule['oif'] }}" {% endif %}
         {%- if true %}accept comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
 
