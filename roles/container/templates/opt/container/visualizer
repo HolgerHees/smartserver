@@ -10,6 +10,24 @@ from textwrap import wrap
 
 from smartserver.processlist import Processlist
 
+TYPE_HEADLINE = 0
+TYPE_NETWORK = 1
+TYPE_CONTAINER = 2
+
+colors = {
+    TYPE_HEADLINE: [0,"1;37","1;37","1;37","1;37","1;37","1;37"],
+    TYPE_NETWORK: [0,"0;30;47","1;37;43","1;37;45","1;37;45","0;100","0;30;46"],
+    TYPE_CONTAINER: [0,"0;37","0;33","1;35","1;35","0;39","0;36"]
+}
+
+port_colors = {
+    "local": "0;37",
+    "intern": "0;32",
+    "extern": "0;91"
+}
+
+MAX_INCOMING_RULES_LENGTH = MAX_OUTGOING_RULES_LENGTH = 58
+
 class Network:
     def __init__(self,id,name,driver,scope):
         self.id = id
@@ -20,17 +38,14 @@ class Network:
         self.subnet = ""
         self.gateway = ""
         self.bridge = ""
-        self.is_internal = False
 
-    def addDetails(self,subnet,gateway,bridge,is_internal):
+    def addDetails(self,subnet,gateway,bridge):
         self.subnet = subnet
         self.gateway = gateway
         self.bridge = bridge
-        self.is_internal = is_internal
 
     def addConnection(self,connection):
-        key = connection.ip + " " + connection.container.type + ' ' + connection.container.name
-        self.connection_r[key] = connection
+        self.connection_r[connection.ip + connection.container.name] = connection
 
     def getConnection(self, container):
         for connection in self.connection_r.values():
@@ -39,8 +54,7 @@ class Network:
         return None
 
 class Container:
-    def __init__(self, type, name, sandboxKey, pids, interfaceResult):
-        self.type = type
+    def __init__(self, name, sandboxKey, pids, interfaceResult):
         self.name = name
         self.sandboxKey = sandboxKey
         self.pids = pids
@@ -50,6 +64,9 @@ class Container:
 
     def addPort(self, port, protocol):
         self.ports.append({"port": port, 'protocol': protocol})
+
+    def isService(self):
+        return self.sandboxKey is None
 
 class Connection:
     def __init__(self,container, ip, veth):
@@ -67,20 +84,34 @@ class Chain:
         self.name = name
         self.rule_r = []
 
-    def addRule(self, sourceIp, sourcePorts, targetIp, targetPorts, mode, type, interface):
-        self.rule_r.append({"chain": self.name, "sourceIp": sourceIp, "sourcePorts": sourcePorts, "targetIp": targetIp, "targetPorts": targetPorts, "mode": mode, "type": type, "interface": interface })
+    def addRule(self, sourceIp, sourcePorts, targetIp, targetPorts, mode, protocol, interface):
+        self.rule_r.append({"chain": self.name, "sourceIp": sourceIp, "sourcePorts": sourcePorts, "targetIp": targetIp, "targetPorts": targetPorts, "mode": mode, "protocol": protocol, "interface": interface })
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
-
-def messureLength(value):
-    return len(re.sub(r"\033\[[^m]*m","",value))
 
 def convertSetToArray(value):
     return value['set'] if isinstance(value, dict) and 'set' in value else [value]
 
 def detectAccess(ip, host_ip, interface = None):
     return "intern" if ip == host_ip or interface == "macvlan" else "local"
+
+def splitRulesIntoRows(rules, sort_lambda, max_length):
+    values = list(set(rules.keys()))
+    if sort_lambda is not None:
+        values.sort(key=sort_lambda)
+    else:
+        values.sort()
+    values = list(map(lambda x: x.replace(' ', '°'), values))
+    return wrap(", ".join(values), max_length )
+
+def convertRowToArray(rows, rules):
+    array = []
+    if len(rows) > 0:
+        values = rows.pop(0).strip(',').replace('°', ' ').split(", ")
+        for value in values:
+            array.append(rules[value])
+    return array
 
 # Collect ip addresses
 ip_list = execCommand("ip a").stdout.decode("utf-8")
@@ -110,17 +141,16 @@ for network_json in networks_json:
 
     subnet = network_json['subnets'][0]['subnet']
     gateway = network_json['subnets'][0]['gateway']
-    is_internal = network_json['internal']
 
     result = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)
     if len(result)>0:
         bridge_device = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)[0].split()[-1]
     else:
         bridge_device = host_device
-    network.addDetails(subnet,gateway,bridge_device,is_internal)
+    network.addDetails(subnet,gateway,bridge_device)
 
 network = Network('host', 'host', 'host',"local")
-network.addDetails(host_subnet,host_gateway,host_device,False)
+network.addDetails(host_subnet,host_gateway,host_device)
 network_r[network.name]=network
 
 container_r = {}
@@ -135,8 +165,6 @@ container_names = result.stdout.decode("utf-8").split("\n")
 containers_result = execCommand("podman inspect {}".format(" ".join(container_names)))
 containers_json = json.loads(containers_result.stdout.decode("utf-8"))
 for container_json in containers_json:
-    #container_json_dict[container_json["Name"][1:]] = container_json
-
     name = container_json['Name']
 
     if name in container_r:
@@ -148,18 +176,12 @@ for container_json in containers_json:
         if "ConmonPid" in container_json["State"]:
             pids.append( str(container_json["State"]["ConmonPid"]) )
 
-        container = Container("Container", name, sandboxKey, pids, interfaceResult.stdout.decode("utf-8").strip())
+        container = Container(name, sandboxKey, pids, interfaceResult.stdout.decode("utf-8").strip())
         container_r[name] = container
 
         for portKey in container_json['NetworkSettings']['Ports']:
             port,protocol = portKey.split("/")
             container.addPort(port, protocol)
-
-            #if container_json['NetworkSettings']['Ports'][portKey] is not None:
-            #    hostIp = container_json['NetworkSettings']['Ports'][portKey][0]['HostIp']
-            #    hostPort = container_json['NetworkSettings']['Ports'][portKey][0]['HostPort']
-            #    container.addPublishedPort(hostIp, hostPort, protocol)
-
 
     for networkName in container_json['NetworkSettings']['Networks']:
         network = network_r[networkName]
@@ -223,7 +245,7 @@ for line in nftables_rules['nftables']:
     target_ips = [None]
     target_ports = None
     mode = "DROP"
-    type = None # tcp, udp, icmp etc
+    protocol = None # tcp, udp, icmp etc
     interface = None
 
     #print(line)
@@ -233,28 +255,27 @@ for line in nftables_rules['nftables']:
                 continue
 
             if 'payload' in part['match']['left']:
-                protocol = part['match']['left']['payload']['protocol']
                 field = part['match']['left']['payload']['field']
                 value = part['match']['right']
 
                 if field == 'protocol':
-                    type = value
+                    protocol = value
                 elif field == 'saddr':
                     source_ips = convertSetToArray(value)
                 elif field == 'daddr':
                     target_ips = convertSetToArray(value)
                 elif field == 'sport':
                     source_ports = list(map(str, convertSetToArray(value)))
-                    type = protocol
+                    protocol = part['match']['left']['payload']['protocol']
                 elif field == 'dport':
                     target_ports = list(map(str, convertSetToArray(value)))
-                    type = protocol
+                    protocol = part['match']['left']['payload']['protocol']
             elif 'meta' in part['match']['left']:
                 key = part['match']['left']['meta']['key']
                 if key == 'l4proto':
                     protocols = part['match']['right']['set'] if 'set' in part['match']['right'] else part['match']['right']
                     if len(protocols) == 1:
-                        type = protocols[0]
+                        protocol = protocols[0]
                 elif key == 'oif':
                     interface = part['match']['right']
 
@@ -269,7 +290,7 @@ for line in nftables_rules['nftables']:
             if target_ip is not None and 'prefix' in target_ip:
                 target_ip = target_ip['prefix']['addr'] + '/' + str(target_ip['prefix']['len'])
 
-            chain.addRule(source_ip, source_ports, target_ip, target_ports, mode, type, interface)
+            chain.addRule(source_ip, source_ports, target_ip, target_ports, mode, protocol, interface)
 
 # collect all pids from containers
 pid_container_map = {}
@@ -302,8 +323,6 @@ for name in container_r:
 # collect all open ports
 ss_list = execCommand("ss -l -t -u -p -n").stdout.decode("utf-8").strip().split("\n")
 for ss_data in ss_list:
-    #ss_data = ss_data.split(" ")
-
     match = re.match("^(udp|tcp)\s+(UNCONN|LISTEN)\s+.*?\s+([^\s]*?\:[0-9]+)\s+(.*)", ss_data)
     if not match:
         continue
@@ -314,8 +333,6 @@ for ss_data in ss_list:
     match = re.match("^.*?pid=([0-9]+)", match[4])
     pid = match[1] if match else None
 
-    #print("found: {}:{} as pid {}".format(host, port, pid))
-
     if host == '*' or host == "0.0.0.0":
         host = host_ip
     elif host[0] == '[' and host[-1] == ']':
@@ -325,7 +342,6 @@ for ss_data in ss_list:
         host = match.group(1)
 
     if host not in [host_ip,"127.0.0.1"]:
-        #print("skip: {}:{} as pid {}".format(host, port, pid))
         continue
 
     # currently it is not possible to get pid from wireguard_mobile in host mode
@@ -338,7 +354,7 @@ for ss_data in ss_list:
             if service[0:6] == "python":
                 service = Processlist.getCmdLine(pid).rsplit("/", 1)[1]
 
-            container = Container("Service", service, None, None, None)
+            container = Container(service, None, None, None)
             container_r[name] = container
             pid_container_map[pid] = container
         else:
@@ -347,49 +363,24 @@ for ss_data in ss_list:
     network = network_r['host']
     connection = network.getConnection(container)
     if not connection:
-        connection = Connection(container, host_ip, "forwarded" if container.type == "Container" else "host")
+        connection = Connection(container, host_ip, "host" if container.isService() else "forwarded")
         network.addConnection(connection)
 
     connection.addPort(port, protocol, detectAccess(host, host_ip))
 
-TYPE_HEADLINE = 0
-TYPE_NETWORK = 1
-TYPE_CONTAINER = 2
-
-colors = {
-    TYPE_HEADLINE: [0,"1;37","1;37","1;37","1;37","1;37","1;37"],
-    TYPE_NETWORK: [0,"0;30;47","1;37;43","1;37;45","1;37;45","0;100","0;30;46"],
-    TYPE_CONTAINER: [0,"0;37","0;33","1;35","1;35","0;39","0;36"]
-}
-
-port_colors = {
-    "local": "0;37",
-    "intern": "0;32",
-    "extern": "0;91"
-}
-
-MAX_INCOMING_RULES_LENGTH = MAX_OUTGOING_RULES_LENGTH = 58
-
 # Prepare column values
 rows = [[TYPE_HEADLINE,"Type","Name","Network","Outgoing (local, intern, extern) traffic allowed","Incomming (local, intern, extern) traffic allowed","Interface"]]
 
-sorted_network_r = list(network_r)
-#sorted_network_r.sort(key=lambda item: socket.inet_aton(network_r[item].gateway) if network_r[item].gateway else socket.inet_aton("0.0.0.0"), reverse=False)
-
-for network in sorted_network_r:
+for network in network_r:
     network = network_r[network]
 
     if len(network.connection_r) == 0:
         continue
 
-    subnet_msg = u"{}{}".format(network.subnet," (internal)" if network.is_internal else "")
-
-    rows.append([TYPE_NETWORK,"Network",network.name,network.gateway,subnet_msg,"",network.bridge])
+    rows.append([TYPE_NETWORK,"Network",network.name,network.gateway,network.subnet,"",network.bridge])
 
     key_r = list(network.connection_r.keys())
-
     key_r.sort(key=lambda item: network.connection_r[item].container.name, reverse=False)
-    #key_r.sort(key=lambda item: socket.inet_aton(network.connection_r[item].ip), reverse=False)
 
     for key in key_r:
         connection = network.connection_r[key]
@@ -431,8 +422,9 @@ for network in sorted_network_r:
                             sourcePorts = rule['sourcePorts']
                             value += ":" + ( sourcePorts[0] if len(sourcePorts) == 1 else "[" + ",".join(sourcePorts) + "]" )
                         if rule['interface'] is not None:
-                            value += ":" + rule['interface']
-
+                            if value != "":
+                                value += " ➞ "
+                            value += rule['interface']
                         if value != "":
                             value += " ➞ "
 
@@ -441,8 +433,8 @@ for network in sorted_network_r:
                         if rule['targetPorts'] is not None:
                             targetPorts = rule['targetPorts']
                             value += ":" + ( targetPorts[0] if len(targetPorts) == 1 else "[" + ",".join(targetPorts) + "]" )
-                        elif rule['type'] is not None:
-                            value += ":" + rule['type']
+                        elif rule['protocol'] is not None:
+                            value += ":" + rule['protocol']
 
                     elif ipaddress.ip_address(connection.ip) in ipaddress.ip_network(rule['sourceIp']):
                         value = targetIp
@@ -450,6 +442,7 @@ for network in sorted_network_r:
                         value = None
 
                     if value is not None:
+                        value = value.strip()
                         outgoingRules[value] = {
                           "value": value,
                           "access": access
@@ -472,32 +465,16 @@ for network in sorted_network_r:
                                 if data['port'] in rule['targetPorts'] and (sourceIp is None or not ipaddress.ip_address(sourceIp).is_private):
                                     data["access"] = "extern"
 
-        outgoingRulesValues = list(set(outgoingRules.keys()))
-        #outgoingRulesValues.sort(key=lambda x: int(x.split('/')[0]))
-        outgoingRulesValues = list(map(lambda x: x.replace(' ', '°'), outgoingRulesValues))
-        outgoingRulesRows = wrap(", ".join(outgoingRulesValues), MAX_OUTGOING_RULES_LENGTH )
-
-        incomingRulesValues = list(set(incomingRules.keys()))
-        incomingRulesValues.sort(key=lambda x: int(x.split('/')[0]))
-        incomingRulesValues = list(map(lambda x: x.replace(' ', '°'), incomingRulesValues))
-        incomingRulesRows = wrap( ", ".join(incomingRulesValues), MAX_INCOMING_RULES_LENGTH )
+        outgoingRulesRows = splitRulesIntoRows(outgoingRules, None, MAX_OUTGOING_RULES_LENGTH)
+        incomingRulesRows = splitRulesIntoRows(incomingRules, lambda x: int(x.split('/')[0]), MAX_INCOMING_RULES_LENGTH)
 
         firstRow = True
         while len(outgoingRulesRows) > 0 or len(incomingRulesRows) > 0:
-            outgoingRulesArray = []
-            if len(outgoingRulesRows) > 0:
-                outgoingRulesAsValues = outgoingRulesRows.pop(0).strip(',').replace('°', ' ').split(", ")
-                for outgoingRulesAsValue in outgoingRulesAsValues:
-                    outgoingRulesArray.append(outgoingRules[outgoingRulesAsValue.strip()])
-
-            incomingRulesArray = []
-            if len(incomingRulesRows) > 0:
-                incomingRulesAsValues = incomingRulesRows.pop(0).strip(',').replace('°', ' ').split(", ")
-                for incomingRulesAsValue in incomingRulesAsValues:
-                    incomingRulesArray.append(incomingRules[incomingRulesAsValue.strip()])
+            outgoingRulesArray = convertRowToArray(outgoingRulesRows, outgoingRules)
+            incomingRulesArray = convertRowToArray(incomingRulesRows, incomingRules)
 
             if firstRow:
-                rows.append([TYPE_CONTAINER, container.type, container.name, connection.ip, outgoingRulesArray, incomingRulesArray, connection.veth])
+                rows.append([TYPE_CONTAINER, "Service" if container.isService() else "Container", container.name, connection.ip, outgoingRulesArray, incomingRulesArray, connection.veth])
                 firstRow = False
             else:
                 rows.append([TYPE_CONTAINER, "", "", "", outgoingRulesArray, incomingRulesArray, ""])
@@ -507,13 +484,13 @@ columnLength = [0] * len(rows[0])
 for row in rows:
     for i in range(1,len(row)):
         if isinstance(row[i], str):
-            length = messureLength(row[i])
+            length = len(row[i])
             if length > columnLength[i]:
                 columnLength[i] = length
         else:
             length = 0
             for _row in row[i]:
-                length += messureLength(_row['value']) + 2
+                length += len(_row['value']) + 2
             if length > columnLength[i]:
                 columnLength[i] = length
 
