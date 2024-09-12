@@ -12,14 +12,17 @@ class Helper():
     def _executeCmd(cmd):
         returncode, cmd_result = command.exec2(cmd)
         if returncode != 0:
+            logging.error("Cmd '{}' was not successful".format(" ".join(cmd)))
             logging.error("CODE: {}".format(returncode))
             logging.error("RESULT: {}".format(cmd_result))
-            raise Exception("Cmd '{}' was not successful".format(" ".join(cmd)))
+            cmd_result = None
         return cmd_result
 
     @staticmethod
     def _fetchBlockedIps(result, cmd, regex):
         cmd_result = Helper._executeCmd(cmd)
+        if cmd_result is None:
+            return
         for row in cmd_result.split("\n"):
             if "trafficblocker" not in row:
                 continue
@@ -44,6 +47,8 @@ class Helper():
     def unblockIp(config, ip):
         handle = None
         cmd_result = Helper._executeCmd(["/usr/sbin/nft", "-a", "list", "chain", "inet", "filter", "SMARTSERVER_BLOCKER"])
+        if cmd_result is None:
+            return
 
         handle_r = []
         for row in cmd_result.split("\n"):
