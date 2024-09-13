@@ -9,6 +9,8 @@ import json
 from textwrap import wrap
 
 from smartserver.processlist import Processlist
+from smartserver import nsenter
+
 
 TYPE_HEADLINE = 0
 TYPE_NETWORK = 1
@@ -54,11 +56,10 @@ class Network:
         return None
 
 class Container:
-    def __init__(self, name, sandboxKey, pids, interfaceResult):
+    def __init__(self, name, sandboxKey, pids):
         self.name = name
         self.sandboxKey = sandboxKey
         self.pids = pids
-        self.interfaceResult = interfaceResult
 
         self.ports = []
 
@@ -164,19 +165,23 @@ result = execCommand("podman ps -a --format='{{.Names}}'")
 container_names = result.stdout.decode("utf-8").split("\n")
 containers_result = execCommand("podman inspect {}".format(" ".join(container_names)))
 containers_json = json.loads(containers_result.stdout.decode("utf-8"))
+
+_interface_result_r = {}
 for container_json in containers_json:
     name = container_json['Name']
 
     if name in container_r:
         container = container_r[name]
     else:
-        sandboxKey = container_json['NetworkSettings']['SandboxKey']
-        interfaceResult = execCommand("nsenter --net={} ip a".format(sandboxKey))
         pids = [ str(container_json["State"]["Pid"]) ]
         if "ConmonPid" in container_json["State"]:
             pids.append( str(container_json["State"]["ConmonPid"]) )
 
-        container = Container(name, sandboxKey, pids, interfaceResult.stdout.decode("utf-8").strip())
+        sandboxKey = container_json['NetworkSettings']['SandboxKey']
+
+        _interface_result_r[name] = "" if sandboxKey == '' else execCommand("nsenter --net={} ip a".format(sandboxKey)).stdout.decode("utf-8").strip()
+
+        container = Container(name, sandboxKey, pids)
         container_r[name] = container
 
         for portKey in container_json['NetworkSettings']['Ports']:
@@ -191,7 +196,7 @@ for container_json in containers_json:
             ip = host_ip
             veth = "host"
         else:
-            interfaceList = re.findall("inet.*", container.interfaceResult, flags=re.MULTILINE)
+            interfaceList = re.findall("inet.*", _interface_result_r[name], flags=re.MULTILINE)
             network_subnet = ipaddress.ip_network(network.subnet, strict=False)
             for interface in interfaceList:
                 columns = interface.split(" ")
@@ -354,7 +359,7 @@ for ss_data in ss_list:
             if service[0:6] == "python":
                 service = Processlist.getCmdLine(pid).rsplit("/", 1)[1]
 
-            container = Container(service, None, None, None)
+            container = Container(service, None, None)
             container_r[name] = container
             pid_container_map[pid] = container
         else:
