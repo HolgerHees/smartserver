@@ -374,7 +374,7 @@ for ss_data in ss_list:
     connection.addPort(port, protocol, detectAccess(host, host_ip))
 
 # Prepare column values
-rows = [[TYPE_HEADLINE,"Type","Name","Network","Outgoing (local, intern, extern) traffic allowed","Incomming (local, intern, extern) traffic allowed","Interface"]]
+rows = [[TYPE_HEADLINE,"Type","Name","Network","Outgoing (local, intern, extern) traffic allowed","Incoming (local, intern, extern) traffic allowed","Interface"]]
 
 for network in network_r:
     network = network_r[network]
