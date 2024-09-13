@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    libreoffice_version: "24.04.7.1.2"
+    libreoffice_version: "24.04.7.2.1"
   tags: [ 'update_notifier_config' ]
 
 #- name: prepare needed directories
