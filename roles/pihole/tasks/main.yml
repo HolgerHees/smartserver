@@ -71,6 +71,8 @@
     container_capabilities:
       - net_admin
     container_network: "macvlan"
+    container_dns:
+      - "{{default_server_ip}}"
     container_ip: "{{pihole_ip}}"
     container_ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"
     container_exposed_ports:

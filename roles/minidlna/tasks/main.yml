@@ -40,6 +40,8 @@
     container_image: "custom_minidlna:{{alpine_version}}"
     container_user: "{{system_users['www'].id}}:{{system_groups['www'].id}}"
     container_network: "macvlan"
+    container_dns:
+      - "{{default_server_ip}}"
     container_ip: "{{dlna_ip}}"
     container_ip6: "{{dlna_ipv6 if dlna_ipv6 is defined else ''}}"
     container_exposed_ports:
