@@ -41,7 +41,9 @@
       {% if container_no_healthcheck is defined and container_no_healthcheck %}
         "--no-healthcheck",
       {% endif %}
+      {% if container_network != "host" %}
         "--hostname {{container_name}}",
+      {% endif %}
         "--network {{container_network}}{% if container_network != "host" %} --ip {{container_ip}}{% if container_ip6 | default(false) %} --ipv6 {{container_ip6}}{% endif %}{% endif %}",
       {% for value in container_dns | default([]) %}
         "--dns={{value}}",
