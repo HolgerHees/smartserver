@@ -1,7 +1,7 @@
 FROM php:{{php_version}}-fpm
 
 RUN apt-get update && \
-  apt-get install -y sudo \
+  apt-get install -y --no-install-recommends \
 # preview generator nextcloud
   ffmpeg \
 # GMP => needed by nextcloud bookmarks
@@ -15,6 +15,8 @@ RUN apt-get update && \
 # GD Image library with freetype support
   libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev && \
 
+# used for pecl install
+  export MAKEFLAGS="-j $(nproc)" && \
 
   docker-php-ext-enable opcache && \
   docker-php-ext-install -j$(nproc) pcntl && \
@@ -42,7 +44,7 @@ RUN apt-get update && \
 #    https://github.com/Imagick/imagick/pull/641
 #    28f27044e435a2b203e32675e942eb8de620ee58 => 10.09.2024
   cd /tmp && \
-  git clone https://github.com/Imagick/imagick.git && \
+  git clone --single-branch --branch master https://github.com/Imagick/imagick.git && \
   cd /tmp/imagick && \
   git checkout 28f27044e435a2b203e32675e942eb8de620ee58 && \
   pecl install /tmp/imagick/package.xml && \
