@@ -223,15 +223,16 @@ class DHCPListener(threading.Thread):
                             client_dns = self.cache.nslookup(client_ip)
 
                             self.cache.lock(self)
+                            logging.info("New dhcp request for {} detected".format(client_ip))
 
                             device = self.cache.getDevice(client_mac)
                             device.setIP("dhcp_listener", 75, client_ip)
                             device.setDNS("nslookup", 1, client_dns)
                             self.cache.confirmDevice( self, device )
-                            logging.info("New dhcp request for {}".format(device))
 
                             self.arpscanner._refreshDevice( device, True )
 
+                            logging.info("New dhcp request for {} processed".format(client_ip))
                             self.cache.unlock(self)
 
                         except Exception as e:
@@ -430,8 +431,8 @@ class ArpScanner(_handler.Handler):
             duration = round((datetime.now() - startTime).total_seconds(),2)
             if answering_mac is not None:
                 validated = answering_mac == device.getMAC()
-                logging.info("Device {} is {} online. Checked with {} in {} seconds".format(device,"validated" if validated else "unvalidated", " & ".join(methods),duration))
                 self.cache.lock(self)
+                logging.info("Device {} is {} online. Checked with {} in {} seconds".format(device,"validated" if validated else "unvalidated", " & ".join(methods),duration))
                 self._refreshDevice(device, validated)
                 self.cache.unlock(self)
                 return
