@@ -280,9 +280,9 @@
     masked: no
 
 # necessary for instant activated macvlan based containers
-- name: instant activate macvlan
+- name: instant activate macvlan_bridge
   systemd:
-    name: macvlan
+    name: macvlan_bridge
     state: started
     daemon_reload: yes
   when: "macvlan_service_state.changed"
