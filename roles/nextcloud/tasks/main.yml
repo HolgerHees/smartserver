@@ -1,12 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '29.0.7' # patches in "enable_apps" beim nächsten Update überprüfen
-
-    # 1. check for news update (blocker)
-    # 2. upgrade keeweb at the same time
-    # 3. PHP can be updated after too, to version 8.3
-    #nextcloud_version: '28.0.1'
+    nextcloud_version: '30.0.0' # patches in "enable_apps" beim nächsten Update überprüfen
   tags: [ 'update_notifier_config', 'user' ]
 
 # ***** PREPARE FOLDER *****
