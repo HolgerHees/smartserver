@@ -111,7 +111,7 @@
     group: root
     mode: 0644
   tags: ['systemd_service_config']
-  notify: "restart {{trigger_name | default(container_name)}}"
+  notify: "restart {{container_name}}"
 
 - name: "container : create_podman_service : register systemd service watcher"
   vars:

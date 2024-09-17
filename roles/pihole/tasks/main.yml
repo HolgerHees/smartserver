@@ -158,3 +158,11 @@
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
+
+- name: force pihole restart
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: pihole
+  when: "podman_service_container_changed"
+
