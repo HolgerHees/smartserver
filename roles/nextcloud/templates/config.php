@@ -43,29 +43,16 @@ $CONFIG = array (
   'enabledPreviewProviders' => array (
     'OC\Preview\Movie',
     'OC\Preview\Image',
-#    'OC\Preview\Office',
     'OC\Preview\TXT',
     'OC\Preview\SVG',
     'OC\Preview\Bitmap',
-#    'OC\Preview\Bundled',
   ),
-#  'enabledPreviewProviders' => array (
-#    0 => 'OC\\Preview\\PNG',
-#    1 => 'OC\\Preview\\JPEG',
-#    2 => 'OC\\Preview\\GIF',
-#    3 => 'OC\\Preview\\BMP',
-#    4 => 'OC\\Preview\\XBitmap',
-#    5 => 'OC\\Preview\\MP3',
-#    6 => 'OC\\Preview\\TXT',
-#    7 => 'OC\\Preview\\MarkDown',
-#    8 => 'OC\\Preview\\PDF',
-#  ),
   'filesystem_check_changes' => 1,
-  'memcache.local' => '\\OC\\Memcache\\APCu',
   'filelocking.enabled' => true,
+  'memcache.local' => '\\OC\\Memcache\\APCu',
+  'memcache.distributed' => '\\OC\\Memcache\\Redis',
   'memcache.locking' => '\\OC\\Memcache\\Redis',
-  'redis' => 
-  array (
+  'redis' => array (
     'host' => 'redis',
     'port' => 6379,
     'timeout' => 0,
