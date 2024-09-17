@@ -159,6 +159,7 @@
 
     - { import_role: { name: nextcloud },                                                    tags: [ 'nextcloud' ],                                          when: "nextcloud_enabled" }                        # private cloud
     - { import_role: { name: nextcloud_libreoffice },                                        tags: [ 'nextcloud_libreoffice' ],                              when: "nextcloud_enabled" }                        # office editor
+    - { import_role: { name: nextcloud_imaginary },                                          tags: [ 'nextcloud_imaginary' ],                                when: "nextcloud_enabled" }                        # image preview generator
 
     - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mariadb_enabled" }                            # phpMyAdmin
     #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mariadb_enabled" }                           # Adminer

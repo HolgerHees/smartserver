@@ -1,0 +1,8 @@
+- name: restart imaginary
+  systemd:
+    name: imaginary
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart imaginary"

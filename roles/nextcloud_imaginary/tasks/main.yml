@@ -1,0 +1,22 @@
+- name: create container service
+  vars:
+    container_name: "imaginary"
+    container_image: "nextcloud/aio-imaginary"
+    container_network: "isolated"
+    container_ip: "{{podman_imaginary_ip}}"
+    container_exposed_ports:
+      - "9000"
+    container_capabilities:
+      - "sys_nice"
+    #container_command: "-cpus 4 -concurrency 80"
+    container_readyness: { "type": "port_check", "ip": "{{podman_imaginary_ip}}", "port": "9000" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+- name: allow container service
+  vars:
+    service_name: "imaginary"
+    container_to_container_rules:
+      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_imaginary_ip}}", protocol: "tcp", dport: "9000", comment: "php => imaginary" }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
