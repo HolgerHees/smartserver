@@ -226,14 +226,22 @@
   notify: "restart macvlan_bridge"
   when: "macvlan_range | length > 0"
 
-- name: "create systemd service for 'macvlan_bridge'"
+- name: create systemd service for 'macvlan_bridge'
   template:
     src: "templates/macvlan_bridge.service"
     dest: "/etc/systemd/system/macvlan_bridge.service"
     owner: root
     group: root
     mode: 0644
+  register: "macvlan_service_state"
   notify: "restart macvlan_bridge"
+  when: "macvlan_range | length > 0"
+
+- name: trigger macvlan_bridge handler
+  vars:
+    notify: "restart macvlan_bridge"
+    service: "macvlan_bridge"
+  include_tasks: roles/_shared/service_check.yml
   when: "macvlan_range | length > 0"
 
 # ***** FINALIZE *****
@@ -264,16 +272,17 @@
   tags: ['systemd_watcher_config']
   when: "monitoring_enabled and macvlan_range | length > 0"
 
-- name: trigger macvlan_bridge handler
-  vars:
-    notify: "restart macvlan_bridge"
-    service: "macvlan_bridge"
-  include_tasks: roles/_shared/service_check.yml
-  when: "macvlan_range | length > 0"
-
 - name: enable podman
   systemd:
     name: podman
     daemon_reload: yes
     enabled: yes
     masked: no
+
+# necessary for instant activated macvlan based containers
+- name: instant activate macvlan
+  systemd:
+    name: macvlan
+    state: started
+    daemon_reload: yes
+  when: "macvlan_service_state.changed"

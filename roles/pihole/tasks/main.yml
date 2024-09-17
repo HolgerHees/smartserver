@@ -159,10 +159,10 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-- name: force pihole restart
+- name: instant activate pihole
   systemd:
-    state: restarted
-    daemon_reload: yes
     name: pihole
+    state: started
+    daemon_reload: yes
   when: "podman_service_container_changed"
 
