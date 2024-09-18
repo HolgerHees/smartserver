@@ -167,7 +167,7 @@
   vars:
     service_name: "wireguard_mobile"
     container_to_outside_rules:
-      - { saddr: "{ {{ vpn_admin_ips | join(', ')}} }", protocol: "udp", comment: "vpn admin clients" }
+      - { saddr: "{ {{ vpn_admin_ips | join(', ')}} }", comment: "vpn admin clients" }
     network_to_host_rules:
       - { protocol: "udp", dport: "{{mobile_vpn_internal_port}}", comment: "open vpn port" }
     masquerading_rules: |
