@@ -22,7 +22,10 @@ CLONE_NEWNET    = 0x40000000   # New network namespace
 def Host():
     #"/usr/bin/nsenter", "-t", "1", "-m", "-u", "-n", "-i"
     #  |
-    return Namespace(1, CLONE_NEWNS | CLONE_NEWCGROUP | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWNET )
+    return Process(1)
+
+def Process(pid):
+    return Namespace(pid, CLONE_NEWNS | CLONE_NEWCGROUP | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWNET )
 
 class Namespace(object):
     _libc = ctypes.CDLL(ctypes.util.find_library('c'), use_errno=True)

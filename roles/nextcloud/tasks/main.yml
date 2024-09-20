@@ -219,23 +219,34 @@
   with_items: "{{userdata}}"
 
 # ***** FINALIZE *****
-- name: create cron job
+- name: create cron job 'cron.php'
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock podman exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
     group: "nextcloud"
     log: "cron"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
 
-- name: create cron job
+- name: create cron job 'files:scan'
   vars:
     name: "Nextcloud Fileindex"
-    cmd: "podman exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
+    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
     group: "nextcloud"
     log: "file_scan"
     hour: "1"
+    minute: "0"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
+
+- name: create cron job 'generate-all'
+  vars:
+    name: "Nextcloud Preview"
+    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
+    group: "nextcloud"
+    log: "preview_generator"
+    hour: "2"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']

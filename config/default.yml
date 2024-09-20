@@ -731,6 +731,7 @@ podman_prometheus_ip:             "172.16.0.114"
 podman_grafana_ip:                "172.16.0.115"
 podman_samba_ip:                  "172.16.0.116"
 podman_imaginary_ip:              "172.16.0.117"
+podman_nextcloud_service_ip:      "172.16.0.118"
 
 podman_weather_service_ip:        "172.16.0.201"
 podman_cloud_check_ip:            "172.16.0.202"

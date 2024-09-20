@@ -1,11 +1,13 @@
 import struct
 import threading
+import errno
 from ctypes import CFUNCTYPE, CDLL, get_errno, c_int, c_char_p, c_uint32
 from termios import FIONREAD
 from fcntl import ioctl
 from time import sleep
 from functools import reduce
 import os
+import logging
 
 # https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/observers/inotify_c.py
 # https://github.com/seb-m/pyinotify/blob/master/python3/pyinotify.py
@@ -151,6 +153,8 @@ class INotify(threading.Thread):
         if inotify_rm_watch(self._inotify_fd, wd) == -1:
             INotify._raise_error()
 
+        #logging.info("rm_watch: " + str(path) + " " + str(wd))
+
         del self._wd_for_path[path]
         del self._path_for_wd[wd]
 
@@ -164,9 +168,10 @@ class INotify(threading.Thread):
             event_buffer = os.read(self._inotify_fd, bytes_avail.value)
 
             for wd, mask, cookie, name in INotify._parse_event_buffer(event_buffer):
-                if wd == -1:
+                if wd == -1 or mask & Constants.IN_IGNORED:
                     continue
 
+                #logging.info(INotifyEvent._get_mask_string(mask) + " " + str(name) + " " + str(wd))
                 self.callback(INotifyEvent(wd, mask, cookie, name, self._path_for_wd[wd]))
 
         try:

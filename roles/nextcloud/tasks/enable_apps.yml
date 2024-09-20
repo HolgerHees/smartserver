@@ -130,10 +130,10 @@
   with_items: "{{user_saml_configs}}"
 
 # ***** PREVIEW GENERATOR CRON JOB *****
-- name: create previewgenerator incremental cron job
+- name: create cron job 'preview:pre-generate'
   vars:
     name: "Nextcloud Previewupdates"
-    cmd: "podman exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
+    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
     group: "nextcloud"
     log: "preview_generator"
     minute: "*/15"
