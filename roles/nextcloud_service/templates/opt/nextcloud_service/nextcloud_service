@@ -151,8 +151,9 @@ class Handler(Server):
 
                 with self.lock:
                     found = False
-                    for marked_directory, marked_time in self.marked_directories:
-                        if directory.startswith(marked_directory):
+                    for _data in self.marked_directories:
+                        if directory.startswith(_data[0]):
+                            _data[1] = time.time()
                             found = True
                             break
 
