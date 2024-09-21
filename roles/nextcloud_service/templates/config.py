@@ -6,3 +6,6 @@ watched_directories = [
 
 enter_cmd = [ "podman", "exec", "--user={{system_users['www'].name}}", "php", "sh", "-c" ]
 notify_cmd = [ "php", "-f", "{{htdocs_path}}nextcloud/occ" ]
+
+redis_host = "redis"
+redis_port = "6379"

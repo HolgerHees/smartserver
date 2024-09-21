@@ -1,0 +1,11 @@
+groups:
+- name: nextcloud_service
+  rules:
+  - alert: Nextcloud service process crashed
+    expr: 'nextcloud_service_process{job="queue"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "nextcloud_service"
+      severity: critical
+    annotations:
+      summary: "Queue process crashed"

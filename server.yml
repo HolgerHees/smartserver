@@ -160,7 +160,7 @@
     - { import_role: { name: nextcloud },                                                    tags: [ 'nextcloud' ],                                          when: "nextcloud_enabled" }                        # private cloud
     - { import_role: { name: nextcloud_libreoffice },                                        tags: [ 'nextcloud_libreoffice' ],                              when: "nextcloud_enabled" }                        # office editor
     - { import_role: { name: nextcloud_imaginary },                                          tags: [ 'nextcloud_imaginary' ],                                when: "nextcloud_enabled" }                        # image preview generator
-    #- { import_role: { name: nextcloud_service },                                            tags: [ 'nextcloud_service' ],                                  when: "nextcloud_enabled" }                        # inotify watcher
+    - { import_role: { name: nextcloud_service },                                            tags: [ 'nextcloud_service' ],                                  when: "nextcloud_enabled" }                        # inotify watcher
 
     - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mariadb_enabled" }                          # phpMyAdmin
     #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mariadb_enabled" }                          # Adminer
@@ -201,7 +201,7 @@
 
     - { import_role: { name: librenms, tasks_from: apply_config, handlers_from: empty },     tags: [ 'librenms', 'librenms_config' ],                        when: "librenms_enabled" }                         # apply librenms configs
 
-    - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty },     tags: [ 'nextcloud', 'nextcloud_apps' ],                        when: "nextcloud_enabled" }                        # enable nextcloud apps
+    - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: apps },      tags: [ 'nextcloud', 'nextcloud_apps' ],                        when: "nextcloud_enabled" }                        # enable nextcloud apps
 
     - { import_role: { name: influxdb, tasks_from: create_users, handlers_from: empty },     tags: [ 'influxdb', 'influxdb_users' ],                         when: "influxdb_enabled"}                          # create influxdb users
 

@@ -70,17 +70,18 @@
     service_name: "nextcloud_service"
     container_to_container_rules:
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_nextcloud_service_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => nextcloud_service" }
+      - { saddr: "{{podman_nextcloud_service_ip}}", daddr: "{{podman_redis_ip}}", protocol: "tcp", dport: "6379", comment: "nextcloud_service => redis" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
   
-#- name: register prometheus rules & metrics
-#  vars:
-#    name: "nextcloud_service"
-#    rules_file: "templates/prometheus/rules.yml"
-#    scrape_file: "templates/prometheus/scrape.yml"
-#  include_tasks: roles/prometheus/shared/add_config.yml
-#  tags: ['prometheus_config']
-#  when: "monitoring_enabled"
+- name: register prometheus rules & metrics
+  vars:
+    name: "nextcloud_service"
+    rules_file: "templates/prometheus/rules.yml"
+    scrape_file: "templates/prometheus/scrape.yml"
+  include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
+  when: "monitoring_enabled"
 
 - name: copy service fluentd config
   vars:

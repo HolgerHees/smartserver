@@ -240,16 +240,16 @@
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
 
-- name: create cron job 'generate-all'
-  vars:
-    name: "Nextcloud Preview"
-    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
-    group: "nextcloud"
-    log: "preview_generator"
-    hour: "2"
-    minute: "0"
-  include_tasks: roles/cron/shared/add_cronjob.yml
-  tags: ['cron_job']
+#- name: create cron job 'generate-all'
+#  vars:
+#    name: "Nextcloud Preview"
+#    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
+#    group: "nextcloud"
+#    log: "preview_generator"
+#    hour: "2"
+#    minute: "0"
+#  include_tasks: roles/cron/shared/add_cronjob.yml
+#  tags: ['cron_job']
 
 - name: add admin web user
   vars:

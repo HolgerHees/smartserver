@@ -1,0 +1,18 @@
+[Unit]
+Description=Create_nextcloud_inotify
+StartLimitBurst=12
+StartLimitIntervalSec=180
+After=network-online.target php
+
+[Service]
+TimeoutStartSec=120
+TimeoutStopSec=60
+Restart=on-failure
+RestartSec=60
+#RestartSteps=4
+#RestartMaxDelaySec=60
+ExecStart=podman exec --user={{system_users['www'].name}} php sh -c "php -f {{htdocs_path}}nextcloud/occ files_notify_redis:primary -v inotify"
+SyslogIdentifier=nextcloud_inotify
+
+[Install]
+WantedBy=multi-user.target

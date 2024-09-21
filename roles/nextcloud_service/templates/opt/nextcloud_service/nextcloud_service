@@ -3,9 +3,12 @@
 import os
 import logging
 import time
+import datetime
 import queue
 import threading
 import traceback
+import redis
+import json
 
 from smartserver import inotify
 from smartserver.server import Server
@@ -31,19 +34,16 @@ class Handler(Server):
         self.queue_thread = threading.Thread(target=self._processQueue)
         self.queue_event = threading.Event()
 
-        self.notify_thread = threading.Thread(target=self._notifyNextcloud)
-        self.notify_event = threading.Event()
+        self.rename_events = {}
 
-        self.lock = threading.Lock()
-
-        self.marked_directories = []
+        self.redis = redis.Redis(host=config.redis_host, port=config.redis_port, db=0)
 
     def _init(self):
         start = time.time()
         for directory in config.watched_directories:
             self._addWatcher(directory)
         end = time.time()
-        logging.info("INotify watcher initialized in {:.2f} seconds".format(end-start))
+        logging.info("INotify watcher initialized {} directories in {:.2f} seconds".format(len(self.watched_directories.keys()), end-start))
 
     def _addWatcher(self, directory):
         self.watched_directories[directory] = True
@@ -70,106 +70,71 @@ class Handler(Server):
         self.queue.put(event)
         self.queue_event.set()
 
-    def _notifyNextcloud(self):
-        logging.info("Notify loop started")
-
-        while self.is_running:
-            now = time.time()
-            next_directory = None
-            with self.lock:
-                if len(self.marked_directories) > 0:
-                    marked_directory, marked_time = self.marked_directories[0]
-                    if now - marked_time >= 2.0:
-                        del self.marked_directories[0]
-                        next_directory = marked_directory
-
-            if next_directory is not None:
-                args = ['files:scan', '--no-interaction', "--path=\"" + marked_directory + "\"", '--shallow', '--quiet']
-
-                _cmd = config.enter_cmd + [ " ".join( config.notify_cmd + args ) ]
-
-                try:
-                    with nsenter.Host():
-                        logging.info("RUN: " + " ".join(_cmd))
-                        code, result = exec2(_cmd, isRunningCallback=self.isRunning)
-                        if code != 0:
-                            logging.info(result)
-                            logging.info("FAILURE: " + " ".join(_cmd))
-
-                except OSError as e:
-                    logging.info(traceback.format_exc())
-                    logging.info(str(e))
-                    logging.info("Not able to enter php namespace. Try again in 60 seconds.")
-                    self.php_container_pid = None
-                    self.notify_event.wait(60)
-                    self.notify_event.clear()
-            else:
-                next_timeout = None
-                with self.lock:
-                    if len(self.marked_directories) > 0:
-                        _, marked_time = self.marked_directories[0]
-                        next_timeout = 2.0 - ( now - marked_time )
-
-                if next_timeout is None:
-                    logging.info("Sleep notify loop")
-                else:
-                    logging.info("Sleep notify loop for {:.2f} seconds".format(next_timeout))
-
-                self.notify_event.wait(next_timeout)
-                self.notify_event.clear()
-
-                if self.is_running and next_timeout is None:
-                    time.sleep(2)
-                    self.notify_event.clear()
-
-        logging.info("Notify loop stopped")
-
     def _processQueue(self):
         logging.info("Queue loop started")
 
-        if self.is_running:
-            init = self.queue.get()
-            init()
+        try:
+            if self.is_running:
+                init = self.queue.get()
+                init()
 
-        while self.is_running:
-            try:
-                event = self.queue.get_nowait()
+            while self.is_running:
+                try:
+                    event = self.queue.get_nowait()
 
-                if event.path in self.watched_directories:
-                    directory = event.path
-                    if event.mask & ( inotify.Constants.IN_DELETE | inotify.Constants.IN_MOVED_FROM ):
-                        logging.info("Unwatch " + directory)
-                        self._delWatcher(directory)
-                        #logging.info("delete ok " + directory)
-                        directory = os.path.dirname(directory)
-                else:
-                    directory = event.path if event.mask & inotify.Constants.IN_ISDIR else os.path.dirname(event.path)
-                    if directory not in self.watched_directories and event.mask & ( inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_TO ):
-                        logging.info("Watch " + directory)
-                        self._addWatcher(directory)
-                        #logging.info("add ok " + directory)
+                    if event.path in self.watched_directories:
+                        directory = event.path
+                        if event.mask & ( inotify.Constants.IN_DELETE | inotify.Constants.IN_MOVED_FROM ):
+                            logging.info("Unwatch " + directory)
+                            self._delWatcher(directory)
+                            #logging.info("delete ok " + directory)
+                            directory = os.path.dirname(directory)
+                    else:
+                        directory = event.path if event.mask & inotify.Constants.IN_ISDIR else os.path.dirname(event.path)
+                        if directory not in self.watched_directories and event.mask & ( inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_TO ):
+                            logging.info("Watch " + directory)
+                            self._addWatcher(directory)
+                            #logging.info("add ok " + directory)
 
-                with self.lock:
-                    found = False
-                    for _data in self.marked_directories:
-                        if directory.startswith(_data[0]):
-                            _data[1] = time.time()
-                            found = True
-                            break
 
-                    if not found:
-                        for _data in list(self.marked_directories):
-                            if _data[0].startswith(directory):
-                                self.marked_directories.remove(data)
-                        self.marked_directories.append([ directory, time.time() ])
+                    utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
+                    utc_offset = datetime.timedelta(seconds=-utc_offset_sec)
+                    now = datetime.datetime.now().replace(microsecond=0, tzinfo=datetime.timezone(offset=utc_offset)).isoformat()
+                    #now = datetime.datetime.now().replace(microsecond=0).isoformat()
 
-                self.notify_event.set()
-            except queue.Empty:
-                logging.info("Sleep queue loop")
-                self.queue_event.wait()
-                self.queue_event.clear()
+                    nextcloud_event = None
+                    if event.mask & ( inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_MOVED_FROM ):
+                        if event.cookie not in self.rename_events:
+                            self.rename_events[event.cookie] = {'event': 'move', 'from': None, 'to': None, 'time': None }
 
-        logging.info("Queue loop stopped")
+                        self.rename_events[event.cookie]['time'] = now
+                        self.rename_events[event.cookie]['from' if event.mask & inotify.Constants.IN_MOVED_FROM else 'to'] = event.path
+
+                        if self.rename_events[event.cookie]['from'] is not None and self.rename_events[event.cookie]['to'] is not None:
+                            nextcloud_event = self.rename_events[event.cookie]
+                            del self.rename_events[event.cookie]
+                    elif event.mask & inotify.Constants.IN_DELETE:
+                        nextcloud_event = {'event': 'delete', 'path': event.path, 'time': now}
+                    elif event.mask & inotify.Constants.IN_CREATE:
+                        nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0}
+                    elif event.mask & inotify.Constants.IN_CLOSE_WRITE:
+                        nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0 if event.mask & inotify.Constants.IN_ISDIR else os.stat(event.path).st_size}
+                    else:
+                        logging.warn("Unexpected event: " + str(event))
+
+                    if nextcloud_event is not None:
+                        logging.info(nextcloud_event)
+                        self.redis.lpush("inotify", json.dumps(nextcloud_event))
+
+                except queue.Empty:
+                    #logging.info("Sleep queue loop")
+                    self.queue_event.wait()
+                    self.queue_event.clear()
+        except Exception as e:
+            self.is_running = False
+            raise e
+        finally:
+            logging.info("Queue loop stopped")
 
     def isRunning(self):
         return self.is_running
@@ -178,7 +143,6 @@ class Handler(Server):
         self.is_running = True
 
         self.inotify.start()
-        self.notify_thread.start()
         self.queue_thread.start()
 
         super().start()
@@ -191,11 +155,6 @@ class Handler(Server):
             self.inotify.stop()
             self.inotify.join()
 
-        logging.info("Terminate notify_thread")
-        if self.notify_thread.is_alive():
-            self.notify_event.set()
-            self.notify_thread.join()
-
         logging.info("Terminate queue_thread")
         if self.queue_thread.is_alive():
             self.queue_event.set()
@@ -203,10 +162,12 @@ class Handler(Server):
 
         super().terminate()
 
-    #def getStateMetrics(self):
-    #    return [
-    #        "ci_service_state{{job=\"ci_service\",type=\"leftover\",}} {}".format("1" if self.has_leftovers else "0")
-    #    ]
+    def getStateMetrics(self):
+        metrics = [
+            "nextcloud_service_process{{job=\"queue\"}} {}".format("1" if self.is_running else "0"),
+            "nextcloud_service_watches{{job=\"queue\"}} {}".format(len(self.watched_directories.keys()))
+        ]
+        return "{}\n".format( "\n".join(metrics) )
 
 handler = Handler()
 handler.start()

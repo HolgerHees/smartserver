@@ -1,0 +1,8 @@
+- name: restart nextcloud_inotify
+  systemd:
+    name: nextcloud_inotify
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart nextcloud_inotify"
