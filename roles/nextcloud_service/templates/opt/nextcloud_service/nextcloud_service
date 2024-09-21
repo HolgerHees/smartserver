@@ -121,6 +121,8 @@ class Handler(Server):
                         try:
                             nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0 if event.mask & inotify.Constants.IN_ISDIR else os.stat(event.path).st_size}
                         except FileNotFoundError:
+                            # TODO maybe convert to a modify event, during follow up move event
+                            # can happen when uploading *.part and rename after
                             continue
                     else:
                         logging.warn("Unexpected event: " + str(event))
