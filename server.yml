@@ -201,7 +201,7 @@
 
     - { import_role: { name: librenms, tasks_from: apply_config, handlers_from: empty },     tags: [ 'librenms', 'librenms_config' ],                        when: "librenms_enabled" }                         # apply librenms configs
 
-    - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: apps },      tags: [ 'nextcloud', 'nextcloud_apps' ],                        when: "nextcloud_enabled" }                        # enable nextcloud apps
+    - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty },     tags: [ 'nextcloud', 'nextcloud_apps' ],                        when: "nextcloud_enabled" }                        # enable nextcloud apps
 
     - { import_role: { name: influxdb, tasks_from: create_users, handlers_from: empty },     tags: [ 'influxdb', 'influxdb_users' ],                         when: "influxdb_enabled"}                          # create influxdb users
 
