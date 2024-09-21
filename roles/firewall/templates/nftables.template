@@ -65,7 +65,7 @@ table ip nat {
 table ip nat {
     chain SMARTSERVER_MASQ {
 {% for rule in tpl_masquerading_rules %}
-        {% if true %}meta l4proto { tcp, udp } ip saddr {{rule['saddr']}} {% endif %}
+        {% if true %}ip saddr {{rule['saddr']}} {% endif %}
         {%- if 'oif' in rule %}oif "{{ rule['oif'] }}" {% endif %}
         {%- if 'oifname' in rule %}oifname "{{ rule['oifname'] }}" {% endif %}
         {%- if true %}masquerade comment "{{rule_name}}{{ ': ' + rule['comment'] if 'comment' in rule else '' }}"{% endif %}

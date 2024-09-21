@@ -125,6 +125,10 @@
       {% endfor %}
         { "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "iif": "{{default_network_interface}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
+#    masquerading_rules: |
+#        [
+#            { "saddr": "{{cloud_vpn['interface']['network']}}", "oif": "{{default_network_interface}}" }
+#        ]
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
