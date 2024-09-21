@@ -118,7 +118,10 @@ class Handler(Server):
                     elif event.mask & inotify.Constants.IN_CREATE:
                         nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0}
                     elif event.mask & inotify.Constants.IN_CLOSE_WRITE:
-                        nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0 if event.mask & inotify.Constants.IN_ISDIR else os.stat(event.path).st_size}
+                        try:
+                            nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0 if event.mask & inotify.Constants.IN_ISDIR else os.stat(event.path).st_size}
+                        except FileNotFoundError:
+                            continue
                     else:
                         logging.warn("Unexpected event: " + str(event))
 
