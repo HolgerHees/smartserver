@@ -41,3 +41,10 @@
     - "{{global_build}}mysql"
     - "{{global_etc}}wireguard_cloud/util/startup.sh"
 
+- name: "cleanup cron jobs"
+  cron:
+    name: "{{item.name}}"
+    cron_file: "ansible_{{item.group}}"
+    state: absent
+  with_items:
+    - { name: "Nextcloud Previewupdates", group: "nextcloud" }

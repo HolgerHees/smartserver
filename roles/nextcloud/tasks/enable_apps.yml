@@ -131,15 +131,15 @@
   with_items: "{{user_saml_configs}}"
 
 # ***** PREVIEW GENERATOR CRON JOB *****
-- name: create cron job 'preview:pre-generate'
-  vars:
-    name: "Nextcloud Previewupdates"
-    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
-    group: "nextcloud"
-    log: "preview_generator"
-    minute: "*/15"
-  include_tasks: roles/cron/shared/add_cronjob.yml
-  tags: ['cron_job']
+#- name: create cron job 'preview:pre-generate'
+#  vars:
+#    name: "Nextcloud Previewupdates"
+#    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
+#    group: "nextcloud"
+#    log: "preview_generator"
+#    minute: "*/15"
+#  include_tasks: roles/cron/shared/add_cronjob.yml
+#  tags: ['cron_job']
 
 # ***** FINALIZE NEWS INSTALLATION *****
 #- name: prepare news config folder
