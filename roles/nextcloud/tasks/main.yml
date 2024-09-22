@@ -229,16 +229,16 @@
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
 
-- name: create cron job 'files:scan'
-  vars:
-    name: "Nextcloud Fileindex"
-    cmd: "podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
-    group: "nextcloud"
-    log: "file_scan"
-    hour: "1"
-    minute: "0"
-  include_tasks: roles/cron/shared/add_cronjob.yml
-  tags: ['cron_job']
+#- name: create cron job 'files:scan'
+#  vars:
+#    name: "Nextcloud Fileindex"
+#    cmd: "podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
+#    group: "nextcloud"
+#    log: "file_scan"
+#    hour: "1"
+#    minute: "0"
+#  include_tasks: roles/cron/shared/add_cronjob.yml
+#  tags: ['cron_job']
 
 #- name: create cron job 'generate-all'
 #  vars:

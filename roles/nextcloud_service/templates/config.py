@@ -10,4 +10,5 @@ redis_port = "6379"
 min_preview_delay = 5
 max_preview_delay = 15
 
-preview_generator_cmd = ["podman", "exec", "-it", "--user={{system_users['www'].name}}", "php", "php", "-f", "{{htdocs_path}}nextcloud/occ", "preview:pre-generate" ]
+cmd_file_scan = ["podman", "exec", "-it", "--user={{system_users['www'].name}}", "php", "php", "-f", "{{htdocs_path}}nextcloud/occ", "files:scan", "--all" ]
+cmd_preview_generator = ["podman", "exec", "-it", "--user={{system_users['www'].name}}", "php", "php", "-f", "{{htdocs_path}}nextcloud/occ", "preview:pre-generate" ]

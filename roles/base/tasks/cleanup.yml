@@ -47,4 +47,5 @@
     cron_file: "ansible_{{item.group}}"
     state: absent
   with_items:
+    - { name: "Nextcloud Fileindex", group: "nextcloud" }
     - { name: "Nextcloud Previewupdates", group: "nextcloud" }
