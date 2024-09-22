@@ -157,7 +157,7 @@
 - name: create check cron job
   vars:
     name: "Continues integration job"
-    cmd: "podman exec ci_service sh -c \"{{global_opt}}ci_service/ci_job_handler start > /dev/null\""
+    cmd: "podman exec ci_service {{global_opt}}ci_service/ci_job_handler start > /dev/null"
     group: "ci_service"
     log: "job"
     minute: "*/5"

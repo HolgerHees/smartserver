@@ -56,7 +56,7 @@
 - name: "influxdb : add_bucket : create cron job"
   vars:
     name: "Influxdb {{(database|capitalize) + ('_' + item.name if item.name is defined else '')}} Backup"
-    cmd: "podman exec influxdb sh -c \"influx backup --bucket {{database + ('_' + item.name if item.name is defined else '')}} --org default-org /var/lib/influxdb_backup/{{database + ('_' + item.name if item.name is defined else '')}}_$(date +\\%Y-\\%m-\\%d)/ &> /dev/null\""
+    cmd: "podman exec influxdb influx backup --bucket {{database + ('_' + item.name if item.name is defined else '')}} --org default-org /var/lib/influxdb_backup/{{database + ('_' + item.name if item.name is defined else '')}}_$(date +\\%Y-\\%m-\\%d)/ &> /dev/null"
     group: "influxdb"
     log: "dump_{{database}}"
     hour: "1"
