@@ -51,6 +51,7 @@
     state: stopped
     enabled: no
     masked: no
+  failed_when: no
   with_items:
     - "nextcloud_inotify.service"
 
