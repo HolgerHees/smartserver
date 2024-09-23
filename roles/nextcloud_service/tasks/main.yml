@@ -21,7 +21,7 @@
       - "--chown=root:root"
       - "--chmod={{item.chmod}}"
   with_items:
-#    - { "chmod": "D750,F640", "path": "nextcloud_service/lib" }
+    - { "chmod": "D750,F640", "path": "nextcloud_service/lib" }
     - { "chmod": "D750,F750", "path": "nextcloud_service/nextcloud_service" }
   notify: "restart nextcloud_service"
 
