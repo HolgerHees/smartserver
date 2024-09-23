@@ -10,11 +10,12 @@ import re
 
 class MQTT(threading.Thread):
     '''Handler client'''
-    def __init__(self, config):
+    def __init__(self, config, lazyStart):
         threading.Thread.__init__(self)
 
         self.is_running = False
         self.config = config
+        self.lazyStart = lazyStart
 
         self.event = threading.Event()
 
@@ -44,6 +45,8 @@ class MQTT(threading.Thread):
             except Exception as e:
                 logging.info("MQTT {}. Retry in 5 seconds".format(str(e)))
                 time.sleep(5)
+
+        self.lazyStart()
 
         while self.is_running:
             self.event.wait(60)
@@ -79,9 +82,6 @@ class MQTT(threading.Thread):
 
     def publish(self, topic, payload=None, qos=0, retain=False):
         self.mqtt_client.publish(topic, payload,qos,retain)
-
-    def isConnected(self):
-        return self.mqtt_client.is_connected()
 
     def getStateMetrics(self):
         return ["weather_service_state{{type=\"mqtt\"}} {}".format(self.state)]

@@ -32,7 +32,7 @@ class Handler(Server):
         self.db = DB(config)
         self.scheduler = Scheduler("weather_service")
 
-        self.mqtt = DummyBroker(config) if config.mosquitto_host == "dummy" else MQTTBroker(config)
+        self.mqtt = DummyBroker(config, self.lazyStart) if config.mosquitto_host == "dummy" else MQTTBroker(config, self.lazyStart)
 
         self.provider = None
         if config.api_provider == 'listener':
@@ -69,6 +69,10 @@ class Handler(Server):
     def start(self):
         self.scheduler.start()
         self.mqtt.start()
+
+        super().start()
+
+    def lazyStart(self):
         self.provider_consumer.start()
         if self.station_consumer:
             self.station_consumer.start()
@@ -76,8 +80,6 @@ class Handler(Server):
 
         if self.provider != None:
             self.provider.start()
-
-        super().start()
 
     def terminate(self):
         if self.provider != None:
