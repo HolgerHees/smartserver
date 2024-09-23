@@ -69,6 +69,6 @@ class PreviewGenerator(threading.Thread):
 
     def getStateMetrics(self):
         metrics = [
-            "nextcloud_service_process{{job=\"preview_generator\"}} {}".format("1" if self.is_running else "0")
+            "nextcloud_service_process{{type=\"preview_generator\"}} {}".format("1" if self.is_running else "0")
         ]
         return metrics

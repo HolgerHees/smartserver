@@ -63,6 +63,6 @@ class INotifyListener(threading.Thread):
 
     def getStateMetrics(self):
         metrics = [
-            "nextcloud_service_process{{job=\"inotify_listener\"}} {}".format("1" if self.is_running else "0")
+            "nextcloud_service_process{{type=\"inotify_listener\"}} {}".format("1" if self.is_running else "0")
         ]
         return metrics

@@ -158,6 +158,7 @@ class INotifyWatcher(threading.Thread):
 
     def getStateMetrics(self):
         metrics = [
-            "nextcloud_service_process{{job=\"inotify_watcher\"}} {}".format("1" if self.is_running else "0")
+            "nextcloud_service_process{{type=\"inotify_watcher\"}} {}".format("1" if self.is_running else "0"),
+            "nextcloud_service_state{{type=\"inotify_watcher\"}} {}".format(len(self.watched_directories))
         ]
         return metrics
