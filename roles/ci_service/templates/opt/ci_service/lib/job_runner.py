@@ -19,7 +19,6 @@ from smartserver.github import GitHub
 from smartserver.logfile import LogFile
 from smartserver import command
 from smartserver import pexpect
-from smartserver import nsenter
 
 max_subject_length = 50
 max_cleanup_time = 60*10
@@ -115,8 +114,7 @@ class JobRunner:
                     vagrant_path = pathlib.Path(__file__).parent.absolute().as_posix() + "/../vagrant"
 
                     # force VBox folder
-                    with nsenter.Host():
-                        command.exec( [ "VBoxManage", "setproperty", "machinefolder", "{}VirtualMachines".format(self.lib_dir) ])
+                    command.exec( [ "VBoxManage", "setproperty", "machinefolder", "{}VirtualMachines".format(self.lib_dir) ], run_on_host=True)
 
                     env = { "VAGRANT_HOME": self.lib_dir, "HOME": os.path.expanduser('~') }
 
@@ -124,9 +122,8 @@ class JobRunner:
                     # Always test with the latest version
                     logging.info( u"Image check for commit '{}' started".format(self.git_hash) )
                     update_cmd = [ vagrant_path, "--config={}".format(config_name), "--os={}".format(os_name), "box", "update" ]
-                    with nsenter.Host():
-                        self.job = pexpect.Process(update_cmd, timeout=1800, logfile=lf, cwd=self.repository_dir, env=env)
-                        self.job.start()
+                    self.job = pexpect.Process(command.prepareRunOnHost(update_cmd), timeout=1800, logfile=lf, cwd=self.repository_dir, env=env)
+                    self.job.start()
                     exitcode = self.job.getExitCode()
                     if exitcode != 0:
                         if self.job.isTerminated():
@@ -148,9 +145,8 @@ class JobRunner:
                     self.max_starttime_checker = threading.Timer(5,self._watchDeployment)
                     self.max_starttime_checker.start()
 
-                    with nsenter.Host():
-                        self.job = pexpect.Process(deploy_cmd, timeout=7200, logfile=lf, cwd=self.repository_dir, env = env)
-                        self.job.start()
+                    self.job = pexpect.Process(command.prepareRunOnHost(deploy_cmd), timeout=7200, logfile=lf, cwd=self.repository_dir, env = env)
+                    self.job.start()
                     if self.max_starttime_exceeded:
                         raise DeploymentException(-1, "crashed", "Max start time exceeded", deploy_cmd)
                     exitcode = self.job.getExitCode()
@@ -197,9 +193,8 @@ class JobRunner:
                     lf.writeRaw("\n")
                     logging.info( u"Cleaning for commit '{}' started".format(self.git_hash) )
                     clean_cmd = [ vagrant_path, "--config={}".format(config_name), "--os={}".format(os_name), "destroy", "--force" ]
-                    with nsenter.Host():
-                        job = pexpect.Process( clean_cmd, timeout=max_cleanup_time, logfile=lf, cwd=self.repository_dir, env = env)
-                        job.start()
+                    job = pexpect.Process( command.prepareRunOnHost(clean_cmd), timeout=max_cleanup_time, logfile=lf, cwd=self.repository_dir, env = env)
+                    job.start()
 
                     exitcode = job.getExitCode()
                     if exitcode != 0:
@@ -430,8 +425,7 @@ class JobExecutor():
                     body += "\n\n"
                     body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,self.current_git_hash)
 
-                    with nsenter.Host():
-                        command.sendEmail("root", "CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body)
+                    command.sendEmail("root", "CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body, run_on_host=True)
 
                     is_failed_job = True
                     break

@@ -2,7 +2,6 @@ import os
 import logging
 
 from smartserver import command
-from smartserver import nsenter
 
 
 def deltree(target):
@@ -15,8 +14,7 @@ def deltree(target):
     os.rmdir(target)
 
 def getRegisteredMachines():
-    with nsenter.Host():
-        result = command.exec([ "VBoxManage", "list", "vms" ])
+    result = command.exec(["VBoxManage", "list", "vms" ], run_on_host=True)
     lines = result.stdout.decode("utf-8").strip().split("\n");
     machines = {}
     for line in lines:
@@ -48,9 +46,8 @@ def destroyMachine(vid):
         machines = getRegisteredMachines()
         if vid in machines:
             name = machines[vid]
-            with nsenter.Host():
-                command.exec( [ "VBoxManage", "controlvm", vid, "poweroff" ], exitstatus_check=False)
-                command.exec( [ "VBoxManage", "unregistervm", "--delete", vid ], exitstatus_check=False)
+            command.exec( ["VBoxManage", "controlvm", vid, "poweroff" ], exitstatus_check=False, run_on_host=True)
+            command.exec( ["VBoxManage", "unregistervm", "--delete", vid ], exitstatus_check=False, run_on_host=True)
             return name
     return None
 

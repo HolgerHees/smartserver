@@ -35,18 +35,18 @@ class Helper():
                                 bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
                                 universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
-    def ping(ip, timeout, isRunningCallback = None):
-        returncode, result = command.exec2(["/bin/ping", "-W", str(timeout), "-c", "1", ip ], isRunningCallback=isRunningCallback)
+    def ping(ip, timeout, is_running_callback = None):
+        returncode, result = command.exec2(["/bin/ping", "-W", str(timeout), "-c", "1", ip ], is_running_callback=is_running_callback)
         return returncode == 0
 
-    def getMacFromPing(ip, timeout, isRunningCallback = None):
-        is_success = Helper.ping(ip, timeout, isRunningCallback)
+    def getMacFromPing(ip, timeout, is_running_callback = None):
+        is_success = Helper.ping(ip, timeout, is_running_callback)
         if is_success:
             return Helper.ip2mac(ip)
         return None
     
-    def getMacFromArpPing(ip, interface, timeout, isRunningCallback = None):
-        returncode, result = command.exec2(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip], isRunningCallback=isRunningCallback)
+    def getMacFromArpPing(ip, interface, timeout, is_running_callback = None):
+        returncode, result = command.exec2(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip], is_running_callback=is_running_callback)
         if returncode != 0:
             return None
 
@@ -55,8 +55,8 @@ class Helper():
             return match[1]
         return None
 
-    def arpscan(interface, network, isRunningCallback = None):
-        returncode, result = command.exec2(["/usr/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], isRunningCallback=isRunningCallback)
+    def arpscan(interface, network, is_running_callback = None):
+        returncode, result = command.exec2(["/usr/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], is_running_callback=is_running_callback)
         if returncode != 0:
             raise Exception("Cmd 'arpscan' was not successful")
 
@@ -81,21 +81,21 @@ class Helper():
 
             services["{}/{}".format(match[1],match[2])] = match[4]
 
-    def nmap(ip, isRunningCallback = None):
+    def nmap(ip, is_running_callback = None):
         services = {}
 
         # using "--defeat-rst-ratelimit" will hit the limit of netfilter conntrack table
-        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--defeat-rst-ratelimit", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
+        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--defeat-rst-ratelimit", "--max-retries", "2", ip], is_running_callback=is_running_callback)
 
         # TCP scan 2 retries
-        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sS", "-PN", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
+        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sS", "-PN", "--max-retries", "2", ip], is_running_callback=is_running_callback)
         if returncode != 0:
             raise Exception("Cmd 'nmap' (tcp) was not successful")
         Helper._nmap_parser(result, services)
 
         # UDP scan with 0 retries and only first 1023 ports
-        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p1-1023", "-sU", "-PN", "--max-retries", "0", ip], isRunningCallback=isRunningCallback)
-        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p1-1023", "-sU", "-PN", "--max-retries", "0", ip], isRunningCallback=isRunningCallback)
+        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p1-1023", "-sU", "-PN", "--max-retries", "0", ip], is_running_callback=is_running_callback)
+        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p1-1023", "-sU", "-PN", "--max-retries", "0", ip], is_running_callback=is_running_callback)
         if returncode != 0:
             raise Exception("Cmd 'nmap' (udp) was not successful")
         Helper._nmap_parser(result, services)

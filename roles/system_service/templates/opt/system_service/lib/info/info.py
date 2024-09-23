@@ -116,7 +116,7 @@ class Info(threading.Thread):
             logging.info("Saved config")
 
     def checkConnection(self):
-        returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1", self.ip_check ], isRunningCallback=self._isRunning)
+        returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1", self.ip_check ], is_running_callback=self._isRunning)
         return returncode == 0
 
     def checkIP(self, active_service):

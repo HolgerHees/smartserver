@@ -43,7 +43,7 @@ class FPing(threading.Thread):
         try:
             logging.info("FPing started")
             while self._isRunning():
-                returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1" ] + self.config.fping_test_hosts, isRunningCallback=self._isRunning)
+                returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1" ] + self.config.fping_test_hosts, is_running_callback=self._isRunning)
 
                 ping_result_map = {}
                 if len(result) > 0:

@@ -264,14 +264,14 @@ class Cache():
                 stat.removeData(connection_details)
                 self.confirmStat( source_handler, stat, caller_frame + 1 )
 
-    def ip2mac(self,ip, isRunningCallback = None):
+    def ip2mac(self,ip, is_running_callback = None):
         now = datetime.now()
         if ip not in self.ip_mac_map or (now - self.ip_mac_map[ip][1]).total_seconds() > self.config.cache_ip_mac_revalidation_interval:
             mac = Helper.ip2mac(ip)
             if mac is None:
                 logging.info("Not able to resolve ip2mac {}. Fallback to ping".format(ip))
                 # try a ping to force an arp table update
-                mac = Helper.getMacFromPing(ip, 5, isRunningCallback)
+                mac = Helper.getMacFromPing(ip, 5, is_running_callback)
                 if mac is None:
                     return None
             self.ip_mac_map[ip] = [mac, now]
