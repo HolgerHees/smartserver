@@ -10,7 +10,7 @@ from datetime import datetime
 import subprocess
 
 from smartserver import inotify
-from smartserver.command import prepareRunOnHost
+from smartserver import command
 
 
 class INotifyListener(threading.Thread):
@@ -37,9 +37,7 @@ class INotifyListener(threading.Thread):
         try:
             while self.is_running:
                 #logging.info(str(self.config.cmd_inotify_listener))
-                process = subprocess.Popen(prepareRunOnHost(self.config.cmd_inotify_listener),
-                    bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
-                    universal_newlines=True, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                process = command.popen(self.config.cmd_inotify_listener, run_on_host=True)
                 os.set_blocking(process.stdout.fileno(), False)
                 while self.is_running and process.poll() is None:
                     for line in iter(process.stdout.readline, b''):

@@ -122,7 +122,7 @@ class JobRunner:
                     # Always test with the latest version
                     logging.info( u"Image check for commit '{}' started".format(self.git_hash) )
                     update_cmd = [ vagrant_path, "--config={}".format(config_name), "--os={}".format(os_name), "box", "update" ]
-                    self.job = pexpect.Process(command.prepareRunOnHost(update_cmd), timeout=1800, logfile=lf, cwd=self.repository_dir, env=env)
+                    self.job = pexpect.Process(update_cmd, timeout=1800, logfile=lf, cwd=self.repository_dir, env=env, run_on_host=True)
                     self.job.start()
                     exitcode = self.job.getExitCode()
                     if exitcode != 0:
@@ -145,7 +145,7 @@ class JobRunner:
                     self.max_starttime_checker = threading.Timer(5,self._watchDeployment)
                     self.max_starttime_checker.start()
 
-                    self.job = pexpect.Process(command.prepareRunOnHost(deploy_cmd), timeout=7200, logfile=lf, cwd=self.repository_dir, env = env)
+                    self.job = pexpect.Process(deploy_cmd, timeout=7200, logfile=lf, cwd=self.repository_dir, env = env, run_on_host=True)
                     self.job.start()
                     if self.max_starttime_exceeded:
                         raise DeploymentException(-1, "crashed", "Max start time exceeded", deploy_cmd)
@@ -193,7 +193,7 @@ class JobRunner:
                     lf.writeRaw("\n")
                     logging.info( u"Cleaning for commit '{}' started".format(self.git_hash) )
                     clean_cmd = [ vagrant_path, "--config={}".format(config_name), "--os={}".format(os_name), "destroy", "--force" ]
-                    job = pexpect.Process( command.prepareRunOnHost(clean_cmd), timeout=max_cleanup_time, logfile=lf, cwd=self.repository_dir, env = env)
+                    job = pexpect.Process(clean_cmd, timeout=max_cleanup_time, logfile=lf, cwd=self.repository_dir, env = env, run_on_host=True)
                     job.start()
 
                     exitcode = job.getExitCode()

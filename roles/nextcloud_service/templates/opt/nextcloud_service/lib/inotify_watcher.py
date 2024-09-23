@@ -111,7 +111,7 @@ class INotifyWatcher(threading.Thread):
             detected_last_modified = None
             for directory in self.config.watched_directories:
                 self._add(directory)
-                result = exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), shell=True, run_on_host=True)
+                result = exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), run_on_host=True)
                 date_str, file = result.stdout.decode("utf-8").split("\t")
 
                 date =  datetime.fromisoformat(date_str).replace(microsecond=0, tzinfo=self.timezone)

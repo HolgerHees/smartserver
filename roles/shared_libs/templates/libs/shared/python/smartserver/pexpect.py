@@ -6,16 +6,18 @@ from pexpect.exceptions import EOF, TIMEOUT
 import subprocess
 
 from smartserver import processlist
+from smartserver import command
 
 
 class Process():
-    def __init__(self, cmd, timeout=0, logfile=None, cwd=None, env=None, interaction=None ):
+    def __init__(self, cmd, timeout=0, logfile=None, cwd=None, env=None, interaction=None, run_on_host=False):
         self.cmd = cmd
         self.timeout = timeout
         self.logfile = logfile
         self.cwd = cwd
         self.env = env
         self.interaction = interaction
+        self.run_on_host = run_on_host
 
         self.exitcode = None
         self.output = None
@@ -55,6 +57,8 @@ class Process():
             cmd = self.cmd
             if isinstance(cmd, list):
                 cmd = subprocess.list2cmdline(cmd)
+
+            shell, cmd = command._prepareRunOnHost(cmd, cwd=self.cwd, env=self.env, run_on_host=self.run_on_host)
 
             self.process = pexpect.spawn(cmd, timeout=self.timeout, cwd=self.cwd, env=self.env, encoding="utf-8" )
             if self.logfile is not None:
