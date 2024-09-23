@@ -1,274 +1,59 @@
 #!/usr/bin/python3
 
-import os
 import logging
-import time
-from datetime import datetime, timezone, timedelta
-import queue
-import threading
-import traceback
-import redis
-import json
 
-from smartserver import inotify
 from smartserver.server import Server
-from smartserver.command import exec2, exec
-from smartserver import nsenter
-from smartserver.confighelper import ConfigHelper
 
 from config import config
 
+from lib import inotify_watcher
+from lib import inotify_publisher
+from lib import inotify_listener
+from lib import preview_generator
 
 class Handler(Server):
     def __init__(self):
         super().__init__("nextcloud_service", "0.0.0.0", "80")
 
-        self.is_running = False
+        self.preview_generator = preview_generator.PreviewGenerator(config)
+        self.inotify_listener = inotify_listener.INotifyListener(config)
+        self.inotify_publisher = inotify_publisher.INotifyPublisher(config, self.preview_generator, self)
+        self.inotify_watcher = inotify_watcher.INotifyWatcher(config, self.inotify_publisher, self.startLazy)
 
-        self.inotify = inotify.INotify(self._inotifyEvent)
-        self.redis = redis.Redis(host=config.redis_host, port=config.redis_port, db=0)
-
-        self.watched_directories = {}
-        self.rename_events = {}
-
-        self.queue = queue.Queue()
-
-        self.queue_thread = threading.Thread(target=self._processQueue)
-        self.queue_event = threading.Event()
-
-        self.preview_thread = threading.Thread(target=self._processPreview)
-        self.preview_event = threading.Event()
-
-        self.first_event = 0
-        self.last_event = 0
-
-        self.dump_path= "/var/lib/nextcloud_service/state.json"
-        self.valid_dump_file = True
-        self.version = 1
-
-        self._restore()
-
-    def _restore(self):
-        self.valid_dump_file, data = ConfigHelper.loadConfig(self.dump_path, self.version)
-        if data is not None:
-            self.state = data
-        else:
-            self.state = {'last_modified': None}
-            self._dump()
-
-    def _dump(self):
-        if self.valid_dump_file:
-            ConfigHelper.saveConfig(self.dump_path, self.version, self.state )
-
-    def _init(self):
-        start = time.time()
-        detected_last_modified = None
-        for directory in config.watched_directories:
-            self._addWatcher(directory)
-            with nsenter.Host():
-                result = exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), shell=True)
-                date_str, file = result.stdout.decode("utf-8").split("\t")
-
-                date =  datetime.fromisoformat(date_str)
-                if detected_last_modified is None or detected_last_modified < date:
-                    detected_last_modified = date
-        end = time.time()
-        logging.info("INotify watcher initialized {} directories in {:.2f} seconds".format(len(self.watched_directories.keys()), end-start))
-
-        last_modified = datetime.fromisoformat(self.state['last_modified']) if self.state['last_modified'] is not None else None
-
-        if last_modified is None or detected_last_modified > last_modified:
-            while self.is_running:
-                logging.info("Starting file scan")
-                start = time.time()
-                with nsenter.Host():
-                    code, result = exec2(config.cmd_file_scan, isRunningCallback=self.isRunning )
-                if code == 0:
-                    end = time.time()
-                    logging.info("Files scanned in {:.2f} seconds".format(end-start))
-                    break
-                else:
-                    logging.info("Not able to scan files. Try again in 60 seconds.")
-                    self.queue_event.wait(60)
-                    self.queue_event.clear()
-            self.state['last_modified'] = detected_last_modified.isoformat()
-        else:
-            logging.info("Skipped file scan")
-
-        self.preview_is_running = True
-        self.preview_thread.start()
-
-    def _addWatcher(self, directory):
-        self.watched_directories[directory] = True
-        self.inotify.add_watch(directory, inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
-
-        for root, sub_directory_names, files in os.walk(directory):
-            for _sub_directory_name in sub_directory_names:
-                sub_directory = os.path.join(root, _sub_directory_name)
-                self.watched_directories[sub_directory] = True
-                self.inotify.add_watch(sub_directory, inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
-
-    def _delWatcher(self, directory):
-        del self.watched_directories[directory]
-        self.inotify.rm_watch(directory)
-
-        for root, sub_directory_names, files in os.walk(directory):
-            for _sub_directory_name in sub_directory_names:
-                sub_directory = os.path.join(root, _sub_directory_name)
-                del self.watched_directories[sub_directory]
-                self.inotify.rm_watch(sub_directory)
-
-    def _inotifyEvent(self, event):
-        #logging.info(str(event))
-        self.queue.put(event)
-        self.queue_event.set()
-
-    def _processQueue(self):
-        try:
-            if self.is_running:
-                self._init()
-
-            logging.info("Queue loop started")
-
-            while self.is_running:
-                try:
-                    event = self.queue.get_nowait()
-
-                    if event.path in self.watched_directories:
-                        directory = event.path
-                        if event.mask & ( inotify.Constants.IN_DELETE | inotify.Constants.IN_MOVED_FROM ):
-                            logging.info("Unwatch " + directory)
-                            self._delWatcher(directory)
-                            #logging.info("delete ok " + directory)
-                            directory = os.path.dirname(directory)
-                    else:
-                        directory = event.path if event.mask & inotify.Constants.IN_ISDIR else os.path.dirname(event.path)
-                        if directory not in self.watched_directories and event.mask & ( inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_TO ):
-                            logging.info("Watch " + directory)
-                            self._addWatcher(directory)
-                            #logging.info("add ok " + directory)
-
-
-                    utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
-                    utc_offset = timedelta(seconds=-utc_offset_sec)
-                    now = datetime.now().replace(microsecond=0, tzinfo=timezone(offset=utc_offset)).isoformat()
-                    #now = datetime.now().replace(microsecond=0).isoformat()
-
-                    self.state['last_modified'] = now
-
-                    nextcloud_event = None
-                    if event.mask & ( inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_MOVED_FROM ):
-                        if event.cookie not in self.rename_events:
-                            self.rename_events[event.cookie] = {'event': 'move', 'from': None, 'to': None, 'time': None }
-
-                        self.rename_events[event.cookie]['time'] = now
-                        self.rename_events[event.cookie]['from' if event.mask & inotify.Constants.IN_MOVED_FROM else 'to'] = event.path
-
-                        if self.rename_events[event.cookie]['from'] is not None and self.rename_events[event.cookie]['to'] is not None:
-                            nextcloud_event = self.rename_events[event.cookie]
-                            del self.rename_events[event.cookie]
-                    elif event.mask & inotify.Constants.IN_DELETE:
-                        nextcloud_event = {'event': 'delete', 'path': event.path, 'time': now}
-                    elif event.mask & inotify.Constants.IN_CREATE:
-                        nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0}
-                    elif event.mask & inotify.Constants.IN_CLOSE_WRITE:
-                        try:
-                            nextcloud_event = {'event': 'modify', 'path': event.path, 'time': now, 'size': 0 if event.mask & inotify.Constants.IN_ISDIR else os.stat(event.path).st_size}
-                        except FileNotFoundError:
-                            # TODO maybe convert to a modify event, during follow up move event
-                            # can happen when uploading *.part and rename after
-                            continue
-                    else:
-                        logging.warn("Unexpected event: " + str(event))
-
-                    if nextcloud_event is not None:
-                        logging.info(nextcloud_event)
-                        self.redis.lpush("inotify", json.dumps(nextcloud_event))
-
-                        self.last_event = time.time()
-                        if self.first_event == 0:
-                            self.first_event = self.last_event
-                        self.preview_event.set()
-
-                except queue.Empty:
-                    #logging.info("Sleep queue loop")
-                    self.queue_event.wait()
-                    self.queue_event.clear()
-        except Exception as e:
-            self.is_running = False
-            raise e
-        finally:
-            logging.info("Queue loop stopped")
-
-    def _processPreview(self):
-        logging.info("Preview loop started")
-
-        try:
-            while self.is_running:
-                now = time.time()
-                next_timeout = config.min_preview_delay - (now - self.last_event)
-                max_timeout = config.max_preview_delay - (now - self.first_event)
-                timeout = next_timeout if next_timeout < max_timeout else max_timeout
-                if timeout <= 0:
-                    start = time.time()
-                    with nsenter.Host():
-                        code, result = exec2(config.cmd_preview_generator, isRunningCallback=self.isRunning )
-                    if code == 0:
-                        end = time.time()
-                        logging.info("Previews generated in {:.2f} seconds".format(end-start))
-                        self.first_event = self.last_event = 0
-                        timeout = None
-                    else:
-                        logging.info("Not able to generate previews. Try again in 60 seconds.")
-                        timeout = 60
-                self.preview_event.wait(timeout)
-                self.preview_event.clear()
-        except Exception as e:
-            self.is_running = False
-            raise e
-        finally:
-            logging.info("Preview loop stopped")
-
-    def isRunning(self):
-        return self.is_running
+    def confirmEvent(self, time):
+        self.inotify_watcher.confirmEvent(time)
 
     def start(self):
-        self.inotify.start()
-
-        self.is_running = True
-
-        self.queue_thread.start()
+        self.inotify_watcher.start()
 
         super().start()
 
+    def startLazy(self):
+        self.inotify_listener.start()
+        self.inotify_publisher.start()
+        self.preview_generator.start()
+
     def terminate(self):
-        if self.is_running and os.path.exists(self.dump_path):
-            self._dump()
+        logging.info("Terminate inotify watcher")
+        self.inotify_watcher.terminate()
 
-        self.is_running = False
+        logging.info("Terminate inotify publisher")
+        self.inotify_publisher.terminate()
 
-        logging.info("Terminate inotify")
-        if self.inotify.is_alive():
-            self.inotify.stop()
-            self.inotify.join()
+        logging.info("Terminate inotify listener")
+        self.inotify_listener.terminate()
 
-        logging.info("Terminate queue_thread")
-        if self.queue_thread.is_alive():
-            self.queue_event.set()
-            self.queue_thread.join()
-
-        logging.info("Terminate preview_thread")
-        if self.preview_thread.is_alive():
-            self.preview_event.set()
-            self.preview_thread.join()
+        logging.info("Terminate preview generator")
+        self.preview_generator.terminate()
 
         super().terminate()
 
     def getStateMetrics(self):
-        metrics = [
-            "nextcloud_service_process{{job=\"queue\"}} {}".format("1" if self.is_running else "0"),
-            "nextcloud_service_watches{{job=\"queue\"}} {}".format(len(self.watched_directories.keys()))
-        ]
+        metrics = []
+        metrics += self.inotify_watcher.getStateMetrics()
+        metrics += self.inotify_listener.getStateMetrics()
+        metrics += self.inotify_publisher.getStateMetrics()
+        metrics += self.preview_generator.getStateMetrics()
         return "{}\n".format( "\n".join(metrics) )
 
 handler = Handler()

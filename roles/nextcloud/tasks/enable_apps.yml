@@ -269,25 +269,3 @@
 #    Remove all settings in the db: DELETE FROM oc_appconfig WHERE appid = ‘news’;
 #    Remove all migrations in the db: DELETE FROM oc_migrations WHERE app = ‘news’;
 #    Reinstall and Enable news app.
-
-- name: create systemd service for 'files_notify_redis'
-  template:
-    src: "templates/nextcloud_inotify.service"
-    dest: "/etc/systemd/system/nextcloud_inotify.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart nextcloud_inotify"
-
-- name: register systemd service watcher
-  vars:
-    watcher_name: "nextcloud_inotify"
-  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  tags: ['systemd_watcher_config']
-  when: "monitoring_enabled"
-
-- name: trigger nextcloud_inotify handler
-  vars:
-    notify: "restart nextcloud_inotify"
-    service: "nextcloud_inotify"
-  include_tasks: roles/_shared/service_check.yml

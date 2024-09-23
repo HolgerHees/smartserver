@@ -31,17 +31,11 @@
   include_tasks: _cleanup_mysql.yml
   when: "cleanup_mysql_check.stat.exists"
 
-- name: clean old build folder
-  file:
-    path: "{{item}}"
-    state: absent
-  with_items:
-    - "{{global_build}}loki"
-    #- "{{global_build}}influxdb"
-    - "{{global_build}}mysql"
-    - "{{global_etc}}wireguard_cloud/util/startup.sh"
 
-- name: "cleanup cron jobs"
+
+
+
+- name: cleanup cron jobs
   cron:
     name: "{{item.name}}"
     cron_file: "ansible_{{item.group}}"
@@ -50,3 +44,24 @@
   with_items:
     - { name: "Nextcloud Fileindex", group: "nextcloud" }
     - { name: "Nextcloud Previewupdates", group: "nextcloud" }
+
+- name: stop obsolete services
+  systemd:
+    name: "{{item}}"
+    state: stopped
+    enabled: no
+    masked: no
+  with_items:
+    - "nextcloud_inotify.service"
+
+- name: clean obsolete files
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "{{global_build}}loki"
+    #- "{{global_build}}influxdb"
+    - "{{global_build}}mysql"
+    - "{{global_etc}}wireguard_cloud/util/startup.sh"
+    - "/etc/systemd/system/nextcloud_inotify.service"
+    - "{{global_etc}}systemd_watcher/services/nextcloud_inotify.conf"

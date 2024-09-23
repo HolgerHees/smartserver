@@ -12,3 +12,4 @@ max_preview_delay = 15
 
 cmd_file_scan = ["podman", "exec", "-it", "--user={{system_users['www'].name}}", "php", "php", "-f", "{{htdocs_path}}nextcloud/occ", "files:scan", "--all" ]
 cmd_preview_generator = ["podman", "exec", "-it", "--user={{system_users['www'].name}}", "php", "php", "-f", "{{htdocs_path}}nextcloud/occ", "preview:pre-generate" ]
+cmd_inotify_listener = ["podman", "exec", "-it", "--user={{system_users['www'].name}}", "php", "php", "-f", "{{htdocs_path}}nextcloud/occ", "files_notify_redis:primary", "-v", "inotify" ]
