@@ -55,7 +55,7 @@ class PreviewGenerator(threading.Thread):
                     else:
                         self.app_state = 0
                         logging.info(result)
-                        logging.info("Not able to generate previews. Try again in 60 seconds.")
+                        logging.info("Not able to run nextcloud 'preview generator' app. Try again in 60 seconds.")
                         self.event.wait(60)
                         if self.is_running:
                             logging.info("Restart preview generator")

@@ -144,7 +144,7 @@ class INotifyWatcher(threading.Thread):
                         break
                     else:
                         self.app_state = 0
-                        logging.info("Not able to scan files. Try again in 60 seconds.")
+                        logging.info("Not able to run nextcloud 'file scanner' app. Try again in 60 seconds.")
                         self.queue_event.wait(60)
                         self.queue_event.clear()
                         if self.is_running:
