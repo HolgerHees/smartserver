@@ -2,7 +2,7 @@
 
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import cmp_to_key
 
 from config import config
@@ -112,7 +112,7 @@ def collectContainers():
             #_obj = json.loads(result.stdout.decode("utf-8"))
             #state = _obj[0]["State"]
             finished_at = datetime.fromtimestamp(obj["ExitedAt"])
-            is_stopped_since = (datetime.utcnow() - finished_at)
+            is_stopped_since = (datetime.now(timezone.utc) - finished_at)
 
         name = obj["Names"][0].split("/", 1)[-1]
         image_repository, image_tag = obj["Image"].split(':', 1)

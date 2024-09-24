@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import requests
 import json
 
@@ -45,7 +45,7 @@ class Alertmanager():
         #resolved_alert["status"] = "resolved"
         resolved_alert["labels"] = alert["labels"]
 
-        endsAt = datetime.utcnow() - timedelta(seconds=1)
+        endsAt = datetime.now(timezone.utc) - timedelta(seconds=1)
         resolved_alert["endsAt"] = endsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
 
         return resolved_alert
@@ -90,7 +90,7 @@ class Alertmanager():
         silence["comment"] = name
         #silence["status"] = { "state": "active" }
 
-        startsAt = datetime.utcnow()
+        startsAt = datetime.now(timezone.utc)
         silence["startsAt"] = startsAt.isoformat()#.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
         silence["endsAt"] = "2999-01-01T01:01:01.000000000Z"
 

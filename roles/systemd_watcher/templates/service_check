@@ -5,7 +5,7 @@ import sys
 import glob
 from os import path
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 
 from smartserver.alertmanager import Alertmanager
@@ -42,7 +42,7 @@ def fetchAlertmanagerAlerts():
     return alertmanager_alerts
 
 def buildAlert(severity, name, service, summary = None):
-    return Alertmanager.buildAlert("service-check", severity, name, summary, datetime.utcnow(), {"service": service})
+    return Alertmanager.buildAlert("service-check", severity, name, summary, datetime.now(timezone.utc), {"service": service})
 
 # cron job should start checking services 5 minutes after reboot, to give alle services enough time to start
 if not is_cli and not args_values["deployment"]:
@@ -128,15 +128,15 @@ for systemd_service in services:
         #    notified_service.append(systemd_service)
         #    continue
 
-        m = re.search("Loaded:[^;]+; ([^\s;\)]+).*",state)
+        m = re.search(r"Loaded:[^;]+; ([^\s;\)]+).*",state)
         loading_state = m.group(1)
         is_enabled = loading_state in ["enabled","static"]
 
-        m = re.search("Active: ([^\s]+).*",state)
+        m = re.search(r"Active: ([^\s]+).*",state)
         activation_state = m.group(1)
         is_active = activation_state in ["active","reloading"]
 
-        m = re.search("TriggeredBy: .*",state)
+        m = re.search(r"TriggeredBy: .*",state)
         is_triggered = m is not None
 
         state_flags = []
@@ -148,12 +148,12 @@ for systemd_service in services:
                 if is_enabled and is_triggered:
                    ignore = True
                 elif isVirtualized:
-                    m = re.search("Loaded: loaded \((.+?);.*",state)
+                    m = re.search(r"Loaded: loaded \((.+?);.*",state)
                     if m is not None:
                         service_file = m.group(1)
                         with open(service_file) as f:
                             content = f.read()
-                            m = re.search("ConditionVirtualization\s*=\s*(false|no)",content,re.IGNORECASE)
+                            m = re.search(r"ConditionVirtualization\s*=\s*(false|no)",content,re.IGNORECASE)
                             if m != None:
                                 ignore = True
                 if not ignore:
