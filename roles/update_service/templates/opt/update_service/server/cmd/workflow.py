@@ -138,7 +138,7 @@ class CmdWorkflow:
             external_cmd_type = self.cmd_executer.getExternalCmdType()
             if external_cmd_type != None:
                 last_seen_time = now
-                last_cmd_type = external_cmd_type if external_cmd_type is not None else self.cmd_executer.getCurrentJobCmdType()
+                last_cmd_type = external_cmd_type
 
             if waiting_time > min_waiting_time and inactivity_time > min_process_inactivity_time:
                 can_proceed = True

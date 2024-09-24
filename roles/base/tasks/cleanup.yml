@@ -66,3 +66,5 @@
     - "{{global_etc}}wireguard_cloud/util/startup.sh"
     - "/etc/systemd/system/nextcloud_inotify.service"
     - "{{global_etc}}systemd_watcher/services/nextcloud_inotify.conf"
+    - "/etc/nftables/20_trusted_cloud_vpn.nft"
+    - "/etc/nftables/20_trusted_networks.nft"

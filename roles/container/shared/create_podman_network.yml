@@ -7,10 +7,3 @@
     gateway: "{{network_gateway}}"
 #    connected: "{{network_container | default([])}}"
   register: network_result
- 
-- name: "container : create_podman_network : allow network {{network_name}}"
-  vars:
-    container_to_container_rules:
-       - { saddr: "{{network_firewall_subnet}}", daddr: "{{network_firewall_subnet}}", comment: "{{network_name}} <=> {{network_name}}" }
-  include_tasks: roles/firewall/shared/allow_network.yml
-  tags: ['firewall_config']

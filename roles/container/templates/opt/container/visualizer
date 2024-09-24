@@ -9,7 +9,6 @@ import json
 from textwrap import wrap
 
 from smartserver.processlist import Processlist
-from smartserver import nsenter
 
 
 TYPE_HEADLINE = 0

@@ -42,7 +42,6 @@
     mode: "{{item.mode}}"
   with_items:
     - { mode: "u=rw,g=r,o=", path: "/etc/nftables/00_init.nft" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/nftables/20_trusted_networks.nft" }
     - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/iptables-blacklist.conf" } # block iptables
   notify: "restart nftables"
 

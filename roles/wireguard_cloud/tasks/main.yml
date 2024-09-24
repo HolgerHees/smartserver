@@ -118,6 +118,8 @@
 - name: allow container service
   vars:
     service_name: "wireguard_cloud"
+    container_to_container_rules:
+      - { saddr: "{{vpn_cloud_subnet}}.0.0/16", daddr: "{{vpn_cloud_subnet}}.0.0/16", comment: "cloud_vpn <=> cloud_vpn" }
     container_to_outside_rules: |
       [
       {% for peer in cloud_vpn.peers %}
@@ -125,10 +127,11 @@
       {% endfor %}
         { "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "iif": "{{default_network_interface}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
-#    masquerading_rules: |
-#        [
 #            { "saddr": "{{cloud_vpn['interface']['network']}}", "oif": "{{default_network_interface}}" }
-#        ]
+    masquerading_rules: |
+        [
+            { "saddr": "{{vpn_cloud_services.local.gateway}}", "oif": "{{default_network_interface}}" }
+        ]
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
