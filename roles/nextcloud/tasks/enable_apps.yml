@@ -2,6 +2,27 @@
   set_fact:
     nextcloud_keeweb_version: '0.6.13'
 #    nextcloud_keeweb_version: '0.6.15'
+    nextcloud_default_apps:
+      - files_notify_redis
+      - user_saml
+      - richdocuments
+#      - jsloader
+      - previewgenerator
+      - bookmarks
+      - contacts
+      - calendar
+      - notes
+#      - collectives
+      - news
+      - deck
+      - tasks
+      - keeweb
+    nextcloud_disabled_apps:
+      - dashboard
+      - collectives
+      - jsloader
+#      - tasks
+#      - notes
 
 # ***** DISABLE APPS *****
 - name: disable apps
@@ -9,12 +30,7 @@
   register: app_disable_result
   changed_when: "'disabled' in app_disable_result.stdout"
 #  failed_when: "'disabled' not in app_disable_result.stdout and 'such app enabled' not in app_disable_result.stdout"
-  with_items:
-    - dashboard
-    - collectives
-    - jsloader
-#    - tasks
-#    - notes
+  with_items: "{{nextcloud_disabled_apps}}"
 
 # ***** INSTALL APPS *****
 - name: check installed apps
@@ -28,21 +44,7 @@
   failed_when: "'installed' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout and 'already exists' not in app_install_result.stdout"
   changed_when: "'enabled' in app_install_result.stdout"
   when: "'- ' + item + ':' not in app_list_result.stdout"
-  with_items:
-    - files_notify_redis
-    - user_saml
-    - richdocuments
-#    - jsloader
-    - previewgenerator
-    - bookmarks
-    - contacts
-    - calendar
-    - notes
-#    - collectives
-    - news
-    - deck
-    - tasks
-    - keeweb
+  with_items: "{{nextcloud_default_apps}}"
 
 - name: install additional_apps
   shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item.app}}\""
@@ -197,21 +199,12 @@
   register: app_status
   changed_when: no
 
-- name: enable disabled core apps
+- name: enable disabled default apps
   shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item}} --force\""
   register: app_enable_result
   failed_when: "'enabled' not in app_enable_result.stdout"
   when: "item not in app_status.stdout.split('Disabled')[0]"
-  with_items:
-    - user_saml
-    - richdocuments
-#    - collectives
-#    - jsloader
-    - previewgenerator
-    - news
-    - notes
-    - tasks
-    - keeweb
+  with_items: "{{nextcloud_default_apps}}"
 
 - name: enable disabled additional_apps apps
   shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item.app}} --force\""
