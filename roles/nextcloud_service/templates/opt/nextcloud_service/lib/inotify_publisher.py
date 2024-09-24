@@ -34,9 +34,10 @@ class INotifyPublisher(threading.Thread):
         super().start()
 
     def terminate(self):
-        self.is_running = False
-        self.event.set()
-        self.join()
+        if self.is_running:
+            self.is_running = False
+            self.event.set()
+            self.join()
 
     def trigger(self, event, time):
         self.queue.put([event, time])
@@ -99,6 +100,6 @@ class INotifyPublisher(threading.Thread):
 
     def getStateMetrics(self):
         metrics = [
-            "nextcloud_service_process{{type=\"inotify_publisher\"}} {}".format("1" if self.is_running else "0")
+            "nextcloud_service_process{{type=\"inotify_publisher\",group=\"main\"}} {}".format("1" if self.is_running else "0")
         ]
         return metrics

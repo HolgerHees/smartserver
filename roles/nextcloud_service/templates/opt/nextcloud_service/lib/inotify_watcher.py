@@ -27,6 +27,8 @@ class INotifyWatcher(threading.Thread):
 
         self.watched_directories = {}
 
+        self.app_state = -1
+
         self.dump_path= "/var/lib/nextcloud_service/state.json"
 
         self.valid_dump_file = True
@@ -42,13 +44,14 @@ class INotifyWatcher(threading.Thread):
         super().start()
 
     def terminate(self):
-        if self.is_running and os.path.exists(self.dump_path):
-            self._dump()
+        if self.is_running:
+            if os.path.exists(self.dump_path):
+                self._dump()
 
-        self.is_running = False
+            self.is_running = False
 
-        self.inotify.stop()
-        self.inotify.join()
+            self.inotify.stop()
+            self.inotify.join()
 
     def isRunning(self):
         return self.is_running
@@ -135,10 +138,12 @@ class INotifyWatcher(threading.Thread):
                     start = time.time()
                     code, result = exec2(self.config.cmd_file_scan, is_running_callback=self.isRunning, run_on_host=True)
                     if code == 0:
+                        self.app_state = 1
                         end = time.time()
                         logging.info("Files scanned in {:.2f} seconds".format(end-start))
                         break
                     else:
+                        self.app_state = 0
                         logging.info("Not able to scan files. Try again in 60 seconds.")
                         self.queue_event.wait(60)
                         self.queue_event.clear()
@@ -148,6 +153,7 @@ class INotifyWatcher(threading.Thread):
 
                 self._dump()
             else:
+                self.app_state = 1
                 logging.info("Skipped file scan")
 
             self.start_lazy_callback()
@@ -158,7 +164,8 @@ class INotifyWatcher(threading.Thread):
 
     def getStateMetrics(self):
         metrics = [
-            "nextcloud_service_process{{type=\"inotify_watcher\"}} {}".format("1" if self.is_running else "0"),
-            "nextcloud_service_state{{type=\"inotify_watcher\"}} {}".format(len(self.watched_directories))
+            "nextcloud_service_process{{type=\"inotify_watcher\",group=\"main\"}} {}".format("1" if self.is_running else "0"),
+            "nextcloud_service_process{{type=\"inotify_watcher\",group=\"app\",details=\"files:scan\"}} {}".format(self.app_state),
+            "nextcloud_service_state{{type=\"inotify_watcher\",group=\"count\"}} {}".format(len(self.watched_directories))
         ]
         return metrics

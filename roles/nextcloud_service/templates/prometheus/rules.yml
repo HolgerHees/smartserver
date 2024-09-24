@@ -1,11 +1,19 @@
 groups:
 - name: nextcloud_service
   rules:
-  - alert: Nextcloud service process crashed
-    expr: 'nextcloud_service_process{job="queue"} == 0'
+  - alert: Nextcloud worker process crashed
+    expr: 'nextcloud_service_process{group="main"} == 0'
     for: 0m
     labels:
       notifyGroup: "nextcloud_service"
       severity: critical
     annotations:
-      summary: "Queue process crashed"
+      summary: "Worker process crashed"
+  - alert: Nextcloud app was not successful
+    expr: 'nextcloud_service_process{group="app"} == 0'
+    for: 15m
+    labels:
+      notifyGroup: "nextcloud_service"
+      severity: critical
+    annotations:
+      summary: "Nextcloud app was not successful since 15 minutes"

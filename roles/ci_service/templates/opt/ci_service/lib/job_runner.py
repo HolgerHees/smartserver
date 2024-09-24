@@ -134,10 +134,16 @@ class JobRunner:
                             raise DeploymentException(exitcode, "failed", None, update_cmd)
 
                     # DEPLOYMENT RUN
-                    lf.writeRaw("\n")
                     deploy_cmd = [ vagrant_path, "--config={}".format(config_name), "--os={}".format(os_name), "up" ]
                     #cmd = u"echo '\033[31mtest1\033[0m' && echo '\033[200mtest2' && echo 1 && sleep 5 && echo 2 && sleep 5 && echo 3 2>&1"
-                    logging.info( u"Deployment for commit '{}' ('{}') started".format(self.git_hash,self._fmtCmd(deploy_cmd)) )
+                    logging.info(u"Deployment for commit '{}' ('{}') started".format(self.git_hash,self._fmtCmd(deploy_cmd)))
+
+                    env_r = []
+                    for k in env:
+                        env_r.append(u"{}={}".format(k, env[k]))
+                    self._writeWrapppedLog(lf, u"Env: '{}'".format(" ".join(env_r)))
+                    self._writeWrapppedLog(lf, u"Command: '{}' started".format(self._fmtCmd(deploy_cmd)))
+                    lf.writeRaw("\n")
 
                     # all 3 variables will only be used in 'self._watchDeployment'
                     self.registered_machines = virtualbox.getRegisteredMachines()
