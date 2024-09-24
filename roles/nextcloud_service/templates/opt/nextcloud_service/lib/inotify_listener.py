@@ -56,7 +56,7 @@ class INotifyListener(threading.Thread):
                     break
                 else:
                     self.app_state = 0
-                    logging.info("Not able to run nexcloud 'inotify listener' app. Try again in 60 seconds.")
+                    logging.info("Not able to run nextcloud 'inotify listener' app. Try again in 60 seconds.")
                     self.event.wait(60)
                     self.event.clear()
                     if self.is_running:
