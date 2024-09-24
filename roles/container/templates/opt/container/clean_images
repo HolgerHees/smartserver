@@ -57,9 +57,6 @@ class Image:
     def __lt__(self, other):
         return self.pull_reference < other.pull_reference or ( self.pull_reference == other.pull_reference and self.created < other.created )
 
-def execCommand(cmd, cwd=None ):
-    return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
-
 def sortImages(item1, item2):
     item1_is_custom = item1 is not None and item1.pull_reference.startswith("custom")
     item2_is_custom = item2 is not None and item2.pull_reference.startswith("custom")
@@ -132,13 +129,13 @@ def collectUsedImages(images, containers):
             used_images[container.image_id] = "used"
             image = images[container.image_id]
             if image.tag is None:
-                command.exec(["podman tag {} {}:{}".format(container.image_id, container.image_repository, container.image_tag) ] , shell=True)
+                command.exec(["podman", "tag", container.image_id, "{}:{}".format(container.image_repository, container.image_tag)])
 
                 image.setRepositiory(container.image_repository, container.image_tag)
                 print(u"\033[0;33mFIXED TAG \033[0m: IMG '{}', '{}'".format(image.id,image.pull_reference))
 
     # Collect Image ID's used in dockerfiles or containers
-    result = command.exec(["grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(config.GLOBAL_BUILD) ] , shell=True)
+    result = command.exec("grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(config.GLOBAL_BUILD))
     lines = result.stdout.decode("utf-8").split("\n")
     for line in lines[0:-1]:
         columns = line.split()
