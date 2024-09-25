@@ -71,36 +71,44 @@ class INotifyWatcher(threading.Thread):
     def _add(self, directory):
         self.watched_directories[directory] = True
         self.inotify.add_watch(directory, inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
+        #logging.info("Watch " + directory)
 
+    def _addRecursive(self, directory):
+        self._add(directory)
         for root, sub_directory_names, files in os.walk(directory):
             for _sub_directory_name in sub_directory_names:
-                sub_directory = os.path.join(root, _sub_directory_name)
-                self.watched_directories[sub_directory] = True
-                self.inotify.add_watch(sub_directory, inotify.Constants.IN_CLOSE_WRITE | inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_FROM | inotify.Constants.IN_MOVED_TO | inotify.Constants.IN_DELETE )
+                self._add(os.path.join(root, _sub_directory_name))
 
     def _del(self, directory):
         del self.watched_directories[directory]
         self.inotify.rm_watch(directory)
+        #logging.info("Unwatch " + directory)
 
-        for root, sub_directory_names, files in os.walk(directory):
-            for _sub_directory_name in sub_directory_names:
-                sub_directory = os.path.join(root, _sub_directory_name)
-                del self.watched_directories[sub_directory]
-                self.inotify.rm_watch(sub_directory)
+    def _delRecursive(self, directory):
+        self._del(directory)
+        for subdirectory in list(self.watched_directories.keys()):
+            if subdirectory.startswith(directory):
+                self._del(subdirectory)
 
     def _inotifyEvent(self, event):
-        now = datetime.now().replace(microsecond=0, tzinfo=self.timezone)
+        #logging.info(str(event))
 
-        if event.path in self.watched_directories:
+        now = datetime.now().replace(microsecond=0, tzinfo=self.timezone)
+        is_dir = event.mask & inotify.Constants.IN_ISDIR
+
+        if is_dir and event.path in self.watched_directories:
             directory = event.path
-            if event.mask & ( inotify.Constants.IN_DELETE | inotify.Constants.IN_MOVED_FROM ):
-                logging.info("Unwatch " + directory)
+            if event.mask & inotify.Constants.IN_DELETE:
                 self._del(directory)
+            elif event.mask & inotify.Constants.IN_MOVED_FROM:
+                self._delRecursive(directory)
         else:
-            directory = event.path if event.mask & inotify.Constants.IN_ISDIR else os.path.dirname(event.path)
-            if directory not in self.watched_directories and event.mask & ( inotify.Constants.IN_CREATE | inotify.Constants.IN_MOVED_TO ):
-                logging.info("Watch " + directory)
-                self._add(directory)
+            directory = event.path if is_dir else os.path.dirname(event.path)
+            if directory not in self.watched_directories:
+                if event.mask & inotify.Constants.IN_CREATE:
+                    self._add(directory)
+                elif event.mask & inotify.Constants.IN_MOVED_TO:
+                    self._addRecursive(directory)
 
         self.inotify_processor.trigger(event, now)
 
@@ -113,7 +121,7 @@ class INotifyWatcher(threading.Thread):
             start = time.time()
             detected_last_modified = None
             for directory in self.config.watched_directories:
-                self._add(directory)
+                self._addRecursive(directory)
                 result = exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), run_on_host=True)
                 date_str, file = result.stdout.decode("utf-8").split("\t")
 

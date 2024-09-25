@@ -228,7 +228,7 @@ class INotifyEvent:
         self._name = name
         self._wd_path = wd_path
 
-        self._path = wd_path + ( "/" + os.fsdecode(name) if name else "" )
+        self._path = os.path.join(wd_path, os.fsdecode(name)) if name else wd_path
 
     @property
     def wd(self):
