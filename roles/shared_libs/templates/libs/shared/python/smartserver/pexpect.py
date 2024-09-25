@@ -58,7 +58,7 @@ class Process():
             if isinstance(cmd, list):
                 cmd = subprocess.list2cmdline(cmd)
 
-            shell, cmd = command._prepareRunOnNamespace(cmd, cwd=self.cwd, env=self.env, namespace_pid=self.namespace_pid)
+            shell, cmd = command._prepareRunOnNamespace(cmd, cwd=self.cwd, env=self.env, pid=self.namespace_pid)
 
             self.process = pexpect.spawn(cmd, timeout=self.timeout, cwd=self.cwd, env=self.env, encoding="utf-8" )
             if self.logfile is not None:
