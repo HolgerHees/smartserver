@@ -38,21 +38,13 @@
   changed_when: no
   register: app_list_result
 
-- name: install core apps
+- name: install missing apps
   shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
   register: app_install_result
   failed_when: "'installed' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout and 'already exists' not in app_install_result.stdout"
   changed_when: "'enabled' in app_install_result.stdout"
   when: "'- ' + item + ':' not in app_list_result.stdout"
-  with_items: "{{nextcloud_default_apps}}"
-
-- name: install additional_apps
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item.app}}\""
-  register: app_install_result
-  failed_when: "'installed' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout and 'already exists' not in app_install_result.stdout"
-  changed_when: "'enabled' in app_install_result.stdout"
-  when: "'- ' + item.app + ':' not in app_list_result.stdout"
-  with_items: "{{nextcloud_additional_apps}}"
+  with_items: "{{nextcloud_default_apps + nextcloud_additional_apps | map(attribute='app')}}"
 
 #podman exec php sh -c "php -f {{htdocs_path}}nextcloud/occ update:check"
 - name: check available app updates
@@ -199,19 +191,12 @@
   register: app_status
   changed_when: no
 
-- name: enable disabled default apps
+- name: enable disabled apps
   shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item}} --force\""
   register: app_enable_result
   failed_when: "'enabled' not in app_enable_result.stdout"
   when: "item not in app_status.stdout.split('Disabled')[0]"
-  with_items: "{{nextcloud_default_apps}}"
-
-- name: enable disabled additional_apps apps
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item.app}} --force\""
-  register: app_enable_result
-  failed_when: "'enabled' not in app_enable_result.stdout"
-  when: "item.app not in app_status.stdout.split('Disabled')[0]"
-  with_items: "{{nextcloud_additional_apps}}"
+  with_items: "{{nextcloud_default_apps + nextcloud_additional_apps | map(attribute='app')}}"
 
 - name: collect additional app icons
   set_fact:
