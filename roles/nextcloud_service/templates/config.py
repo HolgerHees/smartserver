@@ -1,6 +1,7 @@
 watched_directories = [
+    "{{nextcloud_data_path}}admin/files/"
 {% for item in userdata %}{% if 'user' in userdata[item].groups %}
-    "{{nextcloud_data_path}}{{item}}/files/",
+    , "{{nextcloud_data_path}}{{item}}/files/"
 {% endif %}{% endfor %}
 ]
 

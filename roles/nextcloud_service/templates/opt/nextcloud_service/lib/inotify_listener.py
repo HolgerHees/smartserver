@@ -12,55 +12,49 @@ import subprocess
 from smartserver import inotify
 from smartserver import command
 
+from lib._process import Process
+
 
 class INotifyListener(threading.Thread):
     def __init__(self, config):
         threading.Thread.__init__(self)
 
-        self.event = threading.Event()
+        self.listener_process = Process()
+        self.listener_event = threading.Event()
 
         self.is_running = False
         self.config = config
-
-        self.app_state = -1
 
     def start(self):
         self.is_running = True
         super().start()
 
     def terminate(self):
-        if self.is_running:
-            self.is_running = False
+        if not self.is_running:
+            return
 
-            self.event.set()
-            self.join()
+        self.is_running = False
+
+        self.listener_event.set()
+        self.listener_process.terminate()
+        self.listener_process.join()
+
+        self.join()
 
     def run(self):
         logging.info("INotify listener started")
         try:
             while self.is_running:
                 #logging.info(str(self.config.cmd_inotify_listener))
-                process = command.popen(self.config.cmd_inotify_listener, run_on_host=True)
-                os.set_blocking(process.stdout.fileno(), False)
-                start = time.time()
-                while self.is_running and process.poll() is None:
-                    for line in iter(process.stdout.readline, b''):
-                        if line == '':
-                            break
-                        logging.info("RECEIVED: " + line.strip())
-                    if self.app_state != 1 and time.time() - start > 5:
-                        self.app_state = 1
-                    time.sleep(0.5)
-                if not self.is_running:
-                    process.terminate()
-                    break
-                else:
-                    self.app_state = 0
+                self.listener_process.run(self.config.cmd_inotify_listener, lambda msg: logging.info("RECEIVED: " + msg))
+                if self.listener_process.hasErrors():
                     logging.info("Not able to run nextcloud 'inotify listener' app. Try again in 60 seconds.")
-                    self.event.wait(60)
-                    self.event.clear()
+                    self.listener_event.wait(60)
+                    self.listener_event.clear()
                     if self.is_running:
                         logging.info("Restart inotify listener")
+                elif self.listener_process.isShutdown():
+                    break
 
         except Exception as e:
             self.is_running = False
@@ -71,6 +65,6 @@ class INotifyListener(threading.Thread):
     def getStateMetrics(self):
         metrics = [
             "nextcloud_service_process{{type=\"inotify_listener\",group=\"main\"}} {}".format("1" if self.is_running else "0"),
-            "nextcloud_service_process{{type=\"inotify_listener\",group=\"app\",details=\"files_notify_redis:primary\"}} {}".format(self.app_state)
+            "nextcloud_service_process{{type=\"inotify_listener\",group=\"app\",details=\"files_notify_redis:primary\"}} {}".format("1" if not self.listener_process.hasErrors() else "0")
         ]
         return metrics

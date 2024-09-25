@@ -16,9 +16,10 @@ class INotifyPublisher(threading.Thread):
     def __init__(self, config, preview_generator, handler):
         threading.Thread.__init__(self)
 
-        self.event = threading.Event()
+        self.queue_event = threading.Event()
 
         self.is_running = False
+
         self.config = config
         self.preview_generator = preview_generator
         self.handler = handler
@@ -34,14 +35,18 @@ class INotifyPublisher(threading.Thread):
         super().start()
 
     def terminate(self):
-        if self.is_running:
-            self.is_running = False
-            self.event.set()
-            self.join()
+        if not self.is_running:
+            return
+
+        self.is_running = False
+
+        self.queue_event.set()
+
+        self.join()
 
     def trigger(self, event, time):
         self.queue.put([event, time])
-        self.event.set()
+        self.queue_event.set()
 
     def run(self):
         logging.info("INotify publisher started")
@@ -87,16 +92,13 @@ class INotifyPublisher(threading.Thread):
 
                 except queue.Empty:
                     #logging.info("Sleep queue loop")
-                    self.event.wait()
-                    self.event.clear()
+                    self.queue_event.wait()
+                    self.queue_event.clear()
         except Exception as e:
             self.is_running = False
             raise e
         finally:
             logging.info("INotify publisher stopped")
-
-    def isRunning(self):
-        return self.is_running
 
     def getStateMetrics(self):
         metrics = [

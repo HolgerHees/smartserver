@@ -11,6 +11,8 @@ from lib import inotify_publisher
 from lib import inotify_listener
 from lib import preview_generator
 
+from lib._process import Process
+
 class Handler(Server):
     def __init__(self):
         super().__init__("nextcloud_service", "0.0.0.0", "80")
@@ -34,16 +36,16 @@ class Handler(Server):
         self.preview_generator.start()
 
     def terminate(self):
-        logging.info("Terminate inotify watcher")
+        #logging.info("Terminate inotify watcher")
         self.inotify_watcher.terminate()
 
-        logging.info("Terminate inotify publisher")
+        #logging.info("Terminate inotify publisher")
         self.inotify_publisher.terminate()
 
-        logging.info("Terminate inotify listener")
+        #logging.info("Terminate inotify listener")
         self.inotify_listener.terminate()
 
-        logging.info("Terminate preview generator")
+        #logging.info("Terminate preview generator")
         self.preview_generator.terminate()
 
         super().terminate()

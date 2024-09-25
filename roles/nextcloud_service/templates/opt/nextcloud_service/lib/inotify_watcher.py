@@ -6,12 +6,19 @@ from datetime import datetime, timezone, timedelta
 
 from smartserver.confighelper import ConfigHelper
 from smartserver import inotify
-from smartserver.command import exec, exec2
+from smartserver import command
+
+from lib._process import Process
 
 
 class INotifyWatcher(threading.Thread):
     def __init__(self, config, inotify_processor, start_lazy_callback):
         threading.Thread.__init__(self)
+
+        self.main_event = threading.Event()
+
+        self.scanner_process = Process()
+        self.scanner_event = threading.Event()
 
         self.is_running = False
         self.config = config
@@ -44,17 +51,23 @@ class INotifyWatcher(threading.Thread):
         super().start()
 
     def terminate(self):
-        if self.is_running:
-            if os.path.exists(self.dump_path):
-                self._dump()
+        if not self.is_running:
+            return
 
-            self.is_running = False
+        if os.path.exists(self.dump_path):
+            self._dump()
 
-            self.inotify.stop()
-            self.inotify.join()
+        self.is_running = False
 
-    def isRunning(self):
-        return self.is_running
+        self.inotify.stop()
+        self.inotify.join()
+
+        self.scanner_event.set()
+        self.scanner_process.terminate()
+        self.scanner_process.join()
+
+        self.main_event.set()
+        self.join()
 
     def _restore(self):
         self.valid_dump_file, data = ConfigHelper.loadConfig(self.dump_path, self.version)
@@ -75,9 +88,14 @@ class INotifyWatcher(threading.Thread):
 
     def _addRecursive(self, directory):
         self._add(directory)
-        for root, sub_directory_names, files in os.walk(directory):
-            for _sub_directory_name in sub_directory_names:
-                self._add(os.path.join(root, _sub_directory_name))
+        if self.is_running:
+            for root, sub_directory_names, files in os.walk(directory):
+                for _sub_directory_name in sub_directory_names:
+                    if not self.is_running:
+                        break
+                    self._add(os.path.join(root, _sub_directory_name))
+                if not self.is_running:
+                    break
 
     def _del(self, directory):
         del self.watched_directories[directory]
@@ -86,9 +104,12 @@ class INotifyWatcher(threading.Thread):
 
     def _delRecursive(self, directory):
         self._del(directory)
-        for subdirectory in list(self.watched_directories.keys()):
-            if subdirectory.startswith(directory):
-                self._del(subdirectory)
+        if self.is_running:
+            for subdirectory in list(self.watched_directories.keys()):
+                if subdirectory.startswith(directory):
+                    self._del(subdirectory)
+                if not self.is_running:
+                    break
 
     def _inotifyEvent(self, event):
         #logging.info(str(event))
@@ -120,60 +141,75 @@ class INotifyWatcher(threading.Thread):
         try:
             start = time.time()
             detected_last_modified = None
+            interrupted = False
             for directory in self.config.watched_directories:
                 self._addRecursive(directory)
-                result = exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), run_on_host=True)
-                date_str, file = result.stdout.decode("utf-8").split("\t")
+                if not self.is_running:
+                    break
+                result = command.exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), exitstatus_check=False, run_on_host=True)
+                if result.returncode != 0:
+                    if not self.is_running or result.returncode == Process.SIGNAL_TERM:
+                        interrupted = True
+                        break
+                    raise Exception(result.stdout.decode("utf-8"))
+                date_str, _ = result.stdout.decode("utf-8").split("\t")
 
                 date =  datetime.fromisoformat(date_str).replace(microsecond=0, tzinfo=self.timezone)
 
                 if detected_last_modified is None or detected_last_modified < date:
                     detected_last_modified = date
-            end = time.time()
-            logging.info("INotify watcher initialized {} directories in {:.2f} seconds".format(len(self.watched_directories.keys()), end-start))
 
-            last_modified = datetime.fromisoformat(self.state['last_modified']) if self.state['last_modified'] is not None else None
+            if self.is_running and not interrupted:
+                end = time.time()
+                logging.info("INotify watcher initialized {} directories in {:.1f} seconds".format(len(self.watched_directories.keys()), end-start))
 
-            #logging.info(detected_last_modified)
-            #logging.info(last_modified)
-            #logging.info(detected_last_modified > last_modified)
+                last_modified = datetime.fromisoformat(self.state['last_modified']) if self.state['last_modified'] is not None else None
 
-            #last_modified = detected_last_modified
+                #logging.info(detected_last_modified)
+                #logging.info(last_modified)
+                #logging.info(detected_last_modified > last_modified)
 
-            if last_modified is None or detected_last_modified > last_modified:
-                logging.info("Starting file scan")
-                while self.is_running:
-                    start = time.time()
-                    code, result = exec2(self.config.cmd_file_scan, is_running_callback=self.isRunning, run_on_host=True)
-                    if code == 0:
-                        self.app_state = 1
-                        end = time.time()
-                        logging.info("Files scanned in {:.2f} seconds".format(end-start))
-                        break
-                    else:
-                        self.app_state = 0
-                        logging.info("Not able to run nextcloud 'file scanner' app. Try again in 60 seconds.")
-                        self.queue_event.wait(60)
-                        self.queue_event.clear()
-                        if self.is_running:
-                            logging.info("Restart file scan")
-                self.state['last_modified'] = detected_last_modified.isoformat()
+                #last_modified = detected_last_modified
 
-                self._dump()
-            else:
-                self.app_state = 1
-                logging.info("Skipped file scan")
+                if last_modified is None or detected_last_modified > last_modified:
+                    logging.info("Starting file scan")
+                    while self.is_running:
+                        runtime = self.scanner_process.run(self.config.cmd_file_scan, lambda msg: logging.info(msg))
+                        if self.scanner_process.hasErrors():
+                            logging.info("Not able to run nextcloud 'file scanner' app. Try again in 60 seconds.")
+                            self.scanner_event.wait(60)
+                            self.scanner_event.clear()
+                            if self.is_running:
+                                logging.info("Restart file scan")
+                        elif not self.is_running or self.scanner_process.isShutdown():
+                            interrupted = True
+                            break
+                        else:
+                            logging.info("Files scanned in {:.1f} seconds".format(runtime))
+                            self.state['last_modified'] = detected_last_modified.isoformat()
+                            break
 
-            self.start_lazy_callback()
+                    self._dump()
+                else:
+                    logging.info("Skipped file scan")
+
+                if self.is_running and not interrupted:
+                    self.start_lazy_callback()
+
+            while self.is_running:
+                self.main_event.wait(60)
+                self.main_event.clear()
+
         except Exception as e:
-            logging.info("INotify processor crashed")
             self.is_running = False
             raise e
+        finally:
+            logging.info("INotify watcher stopped")
 
     def getStateMetrics(self):
         metrics = [
             "nextcloud_service_process{{type=\"inotify_watcher\",group=\"main\"}} {}".format("1" if self.is_running else "0"),
-            "nextcloud_service_process{{type=\"inotify_watcher\",group=\"app\",details=\"files:scan\"}} {}".format(self.app_state),
+            "nextcloud_service_process{{type=\"inotify_watcher\",group=\"app\",details=\"files:scan\"}} {}".format("1" if not self.scanner_process.hasErrors() else "0"),
             "nextcloud_service_state{{type=\"inotify_watcher\",group=\"count\"}} {}".format(len(self.watched_directories))
         ]
         return metrics
