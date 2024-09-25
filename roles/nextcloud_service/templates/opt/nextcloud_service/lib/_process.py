@@ -7,7 +7,29 @@ from smartserver import command
 
 
 class Process:
+    SIGNAL_KILL = -9
     SIGNAL_TERM = -15
+
+    process_container_pid = None
+    process_container_uid = None
+    process_container_regex = None
+
+    @staticmethod
+    def init(pid_regex, uid):
+        Process.process_container_regex = pid_regex
+        Process.process_container_uid = uid
+
+    @staticmethod
+    def detectProcessContainerPID():
+        if Process.process_container_pid is None:
+            returncode, result = command.exec2("ps -al | grep -E \"{}\"".format(Process.process_container_regex))
+            if returncode == 0:
+                Process.process_container_pid = result.split(" ")[0]
+        return Process.process_container_pid
+
+    @staticmethod
+    def resetProcessContainerPID():
+        Process.process_container_pid = None
 
     def __init__(self):
         self.process = None
@@ -39,34 +61,40 @@ class Process:
         self.is_running = True
         self.returncode = None
 
-        self.process = command.popen(cmd, run_on_host=True)
-        #if self.has_errors:
-        os.set_blocking(self.process.stdout.fileno(), False)
-        while self.process.poll() is None:
-            #logging.info("loop start " + str(self.process.pid))
-            poll_result = select([self.process.stdout], [], [], 5)[0]
-            #logging.info("loop done " + str(self.process.pid))
-            if not poll_result:
-                continue
+        pid = Process.detectProcessContainerPID()
+        if pid is not None:
+            self.process = command.popen(cmd, namespace_pid = pid, namespace_uid = Process.process_container_uid)
+            #if self.has_errors:
+            os.set_blocking(self.process.stdout.fileno(), False)
+            while self.process.poll() is None:
+                #logging.info("loop start " + str(self.process.pid))
+                poll_result = select([self.process.stdout], [], [], 5)[0]
+                #logging.info("loop done " + str(self.process.pid))
+                if not poll_result:
+                    continue
 
-            for line in iter(self.process.stdout.readline, b''):
-                if line == '':
-                    break
-                logging_callback(line.strip())
+                for line in iter(self.process.stdout.readline, b''):
+                    if line == '':
+                        break
+                    logging_callback(line.strip())
 
-            if self.has_errors:
-                if time.time() - start > 5:
-                    self.has_errors = False
-                    #os.set_blocking(self.process.stdout.fileno(), True)
-                #time.sleep(0.1)
+                if self.has_errors:
+                    if time.time() - start > 5:
+                        self.has_errors = False
+                        #os.set_blocking(self.process.stdout.fileno(), True)
+                    #time.sleep(0.1)
 
-        #logging.info("run done " + " ".join(cmd))
+            #logging.info("run done " + " ".join(cmd))
 
-        self.returncode = self.process.returncode
-        if self.is_running and self.returncode not in [0,Process.SIGNAL_TERM]:
-            self.has_errors = True
+            self.returncode = self.process.returncode
+            if self.is_running and self.returncode not in [0,Process.SIGNAL_TERM]:
+                Process.resetProcessContainerPID()
+                self.has_errors = True
+            else:
+                self.has_errors = False
         else:
-            self.has_errors = False
+            self.returncode = Process.SIGNAL_KILL
+            self.has_errors = True
 
         self.process = None
         self.is_running = False

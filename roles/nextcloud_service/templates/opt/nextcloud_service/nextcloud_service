@@ -17,6 +17,8 @@ class Handler(Server):
     def __init__(self):
         super().__init__("nextcloud_service", "0.0.0.0", "80")
 
+        Process.init(config.process_container_regex, config.process_container_uid)
+
         self.preview_generator = preview_generator.PreviewGenerator(config)
         self.inotify_listener = inotify_listener.INotifyListener(config)
         self.inotify_publisher = inotify_publisher.INotifyPublisher(config, self.preview_generator, self)

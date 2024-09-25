@@ -14,7 +14,7 @@ def deltree(target):
     os.rmdir(target)
 
 def getRegisteredMachines():
-    result = command.exec(["VBoxManage", "list", "vms" ], run_on_host=True)
+    result = command.exec(["VBoxManage", "list", "vms" ], namespace_pid=command.NAMESPACE_PID_HOST)
     lines = result.stdout.decode("utf-8").strip().split("\n");
     machines = {}
     for line in lines:
@@ -46,8 +46,8 @@ def destroyMachine(vid):
         machines = getRegisteredMachines()
         if vid in machines:
             name = machines[vid]
-            command.exec( ["VBoxManage", "controlvm", vid, "poweroff" ], exitstatus_check=False, run_on_host=True)
-            command.exec( ["VBoxManage", "unregistervm", "--delete", vid ], exitstatus_check=False, run_on_host=True)
+            command.exec( ["VBoxManage", "controlvm", vid, "poweroff" ], exitstatus_check=False, namespace_pid=command.NAMESPACE_PID_HOST)
+            command.exec( ["VBoxManage", "unregistervm", "--delete", vid ], exitstatus_check=False, namespace_pid=command.NAMESPACE_PID_HOST)
             return name
     return None
 

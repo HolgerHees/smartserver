@@ -114,7 +114,7 @@ class JobRunner:
                     vagrant_path = pathlib.Path(__file__).parent.absolute().as_posix() + "/../vagrant"
 
                     # force VBox folder
-                    command.exec( [ "VBoxManage", "setproperty", "machinefolder", "{}VirtualMachines".format(self.lib_dir) ], run_on_host=True)
+                    command.exec( [ "VBoxManage", "setproperty", "machinefolder", "{}VirtualMachines".format(self.lib_dir) ], namespace_pid=command.NAMESPACE_PID_HOST)
 
                     env = { "VAGRANT_HOME": self.lib_dir, "HOME": os.path.expanduser('~') }
 
@@ -122,7 +122,7 @@ class JobRunner:
                     # Always test with the latest version
                     logging.info( u"Image check for commit '{}' started".format(self.git_hash) )
                     update_cmd = [ vagrant_path, "--config={}".format(config_name), "--os={}".format(os_name), "box", "update" ]
-                    self.job = pexpect.Process(update_cmd, timeout=1800, logfile=lf, cwd=self.repository_dir, env=env, run_on_host=True)
+                    self.job = pexpect.Process(update_cmd, timeout=1800, logfile=lf, cwd=self.repository_dir, env=env, namespace_pid=command.NAMESPACE_PID_HOST)
                     self.job.start()
                     exitcode = self.job.getExitCode()
                     if exitcode != 0:
@@ -144,7 +144,7 @@ class JobRunner:
                     self.max_starttime_checker = threading.Timer(5,self._watchDeployment)
                     self.max_starttime_checker.start()
 
-                    self.job = pexpect.Process(deploy_cmd, timeout=7200, logfile=lf, cwd=self.repository_dir, env = env, run_on_host=True)
+                    self.job = pexpect.Process(deploy_cmd, timeout=7200, logfile=lf, cwd=self.repository_dir, env = env, namespace_pid=command.NAMESPACE_PID_HOST)
                     self.job.start()
                     if self.max_starttime_exceeded:
                         raise DeploymentException(-1, "crashed", "Max start time exceeded", deploy_cmd)
@@ -192,7 +192,7 @@ class JobRunner:
                     lf.writeRaw("\n")
                     logging.info( u"Cleaning for commit '{}' started".format(self.git_hash) )
                     clean_cmd = [ vagrant_path, "--config={}".format(config_name), "--os={}".format(os_name), "destroy", "--force" ]
-                    job = pexpect.Process(clean_cmd, timeout=max_cleanup_time, logfile=lf, cwd=self.repository_dir, env = env, run_on_host=True)
+                    job = pexpect.Process(clean_cmd, timeout=max_cleanup_time, logfile=lf, cwd=self.repository_dir, env = env, namespace_pid=command.NAMESPACE_PID_HOST)
                     job.start()
 
                     exitcode = job.getExitCode()
@@ -424,7 +424,7 @@ class JobExecutor():
                     body += "\n\n"
                     body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,self.current_git_hash)
 
-                    command.sendEmail("root", "CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body, run_on_host=True)
+                    command.sendEmail("root", "CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body, namespace_pid=command.NAMESPACE_PID_HOST)
 
                     is_failed_job = True
                     break

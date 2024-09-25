@@ -146,7 +146,7 @@ class INotifyWatcher(threading.Thread):
                 self._addRecursive(directory)
                 if not self.is_running:
                     break
-                result = command.exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), exitstatus_check=False, run_on_host=True)
+                result = command.exec("find {} -type f -printf \"%T+\t%p\n\" | sort | tail -1".format(directory), exitstatus_check=False, namespace_pid=command.NAMESPACE_PID_HOST)
                 if result.returncode != 0:
                     if not self.is_running or result.returncode == Process.SIGNAL_TERM:
                         interrupted = True
