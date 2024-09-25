@@ -50,7 +50,7 @@ class Application(App):
         tag_r = []
 
         # parse for parent images first, because new "docker buildx" will never cache parent images.
-        result = command.exec("/usr/bin/grep -R 'FROM {}:' {}*/Dockerfile".format(self.plugin_config['repository'], self.build_dir), exitstatus_check = False, shell=True )
+        result = command.exec("/usr/bin/grep -R 'FROM {}:' {}*/Dockerfile".format(self.plugin_config['repository'], self.build_dir), exitstatus_check = False)
         if result.returncode == 0:
             rows = result.stdout.decode("utf-8").split("\n")
             for row in rows:
