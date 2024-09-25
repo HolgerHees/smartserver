@@ -165,12 +165,6 @@ class INotifyWatcher(threading.Thread):
 
                 last_modified = datetime.fromisoformat(self.state['last_modified']) if self.state['last_modified'] is not None else None
 
-                #logging.info(detected_last_modified)
-                #logging.info(last_modified)
-                #logging.info(detected_last_modified > last_modified)
-
-                #last_modified = detected_last_modified
-
                 if last_modified is None or detected_last_modified > last_modified:
                     logging.info("Starting file scan")
                     while self.is_running:
@@ -189,7 +183,8 @@ class INotifyWatcher(threading.Thread):
                             self.state['last_modified'] = detected_last_modified.isoformat()
                             break
 
-                    self._dump()
+                    if self.is_running and not interrupted:
+                        self._dump()
                 else:
                     logging.info("Skipped file scan")
 
