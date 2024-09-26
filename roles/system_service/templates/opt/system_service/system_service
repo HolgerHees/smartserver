@@ -7,6 +7,7 @@ from datetime import datetime
 
 from smartserver.server import Server, serverWeb, serverSocket
 from smartserver.scheduler import Scheduler
+from smartserver.metric import Metric
 
 from lib.scanner.scanner import Scanner as NetworkScanner
 from lib.speedtest.speedtest import Speedtest
@@ -172,7 +173,7 @@ class Handler(Server):
 
         metrics += self.scheduler.getStateMetrics()
 
-        return "{}\n".format( "\n".join(metrics) )
+        return Metric.buildMetricsResult(metrics)
 
 @serverWeb.route('/triggerSpeedtest/', methods = ['GET'])
 def speedtest():

@@ -63,3 +63,11 @@
     - { src: "fonts/opensans/open-sans-v40-latin-600.woff2", dest: "shared/font/" }
     - { src: "fonts/opensans/open-sans-v40-latin-700.woff2", dest: "shared/font/" }
     - { src: "fonts/opensans/open-sans-v40-latin-800.woff2", dest: "shared/font/" }
+
+- name: register prometheus rules
+  vars:
+    name: "services"
+    rules_file: "templates/prometheus/rules.yml"
+  include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
+  when: "monitoring_enabled"

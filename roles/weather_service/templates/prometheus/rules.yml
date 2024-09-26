@@ -1,56 +1,20 @@
 groups:
 - name: weather_service
   rules:
-  - alert: Weather service process crashed
-    expr: 'weather_service_process{job="weather_service"} == 0'
+  - alert: Weather service connection state
+    expr: 'service_state{service="weather_service",type="connection"} == 0'
     for: 0m
     labels:
       notifyGroup: "weather_service"
       severity: critical
     annotations:
-      summary: "Weather service process '{{'{{'}} $labels.type {{'}}'}}' crashed"
+      summary: "Weather service connection state '{{'{{'}} $labels.group {{'}}'}}'"
 
-  - alert: Weather mqtt availability
-    expr: 'weather_service_state{job="weather_service", type="mqtt"} == 0'
+  - alert: Weather service state
+    expr: 'service_state{service="weather_service",type!="connection"} == 0'
     for: 0m
     labels:
       notifyGroup: "weather_service"
       severity: critical
     annotations:
-      summary: "Weather service mqtt"
-
-  - alert: Weather database availability
-    expr: 'weather_service_state{job="weather_service", type="mariadb"} == 0'
-    for: 0m
-    labels:
-      notifyGroup: "weather_service"
-      severity: critical
-    annotations:
-      summary: "Weather service database"
-
-  - alert: Weather provider
-    expr: 'weather_service_state{job="weather_service", type="provider"} == 0'
-    for: 0m
-    labels:
-      notifyGroup: "weather_service"
-      severity: critical
-    annotations:
-      summary: "Weather provider problem"
-
-  - alert: Weather consumer (provider)
-    expr: 'weather_service_state{job="weather_service", type="consumer_provider"} == 0'
-    for: 0m
-    labels:
-      notifyGroup: "weather_service"
-      severity: critical
-    annotations:
-      summary: "Weather consumer (provider) problem"
-
-  - alert: Weather consumer (station)
-    expr: 'weather_service_state{job="weather_service", type="consumer_station"} == 0'
-    for: 0m
-    labels:
-      notifyGroup: "weather_service"
-      severity: critical
-    annotations:
-      summary: "Weather consumer (station) problem"
+      summary: "Weather service state '{{'{{'}} $labels.group {{'}}'}}' - '{{'{{'}} $labels.type {{'}}'}}'"

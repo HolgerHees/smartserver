@@ -8,6 +8,8 @@ from datetime import datetime
 
 import logging
 
+from smartserver.metric import Metric
+
 
 class InfluxDB(threading.Thread):
     def __init__(self, config ):
@@ -41,7 +43,7 @@ class InfluxDB(threading.Thread):
         return datetime.strptime("{}+0000".format(value), "%Y-%m-%dT%H:%M:%S.%f%z").astimezone()
 
     def getStateMetrics(self):
-        return ["system_service_state{{type=\"influxdb\"}} {}".format(self.state_metrics)]
+        return [ Metric.buildStateMetric("system_service", "influxdb", self.state_metrics, {"type": "connection"}) ]
 
     def start(self):
         self.is_running = True
@@ -178,7 +180,7 @@ class InfluxDB(threading.Thread):
         except Exception as e:
             logging.error("Got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
             logging.error(traceback.format_exc())
-            return -1
+            return 0
 
 
     @staticmethod

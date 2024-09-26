@@ -7,6 +7,8 @@ import threading
 import logging
 import re
 
+from smartserver.metric import Metric
+
 
 class MQTT(threading.Thread):
     '''Handler client'''
@@ -84,7 +86,9 @@ class MQTT(threading.Thread):
         self.mqtt_client.publish(topic, payload,qos,retain)
 
     def getStateMetrics(self):
-        return ["weather_service_state{{type=\"mqtt\"}} {}".format(self.state)]
+        return [
+            Metric.buildStateMetric("weather_service", "mqtt", self.state, { "type": "connection" } )
+        ]
 
     def terminate(self):
         self.is_running = False

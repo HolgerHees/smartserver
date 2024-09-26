@@ -4,8 +4,10 @@ import logging
 import time
 
 from smartserver.processlist import Processlist
+from smartserver.metric import Metric
 
 from server.watcher import watcher
+
 
 class ProcessWatcher(watcher.Watcher): 
     process_mapping = {
@@ -209,5 +211,5 @@ class ProcessWatcher(watcher.Watcher):
 
     def getStateMetrics(self):
         return [
-            "update_service_process{{type=\"process_watcher\"}} {}".format("1" if self.is_running else "0")
+            Metric.buildProcessMetric("update_service", "process_watcher", "1" if self.is_running else "0")
         ]

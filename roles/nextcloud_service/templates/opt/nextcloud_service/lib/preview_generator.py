@@ -4,6 +4,7 @@ import time
 import os
 
 from smartserver import command
+from smartserver.metric import Metric
 
 from lib._process import Process
 
@@ -74,8 +75,7 @@ class PreviewGenerator(threading.Thread):
             logging.info("Preview generator stopped")
 
     def getStateMetrics(self):
-        metrics = [
-            "nextcloud_service_process{{type=\"preview_generator\",group=\"main\"}} {}".format("1" if self.is_running else "0"),
-            "nextcloud_service_process{{type=\"preview_generator\",group=\"app\",details=\"preview:pre-generate\"}} {}".format("1" if not self.generator_process.hasErrors() else "0")
+        return [
+            Metric.buildProcessMetric("nextcloud_service", "preview_generator", "1" if self.is_running else "0"),
+            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "1" if not self.generator_process.hasErrors() else "0", { "app": "preview:pre-generate" })
         ]
-        return metrics

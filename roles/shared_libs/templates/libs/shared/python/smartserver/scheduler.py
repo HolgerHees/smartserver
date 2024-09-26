@@ -3,6 +3,9 @@ import threading
 import logging
 import traceback
 
+from smartserver.metric import Metric
+
+
 class Scheduler(threading.Thread):
     def __init__(self, name):
         threading.Thread.__init__(self)
@@ -39,5 +42,5 @@ class Scheduler(threading.Thread):
 
     def getStateMetrics(self):
         return [
-            "{}_process{{type=\"scheduler\"}} {}".format(self.name, "1" if self.is_running else "0")
+            Metric.buildProcessMetric(self.name, "scheduler", "1" if self.is_running else "0")
         ]

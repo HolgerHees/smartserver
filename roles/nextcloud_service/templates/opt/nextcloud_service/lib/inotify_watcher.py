@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 from smartserver.confighelper import ConfigHelper
 from smartserver import inotify
 from smartserver import command
+from smartserver.metric import Metric
 
 from lib._process import Process
 
@@ -202,9 +203,9 @@ class INotifyWatcher(threading.Thread):
             logging.info("INotify watcher stopped")
 
     def getStateMetrics(self):
-        metrics = [
-            "nextcloud_service_process{{type=\"inotify_watcher\",group=\"main\"}} {}".format("1" if self.is_running else "0"),
-            "nextcloud_service_process{{type=\"inotify_watcher\",group=\"app\",details=\"files:scan\"}} {}".format("1" if not self.scanner_process.hasErrors() else "0"),
-            "nextcloud_service_state{{type=\"inotify_watcher\",group=\"count\"}} {}".format(len(self.watched_directories))
+        return [
+            Metric.buildProcessMetric("nextcloud_service", "inotify_watcher", "1" if self.is_running else "0"),
+            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "1" if self.valid_dump_file else "0", { "type": "cache_file" }),
+            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "1" if not self.scanner_process.hasErrors() else "0", { "app": "files:scan" }),
+            Metric.buildDataMetric("nextcloud_service", "inotify_watcher", len(self.watched_directories), { "type": "count" })
         ]
-        return metrics

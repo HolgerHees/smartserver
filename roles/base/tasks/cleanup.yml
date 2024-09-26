@@ -68,3 +68,6 @@
     - "{{global_etc}}systemd_watcher/services/nextcloud_inotify.conf"
     - "/etc/nftables/20_trusted_cloud_vpn.nft"
     - "/etc/nftables/20_trusted_networks.nft"
+    - "{{global_etc}}prometheus/rules/camera_service.yml"
+    - "{{global_etc}}prometheus/rules/update_service.yml"
+

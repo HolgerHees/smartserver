@@ -8,6 +8,7 @@ import schedule
 import time
 
 from smartserver.confighelper import ConfigHelper
+from smartserver.metric import Metric
 
 from lib.db import DBException
 from lib.helper.forecast import WeatherBlock, WeatherHelper
@@ -500,7 +501,7 @@ class ProviderConsumer():
                 if self.consume_refreshed[state_name] - self.consume_errors[state_name] < 300:
                     has_errors = True
 
-        state_metrics = []
-        state_metrics.append("weather_service_state{{type=\"consumer_provider\",group=\"data\"}} {}".format(1 if has_any_update else 0))
-        state_metrics.append("weather_service_state{{type=\"consumer_provider\",group=\"running\"}} {}".format(1 if self.is_running and not has_errors else 0))
-        return state_metrics
+        return [
+            Metric.buildProcessMetric("weather_service", "consumer_provider", "1" if self.is_running and not has_errors else "0"),
+            Metric.buildStateMetric("weather_service", "consumer_provider", "1" if has_any_update else "0", { "type": "not_outdatet" })
+        ]

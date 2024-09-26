@@ -4,6 +4,7 @@ import traceback
 import time
 
 from smartserver.confighelper import ConfigHelper
+from smartserver.metric import Metric
 
 
 class StationConsumer():
@@ -96,7 +97,7 @@ class StationConsumer():
                 has_any_update = True
                 break
 
-        state_metrics = []
-        state_metrics.append("weather_service_state{{type=\"consumer_station\",group=\"data\"}} {}".format(1 if has_any_update else 0))
-        state_metrics.append("weather_service_state{{type=\"consumer_station\",group=\"running\"}} {}".format(1 if self.is_running else 0))
-        return state_metrics
+        return [
+            Metric.buildProcessMetric("weather_service", "consumer_station", "1" if self.is_running else "0"),
+            Metric.buildStateMetric("weather_service", "consumer_station", "1" if has_any_update else "0", { "type": "not_outdatet" })
+        ]

@@ -11,6 +11,7 @@ import subprocess
 
 from smartserver import inotify
 from smartserver import command
+from smartserver.metric import Metric
 
 from lib._process import Process
 
@@ -63,8 +64,7 @@ class INotifyListener(threading.Thread):
             logging.info("INotify listener stopped")
 
     def getStateMetrics(self):
-        metrics = [
-            "nextcloud_service_process{{type=\"inotify_listener\",group=\"main\"}} {}".format("1" if self.is_running else "0"),
-            "nextcloud_service_process{{type=\"inotify_listener\",group=\"app\",details=\"files_notify_redis:primary\"}} {}".format("1" if not self.listener_process.hasErrors() else "0")
+        return [
+            Metric.buildProcessMetric("nextcloud_service", "inotify_listener", "1" if self.is_running else "0"),
+            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "1" if not self.listener_process.hasErrors() else "0", { "app": "files_notify_redis:primary" })
         ]
-        return metrics

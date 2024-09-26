@@ -8,6 +8,7 @@ from datetime import datetime
 from smartserver.server import Server, serverWeb, serverSocket
 from smartserver.scheduler import Scheduler
 from smartserver.filewatcher import FileWatcher
+from smartserver.metric import Metric
 
 from lib.cachehandler import CacheHandler
 
@@ -73,7 +74,7 @@ class Handler(Server):
         metrics = []
         metrics += self.scheduler.getStateMetrics()
         metrics += self.cache_handler.getStateMetrics()
-        return "{}\n".format( "\n".join(metrics) )
+        return Metric.buildMetricsResult(metrics)
 
 handler = Handler()
 handler.start()

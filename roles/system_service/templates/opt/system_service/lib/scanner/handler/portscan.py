@@ -9,12 +9,13 @@ import schedule
 import os
 
 from smartserver import command
+from smartserver.confighelper import ConfigHelper
+from smartserver.metric import Metric
 
 from lib.scanner.handler import _handler
 from lib.scanner.helper import Helper
 from lib.scanner.dto.event import Event
 
-from smartserver.confighelper import ConfigHelper
 
 class PortScanner(_handler.Handler): 
     def __init__(self, config, cache ):
@@ -41,7 +42,7 @@ class PortScanner(_handler.Handler):
 
     def getStateMetrics(self):
         metrics = super().getStateMetrics()
-        metrics.append("system_service_state{{type=\"portscan\",details=\"cache_file\",}} {}".format("1" if self.valid_cache_file else "0"))
+        metrics.append(Metric.buildStateMetric("system_service", "portscan", "1" if self.valid_cache_file else "0", { "type": "cache_file" }))
         return metrics
 
     def start(self):

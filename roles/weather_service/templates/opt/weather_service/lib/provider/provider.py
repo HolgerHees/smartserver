@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import os
 
 from smartserver.confighelper import ConfigHelper
+from smartserver.metric import Metric
 
 from lib.db import DBException
 
@@ -195,10 +196,11 @@ class Provider:
     def getStateMetrics(self):
         state_metrics = []
         for name, value in self.service_metrics.items():
-            state_metrics.append("weather_service_state{{type=\"provider\", group=\"{}\"}} {}".format(name,value))
+            state_metrics.append(Metric.buildStateMetric("weather_service", "provider", value, { "type": name }))
 
         max_hours = 3 if self.is_fetching else 6
         state = 1 if time.time() - self.last_fetch < 60 * 60 * max_hours else 0
 
-        state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(state))
+        state_metrics.append(Metric.buildProcessMetric("system_service", "provider", state))
+        state_metrics.append(Metric.buildStateMetric("weather_service", "provider", value, { "type": name }))
         return state_metrics

@@ -7,6 +7,9 @@ import threading
 import logging
 import re
 
+from smartserver.metric import Metric
+
+
 class Message():
     def __init__(self, topic, payload):
         self.topic = topic
@@ -40,7 +43,9 @@ class Dummy():
         self.subscriber[topic] = callback
 
     def getStateMetrics(self):
-        return ["weather_service_state{{type=\"mqtt\"}} {}".format(self.state)]
+        return [
+            Metric.buildStateMetric("weather_service", "mqtt", self.state, { "type": "connection" } )
+        ]
 
     def terminate(self):
         logging.info("Stop dummy broker ...")

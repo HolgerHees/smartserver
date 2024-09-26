@@ -19,6 +19,7 @@ from lib import git
 from config import config
 
 from smartserver import command
+from smartserver.metric import Metric
 
 import glob
 from smartserver import logfile
@@ -244,7 +245,7 @@ class Handler(Server):
 
     def getStateMetrics(self):
         return [
-            "ci_service_state{{job=\"ci_service\",type=\"leftover\",}} {}".format("1" if self.has_leftovers else "0")
+            Metric.buildStateMetric("ci_service", "no_leftover", "1" if not self.has_leftovers else "0")
         ]
 
 @serverWeb.route('/status/', methods = ['GET'])

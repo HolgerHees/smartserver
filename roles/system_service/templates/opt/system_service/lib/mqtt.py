@@ -3,6 +3,9 @@ import time
 import logging
 import traceback
 
+from smartserver.metric import Metric
+
+
 class MQTTHandler():
     def __init__(self, config):
         self.mqtt_client = None
@@ -11,7 +14,7 @@ class MQTTHandler():
         self.state_metrics = -1
 
     def getStateMetrics(self):
-        return ["system_service_state{{type=\"mqtt\"}} {}".format(self.state_metrics)]
+        return [ Metric.buildStateMetric("system_service", "mqtt", self.state_metrics, {"type": "connection"}) ]
 
     def start(self):
         while True:

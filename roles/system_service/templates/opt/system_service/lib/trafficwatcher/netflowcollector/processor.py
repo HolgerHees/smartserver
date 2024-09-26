@@ -11,11 +11,14 @@ import ipaddress
 import cProfile, pstats, io
 from pstats import SortKey
 
+from smartserver.metric import Metric
+
 from .collector import ThreadedNetFlowListener
 
 from netflow.v9 import V9OptionsTemplateRecord, V9TemplateRecord
 
 from lib.trafficwatcher.helper.helper import TrafficGroup, Helper as TrafficHelper
+
 
 IP_protocolIdentifierS = {
     1: "icmp",
@@ -568,6 +571,6 @@ class Processor(threading.Thread):
 
     def getStateMetrics(self):
         return [
-            "system_service_state{{type=\"trafficwatcher.netflowcollector\",details=\"device_init_time\",}} {}".format( "1" if self.device_base_error == 0 or time.time() - self.device_base_error < 600 else "0" ),
-            "system_service_process{{type=\"trafficwatcher.netflowcollector\",}} {}".format("1" if self.is_running else "0")
+            Metric.buildProcessMetric("system_service", "trafficwatcher.netflowcollector", "1" if self.is_running else "0"),
+            Metric.buildStateMetric("system_service", "trafficwatcher.netflowcollector", "1" if self.device_base_error == 0 or time.time() - self.device_base_error < 600 else "0", { "type": "device_init_time" })
         ]

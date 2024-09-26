@@ -1,19 +1,20 @@
 groups:
 - name: nextcloud_service
   rules:
-  - alert: Nextcloud worker process crashed
-    expr: 'nextcloud_service_process{group="main"} == 0'
-    for: 0m
-    labels:
-      notifyGroup: "nextcloud_service"
-      severity: critical
-    annotations:
-      summary: "Worker process crashed"
-  - alert: Nextcloud app was not successful
-    expr: 'nextcloud_service_process{group="app"} == 0'
+  - alert: Nextcloud service app was not successful
+    expr: 'service_state{service="nextcloud_service",app!=""} == 0'
     for: 15m
     labels:
       notifyGroup: "nextcloud_service"
       severity: critical
     annotations:
-      summary: "Nextcloud app was not successful since 15 minutes"
+      summary: "Nextcloud service app '{{'{{'}} $labels.group {{'}}'}}'.'{{'{{'}} $labels.app {{'}}'}}' was not successful since 15 minutes"
+
+  - alert: Nextcloud service state was not successful
+    expr: 'service_state{service="nextcloud_service",app==""} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "nextcloud_service"
+      severity: critical
+    annotations:
+      summary: "Nextcloud service state '{{'{{'}} $labels.group {{'}}'}}' was not successful"

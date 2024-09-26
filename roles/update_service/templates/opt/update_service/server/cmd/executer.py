@@ -15,6 +15,7 @@ from config import config
 from smartserver import command
 from smartserver import pexpect
 from smartserver import processlist
+from smartserver.metric import Metric
 
 from server.watcher import watcher
 
@@ -329,5 +330,5 @@ class CmdExecuter(watcher.Watcher):
 
     def getStateMetrics(self):
         return [
-            "update_service_process{{type=\"cmd_executer\"}} {}".format("1" if self.is_running else "0")
+            Metric.buildProcessMetric("update_service", "cmd_executer", "1" if self.is_running else "0")
         ]

@@ -1,11 +1,11 @@
 groups:
 - name: ci_service
   rules:
-  - alert: CIService has leftover machines
-    expr: 'ci_service_state{job="ci_service", type="leftover"} == 1'
+  - alert: CI Service has leftover machines
+    expr: 'service_state{service="ci_service",group="no_leftover"} == 0'
     for: 0m
     labels:
       notifyGroup: "ci_service"
       severity: critical
     annotations:
-      summary: "CIServer problem"
+      summary: "CIService has leftover machines"

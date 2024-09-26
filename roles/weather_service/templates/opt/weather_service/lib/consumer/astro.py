@@ -2,6 +2,8 @@ import logging
 from datetime import datetime, timedelta
 import schedule
 
+from smartserver.metric import Metric
+
 from lib.helper.forecast import WeatherHelper
 
 
@@ -48,4 +50,6 @@ class AstroConsumer():
         return { "astroSunrise": self.astroSunrise, "astroSunset": self.astroSunset }
 
     def getStateMetrics(self):
-        return ["weather_service_state{{type=\"consumer_astro\",group=\"running\"}} {}".format(1 if self.is_running else 0)]
+        return [
+            Metric.buildProcessMetric("weather_service", "consumer_astro", "1" if self.is_running else "0")
+        ]

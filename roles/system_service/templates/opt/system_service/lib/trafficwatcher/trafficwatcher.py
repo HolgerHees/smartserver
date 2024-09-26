@@ -9,6 +9,7 @@ import requests
 from datetime import datetime
 
 from smartserver import command
+from smartserver.metric import Metric
 
 from lib.trafficwatcher.trafficblocker.trafficblocker import TrafficBlocker
 from lib.trafficwatcher.netflowcollector.processor import Processor as NetflowProcessor, Connection as NetflowConnection
@@ -25,6 +26,7 @@ import pstats
 import io
 
 WIREGUARD_PEER_TIMEOUT = 60 * 5 # 5 minutes
+
 
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
@@ -716,19 +718,15 @@ class TrafficWatcher(threading.Thread):
         return messurements
 
     def getStateMetrics(self):
-        metrics = ["system_service_process{{type=\"trafficwatcher\"}} {}".format("1" if self.is_running else "0")]
-
+        metrics = [ Metric.buildProcessMetric("system_service", "trafficwatcher", "1" if self.is_running else "0") ]
         with self.stats_lock:
             count_values = self.traffic_metrics.copy()
             self.traffic_metrics = {}
-
         self._fillTrafficGroups(count_values)
         for group, count in count_values.items():
-            metrics.append( "system_service_trafficwatcher{{type=\"{}\",}} {}".format( group, count ) )
-
-        metrics = metrics + self.logcollector.getStateMetrics()
-        metrics = metrics + self.netflow.getStateMetrics()
-        metrics = metrics + self.blocklists.getStateMetrics()
-        metrics = metrics + self.trafficblocker.getStateMetrics()
-
+            metrics.append( Metric.buildDataMetric("system_service", "trafficwatcher", count, { "traffic_group": group }) )
+        metrics += self.logcollector.getStateMetrics()
+        metrics += self.netflow.getStateMetrics()
+        metrics += self.blocklists.getStateMetrics()
+        metrics += self.trafficblocker.getStateMetrics()
         return metrics

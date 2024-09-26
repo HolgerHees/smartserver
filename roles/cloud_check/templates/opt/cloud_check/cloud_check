@@ -16,6 +16,8 @@ import logging
 
 import requests
 
+from smartserver.metric import Metric
+
 from config import config
 
 CHECK_INTERVAL = 60
@@ -313,17 +315,16 @@ class Handler(threading.Thread):
                         topic_state[source_peer] = MQTT_STATE_OFFLINE
 
                 if Helper.getAgeInSeconds(topic_data["updated"]) < CHECK_INTERVAL * 2:
-                    state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,int(topic_data["state"])))
-
                     # mqtt state is unknown during startup where updated is datetime.now() but state is PEER_STATE_UNKNOWN
+                    state_metrics.append(Metric.buildGenericMetric("cloud_check_topic", {"source_peer": source_peer, "target_peer": target_peer}, int(topic_data["state"])))
                     topic_state[source_peer] = MQTT_STATE_ONLINE if topic_data["state"] != PEER_STATE_UNKNOWN else MQTT_STATE_UNKNOWN
                     continue
                 else:
-                    state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,PEER_STATE_UNKNOWN))
+                    Metric.buildGenericMetric("cloud_check_topic", {"source_peer": source_peer, "target_peer": target_peer}, PEER_STATE_UNKNOWN)
                     topic_data["state"] = PEER_STATE_UNKNOWN
 
             for peer in topic_state:
-                state_metrics.append("cloud_check_peer_mqtt_state{{peer=\"{}\"}} {}".format(peer,topic_state[peer]))
+                state_metrics.append(Metric.buildGenericMetric("cloud_check_peer_mqtt_state", {"peer": peer}, topic_state[peer]))
                 if peer not in self.last_mqtt_state or self.last_mqtt_state[peer] != topic_state[peer]:
                     Helper.logInfo("New mqtt state for pear '{}' is '{}'".format(peer, topic_state[peer]))
                     self.last_mqtt_state[peer] = topic_state[peer]
@@ -331,8 +332,8 @@ class Handler(threading.Thread):
             # **** CHECK IF ALL PEERS ARE ONLINE ****
             for peer in config.cloud_peers:
                 peer_job = self.peer_jobs[peer]
-                state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,peer_job.getRunningState()))
-                state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
+                state_metrics.append(Metric.buildGenericMetric("cloud_check_peer_online_state", {"peer": peer}, peer_job.getRunningState()))
+                state_metrics.append(Metric.buildGenericMetric("cloud_check_peer_mount_state", {"peer": peer}, peer_job.getMountState()))
 
             if not self.isOnline():
                 state = "0"
@@ -343,7 +344,7 @@ class Handler(threading.Thread):
         else:
             state_metrics = []
 
-        return "{}\n".format( "\n".join(state_metrics) )
+        return Metric.buildMetricsResult(state_metrics)
 
     def getSelfState(self, peer):
         max_state = PEER_STATE_UNKNOWN

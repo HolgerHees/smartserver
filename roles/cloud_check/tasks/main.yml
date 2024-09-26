@@ -30,7 +30,7 @@
     image_files:
       - roles/cloud_check/templates/container/Dockerfile
     entrypoint_startup:
-#      - "/opt/shared/python/install.py"
+      - "/opt/shared/python/install.py"
       - "/opt/cloud_check/cloud_check &"
   include_tasks: roles/container/shared/build_podman_image.yml
   tags: ['container_entrypoint_config']
@@ -44,6 +44,7 @@
     container_exposed_ports:
       - "80/tcp"
     container_volumes:
+      - '{{global_opt}}shared/python:/opt/shared/python:ro'
       - '{{global_opt}}cloud_check/:/opt/cloud_check'
       - '{{cloud_path}}/remote:/cloud/remote:rshared'
     container_after: [ "cloud_mosquitto" ]

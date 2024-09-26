@@ -3,6 +3,7 @@
 import logging
 
 from smartserver.server import Server
+from smartserver.metric import Metric
 
 from config import config
 
@@ -12,6 +13,7 @@ from lib import inotify_listener
 from lib import preview_generator
 
 from lib._process import Process
+
 
 class Handler(Server):
     def __init__(self):
@@ -58,7 +60,7 @@ class Handler(Server):
         metrics += self.inotify_listener.getStateMetrics()
         metrics += self.inotify_publisher.getStateMetrics()
         metrics += self.preview_generator.getStateMetrics()
-        return "{}\n".format( "\n".join(metrics) )
+        return Metric.buildMetricsResult(metrics)
 
 handler = Handler()
 handler.start()

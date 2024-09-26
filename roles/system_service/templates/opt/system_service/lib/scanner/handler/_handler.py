@@ -6,6 +6,8 @@ import traceback
 
 import json
 
+from smartserver.metric import Metric
+
 from lib.scanner.dto.event import Event
 from lib.scanner.helper import Helper
 
@@ -34,13 +36,13 @@ class Handler:
     def getStateMetrics(self):
         metrics = []
         for hostname in self.device_metric_states:
-            metrics.append("system_service_state{{type=\"{}\",hostname=\"{}\"}} {}".format(self.__class__.__name__.lower(), hostname, self.device_metric_states[hostname]))
+            metrics.append(Metric.buildStateMetric("system_service", self.__class__.__name__.lower(), self.device_metric_states[hostname], { "hostname": hostname }))
 
         for service in self.service_metric_states:
-            metrics.append("system_service_state{{type=\"{}\"}} {}".format(service, self.service_metric_states[service]))
+            metrics.append(Metric.buildStateMetric("system_service", service, self.service_metric_states[service]))
 
         if self.thread is not None:
-            metrics.append("system_service_process{{type=\"scanner.{}\",}} {}".format(self.__class__.__name__.lower(), "1" if self.is_running else "0"))
+            metrics.append(Metric.buildProcessMetric("system_service", "scanner.{}".format(self.__class__.__name__.lower()), "1" if self.is_running else "0"))
         return metrics
 
     def _setDeviceMetricState(self, hostname, value):

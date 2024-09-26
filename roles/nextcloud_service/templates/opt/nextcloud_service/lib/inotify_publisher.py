@@ -10,6 +10,7 @@ from datetime import datetime
 import subprocess
 
 from smartserver import inotify
+from smartserver.metric import Metric
 
 
 class INotifyPublisher(threading.Thread):
@@ -101,7 +102,6 @@ class INotifyPublisher(threading.Thread):
             logging.info("INotify publisher stopped")
 
     def getStateMetrics(self):
-        metrics = [
-            "nextcloud_service_process{{type=\"inotify_publisher\",group=\"main\"}} {}".format("1" if self.is_running else "0")
+        return [
+            Metric.buildProcessMetric("nextcloud_service", "inotify_publisher", "1" if self.is_running else "0")
         ]
-        return metrics

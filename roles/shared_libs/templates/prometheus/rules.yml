@@ -1,0 +1,11 @@
+groups:
+- name: Services
+  rules:
+  - alert: Service process crashed
+    expr: 'service_process == 0'
+    for: 0m
+    labels:
+      notifyGroup: "{{'{{'}} $labels.service {{'}}'}}"
+      severity: critical
+    annotations:
+      summary: "Service process '{{'{{'}} $labels.service {{'}}'}}'.'{{'{{'}} $labels.group {{'}}'}}' crashed"

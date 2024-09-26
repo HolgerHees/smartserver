@@ -1,37 +1,37 @@
 groups:
 - name: system_service
   rules:
-  - alert: System service service state
-    expr: 'system_service_state{job="system_service",hostname=""} == 0'
+  - alert: System service state
+    expr: 'service_state{service="system_service",hostname="",connection=""} == 0'
     for: 0m
     labels:
       notifyGroup: "system_service"
       severity: critical
     annotations:
-      summary: "System service service state '{{'{{'}} $labels.type {{'}}'}}'"
+      summary: "System service service state '{{'{{'}} $labels.group {{'}}'}}'"
 
   - alert: System service device state
-    expr: 'system_service_state{job="system_service",hostname!=""} == 0'
+    expr: 'service_state{service="system_service",hostname!=""} == 0'
     for: 0m
     labels:
       notifyGroup: "system_service"
       severity: critical
     annotations:
-      summary: "System service device state '{{'{{'}} $labels.type {{'}}'}}' - '{{'{{'}} $labels.hostname {{'}}'}}'"
+      summary: "System service device state '{{'{{'}} $labels.group {{'}}'}}' - '{{'{{'}} $labels.hostname {{'}}'}}'"
 
-  - alert: System service process crashed
-    expr: 'system_service_process{job="system_service"} == 0'
+  - alert: System service connection state
+    expr: 'service_state{service="system_service",connection!=""} == 0'
     for: 0m
     labels:
       notifyGroup: "system_service"
       severity: critical
     annotations:
-      summary: "System service process '{{'{{'}} $labels.type {{'}}'}}' crashed"
+      summary: "System service connection state '{{'{{'}} $labels.group {{'}}'}}' - '{{'{{'}} $labels.connection {{'}}'}}'"
 
 - name: wan_connection
   rules:
   - alert: Speedtest is not working
-    expr: 'absent_over_time(system_service_speedtest[70m])'
+    expr: 'absent_over_time(service_data{service="system_service",group="speedtest"}[70m])'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -40,9 +40,9 @@ groups:
       summary: "Speedtest is not working. Maybe your wan connection is broken."
 
   - alert: WAN connection download speed is too low
-    expr: 'max_over_time(system_service_speedtest{type="downstream_rate"}[12h]) < max_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.5
+    expr: 'max_over_time(service_data{service="system_service",group="speedtest",type="downstream_rate"}[12h]) < max_over_time(service_data{service="system_service",group="speedtest",type="downstream_rate"}[30d]) * 0.5
            or
-           avg_over_time(system_service_speedtest{type="downstream_rate"}[48h]) < avg_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.75'
+           avg_over_time(service_data{service="system_service",group="speedtest",type="downstream_rate"}[48h]) < avg_over_time(service_data{service="system_service",group="speedtest",type="downstream_rate"}[30d]) * 0.75'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -51,9 +51,9 @@ groups:
       summary: "WAN connection download speed is {{'{{'}}printf \"%.0f\" $value{{'}}'}} mbit/s"
 
   - alert: WAN connection upload speed is too low
-    expr: 'max_over_time(system_service_speedtest{type="upstream_rate"}[12h]) < max_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.5
+    expr: 'max_over_time(service_data{service="system_service",group="speedtest",type="upstream_rate"}[12h]) < max_over_time(service_data{service="system_service",group="speedtest",type="upstream_rate"}[30d]) * 0.5
            or
-           avg_over_time(system_service_speedtest{type="upstream_rate"}[48h]) < avg_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.75'
+           avg_over_time(service_data{service="system_service",group="speedtest",type="upstream_rate"}[48h]) < avg_over_time(service_data{service="system_service",group="speedtest",type="upstream_rate"}[30d]) * 0.75'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -62,7 +62,7 @@ groups:
       summary: "WAN connection upload speed is {{'{{'}}printf \"%.0f\" $value{{'}}'}} mbit/s"
 
   - alert: WAN connection ping latency is too high
-    expr: 'min_over_time(system_service_speedtest{type="ping"}[12h]) > min_over_time(system_service_speedtest{type="ping"}[30d]) * 2'
+    expr: 'min_over_time(service_data{service="system_service",group="speedtest",type="ping"}[12h]) > min_over_time(service_data{service="system_service",group="speedtest",type="ping"}[30d]) * 2'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -71,7 +71,7 @@ groups:
       summary: "WAN connection ping latency is {{'{{'}}$value{{'}}'}} ms"
 
   - alert: Default ISP not active
-    expr: 'system_service_info{type="default_isp"} == 0'
+    expr: 'service_data{service="system_service",group="info",type="default_isp"} == 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -80,7 +80,7 @@ groups:
       summary: "Default ISP route not active. Maybe fallback isp is active."
 
   - alert: WAN not active
-    expr: 'system_service_info{type="wan_active"} == 0'
+    expr: 'service_data{service="system_service",group="info",type="wan_active"} == 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -91,7 +91,7 @@ groups:
 - name: suspicious_traffic
   rules:
   - alert: Suspicious traffic detected
-    expr: 'sum_over_time(system_service_trafficwatcher{type="intruded"}[60m]) > 0'
+    expr: 'sum_over_time(service_data{group="trafficwatcher",traffic_group="intruded"}[60m]) > 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -100,7 +100,7 @@ groups:
       summary: "Suspicious traffic detected"
 
   - alert: Suspicious traffic blocklist outdated
-    expr: 'system_service_blocklists{type="list_state"} == 0'
+    expr: 'service_state{service="system_service",group="trafficwatcher.blocklists",type="not_outdated"} == 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -109,7 +109,7 @@ groups:
       summary: "Suspicious traffic blocklist outdated"
 
   - alert: Suspicious traffic blocklist is empty
-    expr: 'system_service_blocklists{type="list_entries"} == 0'
+    expr: 'service_data{service="system_service",group="trafficwatcher.blocklists",type="entries"} == 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"

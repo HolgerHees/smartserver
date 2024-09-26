@@ -20,6 +20,7 @@ from lib.helper.forecast import WeatherBlock
 from smartserver.scheduler import Scheduler
 from smartserver.server import Server, serverWeb, serverSocket
 from smartserver.filewatcher import FileWatcher
+from smartserver.metric import Metric
 
 from config import config
 
@@ -158,7 +159,7 @@ class Handler(Server):
         if self.station_consumer:
             metrics += self.station_consumer.getStateMetrics()
 
-        return "{}\n".format( "\n".join(metrics) )
+        return Metric.buildMetricsResult(metrics)
 
 @serverSocket.on('getWeekData')
 def getWeekData(day):

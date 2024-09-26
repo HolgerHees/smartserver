@@ -11,6 +11,9 @@ from functools import cmp_to_key
 from wand.image import Image, COMPRESSION_TYPES
 from wand.exceptions import MissingDelegateError, CorruptImageError
 
+from smartserver.metric import Metric
+
+
 class CacheJob(threading.Thread):
     def __init__(self, job_time, job_path, job_is_new):
         threading.Thread.__init__(self)
@@ -298,5 +301,6 @@ class CacheHandler(threading.Thread):
         pass
 
     def getStateMetrics(self):
-        metrics = ["camera_service_process{{type=\"cache_handler\"}} {}".format("1" if self.is_running else "0")]
-        return metrics
+        return [
+            Metric.buildProcessMetric("camera_service", "cache_handler", "1" if self.is_running else "0")
+        ]

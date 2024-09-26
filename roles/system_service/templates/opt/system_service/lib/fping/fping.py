@@ -9,6 +9,8 @@ import logging
 from datetime import datetime
 
 from smartserver import command
+from smartserver.metric import Metric
+
 
 class FPing(threading.Thread):
     def __init__(self, config, handler, influxdb ):
@@ -79,5 +81,4 @@ class FPing(threading.Thread):
         return self.messurements
 
     def getStateMetrics(self):
-        return ["system_service_process{{type=\"fping\",}} {}".format("1" if self.is_running else "0")]
-
+        return [ Metric.buildProcessMetric("system_service", "fping", "1" if self.is_running else "0") ]

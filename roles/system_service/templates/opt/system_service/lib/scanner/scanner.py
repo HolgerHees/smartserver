@@ -5,6 +5,8 @@ from collections import deque
 import traceback
 import ipaddress
 
+from smartserver.metric import Metric
+
 from lib.scanner.dto.device import Device, Connection
 from lib.scanner.dto.event import Event
 
@@ -20,6 +22,7 @@ from lib.scanner.handler.gateway import Gateway
 
 from lib.scanner.handler.publish_mqtt import MQTTPublisher
 from lib.scanner.handler.publish_influxdb import InfluxDBPublisher
+
 
 class Scanner(threading.Thread):
     def __init__(self, config, handler, mqtt, influxdb ):
@@ -323,5 +326,5 @@ class Scanner(threading.Thread):
         metrics = []
         for handler in self.registered_handler:
             metrics += handler.getStateMetrics()
-        metrics.append("system_service_process{{type=\"scanner.broker\",}} {}".format("1" if self.is_running else "0"))
+        metrics.append( Metric.buildProcessMetric("system_service", "scanner.broker", "1" if self.is_running else "0") )
         return metrics

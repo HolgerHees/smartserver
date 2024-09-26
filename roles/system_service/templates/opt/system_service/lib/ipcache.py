@@ -13,6 +13,8 @@ import schedule
 import os
 
 from smartserver.confighelper import ConfigHelper
+from smartserver.metric import Metric
+
 
 class IPCache(threading.Thread):
     TYPE_LOCATION = "Location"
@@ -310,7 +312,7 @@ class IPCache(threading.Thread):
 
     def getStateMetrics(self):
         return [
-            "system_service_process{{type=\"ip_cache\"}} {}".format("1" if self.is_running else "0"),
-            "system_service_state{{type=\"ip_cache\",details=\"ip2location_service\"}} {}".format("1" if self.ip2location_state else "0"),
-            "system_service_state{{type=\"ip_cache\",details=\"cache_file\",}} {}".format("1" if self.valid_cache_file else "0")
+            Metric.buildProcessMetric("system_service", "ip_cache", "1" if self.is_running else "0"),
+            Metric.buildStateMetric("system_service", "ip_cache", "1" if self.ip2location_state else "0", { "type": "ip2location_service" }),
+            Metric.buildStateMetric("system_service", "ip_cache", "1" if self.valid_cache_file else "0", { "type": "cache_file" })
         ]

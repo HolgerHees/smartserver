@@ -8,6 +8,7 @@ import math
 from datetime import datetime, timedelta
 
 from smartserver.confighelper import ConfigHelper
+from smartserver.metric import Metric
 
 from lib.trafficwatcher.trafficblocker.helper import Helper
 from lib.trafficwatcher.helper.helper import TrafficGroup
@@ -296,6 +297,6 @@ class TrafficBlocker(threading.Thread):
 
     def getStateMetrics(self):
         return [
-            "system_service_process{{type=\"trafficwatcher.trafficblocker\"}} {}".format("1" if self.is_running else "0"),
-            "system_service_state{{type=\"trafficwatcher.trafficblocker\",details=\"cache_file\"}} {}".format("1" if self.valid_config_file else "0")
+            Metric.buildProcessMetric("system_service", "trafficwatcher.trafficblocker", "1" if self.is_running else "0"),
+            Metric.buildStateMetric("system_service", "trafficwatcher.trafficblocker", "1" if self.valid_config_file else "0", { "type": "cachefile" })
         ]

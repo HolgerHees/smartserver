@@ -12,7 +12,10 @@ import websocket
 
 from datetime import datetime
 
+from smartserver.metric import Metric
+
 from lib.trafficwatcher.helper.helper import TrafficGroup, Helper as TrafficHelper
+
 
 class Helper():
     @staticmethod
@@ -249,4 +252,6 @@ class LogCollector(threading.Thread):
             logging.error(traceback.format_exc())
 
     def getStateMetrics(self):
-        return [ "system_service_process{{type=\"trafficwatcher.logcollector\"}} {}".format("1" if self.is_running else ( "-1" if self.ws is None else "0" )) ]
+        return [ 
+            Metric.buildProcessMetric("system_service", "trafficwatcher.logcollector", "1" if self.is_running else ( "-1" if self.ws is None else "0"))
+        ]

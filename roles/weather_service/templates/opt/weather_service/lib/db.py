@@ -3,6 +3,9 @@ import logging
 import datetime
 from decimal import Decimal
 
+from smartserver.metric import Metric
+
+
 #class DBHelper():
 #    @staticmethod
 #    def convertDatetime(datetime_str):
@@ -146,7 +149,9 @@ class DB():
         return DBConnection(self, self.config)
 
     def getStateMetrics(self):
-        return ["weather_service_state{{type=\"mariadb\"}} {}".format(self.state)]
+        return [
+            Metric.buildStateMetric("weather_service", "mariadb", self.state, { "type": "connection" } )
+        ]
 
 #    def connect(self):
 #        return MySQLdb.connect(host=self.config.db_host,user=self.config.db_username,passwd=self.config.db_password,db=self.config.db_name)

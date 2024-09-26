@@ -20,6 +20,7 @@ from server.watcher.software_version import SoftwareVersionWatcher
 from smartserver.server import Server, serverWeb, serverSocket
 from smartserver import logfile
 from smartserver.filewatcher import FileWatcher
+from smartserver.metric import Metric
 
 from config import config
 
@@ -319,7 +320,7 @@ class Handler(Server):
         metrics = []
         metrics += self.process_watcher.getStateMetrics()
         metrics += self.cmd_executer.getStateMetrics()
-        return "{}\n".format( "\n".join(metrics) )
+        return Metric.buildMetricsResult(metrics)
 
 
 @serverSocket.on('refreshSoftwareVersionCheck')
