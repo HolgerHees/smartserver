@@ -12,17 +12,15 @@ class Process:
 
     process_container_pid = None
     process_container_uid = None
-    process_container_regex = None
 
     @staticmethod
-    def init(pid_regex, uid):
-        Process.process_container_regex = pid_regex
+    def init(uid):
         Process.process_container_uid = uid
 
     @staticmethod
     def detectProcessContainerPID():
         if Process.process_container_pid is None:
-            returncode, result = command.exec2("ps -al | grep -E \"{}\"".format(Process.process_container_regex))
+            returncode, result = command.exec2("pgrep -f \"master\" -U {}".format(Process.process_container_uid))
             if returncode == 0:
                 Process.process_container_pid = result.split(" ")[0]
         return Process.process_container_pid
