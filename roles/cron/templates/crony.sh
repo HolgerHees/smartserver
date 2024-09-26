@@ -3,15 +3,36 @@
 set -eu
 
 IFS='|' read -r journal_type name command <<< "$@"
-journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//')"
-name="$(echo -e "${name}" | sed -e 's/[[:space:]]*$//')"
-command="$(echo -e "${command}" | sed -e 's/^[[:space:]]*//')"
+#journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//')"
+#name="$(echo -e "${name}" | sed -e 's/[[:space:]]*$//')"
+#command="$(echo -e "${command}" | sed -e 's/^[[:space:]]*//')"
+journal_type="$(echo -e "${journal_type}" | xargs)"
+name="$(echo -e "${name}" | xargs)"
+command="$(echo -e "${command}" | xargs)"
 #name=`echo "$name" | xargs`
 #command=`echo $command | xargs`
+
+script_name=$(basename "$0")
+
+# CHECK for still running jobs
+result=$(pgrep -f "${script_name} ${journal_type} | ${name}");
+instances="$(wc -l <<< \"$result\")"
+
+if [ "$instances" -gt "1" ]; then
+    #pgrep -af "${script_name} ${journal_type} | ${name}"
+    echo "CRON '$name' still running"  | systemd-cat -t $journal_type -p 4;
+    exit
+fi
 
 #echo "$@";
 #echo ":$name:";
 #echo ":$journal_type:";
+#echo ":$command:";
+
+#ps -alx | grep $journal_type
+
+#echo "$instances";
+
 #exit;
 
 #exec > >(systemd-cat -t "$(realpath "$0")" -p info ) 2> >(systemd-cat -t "$(realpath "$0")" -p err )

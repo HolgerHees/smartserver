@@ -222,7 +222,7 @@
 - name: create cron job 'cron.php'
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/cron.php > /dev/null"
+    cmd: "podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/cron.php > /dev/null"
     group: "nextcloud"
     log: "cron"
     minute: "*/5"
