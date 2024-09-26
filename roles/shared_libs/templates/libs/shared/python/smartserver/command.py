@@ -9,20 +9,20 @@ def _prepareRunOnNamespace(cmd, cwd, env, pid = None, uid = None):
     shell = not isinstance(cmd, list)
 
     if pid is not None:
-        if cwd is not None or env is not None:
-            if not shell:
-                cmd = subprocess.list2cmdline(cmd)
-            shell = True
-            if cwd is not None:
-                cmd = "cd {} && {}".format(cwd, cmd)
-            if env is not None:
-                for key in env:
-                    cmd = "{}={} {}".format(key, env[key], cmd)
-
-        _cmd = [ "nsenter", "-t", str(pid) ]
+        # --no-fork work's, but sideeffect is that shutting down the related container will not kill the nsenter process anymore. It will result in an inconsistent state.
+        # --nofork => means the process stayes in the control group of this service
+        # without --no-fork => means the process stayes in the control group of this service, but the forked exec process is part of the control group of the target namespace
+        _cmd = [ "nsenter", "--target={}".format(str(pid)) ]
         if uid is not None:
-            _cmd += [ "-S", str(uid) ]
+            _cmd += [ "--setuid={}".format(str(uid)) ]
+        if cwd is not None:
+            _cmd += [ "--wdns={}".format(str(cwd)) ]
+        #if env is not None:
+        #    #for key in env:
+        #    #    _cmd += "{}={}".format(key, env[key])
+        #    _cmd += [ "--env" ]
         _cmd += [ "--all", "--" ]
+
         if shell:
             _cmd += ["sh", "-c"]
             _cmd.append( cmd )

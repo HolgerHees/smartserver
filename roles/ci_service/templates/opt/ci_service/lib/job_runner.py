@@ -188,6 +188,13 @@ class JobRunner:
                             logging.error("{} ({})".format(msg,e.getDetails()))
                         self._writeWrapppedLog(lf, msg)
 
+                    env_r = []
+                    for key in env:
+                        env_r.append("{}={}".format(key, env[key]))
+                    msg = "Used ENV: '{}'".format(" ".join(env_r))
+                    logging.info(msg)
+                    self._writeWrapppedLog(lf, msg)
+
                     # DEPLOYMENT CLEANUP
                     lf.writeRaw("\n")
                     logging.info( u"Cleaning for commit '{}' started".format(self.git_hash) )
