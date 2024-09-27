@@ -16,7 +16,7 @@
   when: "database not in mariadb_database_exists.stdout"
 
 - name: "mariadb : add_database : refresh privileges => database does not exists"
-  shell: "podman exec mariadb mariadb-admin -u root -h 127.0.0.1 flush-privileges\""
+  shell: "podman exec mariadb mariadb-admin -u root -h 127.0.0.1 flush-privileges"
   when: "database not in mariadb_database_exists.stdout"
 
 - name: "mariadb : add_database : create cron job"
