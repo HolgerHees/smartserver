@@ -30,7 +30,7 @@
 #  when: "certificate_mode == 'create'"
 
 #- name: create certificates => certificate_mode = 'create'
-#  shell: "podman exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
+#  shell: "podman exec apache2 certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}"
 #  notify: "refresh apache2"
 #  when: "certificate_mode == 'create'"
 

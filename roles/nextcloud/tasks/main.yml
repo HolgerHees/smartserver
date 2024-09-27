@@ -172,7 +172,7 @@
 
 # ***** UPDATE USERS *****
 - name: check for existing users
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ user:list\" | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ user:list | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
   register: nextcloud_user_result
   changed_when: False
   #when: "database_added"
@@ -184,7 +184,7 @@
 # basic auth for non dav requests does not work, because the saml code to handle REMOTE_USER needs cookies
 # one possible way to fix is changing "/apps/user_saml/lib/UserBackend.php->getCurrentUserId"
 - name: add new user
-  shell: "podman exec php OC_PASS=123+456*890 php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}"
+  shell: "podman exec --env=OC_PASS=123+456*890 php php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}"
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   when: "'user' in userdata[item].groups"
