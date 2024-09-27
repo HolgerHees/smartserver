@@ -145,6 +145,13 @@
     - { meta: flush_handlers } # Previous roles are independent from upcoming roles, But lot of upcoming roles are depending from previous roles
     # **************************************
 
+    - { import_role: { name: openhab },                                                      tags: [ 'openhab' ],                                            when: "openhab_enabled" }                          # openhab iot server
+    - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools
+
+    # ************ FLUSH HANDLER ***********
+    - { meta: flush_handlers } # Activate openhab as soon as possible to give openhab more time to initialize until post_tasks are running
+    # **************************************
+
     - { import_role: { name: user },                                                         tags: [ 'user' ] }                                                                                                 # users (linux, samba, web ...)
     
     - { import_role: { name: apache_webui },                                                 tags: [ 'apache_webui' ] }                                                                                         # responsive web ui
@@ -164,9 +171,6 @@
 
     - { import_role: { name: mysql_phpmyadmin },                                             tags: [ 'mysql_phpmyadmin' ],                                   when: "mariadb_enabled" }                          # phpMyAdmin
     #- { import_role: { name: mysql_adminer },                                                tags: [ 'mysql_adminer' ],                                      when: "mariadb_enabled" }                          # Adminer
-
-    - { import_role: { name: openhab },                                                      tags: [ 'openhab' ],                                            when: "openhab_enabled" }                          # openhab iot server
-    - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools
 
     - { import_role: { name: minidlna },                                                     tags: [ 'minidlna', 'alpine' ],                                 when: "dlna_enabled" }                             # dlna media server
      
