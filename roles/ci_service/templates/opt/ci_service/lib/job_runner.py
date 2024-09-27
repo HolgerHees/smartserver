@@ -178,19 +178,19 @@ class JobRunner:
 
                     cmd_r = []
                     for key in env:
-                        cmd_r.append("- export {}={}".format(key, env[key]))
-                    cmd_r.append("- {}".format(self._fmtCmd(e.getCmd())))
+                        cmd_r.append("   export {}={}".format(key, env[key]))
+                    cmd_r.append("   {}".format(self._fmtCmd(e.getCmd())))
                     runtime = timedelta(seconds=duration)
                     if statuscode == "success":
                         logging.info("Command '{}' finished successful after {}.".format(self._fmtCmd(e.getCmd()),runtime))
-                        self._writeWrapppedLog(lf, "Command finished successful after {}.".format(runtime) + "\n" + "\n".join(cmd_r) )
+                        self._writeWrapppedLog(lf, "==> Command finished successful after {}.".format(runtime) + "\n" + "\n".join(cmd_r) )
                     else:
                         msg = "Command '{}' stopped unsuccessful ({}) after {}.".format(self._fmtCmd(e.getCmd()),e.getExitCode(),runtime)
                         if self.job.isTerminated():
                             logging.info("{} ({})".format(msg,e.getDetails()))
                         else:
                             logging.error("{} ({})".format(msg,e.getDetails()))
-                        self._writeWrapppedLog(lf, "Command stopped unsuccessful ({}) after {}.".format(e.getExitCode(),runtime) + "\n" + "\n".join(cmd_r))
+                        self._writeWrapppedLog(lf, "==> Command stopped unsuccessful ({}) after {}.".format(e.getExitCode(),runtime) + "\n" + "\n".join(cmd_r))
 
                     # DEPLOYMENT CLEANUP
                     lf.writeRaw("\n")
