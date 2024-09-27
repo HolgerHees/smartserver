@@ -42,7 +42,7 @@ class PortScanner(_handler.Handler):
 
     def getStateMetrics(self):
         metrics = super().getStateMetrics()
-        metrics.append(Metric.buildStateMetric("system_service", "portscan", "1" if self.valid_cache_file else "0", { "type": "cache_file" }))
+        metrics.append(Metric.buildStateMetric("system_service", "scanner.handler.portscan", "cache_file", "1" if self.valid_cache_file else "0"))
         return metrics
 
     def start(self):

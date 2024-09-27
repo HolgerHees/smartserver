@@ -200,7 +200,8 @@ class Info(threading.Thread):
     def getStateMetrics(self):
         return [ 
             Metric.buildProcessMetric("system_service", "info", "1" if self.is_running else "0"),
-            Metric.buildDataMetric("system_service", "info", "1" if self.wan_active else "0", { "type": "wan_active" }),
-            Metric.buildDataMetric("system_service", "info", "1" if self.default_isp_connection_active else "0", { "type": "default_isp" })
+            Metric.buildStateMetric("system_service", "info", "cache_file", "1" if self.valid_cache_file else "0"),
+            Metric.buildDataMetric("system_service", "info", "wan_active", "1" if self.wan_active else "0"),
+            Metric.buildDataMetric("system_service", "info", "default_isp", "1" if self.default_isp_connection_active else "0")
         ]
 

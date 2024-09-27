@@ -572,5 +572,5 @@ class Processor(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("system_service", "trafficwatcher.netflowcollector", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("system_service", "trafficwatcher.netflowcollector", "1" if self.device_base_error == 0 or time.time() - self.device_base_error < 600 else "0", { "type": "device_init_time" })
+            Metric.buildStateMetric("system_service", "trafficwatcher.netflowcollector", "device_init_time", "1" if self.device_base_error == 0 or time.time() - self.device_base_error < 600 else "0")
         ]

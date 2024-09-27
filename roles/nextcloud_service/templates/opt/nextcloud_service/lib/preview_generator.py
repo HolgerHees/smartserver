@@ -77,5 +77,5 @@ class PreviewGenerator(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("nextcloud_service", "preview_generator", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "1" if not self.generator_process.hasErrors() else "0", { "app": "preview:pre-generate" })
+            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "app", "1" if not self.generator_process.hasErrors() else "0", { "app": "preview:pre-generate" })
         ]

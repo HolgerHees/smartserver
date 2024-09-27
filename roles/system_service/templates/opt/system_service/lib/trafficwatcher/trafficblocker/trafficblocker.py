@@ -298,5 +298,5 @@ class TrafficBlocker(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("system_service", "trafficwatcher.trafficblocker", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("system_service", "trafficwatcher.trafficblocker", "1" if self.valid_config_file else "0", { "type": "cachefile" })
+            Metric.buildStateMetric("system_service", "trafficwatcher.trafficblocker", "cache_file", "1" if self.valid_config_file else "0")
         ]

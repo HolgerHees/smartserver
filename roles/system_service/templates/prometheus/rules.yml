@@ -91,7 +91,7 @@ groups:
 - name: suspicious_traffic
   rules:
   - alert: Suspicious traffic detected
-    expr: 'sum_over_time(service_data{group="trafficwatcher",traffic_group="intruded"}[60m]) > 0'
+    expr: 'sum_over_time(service_data{group="trafficwatcher",type="intruded"}[60m]) > 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"

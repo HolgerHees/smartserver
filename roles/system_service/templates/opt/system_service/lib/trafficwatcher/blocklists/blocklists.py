@@ -210,9 +210,9 @@ class Blocklists(threading.Thread):
         ]
 
         for name, config in self.configs.items():
-            metrics.append(Metric.buildStateMetric("system_service", "trafficwatcher.blocklists", "1" if self.valid_dump_file[name] else "0", { "listname": name, "type": "cachefile", "cache_file": "{}_file".format(name) } ))
-            metrics.append(Metric.buildStateMetric("system_service", "trafficwatcher.blocklists", 1 if ( name in self.map_modified and self.map_modified[name] > time.time() - self.max_list_age ) else 0, { "listname": name, "type": "not_outdated" }))
-            metrics.append(Metric.buildDataMetric("system_service", "trafficwatcher.blocklists", self.map_modified[name] if name in self.map_modified else 0, { "listname": name, "type": "last_modified" } ))
-            metrics.append(Metric.buildDataMetric("system_service", "trafficwatcher.blocklists", len(self.map_data[name].keys()), { "listname": name, "type": "entries" }))
+            metrics.append(Metric.buildStateMetric("system_service", "trafficwatcher.blocklists", "cache_file", "1" if self.valid_dump_file[name] else "0", { "listname": name, "file": "{}".format(name) } ))
+            metrics.append(Metric.buildStateMetric("system_service", "trafficwatcher.blocklists", "not_outdated", "1" if ( name in self.map_modified and self.map_modified[name] > time.time() - self.max_list_age ) else "0", { "listname": name }))
+            metrics.append(Metric.buildDataMetric("system_service", "trafficwatcher.blocklists", "last_modified", self.map_modified[name] if name in self.map_modified else 0, { "listname": name } ))
+            metrics.append(Metric.buildDataMetric("system_service", "trafficwatcher.blocklists", "entries", len(self.map_data[name].keys()), { "listname": name }))
 
         return metrics

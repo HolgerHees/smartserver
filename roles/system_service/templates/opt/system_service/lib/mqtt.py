@@ -14,7 +14,7 @@ class MQTTHandler():
         self.state_metrics = -1
 
     def getStateMetrics(self):
-        return [ Metric.buildStateMetric("system_service", "mqtt", self.state_metrics, {"type": "connection"}) ]
+        return [ Metric.buildStateMetric("system_service", "mqtt", "connection", self.state_metrics) ]
 
     def start(self):
         while True:

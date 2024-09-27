@@ -43,7 +43,7 @@ class InfluxDB(threading.Thread):
         return datetime.strptime("{}+0000".format(value), "%Y-%m-%dT%H:%M:%S.%f%z").astimezone()
 
     def getStateMetrics(self):
-        return [ Metric.buildStateMetric("system_service", "influxdb", self.state_metrics, {"type": "connection"}) ]
+        return [ Metric.buildStateMetric("system_service", "influxdb", "connection", self.state_metrics) ]
 
     def start(self):
         self.is_running = True

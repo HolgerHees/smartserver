@@ -162,11 +162,11 @@ class Speedtest():
     def getStateMetrics(self):
         metrics = []
         if self.resultUp != -1:
-            metrics.append(Metric.buildDataMetric("system_service", "speedtest", self.resultUp, { "type": "upstream_rate" }))
+            metrics.append(Metric.buildDataMetric("system_service", "speedtest", "upstream_rate", self.resultUp))
         if self.resultDown != -1:
-            metrics.append(Metric.buildDataMetric("system_service", "speedtest", self.resultDown, { "type": "downstream_rate" }))
+            metrics.append(Metric.buildDataMetric("system_service", "speedtest", "downstream_rate", self.resultDown))
         if self.resultPing != -1:
-            metrics.append(Metric.buildDataMetric("system_service", "speedtest", self.resultPing, { "type": "ping" }))
+            metrics.append(Metric.buildDataMetric("system_service", "speedtest", "ping", self.resultPing))
         metrics.append(Metric.buildProcessMetric("system_service", "speedtest", "1" if self.is_running else "0"))
         return metrics
 

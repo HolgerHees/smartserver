@@ -44,7 +44,7 @@ class Dummy():
 
     def getStateMetrics(self):
         return [
-            Metric.buildStateMetric("weather_service", "mqtt", self.state, { "type": "connection" } )
+            Metric.buildStateMetric("weather_service", "mqtt", "connection", self.state )
         ]
 
     def terminate(self):

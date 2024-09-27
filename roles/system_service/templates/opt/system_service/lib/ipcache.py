@@ -313,6 +313,6 @@ class IPCache(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("system_service", "ip_cache", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("system_service", "ip_cache", "1" if self.ip2location_state else "0", { "type": "ip2location_service" }),
-            Metric.buildStateMetric("system_service", "ip_cache", "1" if self.valid_cache_file else "0", { "type": "cache_file" })
+            Metric.buildStateMetric("system_service", "ip_cache", "ip2location_service", "1" if self.ip2location_state else "0"),
+            Metric.buildStateMetric("system_service", "ip_cache", "cache_file", "1" if self.valid_cache_file else "0")
         ]

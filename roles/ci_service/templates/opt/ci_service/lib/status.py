@@ -4,6 +4,8 @@ import json
 import threading
 
 from smartserver.confighelper import ConfigHelper
+from smartserver.metric import Metric
+
 
 class State():
     def __init__(self, config):
@@ -73,3 +75,9 @@ class State():
 
     def getVID(self):
         return self.data["vid"]
+
+    def getStateMetrics(self):
+        return [
+            Metric.buildStateMetric("ci_service", "state", "cache_file", "1" if self.valid_cache_file else "0")
+        ]
+

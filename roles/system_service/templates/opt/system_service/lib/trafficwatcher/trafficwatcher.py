@@ -724,7 +724,7 @@ class TrafficWatcher(threading.Thread):
             self.traffic_metrics = {}
         self._fillTrafficGroups(count_values)
         for group, count in count_values.items():
-            metrics.append( Metric.buildDataMetric("system_service", "trafficwatcher", count, { "traffic_group": group }) )
+            metrics.append( Metric.buildDataMetric("system_service", "trafficwatcher", group, count))
         metrics += self.logcollector.getStateMetrics()
         metrics += self.netflow.getStateMetrics()
         metrics += self.blocklists.getStateMetrics()

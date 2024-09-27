@@ -66,5 +66,5 @@ class INotifyListener(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("nextcloud_service", "inotify_listener", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "1" if not self.listener_process.hasErrors() else "0", { "app": "files_notify_redis:primary" })
+            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "app", "1" if not self.listener_process.hasErrors() else "0", { "app": "files_notify_redis:primary" })
         ]

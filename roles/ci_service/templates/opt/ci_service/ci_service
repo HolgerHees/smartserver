@@ -244,9 +244,11 @@ class Handler(Server):
         return "\n".join(result)
 
     def getStateMetrics(self):
-        return [
-            Metric.buildStateMetric("ci_service", "no_leftover", "1" if not self.has_leftovers else "0")
+        metrics = [
+            Metric.buildStateMetric("ci_service", "main", "no_leftover", "1" if not self.has_leftovers else "0")
         ]
+        metrics += self.job_state.getStateMetrics()
+        return Metric.buildMetricsResult(metrics)
 
 @serverWeb.route('/status/', methods = ['GET'])
 def processStatus():

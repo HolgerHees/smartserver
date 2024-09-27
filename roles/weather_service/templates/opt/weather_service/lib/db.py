@@ -150,7 +150,7 @@ class DB():
 
     def getStateMetrics(self):
         return [
-            Metric.buildStateMetric("weather_service", "mariadb", self.state, { "type": "connection" } )
+            Metric.buildStateMetric("weather_service", "mariadb", "connection", self.state )
         ]
 
 #    def connect(self):

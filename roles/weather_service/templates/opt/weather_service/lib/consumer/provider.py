@@ -503,5 +503,6 @@ class ProviderConsumer():
 
         return [
             Metric.buildProcessMetric("weather_service", "consumer_provider", "1" if self.is_running and not has_errors else "0"),
-            Metric.buildStateMetric("weather_service", "consumer_provider", "1" if has_any_update else "0", { "type": "not_outdatet" })
+            Metric.buildStateMetric("weather_service", "consumer_provider", "cache_file", "1" if self.valid_cache_file else "0"),
+            Metric.buildStateMetric("weather_service", "consumer_provider", "not_outdatet", "1" if has_any_update else "0")
         ]

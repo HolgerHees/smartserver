@@ -99,5 +99,6 @@ class StationConsumer():
 
         return [
             Metric.buildProcessMetric("weather_service", "consumer_station", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("weather_service", "consumer_station", "1" if has_any_update else "0", { "type": "not_outdatet" })
+            Metric.buildStateMetric("weather_service", "consumer_station", "cache_file", "1" if self.valid_cache_file else "0"),
+            Metric.buildStateMetric("weather_service", "consumer_station", "not_outdatet", "1" if has_any_update else "0")
         ]

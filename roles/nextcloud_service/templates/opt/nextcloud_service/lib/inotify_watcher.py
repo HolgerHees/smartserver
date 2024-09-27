@@ -205,7 +205,7 @@ class INotifyWatcher(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("nextcloud_service", "inotify_watcher", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "1" if self.valid_dump_file else "0", { "type": "cache_file" }),
-            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "1" if not self.scanner_process.hasErrors() else "0", { "app": "files:scan" }),
-            Metric.buildDataMetric("nextcloud_service", "inotify_watcher", len(self.watched_directories), { "type": "count" })
+            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "cache_file", "1" if self.valid_dump_file else "0"),
+            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "app", "1" if not self.scanner_process.hasErrors() else "0", { "app": "files:scan" }),
+            Metric.buildDataMetric("nextcloud_service", "inotify_watcher", "count", len(self.watched_directories))
         ]

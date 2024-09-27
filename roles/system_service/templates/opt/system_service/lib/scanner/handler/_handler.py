@@ -36,10 +36,10 @@ class Handler:
     def getStateMetrics(self):
         metrics = []
         for hostname in self.device_metric_states:
-            metrics.append(Metric.buildStateMetric("system_service", self.__class__.__name__.lower(), self.device_metric_states[hostname], { "hostname": hostname }))
+            metrics.append(Metric.buildStateMetric("system_service", self.__class__.__name__.lower(), "device", self.device_metric_states[hostname], { "hostname": hostname }))
 
         for service in self.service_metric_states:
-            metrics.append(Metric.buildStateMetric("system_service", service, self.service_metric_states[service]))
+            metrics.append(Metric.buildStateMetric("system_service", service, "connection", self.service_metric_states[service]))
 
         if self.thread is not None:
             metrics.append(Metric.buildProcessMetric("system_service", "scanner.{}".format(self.__class__.__name__.lower()), "1" if self.is_running else "0"))

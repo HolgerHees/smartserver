@@ -13,12 +13,12 @@ class Metric():
         return "service_process{{service=\"{}\",group=\"{}\"{}}} {}".format(service, group, "," + Metric._formatLabels(labels) if labels is not None else "", value)
 
     @staticmethod
-    def buildStateMetric(service, group, value, labels=None ):
-        return "service_state{{service=\"{}\",group=\"{}\"{}}} {}".format(service, group, "," + Metric._formatLabels(labels) if labels is not None else "", value)
+    def buildStateMetric(service, group, type, value, labels=None ):
+        return "service_state{{service=\"{}\",group=\"{}\",type=\"{}\"{}}} {}".format(service, group, type, "," + Metric._formatLabels(labels) if labels is not None else "", value)
 
     @staticmethod
-    def buildDataMetric(service, group, value, labels=None ):
-        return "service_data{{service=\"{}\",group=\"{}\"{}}} {}".format(service, group, "," + Metric._formatLabels(labels) if labels is not None else "", value)
+    def buildDataMetric(service, group, type, value, labels=None ):
+        return "service_data{{service=\"{}\",group=\"{}\",type=\"{}\"{}}} {}".format(service, group, type, "," + Metric._formatLabels(labels) if labels is not None else "", value)
 
     @staticmethod
     def buildGenericMetric(name, labels, value ):
