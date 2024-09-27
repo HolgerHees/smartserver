@@ -63,6 +63,7 @@
     - "{{global_build}}loki"
     #- "{{global_build}}influxdb"
     - "{{global_build}}mysql"
+    - "{{global_build}}openhab"
     - "{{global_etc}}wireguard_cloud/util/startup.sh"
     - "/etc/systemd/system/nextcloud_inotify.service"
     - "{{global_etc}}systemd_watcher/services/nextcloud_inotify.conf"

@@ -21,6 +21,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/services" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/things" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/python" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/cont-init.d" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/jsondb" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/persistance" }
@@ -202,6 +203,13 @@
     mode: 0640
   notify: "restart openhab"
   
+- name: copy init.sh
+  copy:
+    src: "templates/init.sh"
+    dest: "{{global_etc}}openhab/cont-init.d/init.sh"
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
   register: device_result
@@ -231,15 +239,6 @@
   with_indexed_items: "{{device_result.stdout_lines}}"
   when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
   
-- name: build container image
-  vars:
-    container_name: "openhab"
-    image_name: "custom_openhab:{{openhab_version}}"
-    image_files:
-      - roles/openhab/templates/container/Dockerfile
-      - roles/openhab/templates/container/init.sh
-  include_tasks: roles/container/shared/build_podman_image.yml
-
 - name: check conf volumens
   shell: "ls -1 {{global_etc}}openhab/conf"
   register: conf_folder_result
@@ -248,7 +247,7 @@
 - name: create container service
   vars:
     container_name: "openhab"
-    container_image: "custom_openhab:{{openhab_version}}"
+    container_image: "openhab/openhab:{{openhab_version}}-debian"
     container_network: "host"
     container_exposed_ports:
       - "8080"
@@ -267,6 +266,8 @@
       CRYPTO_POLICY: "unlimited"
     container_volumes: |
       [
+
+        '{{global_etc}}openhab/cont-init.d:/etc/cont-init.d',
         '{{projects_path}}openhab_config:{{projects_path}}openhab_config',
         '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared',
         '{{global_etc}}openhab/addons:/openhab/addons',
