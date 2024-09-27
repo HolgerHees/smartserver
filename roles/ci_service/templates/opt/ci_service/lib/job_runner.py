@@ -178,8 +178,8 @@ class JobRunner:
 
                     cmd_r = []
                     for key in env:
-                        cmd_r.append("   export {}={}".format(key, env[key]))
-                    cmd_r.append("   {}".format(self._fmtCmd(e.getCmd())))
+                        cmd_r.append("    export {}={}".format(key, env[key]))
+                    cmd_r.append("    {}".format(self._fmtCmd(e.getCmd())))
                     runtime = timedelta(seconds=duration)
                     if statuscode == "success":
                         logging.info("Command '{}' finished successful after {}.".format(self._fmtCmd(e.getCmd()),runtime))
