@@ -68,13 +68,11 @@ class Process:
                 #logging.info("loop start " + str(self.process.pid))
                 poll_result = select([self.process.stdout], [], [], 5)[0]
                 #logging.info("loop done " + str(self.process.pid))
-                if not poll_result:
-                    continue
-
-                for line in iter(self.process.stdout.readline, b''):
-                    if line == '':
-                        break
-                    logging_callback(line.strip())
+                if poll_result:
+                    for line in iter(self.process.stdout.readline, b''):
+                        if line == '':
+                            break
+                        logging_callback(line.strip())
 
                 if self.has_errors:
                     if time.time() - start > 5:
