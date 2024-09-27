@@ -33,12 +33,12 @@
   when: "system_user_result.changed"
   
 - name: check samba users
-  shell: "podman exec -i samba sh -c \"pdbedit -L\""
+  shell: "podman exec -i samba pdbedit -L"
   register: samba_user_result
   changed_when: no
   
 - name: add user to samba
-  shell: "(echo '{{userdata[item].password}}'; echo '{{userdata[item].password}}';) | podman exec -i samba sh -c \"smbpasswd -s -a {{item}}\""
+  shell: "(echo '{{userdata[item].password}}'; echo '{{userdata[item].password}}';) | podman exec -i samba smbpasswd -s -a {{item}}"
   #register: command_result
   #failed_when: "'command-not-found' in command_result.stderr"
   changed_when: "item not in samba_user_result.stdout"

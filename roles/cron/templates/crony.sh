@@ -2,20 +2,21 @@
 
 set -eu
 
-IFS='|' read -r journal_type name command <<< "$@"
-#journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//')"
-#name="$(echo -e "${name}" | sed -e 's/[[:space:]]*$//')"
-#command="$(echo -e "${command}" | sed -e 's/^[[:space:]]*//')"
-journal_type="$(echo -e "${journal_type}" | xargs)"
-name="$(echo -e "${name}" | xargs)"
-command="$(echo -e "${command}" | xargs)"
-#name=`echo "$name" | xargs`
-#command=`echo $command | xargs`
-
 script_name=$(basename "$0")
+
+IFS='|' read -r journal_type name command <<< "$@"
+journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//' )"
+name="$(echo -e "${name}" | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//')"
+command="$(echo -e "${command}" | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//')"
+
+# xargs does not work, becazse it is cleaning/modifing '"' inside the command
+#journal_type="$(echo -e "${journal_type}" | xargs)"
+#name="$(echo -e "${name}" | xargs)"
+#command="$(echo -e "${command}" | xargs)"
 
 # CHECK for still running jobs
 result=$(pgrep -f "${script_name} ${journal_type} | ${name}");
+
 instances="$(wc -l <<< \"$result\")"
 
 if [ "$instances" -gt "1" ]; then
@@ -26,14 +27,8 @@ fi
 
 #echo "$@";
 #echo ":$name:";
-#echo ":$journal_type:";
 #echo ":$command:";
-
-#ps -alx | grep $journal_type
-
-#echo "$instances";
-
-#exit;
+#echo ":$journal_type:";
 
 #exec > >(systemd-cat -t "$(realpath "$0")" -p info ) 2> >(systemd-cat -t "$(realpath "$0")" -p err )
 #echo "stdbuf -i0 -o0 -e0 $command > >(systemd-cat -t $journal_type -p 6) 2> >(systemd-cat -t $journal_type -p 3)"

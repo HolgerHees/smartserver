@@ -1,22 +1,22 @@
 # ***** CREATE TOKEN *****
 - name: check cli config
-  shell: "podman exec influxdb sh -c \"influx config list\""
+  shell: "podman exec influxdb influx config list"
   register: influxdb_config_result
   changed_when: False
   
 - name: create cli config token => config does not exists
-  shell: "podman exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active\""
+  shell: "podman exec influxdb influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active"
   when: "'\tdefault\t' not in influxdb_config_result.stdout"
 
 # ***** CREATE USER *****
 - name: "check users"
-  shell: "podman exec influxdb sh -c \"influx user list\""
+  shell: "podman exec influxdb influx user list"
   register: influxdb_user_result
   changed_when: False
   tags: [ 'user' ]
 
 - name: "add new user"
-  shell: "podman exec influxdb sh -c \"influx user create --name {{item}} --password {{userdata[item].password}} --org default-org\""
+  shell: "podman exec influxdb influx user create --name {{item}} --password {{userdata[item].password}} --org default-org"
   when: "item not in influxdb_user_result.stdout and 'admin' in userdata[item].groups"
   loop_control:
     label: "{{item}}"
@@ -39,15 +39,15 @@
   tags: [ 'user' ]
 
 - name: "check auth"
-  shell: "podman exec influxdb sh -c \"influx auth list --org default-org\""
+  shell: "podman exec influxdb influx auth list --org default-org"
   register: influxdb_auth_result
   changed_when: False
   tags: [ 'user' ]
   
 - name: "add new auth"
-#  shell: "podman exec influxdb sh -c \"influx auth create --description \\\"{{item}}'s Token\\\" --user {{item}} --org default-org --operator\""
+#  shell: "podman exec influxdb influx auth create --description \"{{item}}'s Token\" --user {{item}} --org default-org --operator"
 # WORKARROUND for influxdb 2.4
-  shell: "podman exec influxdb sh -c \"influx auth create --description \\\"{{item}}'s Token\\\" --user {{item}} --org default-org --read-annotations --write-annotations --read-authorizations --write-authorizations  --read-buckets --write-buckets --read-checks --write-checks --read-dashboards --write-dashboards --read-dbrp --write-dbrp --read-documents --write-documents --read-labels --write-labels --read-notebooks --write-notebooks --read-notificationEndpoints --write-notificationEndpoints --read-notificationRules --write-notificationRules --read-orgs --write-orgs --read-scrapers --write-scrapers --read-secrets --write-secrets --read-sources --write-sources  --read-tasks --write-tasks --read-telegrafs --write-telegrafs --read-users --write-users --read-variables --write-variables --read-views --write-views --read-remotes --write-remotes --read-replications --write-replications\""
+  shell: "podman exec influxdb influx auth create --description \"{{item}}'s Token\" --user {{item}} --org default-org --read-annotations --write-annotations --read-authorizations --write-authorizations  --read-buckets --write-buckets --read-checks --write-checks --read-dashboards --write-dashboards --read-dbrp --write-dbrp --read-documents --write-documents --read-labels --write-labels --read-notebooks --write-notebooks --read-notificationEndpoints --write-notificationEndpoints --read-notificationRules --write-notificationRules --read-orgs --write-orgs --read-scrapers --write-scrapers --read-secrets --write-secrets --read-sources --write-sources  --read-tasks --write-tasks --read-telegrafs --write-telegrafs --read-users --write-users --read-variables --write-variables --read-views --write-views --read-remotes --write-remotes --read-replications --write-replications"
   when: "item not in influxdb_auth_result.stdout and 'admin' in userdata[item].groups"
   with_items: "{{userdata}}"
   tags: [ 'user' ]

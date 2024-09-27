@@ -85,7 +85,7 @@
 - name: create cron job
   vars:
     name: "MariaDB Core Backup"
-    cmd: "set -o pipefail && podman exec mariadb sh -c \"/usr/bin/mariadb-dump mysql -u root --quick --single-transaction -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mariadb/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cmd: "set -o pipefail && podman exec mariadb /usr/bin/mariadb-dump mysql -u root --quick --single-transaction -h 127.0.0.1 | bzip2 -c > {{database_backup_path}}mariadb/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     group: "mariadb"
     log: "dump_mysql"
     hour: "1"
@@ -121,7 +121,7 @@
   when: "podman_service_container_changed"
 
 - name: check mariadb upgrade
-  shell: "podman exec mariadb sh -c \"/usr/bin/mariadb-upgrade\""
+  shell: "podman exec mariadb /usr/bin/mariadb-upgrade"
   when: "podman_service_container_changed"
   
 # ***** SHARED DATABASE ****
@@ -135,18 +135,18 @@
   tags: ['cron_job','backup_restore']
   
 - name: "check healthcheck user"
-  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e 'SELECT User FROM mysql.user'\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 -e 'SELECT User FROM mysql.user'"
   register: mariadb_user_exists
   changed_when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"
 
 - name: "create healthcheck user => user does not exists"
-  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{system_users['mariadb'].name}}'@'%'\\\"\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 -e \"CREATE USER IF NOT EXISTS '{{system_users['mariadb'].name}}'@'%'\""
   when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"
 
 - name: "refresh privileges => user does not exists"
-  shell: "podman exec mariadb sh -c \"mariadb-admin -u root -h 127.0.0.1 flush-privileges\""
+  shell: "podman exec mariadb mariadb-admin -u root -h 127.0.0.1 flush-privileges"
   when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"
 
 #- name: "grant healthcheck user permissions => user does not exists"
-#  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e \\\"GRANT USAGE TO '{{system_users['mariadb'].name}}'@'%';\\\"\""
+#  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 -e \\\"GRANT USAGE TO '{{system_users['mariadb'].name}}'@'%';\\\""
 #  when: "system_users['mariadb'].name not in mariadb_user_exists.stdout"

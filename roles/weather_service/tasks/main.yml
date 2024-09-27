@@ -92,7 +92,7 @@
 
 # ***** DEPENDENCY CONFIGS *****
 - name: check database table
-  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'"
   register: mariadb_table_exists
   changed_when: "'weather_forecast' not in mariadb_table_exists.stdout"
   when: "mariadb_enabled"
@@ -114,7 +114,7 @@
   when: "'weather_forecast' not in mariadb_table_exists.stdout"
   
 - name: create missing table 'weather_service' => does not exists in database
-  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | podman exec -i mariadb sh -c \"mariadb -u root -h 127.0.0.1 shared\""
+  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | podman exec -i mariadb mariadb -u root -h 127.0.0.1 shared"
   when: "mariadb_enabled and 'weather_forecast' not in mariadb_table_exists.stdout"
 
 - name: synchronize htdocs

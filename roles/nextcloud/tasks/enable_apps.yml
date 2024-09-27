@@ -26,7 +26,7 @@
 
 # ***** DISABLE APPS *****
 - name: disable apps
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:disable {{item}}\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:disable {{item}}"
   register: app_disable_result
   changed_when: "'disabled' in app_disable_result.stdout"
 #  failed_when: "'disabled' not in app_disable_result.stdout and 'such app enabled' not in app_disable_result.stdout"
@@ -34,31 +34,31 @@
 
 # ***** INSTALL APPS *****
 - name: check installed apps
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:list\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:list"
   changed_when: no
   register: app_list_result
 
 - name: install missing apps
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:install {{item}}"
   register: app_install_result
   failed_when: "'installed' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout and 'already exists' not in app_install_result.stdout"
   changed_when: "'enabled' in app_install_result.stdout"
   when: "'- ' + item + ':' not in app_list_result.stdout"
   with_items: "{{nextcloud_default_apps + nextcloud_additional_apps | map(attribute='app')}}"
 
-#podman exec php sh -c "php -f {{htdocs_path}}nextcloud/occ update:check"
+#podman exec php php -f {{htdocs_path}}nextcloud/occ update:check"
 - name: check available app updates
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --showonly\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:update --showonly"
   changed_when: no
   register: app_update_available_result
 
 #- name: show available app updates
 #  debug:
-#    msg: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update {{item.split()[0]}}\""
+#    msg: "podman exec php php {{htdocs_path}}nextcloud/occ app:update {{item.split()[0]}}"
 #  with_items: "{{app_update_available_result.stdout_lines}}"
 
 - name: update apps
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update {{item.split()[0]}}\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:update {{item.split()[0]}}"
   register: app_update_process_result
   changed_when: "'updated' in app_update_process_result.stdout"
   with_items: "{{app_update_available_result.stdout_lines}}"
@@ -70,7 +70,7 @@
 
 # ***** CONFIGURE apps *****
 - name: read app configs
-  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 nextcloud -e \\\"SELECT appid,configkey,configvalue FROM oc_appconfig;\\\"\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 nextcloud -e \"SELECT appid,configkey,configvalue FROM oc_appconfig;\""
   changed_when: no
   register: app_config_result
 
@@ -99,7 +99,7 @@
       - { app: "text", name: "workspace_available", value: "0" }
 
 - name: set app config
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ config:app:set --value='{{item.value}}' {{item.app}} {{item.name}}\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ config:app:set --value='{{item.value}}' {{item.app}} {{item.name}}"
   register: change_app_config_result
   failed_when: change_app_config_result.rc != 0
   when: "item.app + \"\\t\" + item.name + \"\\t\" + item.value not in app_config_result.stdout "
@@ -107,7 +107,7 @@
 
 # ***** CONFIGURE user_saml *****
 - name: read user_saml configs
-  shell: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 nextcloud -e \\\"SELECT configuration FROM oc_user_saml_configurations WHERE id = 1;\\\"\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 nextcloud -e \"SELECT configuration FROM oc_user_saml_configurations WHERE id = 1;\""
   changed_when: no
   register: user_saml_config_result
 
@@ -118,7 +118,7 @@
       - { id: "1", name: "saml-attribute-mapping-displayName_mapping", value: "REMOTE_USERFULLNAME" }
 
 - name: set user_saml config
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ saml:config:set --{{item.name}}='{{item.value}}' {{item.id}}\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ saml:config:set --{{item.name}}='{{item.value}}' {{item.id}}"
   register: change_user_saml_config_result
   failed_when: change_user_saml_config_result.rc != 0
   when: "'\"' + item.name + '\":\"' + item.value + '\"' not in user_saml_config_result.stdout "
@@ -128,7 +128,7 @@
 #- name: create cron job 'preview:pre-generate'
 #  vars:
 #    name: "Nextcloud Previewupdates"
-#    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
+#    cmd: "podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null"
 #    group: "nextcloud"
 #    log: "preview_generator"
 #    minute: "*/15"
@@ -179,7 +179,7 @@
 #  when: keeweb_installation.changed
 
 #- name: upgrade existing database => keeweb version changed
-#  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
+#  shell: "podman exec php php {{htdocs_path}}nextcloud/occ upgrade"
 #  when: "keeweb_installation.changed"
 
 # maybe cleanup
@@ -187,12 +187,12 @@
 
 # ***** CHECK FOR DISABLED APPS *****
 - name: get final app status
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:list\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:list"
   register: app_status
   changed_when: no
 
 - name: enable disabled apps
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item}} --force\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:enable {{item}} --force"
   register: app_enable_result
   failed_when: "'enabled' not in app_enable_result.stdout"
   when: "item not in app_status.stdout.split('Disabled')[0]"

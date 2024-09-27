@@ -42,7 +42,7 @@
     username: "{{nextcloud_mariadb_username}}"
     password: "{{nextcloud_mariadb_password}}"
     backup: yes
-    backup_cleanup: "podman exec mariadb sh -c \"mariadb -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
+    backup_cleanup: "podman exec mariadb mariadb -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\""
   include_tasks: roles/mariadb/shared/add_database.yml
   tags: ['cron_job','backup_restore']
   when: "mariadb_enabled"
@@ -61,11 +61,11 @@
   when: "database_added"
 
 - name: initialise nextcloud => database does not exists
-  shell: "podman exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'\""
+  shell: "podman exec -i php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'"
   when: "database_added"
 
 - name: disable password policy => database does not exists
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ app:disable password_policy\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ app:disable password_policy"
   when: "database_added"
 
 - name: backup old user folder => database does not exists
@@ -76,7 +76,7 @@
   when: "database_added"
 
 - name: enable cron as background job handler => database does not exists
-  shell: "podman exec php sh -c \"php -f {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ background:cron\""
+  shell: "podman exec php php -f {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ background:cron"
   when: "database_added"
   
 - name: read new nextcloud config => database does not exists
@@ -161,7 +161,7 @@
 
 # ***** INITIALIZE OLD - POST *****
 - name: upgrade => nextcloud version changed
-  shell: "podman exec php sh -c \"php {{htdocs_path}}nextcloud/occ {{item}}\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ {{item}}"
   with_items:
       - "upgrade"
       - "db:add-missing-indices"
@@ -184,7 +184,7 @@
 # basic auth for non dav requests does not work, because the saml code to handle REMOTE_USER needs cookies
 # one possible way to fix is changing "/apps/user_saml/lib/UserBackend.php->getCurrentUserId"
 - name: add new user
-  shell: "podman exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  shell: "podman exec php OC_PASS=123+456*890 php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}"
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   when: "'user' in userdata[item].groups"
@@ -193,7 +193,7 @@
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
 #- name: update existing user
-#  shell: "podman exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{item}}\""
+#  shell: "podman exec php OC_PASS=123+456*890 php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{item}}"
 #  register: result
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
@@ -203,7 +203,7 @@
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
 #- name: update admin user
-#  shell: "podman exec php sh -c \"export OC_PASS={{nextcloud_admin_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{nextcloud_admin_username}}\""
+#  shell: "podman exec php OC_PASS={{nextcloud_admin_password}} php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{nextcloud_admin_username}}"
 #  register: result
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
