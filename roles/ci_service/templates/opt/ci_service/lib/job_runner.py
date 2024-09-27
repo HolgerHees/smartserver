@@ -176,24 +176,20 @@ class JobRunner:
                     if e.getDetails() is not None:
                         self._writeWrapppedLog(lf, e.getDetails())
 
+                    env_r = []
+                    for key in env:
+                        env_r.append("ENV: export {}={}".format(key, env[key]))
                     if statuscode == "success":
                         msg = "Command '{}' finished successful after {}.".format(self._fmtCmd(e.getCmd()),timedelta(seconds=duration))
                         logging.info(msg)
-                        self._writeWrapppedLog(lf, msg)
+                        self._writeWrapppedLog(lf, msg + "\n" + "\n".join(env_r) )
                     else:
                         msg = "Command '{}' stopped unsuccessful ({}) after {}.".format(self._fmtCmd(e.getCmd()),e.getExitCode(),timedelta(seconds=duration))
                         if self.job.isTerminated():
                             logging.info("{} ({})".format(msg,e.getDetails()))
                         else:
                             logging.error("{} ({})".format(msg,e.getDetails()))
-                        self._writeWrapppedLog(lf, msg)
-
-                    env_r = []
-                    for key in env:
-                        env_r.append("{}={}".format(key, env[key]))
-                    msg = "Used ENV: '{}'".format(" ".join(env_r))
-                    logging.info(msg)
-                    self._writeWrapppedLog(lf, msg)
+                        self._writeWrapppedLog(lf, msg + "\n" + "\n".join(env_r))
 
                     # DEPLOYMENT CLEANUP
                     lf.writeRaw("\n")
