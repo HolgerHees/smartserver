@@ -15,7 +15,11 @@ command="$(echo -e "${command}" | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:spac
 #command="$(echo -e "${command}" | xargs)"
 
 # CHECK for still running jobs
-result=$(pgrep -f "${script_name} ${journal_type} | ${name}");
+result=$(pgrep -f "${script_name} ${journal_type} \\| ${name}");
+
+#echo $result
+#echo "pgrep -f \"${script_name} ${journal_type} | ${name}\""
+#pgrep -f "${script_name} ${journal_type} \\| ${name}"
 
 instances="$(wc -l <<< \"$result\")"
 
