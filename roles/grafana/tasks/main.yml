@@ -85,8 +85,8 @@
     container_exposed_ports:
       - "3000/tcp"
     container_volumes:
-      - '{{global_lib}}grafana:/var/lib/grafana'
-      - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning'
+      - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning:ro'
+      - '{{global_lib}}grafana:/var/lib/grafana:rw'
     container_after: [ "mariadb", "influxdb", "loki", "prometheus", "alertmanager" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_grafana_ip}}", "port": "3000" }
   include_tasks: roles/container/shared/create_podman_service.yml

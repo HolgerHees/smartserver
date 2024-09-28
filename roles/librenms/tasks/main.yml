@@ -63,15 +63,16 @@
       - "162"
       - "514"
       - "8000/tcp"
+    # all volumes needs to writeable, because librenms runs chown on OPENHAB_HOME
     container_volumes:
-      - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/'
-      - '{{global_etc}}librenms:/data/config'
-      - '{{global_log}}librenms:/data/logs'
-      - '{{global_lib}}librenms/alert-templates:/data/alert-templates'
-      - '{{global_lib}}librenms/monitoring-plugins:/data/monitoring-plugins'
-      - '{{global_lib}}librenms/plugins:/data/plugins'
-      - '{{global_lib}}librenms/rrd:/data/rrd'
-      - '{{global_lib}}librenms/weathermap:/data/weathermap'
+      - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:rw'
+      - '{{global_etc}}librenms:/data/config:rw'
+      - '{{global_log}}librenms:/data/logs:rw'
+      - '{{global_lib}}librenms/alert-templates:/data/alert-templates:rw'
+      - '{{global_lib}}librenms/monitoring-plugins:/data/monitoring-plugins:rw'
+      - '{{global_lib}}librenms/plugins:/data/plugins:rw'
+      - '{{global_lib}}librenms/rrd:/data/rrd:rw'
+      - '{{global_lib}}librenms/weathermap:/data/weathermap:rw'
     container_after: [ "redis", "mariadb" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_librenms_ip}}", "port": "8000" }
   include_tasks: roles/container/shared/create_podman_service.yml

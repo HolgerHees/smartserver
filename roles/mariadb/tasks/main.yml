@@ -58,8 +58,8 @@
       MYSQL_ALLOW_EMPTY_PASSWORD: "true"
       TZ: "{{timezone}}"
     container_volumes:
-      - '{{ global_etc }}mariadb:/etc/mysql'
-      - '{{ global_lib }}mariadb:/var/lib/mysql'
+      - '{{ global_etc }}mariadb:/etc/mysql:ro'
+      - '{{ global_lib }}mariadb:/var/lib/mysql:rw'
     container_readyness: { "type": "container_exec", "cmd": "mariadb-admin ping -h 127.0.0.1 --silent" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']

@@ -45,8 +45,8 @@
       - "80/tcp"
     container_volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro'
-      - '{{global_opt}}cloud_check/:/opt/cloud_check'
-      - '{{cloud_path}}/remote:/cloud/remote:rshared'
+      - '{{global_opt}}cloud_check/:/opt/cloud_check:ro'
+      - '{{cloud_path}}/remote:/cloud/remote:ro,rshared'
     container_after: [ "cloud_mosquitto" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_cloud_check_ip}}", "port": "80" }
   include_tasks: roles/container/shared/create_podman_service.yml

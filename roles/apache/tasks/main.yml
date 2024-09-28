@@ -244,16 +244,14 @@
       - "443/tcp"
       - "10114/tcp"
     container_volumes:
-      - '{{global_etc}}apache2/_.ansible.auth:/etc/apache2/_.ansible.auth'
-      - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d'
-      - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d'
-      - '{{global_etc}}apache2/_.ansible.server.conf:/etc/apache2/_.ansible.server.conf'
-      - '{{global_etc}}apache2/_.ansible.httpd.conf:/usr/local/apache2/conf/httpd.conf'
-      - '{{global_etc}}letsencrypt:/etc/letsencrypt'
-
-      - '{{global_log}}:{{global_log}}'
-
-      - '{{htdocs_path}}:{{htdocs_path}}'
+      - '{{global_etc}}apache2/_.ansible.auth:/etc/apache2/_.ansible.auth:ro'
+      - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d:ro'
+      - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d:ro'
+      - '{{global_etc}}apache2/_.ansible.server.conf:/etc/apache2/_.ansible.server.conf:ro'
+      - '{{global_etc}}apache2/_.ansible.httpd.conf:/usr/local/apache2/conf/httpd.conf:ro'
+      - '{{global_etc}}letsencrypt:/etc/letsencrypt:rw'
+      - '{{global_log}}:{{global_log}}:rw'
+      - '{{htdocs_path}}:{{htdocs_path}}:ro'
     container_reload_exec: "/usr/bin/podman exec apache2 sh -c \"apachectl -k graceful\""
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "80" }
   include_tasks: roles/container/shared/create_podman_service.yml

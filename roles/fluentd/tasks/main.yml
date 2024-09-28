@@ -71,9 +71,9 @@
     container_network: "isolated"
     container_ip: "{{podman_fluentd_ip}}"
     container_volumes:
-      - '{{ global_etc }}fluentd:/fluentd/etc/'
-      - '{{ global_log }}:{{ global_log }}'
-      - '/run/log/journal:/run/log/journal'
+      - '{{ global_etc }}fluentd:/fluentd/etc/:ro'
+      - '{{ global_log }}:{{ global_log }}:rw'
+      - '/run/log/journal:/run/log/journal:rw'
     container_reload_exec: "/usr/bin/podman kill --signal=USR2 fluentd"
     container_after: [ "loki" ]
     container_readyness: { "type": "ping_check", "ip": "{{podman_fluentd_ip}}" }

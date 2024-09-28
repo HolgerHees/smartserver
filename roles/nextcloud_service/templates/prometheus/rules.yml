@@ -11,7 +11,7 @@ groups:
       summary: "Nextcloud service app '{{'{{'}} $labels.group {{'}}'}}'.'{{'{{'}} $labels.app {{'}}'}}' was not successful since 15 minutes"
 
   - alert: Nextcloud service state
-    expr: 'service_state{service="nextcloud_service",app==""} == 0'
+    expr: 'service_state{service="nextcloud_service",app=""} == 0'
     for: 0m
     labels:
       notifyGroup: "nextcloud_service"

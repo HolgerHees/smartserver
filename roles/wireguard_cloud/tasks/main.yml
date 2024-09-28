@@ -108,7 +108,7 @@
     container_ip: "{{vpn_cloud_services.local.gateway}}"
     container_published_ports: "{{wireguard_cloud_published_ports}}"
     container_volumes:
-      - '{{global_etc}}wireguard_cloud:/etc/wireguard'
+      - '{{global_etc}}wireguard_cloud:/etc/wireguard:ro'
     container_pre_exec: "modprobe wireguard"
     container_post_exec: "/opt/container/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
     container_readyness: { "type": "ping_check", "ip": "{{vpn_cloud_services.local.gateway}}" }

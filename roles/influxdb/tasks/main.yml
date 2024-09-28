@@ -41,9 +41,9 @@
     container_exposed_ports:
       - "8086/tcp"
     container_volumes:
-      - '{{ global_etc }}influxdb:/etc/influxdb2'
-      - '{{ global_lib }}influxdb:/var/lib/influxdb2'
-      - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup'
+      - '{{ global_etc }}influxdb:/etc/influxdb2:ro'
+      - '{{ global_lib }}influxdb:/var/lib/influxdb2:rw'
+      - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup:rw'
     container_readyness: { "type": "url_check", "url": "http://{{podman_influxdb_ip}}:8086/ping" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']

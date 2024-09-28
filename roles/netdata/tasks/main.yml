@@ -76,8 +76,8 @@
 
       - '/var/log:/host/var/log:ro'
 
-      - '{{ global_lib }}netdata:/var/lib/netdata'
-      - '{{ global_lib }}netdata/cache:/var/cache/netdata'
+      - '{{ global_lib }}netdata:/var/lib/netdata:rw'
+      - '{{ global_lib }}netdata/cache:/var/cache/netdata:rw'
 
       - "{{ global_etc }}netdata/.environment:/etc/netdata/.environment:ro"
       - "{{ global_etc }}netdata/netdata.conf:/etc/netdata/netdata.conf:ro"

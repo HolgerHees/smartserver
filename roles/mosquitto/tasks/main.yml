@@ -39,7 +39,7 @@
     container_ip: "{{podman_mosquitto_ip}}"
     container_published_ports: "{{mosquitto_published_ports}}"
     container_volumes:
-      - '{{global_etc}}mosquitto:/mosquitto/config'
+      - '{{global_etc}}mosquitto:/mosquitto/config:ro'
     container_readyness: { "type": "port_check", "ip": "{{podman_mosquitto_ip}}", "port": "1883" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']

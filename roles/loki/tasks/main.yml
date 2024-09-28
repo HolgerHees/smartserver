@@ -28,8 +28,8 @@
     container_exposed_ports:
       - "3100/tcp"
     container_volumes:
-      - '{{global_etc}}loki:/etc/loki'
-      - '{{global_lib}}loki:/loki'
+      - '{{global_etc}}loki:/etc/loki:ro'
+      - '{{global_lib}}loki:/loki:rw'
     container_readyness: { "type": "port_check", "ip": "{{podman_loki_ip}}", "port": "3100" }
 #    container_after: [ "alertmanager" ] # => skipped dependency, because loki & fluentd should start as soon as possible
   include_tasks: roles/container/shared/create_podman_service.yml

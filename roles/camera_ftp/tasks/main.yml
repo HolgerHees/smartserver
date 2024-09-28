@@ -90,8 +90,8 @@
     container_ip: "{{podman_camera_ftp_ip}}"
     container_published_ports: "{{vsftpd_published_ports}}"
     container_volumes:
-      - '{{global_etc}}vsftpd/:/etc/vsftpd'
-      - '{{global_lib}}/camera_service/upload/:/home/upload'
+      - '{{global_etc}}vsftpd/:/etc/vsftpd:ro'
+      - '{{global_lib}}/camera_service/upload/:/home/upload:rw'
     container_readyness: { "type": "port_check", "ip": "{{podman_camera_ftp_ip}}", "port": "21" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']

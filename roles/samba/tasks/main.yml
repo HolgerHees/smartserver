@@ -48,11 +48,11 @@
     container_ip: "{{podman_samba_ip}}"
     container_published_ports: "{{samba_published_ports}}"
     container_volumes:
-      - '{{ global_etc }}samba:/etc/samba'
-      - '{{ global_lib }}samba:/var/lib/samba'
-      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}'
-#      - '{{base_path}}:{{base_path}}'
-#      - '{{data_path}}:{{data_path}}'
+      - '{{ global_etc }}samba:/etc/samba:ro'
+      - '{{ global_lib }}samba:/var/lib/samba:rw'
+      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:rw'
+#      - '{{base_path}}:{{base_path}}:rw'
+#      - '{{data_path}}:{{data_path}}:rw'
       - '/etc/group:/etc/group:ro'
       - '/etc/passwd:/etc/passwd:ro'
 #      - '/etc/shadow:/etc/shadow:ro'

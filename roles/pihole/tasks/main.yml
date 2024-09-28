@@ -112,9 +112,10 @@
         {% endif %}
       }
     container_volumes:
-      - '{{ global_etc }}pihole/:/etc/pihole/'
-      - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/'
-      - '{{ global_lib }}pihole/:/var/lib/pihole/'
+      # 'etc' must be writeable
+      - '{{ global_etc }}pihole/:/etc/pihole:rw'
+      - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d:rw'
+      - '{{ global_lib }}pihole/:/var/lib/pihole:rw'
     container_readyness: { "type": "port_check", "ip": "{{pihole_ip}}", "port": "80" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']

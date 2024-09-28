@@ -157,7 +157,7 @@
     container_exposed_ports:
       - "{{mobile_vpn_internal_port}}/udp"
     container_volumes:
-      - '{{global_etc}}wireguard_mobile:/etc/wireguard'
+      - '{{global_etc}}wireguard_mobile:/etc/wireguard:ro'
     container_pre_exec: "modprobe wireguard"
     container_readyness: { "type": "state_check" }
   include_tasks: roles/container/shared/create_podman_service.yml

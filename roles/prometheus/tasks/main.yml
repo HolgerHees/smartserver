@@ -53,8 +53,8 @@
     container_exposed_ports:
      - "9090"
     container_volumes:
-      - '{{ global_etc }}prometheus:/etc/prometheus'
-      - '{{ global_lib }}prometheus:/prometheus'
+      - '{{ global_etc }}prometheus:/etc/prometheus:ro'
+      - '{{ global_lib }}prometheus:/prometheus:rw'
     container_pre_exec: "/opt/scripts/prometheus_generator {{ global_etc }}prometheus/"
     container_reload_exec: "/usr/bin/podman kill --signal=HUP prometheus"
     container_after: [ "alertmanager" ]

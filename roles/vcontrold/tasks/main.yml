@@ -54,7 +54,7 @@
       - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"
     container_volumes:
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro'
-      - '{{global_log}}vcontrold/:{{global_log}}vcontrold'
+      - '{{global_log}}vcontrold/:{{global_log}}vcontrold:rw'
     container_after: [ "mosquitto" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_vcontrold_ip}}", "port": "3002" }
   include_tasks: roles/container/shared/create_podman_service.yml

@@ -134,9 +134,9 @@
     container_exposed_ports:
       - "2049/tcp"
     container_volumes:
-      - '{{global_etc}}cloud_nfs:/etc/cloud_nfs'
-      - '{{global_etc}}cloud_nfs/exports:/etc/exports'
-      - '{{cloud_path}}local:/cloud/local:rshared'
+      - '{{global_etc}}cloud_nfs:/etc/cloud_nfs:ro'
+      - '{{global_etc}}cloud_nfs/exports:/etc/exports:ro'
+      - '{{cloud_path}}local:/cloud/local:rw,rshared'
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
     container_readyness: { "type": "port_check", "ip": "{{vpn_cloud_services.local.nfs}}", "port": "2049" }

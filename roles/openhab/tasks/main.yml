@@ -264,19 +264,20 @@
       #EXTRA_SHELL_OPTS: "-v"
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
       CRYPTO_POLICY: "unlimited"
+    # all volumes needs to writeable, because openhab runs chown on OPENHAB_HOME
     container_volumes: |
       [
 
-        '{{global_etc}}openhab/cont-init.d:/etc/cont-init.d',
-        '{{projects_path}}openhab_config:{{projects_path}}openhab_config',
-        '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared',
-        '{{global_etc}}openhab/addons:/openhab/addons',
-        '{{global_etc}}openhab/python:/openhab/python',
-        '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb',
-        '{{global_lib}}openhab/persistance:/openhab/userdata/persistence',
-        '{{global_log}}openhab:/openhab/userdata/logs',
+        '{{global_etc}}openhab/cont-init.d:/etc/cont-init.d:rw',
+        '{{projects_path}}openhab_config:{{projects_path}}openhab_config:rw',
+        '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:rw',
+        '{{global_etc}}openhab/addons:/openhab/addons:rw',
+        '{{global_etc}}openhab/python:/openhab/python:rw',
+        '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:rw',
+        '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:rw',
+        '{{global_log}}openhab:/openhab/userdata/logs:rw',
         {% for name in conf_folder_result.stdout_lines %}
-            '{{global_etc}}openhab/conf/{{name}}:/openhab/conf/{{name}}',
+            '{{global_etc}}openhab/conf/{{name}}:/openhab/conf/{{name}}:rw',
         {% endfor %}
       ]
     container_timeout_stop_sec: 60

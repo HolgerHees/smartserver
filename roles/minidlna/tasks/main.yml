@@ -49,10 +49,10 @@
       - "8200/tcp"
     container_volumes: |
       [
-        "{{global_etc}}minidlna:/etc/minidlna",
-        "{{global_lib}}minidlna:/minidlna",
+        "{{global_etc}}minidlna:/etc/minidlna:ro",
+        "{{global_lib}}minidlna:/minidlna:rw",
         {% for dlna_volume in dlna_volumes %}
-        "{{dlna_volume}}:{{dlna_volumes[dlna_volume]}}/",
+        "{{dlna_volume}}:{{dlna_volumes[dlna_volume]}}:ro",
         {% endfor %}
       ]
     container_readyness: { "type": "port_check", "ip": "{{dlna_ip}}", "port": "8200" }

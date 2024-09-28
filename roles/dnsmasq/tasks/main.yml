@@ -73,8 +73,8 @@
     container_ip: "{{podman_dns_ip}}"
     container_published_ports: "{{dnsmasq_published_ports}}"
     container_volumes:
-      - '{{ global_etc }}dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf'
-      - '{{ global_etc }}dnsmasq/:/etc/dnsmasq/'
+      - '{{ global_etc }}dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:ro'
+      - '{{ global_etc }}dnsmasq/:/etc/dnsmasq/:ro'
     container_readyness: { "type": "port_check", "ip": "{{podman_dns_ip}}", "port": "53" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']

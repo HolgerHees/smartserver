@@ -37,8 +37,8 @@
     container_exposed_ports:
       - "9093/tcp"
     container_volumes:
-      - '{{global_etc}}alertmanager:/etc/alertmanager'
-      - '{{global_lib}}alertmanager:/alertmanager'
+      - '{{global_etc}}alertmanager:/etc/alertmanager:ro'
+      - '{{global_lib}}alertmanager:/alertmanager:rw'
     container_post_exec: "sleep 5 && {{ global_etc }}alertmanager/silent_setup.py &"
     container_after: [ "postfix" ]
     container_readyness: { "type": "port_check", "ip": "{{podman_alertmanager_ip}}", "port": "9093" }

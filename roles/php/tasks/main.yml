@@ -26,13 +26,13 @@
       netdata: "{{default_server_ip}}" # fix to make netdata reachable
     container_volumes: |
       [
-        '{{htdocs_path}}:{{htdocs_path}}'
+        '{{htdocs_path}}:{{htdocs_path}}:rw'
         {% if nextcloud_enabled %}
-          , '{{nextcloud_data_path}}:{{nextcloud_data_path}}'       # needed by nextcloud role
-          , '{{global_log}}nextcloud:{{global_log}}nextcloud'       # needed by nextcloud role
+          , '{{nextcloud_data_path}}:{{nextcloud_data_path}}:rw'       # needed by nextcloud role
+          , '{{global_log}}nextcloud:{{global_log}}nextcloud:rw'       # needed by nextcloud role
         {% endif %}
         {% if openhab_enabled %}
-          , '{{projects_path}}toolbox:{{projects_path}}toolbox'     # needed by openhab_toolbox role
+          , '{{projects_path}}toolbox:{{projects_path}}toolbox:ro'     # needed by openhab_toolbox role
         {% endif %}
       ]
     container_after: [ "mariadb", "redis", "postfix", "influxdb" ]
