@@ -52,7 +52,7 @@
     name: "Letsencrypt renew job"
     cmd: "podman exec apache2 certbot renew -q --deploy-hook=\"apachectl -k graceful\""
     group: "apache"
-    log: "letsencrypt"
+    subgroup: "letsencrypt"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml

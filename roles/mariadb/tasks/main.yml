@@ -76,7 +76,7 @@
     name: "MariaDB Clean Backup"
     cmd: "find {{database_backup_path}}mariadb/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
     group: "mariadb"
-    log: "dump_cleanup"
+    subgroup: "dump_cleanup"
     hour: "0"
     minute: "45"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -87,7 +87,7 @@
     name: "MariaDB Core Backup"
     cmd: "set -o pipefail && podman exec mariadb /usr/bin/mariadb-dump mysql -u root --quick --single-transaction -h 127.0.0.1 | bzip2 -c > {{database_backup_path}}mariadb/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     group: "mariadb"
-    log: "dump_mysql"
+    subgroup: "dump_mysql"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml

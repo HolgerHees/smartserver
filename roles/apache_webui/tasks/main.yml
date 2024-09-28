@@ -97,7 +97,7 @@
     name: "POTD Fetcher"
     cmd: "/opt/scripts/apache_webui_fetchPOTD.sh"
     group: "apache"
-    log: "webui"
+    subgroup: "webui"
     hour: "3"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml

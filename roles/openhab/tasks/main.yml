@@ -388,7 +388,7 @@
     name: "Openhab Cleanup"
     cmd: "find {{database_backup_path}}openhab/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
     group: "openhab"
-    log: "dump_cleanup"
+    subgroup: "dump_cleanup"
     hour: "0"
     minute: "45"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -399,7 +399,7 @@
     name: "Openhab Backup"
     cmd: "cp -r {{global_lib}}openhab/persistance/mapdb/ {{database_backup_path}}openhab/mapdb_$(date +\\%Y-\\%m-\\%d)"
     group: "openhab"
-    log: "dump_mapdb"
+    subgroup: "dump_mapdb"
     hour: "0"
     minute: "30"
   include_tasks: roles/cron/shared/add_cronjob.yml

@@ -20,7 +20,7 @@
     name: "LibreNMS Discovery All"
     cmd: "podman exec librenms /opt/librenms/discovery-wrapper.py 8 > /dev/null"
     group: "librenms"
-    log: "discovery_all"
+    subgroup: "discovery_all"
     hour: "*/6"
     minute: "33"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -31,7 +31,7 @@
     name: "LibreNMS Discovery New"
     cmd: "podman exec librenms /opt/librenms/discovery.php  -h new > /dev/null"
     group: "librenms"
-    log: "discovery_new"
+    subgroup: "discovery_new"
     hour: "*"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -42,7 +42,7 @@
     name: "LibreNMS Poller"
     cmd: "podman exec librenms /opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 > /dev/null"
     group: "librenms"
-    log: "poller"
+    subgroup: "poller"
     hour: "*"
     minute: "*/{{librenms_poller_interval}}"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -53,7 +53,7 @@
     name: "LibreNMS Daily"
     cmd: "podman exec --user librenms librenms /opt/librenms/daily.sh > /dev/null"
     group: "librenms"
-    log: "daily"
+    subgroup: "daily"
     hour: "0"
     minute: "15"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -64,7 +64,7 @@
     name: "LibreNMS Alerts"
     cmd: "podman exec librenms /opt/librenms/alerts.php > /dev/null"
     group: "librenms"
-    log: "alerts"
+    subgroup: "alerts"
     hour: "*"
     minute: "*"
   include_tasks: roles/cron/shared/add_cronjob.yml

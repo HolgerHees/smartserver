@@ -149,6 +149,7 @@
     name: "Daily Ping"
     cmd: "printf \"Subject: Daily test message\\nThis is a test message to confirm that mail delivery is working\" | /usr/sbin/sendmail root"
     group: "postfix"
+    subgroup: "test"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml

@@ -11,6 +11,7 @@
     name: "Systemd watcher"
     cmd: "/opt/scripts/systemd_watcher_service_check"
     group: "systemd_watcher"
+    subgroup: "check"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']

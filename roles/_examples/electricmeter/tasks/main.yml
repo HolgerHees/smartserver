@@ -33,6 +33,7 @@
     name: "Electric Meter"
     cmd: "/opt/electricmeter/strom.perl"
     group: "electricmeter"
+    subgroup: "fetch"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']

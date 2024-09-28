@@ -224,7 +224,7 @@
     name: "Nextcloud Updates"
     cmd: "podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/cron.php > /dev/null"
     group: "nextcloud"
-    log: "cron"
+    subgroup: "cron"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
@@ -234,7 +234,7 @@
 #    name: "Nextcloud Fileindex"
 #    cmd: "podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
 #    group: "nextcloud"
-#    log: "file_scan"
+#    subgroup: "file_scan"
 #    hour: "1"
 #    minute: "0"
 #  include_tasks: roles/cron/shared/add_cronjob.yml
@@ -245,7 +245,7 @@
 #    name: "Nextcloud Preview"
 #    cmd: "podman exec --user={{system_users['www'].name}} php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
 #    group: "nextcloud"
-#    log: "preview_generator"
+#    subgroup: "preview_generator"
 #    hour: "2"
 #    minute: "0"
 #  include_tasks: roles/cron/shared/add_cronjob.yml

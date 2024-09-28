@@ -117,6 +117,7 @@
     name: "Camera Cleanup"
     cmd: "find {{global_lib}}/camera_service/upload/ -name \"*.jpg\" -mmin +{{camera_ftp_max_file_age}} -exec rm {} +"
     group: "camera_ftp"
+    subgroup: "cleanup"
     hour: "0"
     minute: "50"
   include_tasks: roles/cron/shared/add_cronjob.yml

@@ -130,7 +130,7 @@
 #    name: "Nextcloud Previewupdates"
 #    cmd: "podman exec --user={{system_users['www'].name}} php php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null"
 #    group: "nextcloud"
-#    log: "preview_generator"
+#    subgroup: "preview_generator"
 #    minute: "*/15"
 #  include_tasks: roles/cron/shared/add_cronjob.yml
 #  tags: ['cron_job']

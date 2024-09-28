@@ -105,7 +105,7 @@
     name: "Software Version check"
     cmd: "/opt/update_service/env/bin/python3 /opt/update_service/software_version_check > /dev/null"
     group: "update_service"
-    log: "software_version_check"
+    subgroup: "software_version_check"
     minute: "0"
     hour: "3"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -117,7 +117,7 @@
     name: "System update check"
     cmd: "/opt/update_service/env/bin/python3 /opt/update_service/system_update_check > /dev/null"
     group: "update_service"
-    log: "system_update_check"
+    subgroup: "system_update_check"
     minute: "30"
     hour: "3"
   include_tasks: roles/cron/shared/add_cronjob.yml
@@ -129,7 +129,7 @@
     name: "System update cleanup"
     cmd: "ls -1t {{global_log}}update_service/*.log | tail -n +50 | xargs rm -f"
     group: "update_service"
-    log: "log_cleanup"
+    subgroup: "log_cleanup"
     hour: "0"
     minute: "40"
   include_tasks: roles/cron/shared/add_cronjob.yml

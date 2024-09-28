@@ -27,6 +27,7 @@
     name: "Heating Sensors"
     cmd: "/opt/heating_sensors/sensoren.bash"
     group: "heating_sensors"
+    subgroup: "fetch"
     minute: "*/1"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']

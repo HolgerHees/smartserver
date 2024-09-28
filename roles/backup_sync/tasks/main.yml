@@ -84,7 +84,7 @@
     name: "Backup sync {{item.name}}"
     cmd: "/opt/backup_sync/sync.py --job {{item.name}}"
     group: "backup_sync"
-    log: "{{item.name}}"
+    subgroup: "{{item.name}}"
     day: "{{item.schedule.day if 'day' in item.schedule else '*'}}"
     weekday: "{{item.schedule.weekday if 'weekday' in item.schedule else '*'}}"
     hour: "{{item.schedule.hour if 'hour' in item.schedule else '*'}}"

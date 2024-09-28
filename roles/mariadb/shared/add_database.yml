@@ -24,12 +24,12 @@
     name: "MariaDB {{database | capitalize}} Backup"
     cmd: "set -o pipefail && podman exec mariadb /usr/bin/mariadb-dump {{database}} -u root --quick --single-transaction -h 127.0.0.1 | bzip2 -c > {{database_backup_path}}mariadb/{{database}}_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     group: "mariadb"
-    log: "dump_{{database}}"
+    subgroup: "dump_{{database}}"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
-  when: "backup"
+  when: "backup" 
 
 - name: "mariadb : add_database : register result state"
   set_fact:

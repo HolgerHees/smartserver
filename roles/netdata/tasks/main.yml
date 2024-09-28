@@ -127,7 +127,7 @@
     name: "Netdata error check"
     cmd: "/opt/scripts/netdata_to_alertmanager"
     group: "netdata"
-    log: "alertmanager"
+    subgroup: "alertmanager"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']

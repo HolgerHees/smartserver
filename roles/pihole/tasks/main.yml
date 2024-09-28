@@ -134,6 +134,7 @@
     name: "Pihole update"
     cmd: "podman exec pihole pihole updateGravity > /dev/null"
     group: "pihole"
+    subgroup: "update"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml

@@ -60,7 +60,7 @@
     name: "Influxdb Cleanup"
     cmd: "find {{database_backup_path}}influxdb/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
     group: "influxdb"
-    log: "dump_cleanup"
+    subgroup: "dump_cleanup"
     hour: "0"
     minute: "45"
   include_tasks: roles/cron/shared/add_cronjob.yml

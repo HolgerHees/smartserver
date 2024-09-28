@@ -159,7 +159,7 @@
     name: "Continues integration job"
     cmd: "podman exec ci_service {{global_opt}}ci_service/ci_job_handler start > /dev/null"
     group: "ci_service"
-    log: "job"
+    subgroup: "job"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
@@ -170,7 +170,7 @@
     name: "Continues integration cleanup"
     cmd: "ls -1t {{global_log}}ci_service/*.log | tail -n +50 | xargs rm -f"
     group: "ci_service"
-    log: "cleanup"
+    subgroup: "cleanup"
     hour: "0"
     minute: "40"
   include_tasks: roles/cron/shared/add_cronjob.yml
