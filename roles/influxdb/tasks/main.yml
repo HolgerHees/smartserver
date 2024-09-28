@@ -41,7 +41,8 @@
     container_exposed_ports:
       - "8086/tcp"
     container_volumes:
-      - '{{ global_etc }}influxdb:/etc/influxdb2:ro'
+      # /etc/influxdb2 must be writeable, because influxdb will place its config there
+      - '{{ global_etc }}influxdb:/etc/influxdb2:rw'
       - '{{ global_lib }}influxdb:/var/lib/influxdb2:rw'
       - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup:rw'
     container_readyness: { "type": "url_check", "url": "http://{{podman_influxdb_ip}}:8086/ping" }
