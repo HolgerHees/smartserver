@@ -2,7 +2,8 @@
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import time
 from functools import cmp_to_key
 
 from config import config
@@ -11,6 +12,10 @@ from smartserver import command
 
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %z %Z'
+
+utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
+utc_offset = timedelta(seconds=-utc_offset_sec)
+local_timezone = timezone(offset=utc_offset)
 
 is_quite = None
 if len(sys.argv) >= 2:
@@ -111,8 +116,8 @@ def collectContainers():
             #result = command.exec(["podman", "inspect", obj["Id"]])
             #_obj = json.loads(result.stdout.decode("utf-8"))
             #state = _obj[0]["State"]
-            finished_at = datetime.fromtimestamp(obj["ExitedAt"])
-            is_stopped_since = (datetime.now(timezone.utc) - finished_at)
+            finished_at = datetime.fromtimestamp(obj["ExitedAt"]).replace(tzinfo=local_timezone)
+            is_stopped_since = datetime.now(timezone.utc) - finished_at
 
         name = obj["Names"][0].split("/", 1)[-1]
         image_repository, image_tag = obj["Image"].split(':', 1)
