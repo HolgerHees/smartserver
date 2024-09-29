@@ -243,6 +243,19 @@
 #     - "apps/keeweb/templates/service-worker.js"    # needed by keepweb
      - "apps/news/css/custom.css"              # needed by nextcloud news <= 24.0.0
 
+- name: check memories:places-setup
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 nextcloud -s -e \"SELECT COUNT(*) FROM  memories_planet_geometry\""
+  register: memories_config_result
+  changed_when: "memories_config_result.rc == 1 or memories_config_result.stdout | int < 500000"
+  failed_when: no
+  when: "is_production"
+
+- name: init memories:places-setup (can takes a while)
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ {{item}}"
+  with_items:
+      - "memories:places-setup"
+  when: "is_production and memories_config_result.changed"
+
 # APP cleanups
 #    Disable and remove news app
 #    Remove all settings in the db: DELETE FROM oc_appconfig WHERE appid = ‘news’;
