@@ -17,13 +17,13 @@ class INotifyPublisher(threading.Thread):
     def __init__(self, config, preview_generator, handler):
         threading.Thread.__init__(self)
 
-        self.queue_event = threading.Event()
-
         self.is_running = False
 
         self.config = config
         self.preview_generator = preview_generator
         self.handler = handler
+
+        self.event = threading.Event()
 
         self.redis = redis.Redis(host=config.redis_host, port=config.redis_port, db=0)
 
@@ -41,13 +41,13 @@ class INotifyPublisher(threading.Thread):
 
         self.is_running = False
 
-        self.queue_event.set()
+        self.event.set()
 
         self.join()
 
     def trigger(self, event, time):
         self.queue.put([event, time])
-        self.queue_event.set()
+        self.event.set()
 
     def run(self):
         logging.info("INotify publisher started")
@@ -93,8 +93,8 @@ class INotifyPublisher(threading.Thread):
 
                 except queue.Empty:
                     #logging.info("Sleep queue loop")
-                    self.queue_event.wait()
-                    self.queue_event.clear()
+                    self.event.wait()
+                    self.event.clear()
         except Exception as e:
             self.is_running = False
             raise e

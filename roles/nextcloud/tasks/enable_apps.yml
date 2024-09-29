@@ -16,6 +16,7 @@
       - news
       - deck
       - tasks
+      - memories
       - keeweb
     nextcloud_disabled_apps:
       - dashboard

@@ -14,11 +14,18 @@ class Process:
     process_container_uid = None
 
     @staticmethod
+    def parseAppCmd(cmd):
+        for _cmd in reversed(cmd):
+            if ":" in _cmd:
+                return _cmd
+        return None
+
+    @staticmethod
     def init(uid):
         Process.process_container_uid = uid
 
     @staticmethod
-    def detectProcessContainerPID():
+    def _detectProcessContainerPID():
         if Process.process_container_pid is None:
             returncode, result = command.exec2("pgrep -f \"master\" -U {}".format(Process.process_container_uid))
             if returncode == 0:
@@ -26,15 +33,18 @@ class Process:
         return Process.process_container_pid
 
     @staticmethod
-    def resetProcessContainerPID():
+    def _resetProcessContainerPID():
         Process.process_container_pid = None
 
-    def __init__(self):
-        self.process = None
-
+    def __init__(self, cmd):
         self.has_errors = False
         self.is_running = False
         self.returncode = None
+
+        self.cmd = cmd
+        self.app = Process.parseAppCmd(cmd)
+
+        self.process = None
 
     def terminate(self):
         if not self.is_running:
@@ -54,14 +64,20 @@ class Process:
     def isShutdown(self):
         return self.returncode == Process.SIGNAL_TERM
 
-    def run(self, cmd, logging_callback):
+    def getApp(self):
+        return self.app
+
+    def run(self, logging_callback, silent=False):
+        if not silent:
+            logging_callback("Start nextcloud '{}' app".format(self.app))
+
         start = time.time()
         self.is_running = True
         self.returncode = None
 
-        pid = Process.detectProcessContainerPID()
+        pid = Process._detectProcessContainerPID()
         if pid is not None:
-            self.process = command.popen(cmd, namespace_pid = pid, namespace_uid = Process.process_container_uid)
+            self.process = command.popen(self.cmd, namespace_pid = pid, namespace_uid = Process.process_container_uid)
             #if self.has_errors:
             os.set_blocking(self.process.stdout.fileno(), False)
             while self.process.poll() is None:
@@ -72,7 +88,7 @@ class Process:
                     for line in iter(self.process.stdout.readline, b''):
                         if line == '':
                             break
-                        logging_callback(line.strip())
+                        logging_callback("APP: {} - {}".format(self.app, line.strip()))
 
                 if self.has_errors:
                     if time.time() - start > 5:
@@ -84,7 +100,7 @@ class Process:
 
             self.returncode = self.process.returncode
             if self.is_running and self.returncode not in [0,Process.SIGNAL_TERM]:
-                Process.resetProcessContainerPID()
+                Process._resetProcessContainerPID()
                 self.has_errors = True
             else:
                 self.has_errors = False

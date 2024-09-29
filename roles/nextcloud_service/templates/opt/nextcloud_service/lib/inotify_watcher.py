@@ -16,22 +16,23 @@ class INotifyWatcher(threading.Thread):
     def __init__(self, config, inotify_processor, start_lazy_callback):
         threading.Thread.__init__(self)
 
-        self.main_event = threading.Event()
-
-        self.scanner_process = Process()
-        self.scanner_event = threading.Event()
-
         self.is_running = False
         self.config = config
         self.inotify_processor = inotify_processor
+
+        self.main_event = threading.Event()
+
+        self.inotify = inotify.INotify(self._inotifyEvent)
+
+        self.init_event = threading.Event()
+        self.init_file_scan_process = Process(self.config.cmd_file_scan)
+        self.init_memories_process = Process(self.config.cmd_memorial_index)
 
         utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
         utc_offset = timedelta(seconds=-utc_offset_sec)
         self.timezone = timezone(offset=utc_offset)
 
         self.start_lazy_callback = start_lazy_callback
-
-        self.inotify = inotify.INotify(self._inotifyEvent)
 
         self.watched_directories = {}
 
@@ -40,7 +41,7 @@ class INotifyWatcher(threading.Thread):
         self.dump_path= "/var/lib/nextcloud_service/state.json"
 
         self.valid_dump_file = True
-        self.version = 1
+        self.version = 2
 
     def start(self):
         self.is_running = True
@@ -63,9 +64,11 @@ class INotifyWatcher(threading.Thread):
         self.inotify.stop()
         self.inotify.join()
 
-        self.scanner_event.set()
-        self.scanner_process.terminate()
-        self.scanner_process.join()
+        self.init_event.set()
+        self.init_file_scan_process.terminate()
+        self.init_file_scan_process.join()
+        self.init_memories_process.terminate()
+        self.init_memories_process.join()
 
         self.main_event.set()
         self.join()
@@ -137,6 +140,22 @@ class INotifyWatcher(threading.Thread):
     def confirmEvent(self, time):
         self.state['last_modified'] = time.isoformat()
 
+    def _runInitApp(self, process):
+        while self.is_running:
+            runtime = process.run(lambda msg: logging.info(msg))
+            if process.hasErrors():
+                logging.info("Not able to run nextcloud '{}' app. Try again in 60 seconds.".format(process.getApp()))
+                self.init_event.wait(60)
+                self.init_event.clear()
+                if self.is_running:
+                    logging.info("Restart nextcloud '{}' app".format(process.getApp()))
+            elif not self.is_running or process.isShutdown():
+                interrupted = True
+                break
+            else:
+                logging.info("Finished nextcloud '{}' app in {:.1f} seconds".format(process.getApp(), runtime))
+                break
+
     def run(self):
         logging.info("INotify watcher started")
         try:
@@ -165,29 +184,17 @@ class INotifyWatcher(threading.Thread):
                 logging.info("INotify watcher initialized {} directories in {:.1f} seconds".format(len(self.watched_directories.keys()), end-start))
 
                 last_modified = datetime.fromisoformat(self.state['last_modified']) if self.state['last_modified'] is not None else None
-
                 if last_modified is None or detected_last_modified > last_modified:
-                    logging.info("Starting file scan")
-                    while self.is_running:
-                        runtime = self.scanner_process.run(self.config.cmd_file_scan, lambda msg: logging.info(msg))
-                        if self.scanner_process.hasErrors():
-                            logging.info("Not able to run nextcloud 'file scanner' app. Try again in 60 seconds.")
-                            self.scanner_event.wait(60)
-                            self.scanner_event.clear()
-                            if self.is_running:
-                                logging.info("Restart file scan")
-                        elif not self.is_running or self.scanner_process.isShutdown():
-                            interrupted = True
-                            break
-                        else:
-                            logging.info("Files scanned in {:.1f} seconds".format(runtime))
-                            self.state['last_modified'] = detected_last_modified.isoformat()
-                            break
+                    self._runInitApp(self.init_file_scan_process)
 
                     if self.is_running and not interrupted:
+                        self._runInitApp(self.init_memories_process)
+
+                    if self.is_running and not interrupted:
+                        self.state['last_modified'] = detected_last_modified.isoformat()
                         self._dump()
                 else:
-                    logging.info("Skipped file scan")
+                    logging.info("Skipped file scanning")
 
                 if self.is_running and not interrupted:
                     self.start_lazy_callback()
@@ -206,6 +213,7 @@ class INotifyWatcher(threading.Thread):
         return [
             Metric.buildProcessMetric("nextcloud_service", "inotify_watcher", "1" if self.is_running else "0"),
             Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "cache_file", "1" if self.valid_dump_file else "0"),
-            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "app", "1" if not self.scanner_process.hasErrors() else "0", { "app": "files:scan" }),
+            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "app", "1" if not self.init_file_scan_process.hasErrors() else "0", { "app": self.init_file_scan_process.getApp() }),
+            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "app", "1" if not self.init_memories_process.hasErrors() else "0", { "app": self.init_memories_process.getApp() }),
             Metric.buildDataMetric("nextcloud_service", "inotify_watcher", "count", len(self.watched_directories))
         ]

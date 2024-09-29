@@ -20,11 +20,11 @@ class INotifyListener(threading.Thread):
     def __init__(self, config):
         threading.Thread.__init__(self)
 
-        self.listener_process = Process()
-        self.listener_event = threading.Event()
-
         self.is_running = False
         self.config = config
+
+        self.process = Process(self.config.cmd_inotify_listener)
+        self.event = threading.Event()
 
     def start(self):
         self.is_running = True
@@ -36,9 +36,9 @@ class INotifyListener(threading.Thread):
 
         self.is_running = False
 
-        self.listener_event.set()
-        self.listener_process.terminate()
-        self.listener_process.join()
+        self.event.set()
+        self.process.terminate()
+        self.process.join()
 
         self.join()
 
@@ -47,14 +47,14 @@ class INotifyListener(threading.Thread):
         try:
             while self.is_running:
                 #logging.info(str(self.config.cmd_inotify_listener))
-                self.listener_process.run(self.config.cmd_inotify_listener, lambda msg: logging.info("RECEIVED: " + msg))
-                if self.listener_process.hasErrors():
-                    logging.info("Not able to run nextcloud 'inotify listener' app. Try again in 60 seconds.")
-                    self.listener_event.wait(60)
-                    self.listener_event.clear()
+                self.process.run(lambda msg: logging.info(msg))
+                if self.process.hasErrors():
+                    logging.info("Not able to run nextcloud '{}' app. Try again in 60 seconds".format(self.process.getApp()))
+                    self.event.wait(60)
+                    self.event.clear()
                     if self.is_running:
-                        logging.info("Restart inotify listener")
-                elif self.listener_process.isShutdown():
+                        logging.info("Restart nextcloud '{}' app".format(self.process.getApp()))
+                elif self.process.isShutdown():
                     break
 
         except Exception as e:
@@ -66,5 +66,5 @@ class INotifyListener(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("nextcloud_service", "inotify_listener", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "app", "1" if not self.listener_process.hasErrors() else "0", { "app": "files_notify_redis:primary" })
+            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "app", "1" if not self.process.hasErrors() else "0", { "app": self.process.getApp() })
         ]

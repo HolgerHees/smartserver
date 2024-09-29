@@ -254,6 +254,7 @@
       - "8443"
       - "5007"
       - "8101"
+    container_no_healthcheck: yes # disable healthcheck, because systemd is watching processes
     container_device: "{{openhab_device_mounts | default([])}}"
     container_env:
       USER_ID: "{{system_users['openhab'].id}}"

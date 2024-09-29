@@ -13,11 +13,11 @@ class PreviewGenerator(threading.Thread):
     def __init__(self, config):
         threading.Thread.__init__(self)
 
-        self.generator_process = Process()
-        self.generator_event = threading.Event()
-
         self.is_running = False
         self.config = config
+
+        self.process = Process(self.config.cmd_preview_generator)
+        self.event = threading.Event()
 
         self.first_event = 0
         self.last_event = 0
@@ -32,9 +32,9 @@ class PreviewGenerator(threading.Thread):
 
         self.is_running = False
 
-        self.generator_event.set()
-        self.generator_process.terminate()
-        self.generator_process.join()
+        self.event.set()
+        self.process.terminate()
+        self.process.join()
 
         self.join()
 
@@ -42,10 +42,11 @@ class PreviewGenerator(threading.Thread):
         self.last_event = time.time()
         if self.first_event == 0:
             self.first_event = self.last_event
-        self.generator_event.set()
+        self.event.set()
 
     def run(self):
         logging.info("Preview generator started")
+        self.event.clear()
         try:
             while self.is_running:
                 now = time.time()
@@ -53,21 +54,21 @@ class PreviewGenerator(threading.Thread):
                 max_timeout = self.config.max_preview_delay - (now - self.first_event)
                 timeout = next_timeout if next_timeout < max_timeout else max_timeout
                 if timeout <= 0:
-                    runtime = self.generator_process.run(self.config.cmd_preview_generator, lambda msg: logging.info(msg))
-                    if self.generator_process.hasErrors():
-                        logging.info("Not able to run nextcloud 'preview generator' app. Try again in 60 seconds.")
-                        self.generator_event.wait(60)
+                    runtime = self.process.run(lambda msg: logging.info(msg), silent=True)
+                    if self.process.hasErrors():
+                        logging.info("Not able to run nextcloud '{}' app. Try again in 60 seconds".format(self.process.getApp()))
+                        self.event.wait(60)
                         if self.is_running:
-                            logging.info("Restart preview generator")
+                            logging.info("Restart nextcloud '{}' app".format(self.process.getApp()))
                     else:
-                        if not self.is_running or self.generator_process.isShutdown():
+                        if not self.is_running or self.process.isShutdown():
                             break
                         logging.info("Previews generated in {:.2f} seconds".format(runtime))
                         self.first_event = self.last_event = 0
-                        self.generator_event.wait()
+                        self.event.wait()
                 else:
-                    self.generator_event.wait(timeout)
-                self.generator_event.clear()
+                    self.event.wait(timeout)
+                self.event.clear()
         except Exception as e:
             self.is_running = False
             raise e
@@ -77,5 +78,5 @@ class PreviewGenerator(threading.Thread):
     def getStateMetrics(self):
         return [
             Metric.buildProcessMetric("nextcloud_service", "preview_generator", "1" if self.is_running else "0"),
-            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "app", "1" if not self.generator_process.hasErrors() else "0", { "app": "preview:pre-generate" })
+            Metric.buildStateMetric("nextcloud_service", "inotify_listener", "app", "1" if not self.process.hasErrors() else "0", { "app": self.process.getApp() })
         ]

@@ -52,8 +52,10 @@
     enabled: no
     masked: no
   failed_when: no
+  register: cleaned_services
   with_items:
     - "nextcloud_inotify.service"
+    - "imaginary.service"
 
 - name: clean obsolete files
   file:
@@ -71,6 +73,17 @@
     - "/etc/nftables/20_trusted_networks.nft"
     - "{{global_etc}}prometheus/rules/camera_service.yml"
     - "{{global_etc}}prometheus/rules/update_service.yml"
+    - "/etc/systemd/system/imaginary.service"
+    - "{{global_etc}}systemd_watcher/services/imaginary.conf"
+
+- name: Refresh systemd
+  shell:
+    cmd: "{{item}}"
+  failed_when: no
+  when: "cleaned_services.changed"
+  with_items:
+    - "systemctl daemon-reload"
+    - "systemctl reset-failed"
 
 - name: Clean wrong created backup cronjob
   file:

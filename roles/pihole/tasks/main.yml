@@ -81,7 +81,7 @@
     # - "67:67/udp"
       - "80/tcp"
       - "443/tcp"
-    container_no_healthcheck: yes # disable healthcheck for now, because systemd is producing startup errors related to not successful first healthcheck
+    container_no_healthcheck: yes # disable healthcheck, because systemd is watching processes and additionally ir is producing startup errors related to not successful first healthcheck
     #healthcheck: "dig +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"
     #healthcheck_start_period: 30s
     #healthcheck_timeout: 30s
