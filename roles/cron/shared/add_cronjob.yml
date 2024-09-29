@@ -2,7 +2,7 @@
   vars:
     cron_name: "{{name}}"
     cron_cmd: "{{cmd}}"
-    cron_journal_type: "crony_{{ group + '_' + subgroup }}"
+    cron_journal_type: "crony_{{ group + '_' + subgroup if subgroup is defined else group }}"
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'roles/cron/templates/cron_job') }}"
