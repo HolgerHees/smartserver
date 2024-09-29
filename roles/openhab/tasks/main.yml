@@ -254,7 +254,7 @@
       - "8443"
       - "5007"
       - "8101"
-    container_no_healthcheck: yes # disable healthcheck, because systemd is watching processes
+    container_no_healthcheck: yes # disable healthcheck, because systemd is watching processes. Sometimes the initialization takes so long that the health check thinks it is frozen and kills the container.
     container_device: "{{openhab_device_mounts | default([])}}"
     container_env:
       USER_ID: "{{system_users['openhab'].id}}"
