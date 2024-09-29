@@ -26,7 +26,7 @@ class INotifyWatcher(threading.Thread):
 
         self.init_event = threading.Event()
         self.init_file_scan_process = Process(self.config.cmd_file_scan)
-        self.init_memories_process = Process(self.config.cmd_memorial_index)
+        #self.init_memories_process = Process(self.config.cmd_memorial_index)
 
         utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
         utc_offset = timedelta(seconds=-utc_offset_sec)
@@ -67,8 +67,8 @@ class INotifyWatcher(threading.Thread):
         self.init_event.set()
         self.init_file_scan_process.terminate()
         self.init_file_scan_process.join()
-        self.init_memories_process.terminate()
-        self.init_memories_process.join()
+        #self.init_memories_process.terminate()
+        #self.init_memories_process.join()
 
         self.main_event.set()
         self.join()
@@ -187,8 +187,8 @@ class INotifyWatcher(threading.Thread):
                 if last_modified is None or detected_last_modified > last_modified:
                     self._runInitApp(self.init_file_scan_process)
 
-                    if self.is_running and not interrupted:
-                        self._runInitApp(self.init_memories_process)
+                    #if self.is_running and not interrupted:
+                    #    self._runInitApp(self.init_memories_process)
 
                     if self.is_running and not interrupted:
                         self.state['last_modified'] = detected_last_modified.isoformat()
@@ -214,6 +214,6 @@ class INotifyWatcher(threading.Thread):
             Metric.buildProcessMetric("nextcloud_service", "inotify_watcher", "1" if self.is_running else "0"),
             Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "cache_file", "1" if self.valid_dump_file else "0"),
             Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "app", "1" if not self.init_file_scan_process.hasErrors() else "0", { "app": self.init_file_scan_process.getApp() }),
-            Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "app", "1" if not self.init_memories_process.hasErrors() else "0", { "app": self.init_memories_process.getApp() }),
+            #Metric.buildStateMetric("nextcloud_service", "inotify_watcher", "app", "1" if not self.init_memories_process.hasErrors() else "0", { "app": self.init_memories_process.getApp() }),
             Metric.buildDataMetric("nextcloud_service", "inotify_watcher", "count", len(self.watched_directories))
         ]
