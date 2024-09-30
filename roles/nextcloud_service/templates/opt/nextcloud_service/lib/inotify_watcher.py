@@ -128,6 +128,10 @@ class INotifyWatcher(threading.Thread):
             elif event.mask & inotify.Constants.IN_MOVED_FROM:
                 self._delRecursive(directory)
         else:
+            # ignore nextcloud memories exif tool modifications
+            if not is_dir and event.path.endswith("_exiftool_tmp"):
+                return
+
             directory = event.path if is_dir else os.path.dirname(event.path)
             if directory not in self.watched_directories:
                 if event.mask & inotify.Constants.IN_CREATE:
