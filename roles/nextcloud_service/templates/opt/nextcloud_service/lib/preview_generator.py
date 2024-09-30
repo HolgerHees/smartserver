@@ -52,7 +52,7 @@ class PreviewGenerator(threading.Thread):
                 now = time.time()
                 next_timeout = self.config.min_preview_delay - (now - self.last_event)
                 max_timeout = self.config.max_preview_delay - (now - self.first_event)
-                timeout = next_timeout if next_timeout < max_timeout else max_timeout
+                timeout = min(next_timeout, max_timeout)
                 if timeout <= 0:
                     runtime = self.process.run(lambda msg: logging.info(msg), silent=True)
                     if self.process.hasErrors():
