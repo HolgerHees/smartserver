@@ -58,8 +58,6 @@ class PreviewGenerator(threading.Thread):
                     if self.process.hasErrors():
                         logging.info("Not able to run nextcloud '{}' app. Try again in 60 seconds".format(self.process.getApp()))
                         self.event.wait(60)
-                        if self.is_running:
-                            logging.info("Restart nextcloud '{}' app".format(self.process.getApp()))
                     else:
                         if not self.is_running or self.process.isShutdown():
                             break

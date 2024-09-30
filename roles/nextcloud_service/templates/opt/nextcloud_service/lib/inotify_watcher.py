@@ -147,8 +147,6 @@ class INotifyWatcher(threading.Thread):
                 logging.info("Not able to run nextcloud '{}' app. Try again in 60 seconds.".format(process.getApp()))
                 self.init_event.wait(60)
                 self.init_event.clear()
-                if self.is_running:
-                    logging.info("Restart nextcloud '{}' app".format(process.getApp()))
             elif not self.is_running or process.isShutdown():
                 interrupted = True
                 break
