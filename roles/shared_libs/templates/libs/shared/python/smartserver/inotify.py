@@ -150,8 +150,11 @@ class INotify(threading.Thread):
 
     def rm_watch(self, path):
         wd = self._wd_for_path[path]
-        if inotify_rm_watch(self._inotify_fd, wd) == -1:
-            INotify._raise_error()
+
+        # ignore any kind of error, because it can throw an "Invalid argument" error in case of a deleted file
+        inotify_rm_watch(self._inotify_fd, wd)
+        #if inotify_rm_watch(self._inotify_fd, wd) == -1:
+        #    INotify._raise_error()
 
         #logging.info("rm_watch: " + str(path) + " " + str(wd))
 
