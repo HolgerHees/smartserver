@@ -2,29 +2,35 @@
   set_fact:
     nextcloud_keeweb_version: '0.6.13'
 #    nextcloud_keeweb_version: '0.6.15'
-    nextcloud_default_apps:
-      - files_notify_redis
-      - user_saml
-      - richdocuments
-#      - jsloader
-      - previewgenerator
-      - bookmarks
-      - contacts
-      - calendar
-      - notes
-#      - collectives
-      - news
-      - deck
-      - tasks
-      - memories
-      - keeweb
-    nextcloud_disabled_apps:
-      - dashboard
-      - collectives
-      - jsloader
-      - photos
-#      - tasks
-#      - notes
+    nextcloud_default_apps: |
+      [
+        "files_notify_redis",
+        "user_saml",
+        "richdocuments",
+        "previewgenerator",
+
+      {% if nextcloud_image_recognize_enabled %}
+        "recognize",
+      {% endif %}
+        "memories",
+
+        "bookmarks",
+        "contacts",
+        "calendar",
+        "notes",
+        "news",
+        "deck",
+        "tasks",
+
+        "keeweb"
+      ]
+    nextcloud_disabled_apps: |
+      [
+        "dashboard",
+        "collectives",
+        "jsloader",
+        "photos"
+      ]
 
 # ***** DISABLE APPS *****
 - name: disable apps
@@ -249,13 +255,13 @@
   register: memories_config_result
   changed_when: "memories_config_result.rc == 1 or memories_config_result.stdout | int < 500000"
   failed_when: no
-  when: "is_production"
+  when: "is_production and nextcloud_image_geolocation_enabled"
 
 - name: init memories:places-setup (can takes a while)
   shell: "podman exec php php {{htdocs_path}}nextcloud/occ {{item}}"
   with_items:
       - "memories:places-setup"
-  when: "is_production and memories_config_result.changed"
+  when: "is_production and nextcloud_image_geolocation_enabled and memories_config_result.changed"
 
 # APP cleanups
 #    Disable and remove news app
