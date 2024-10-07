@@ -255,7 +255,6 @@
       - "5007"
       - "8101"
     container_no_healthcheck: yes # disable healthcheck, because systemd is watching processes. Sometimes the initialization takes so long that the health check thinks it is frozen and kills the container.
-    container_device: "{{openhab_device_mounts | default([])}}"
     container_env:
       USER_ID: "{{system_users['openhab'].id}}"
       GROUP_ID: "{{system_groups['openhab'].id}}"
@@ -266,9 +265,11 @@
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
       CRYPTO_POLICY: "unlimited"
     # all volumes needs to writeable, because openhab runs chown on OPENHAB_HOME
+#    container_device: "{{openhab_device_mounts | default([])}}"
+    container_privileged: yes
     container_volumes: |
       [
-
+        '/dev:/dev:rw',
         '{{global_etc}}openhab/cont-init.d:/etc/cont-init.d:rw',
         '{{projects_path}}openhab_config:{{projects_path}}openhab_config:rw',
         '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:rw',
