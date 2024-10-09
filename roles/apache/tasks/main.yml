@@ -251,7 +251,7 @@
       - '{{global_etc}}apache2/_.ansible.httpd.conf:/usr/local/apache2/conf/httpd.conf:ro'
       - '{{global_etc}}letsencrypt:/etc/letsencrypt:rw'
       - '{{global_log}}:{{global_log}}:rw'
-      - '{{htdocs_path}}:{{htdocs_path}}:ro'
+      - '{{htdocs_path}}:{{htdocs_path}}:rw' # must be rw, because letsencrypt is writing to /htdocs/_public/.well-known/acme-challenge
     container_reload_exec: "/usr/bin/podman exec apache2 sh -c \"apachectl -k graceful\""
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "80" }
   include_tasks: roles/container/shared/create_podman_service.yml
