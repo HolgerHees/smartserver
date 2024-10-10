@@ -2,7 +2,7 @@ groups:
 - name: smartd
   rules:
   - alert: Smartd temperature is too high (HDD/SSD)
-    expr: '{__name__=~"netdata.*",chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
+    expr: '{__name__=~"netdata.*",chart=~"smartctl.*",family="temperature",job="netdata"} > 50 > 50'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -11,7 +11,7 @@ groups:
       summary: "Smartd temperature is {{'{{'}}$value{{'}}'}} °C"
 
   - alert: Smartd reallocated sector count changed (HDD/SSD)
-    expr: 'changes(netdata_smartd_log_reallocated_sectors_count_sectors_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_reallocated_sector_ct_sectors_average[1h]) > 0'
     for: 0m
     labels:
       severity: info
@@ -19,7 +19,7 @@ groups:
       summary: "Smartd reallocated sectors on disk is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd UDMA CRC error count changed (HDD/SSD)
-    expr: 'changes(netdata_smartd_log_udma_crc_error_count_errors_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_udma_crc_error_count_errors_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -28,7 +28,7 @@ groups:
       summary: "Smartd UDMA CRC error count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd read error rate changed (HDD)
-    expr: 'changes(netdata_smartd_log_read_error_rate_value_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_raw_read_error_rate_errors_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -46,7 +46,7 @@ groups:
 #      summary: "Smartd seek error rate is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd current pending sector count changed (HDD)
-    expr: 'changes(netdata_smartd_log_current_pending_sector_count_sectors_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_current_pending_sector_sectors_average[1h]) > 0'
     for: 0m
     labels:
       severity: warning
@@ -54,7 +54,7 @@ groups:
       summary: "Smartd current pending sector is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd offline uncorrectable sector count changed (HDD)
-    expr: 'changes(netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_offline_uncorrectable_sectors_average[1h]) > 0'
     for: 0m
     labels:
       severity: warning
@@ -62,7 +62,7 @@ groups:
       summary: "Smartd offline uncorrectable disk sector count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd unexpected power loss changed (HDD)
-    expr: 'changes(netdata_smartd_log_unexpected_power_loss_events_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_unexpected_power_loss_value_average[1h]) > 0'
     for: 0m
     labels:
       severity: warning
@@ -70,7 +70,7 @@ groups:
       summary: "Smartd unexpected power loss is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd spin up retries is above 5 (HDD)
-    expr: 'netdata_smartd_log_spin_up_retries_retries_average > 5'
+    expr: 'netdata_smartctl_device_smart_attr_spin_retry_count_events_average > 5'
     for: 0m
     labels:
       severity: info
@@ -78,7 +78,7 @@ groups:
       summary: "Smartd spin up retries is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd program fail count changed (SSD)
-    expr: 'changes(netdata_smartd_log_program_fail_count_errors_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_program_fail_count_events_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -87,7 +87,7 @@ groups:
       summary: "Smartd program fail count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Smartd erase fail count changed (SSD)
-    expr: 'changes(netdata_smartd_log_erase_fail_count_failures_average[1h]) > 0'
+    expr: 'changes(netdata_smartctl_device_smart_attr_erase_fail_count_events_average[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"

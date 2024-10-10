@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.47.3"
+    netdata_version: "1.47.4"
   tags: [ 'update_notifier_config' ]
 
 - name: prepare needed directories
@@ -48,6 +48,7 @@
     container_capabilities:
       - SYS_PTRACE
       - SYS_ADMIN
+      - SYS_RAWIO # smartctl
     container_security_opt:
       - "apparmor:unconfined"
     container_network: "host"
@@ -62,8 +63,10 @@
     #  VIRTUALIZATION: "kvm"
       DOCKER_USR: "root"
       DOCKER_GRP: "root"
-      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors"
+      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools"
     container_volumes:
+      - '/dev:/dev:rw' # smartctl
+
       - '/etc/passwd:/host/etc/passwd:ro'
       - '/etc/group:/host/etc/group:ro'
       - '/etc/localtime:/etc/localtime:ro'
@@ -72,7 +75,7 @@
       - '/proc:/host/proc:ro'
       - '/sys:/host/sys:ro'
       - '/run/dbus:/run/dbus:ro'
-      - '/var/lib/smartmontools/:/var/lib/smartmontools/:ro'
+      - '/var/lib/smartmontools/:/var/lib/smartmontools/:rw'
 
       - '/var/log:/host/var/log:ro'
 
