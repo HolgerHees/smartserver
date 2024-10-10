@@ -47,6 +47,11 @@ class CmdWorkflow:
         thread.start()
 
     def _handleRunningStates(self):
+        #lf = LogFile("/tmp/test.log", "w", self.handler.notifyChangedCmdExecuterLog, "test")
+        #with lf:
+        #    can_proceed = self._waitToProceed(lf, MIN_PROCESS_INACTIVITY_TIME, MIN_STARTUP_WAITING_TIME, MAX_STARTUP_WAITING_TIME, "resume")
+        #    logging.info("DEBUG: TEST " + str(can_proceed))
+
         for log_file in glob.glob(u"{}*-*-running-*-*.log".format(config.job_log_folder)):
             log_details = CmdExecuter.getLogFileDetails(log_file)
             result = False
@@ -135,7 +140,7 @@ class CmdWorkflow:
             inactivity_time = now - last_seen_time
             waiting_time = round(now - waiting_start)
             
-            external_cmd_type = self.cmd_executer.getExternalCmdType()
+            external_cmd_type = self.cmd_executer.getExternalCmdTypeDebug()
             if external_cmd_type != None:
                 last_seen_time = now
                 last_cmd_type = external_cmd_type

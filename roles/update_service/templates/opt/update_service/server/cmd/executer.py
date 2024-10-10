@@ -294,6 +294,16 @@ class CmdExecuter(watcher.Watcher):
             self._refreshExternalCmdType()
         return self.external_cmd_type
 
+    def getExternalCmdTypeDebug(self):
+        with self.extern_cmd_lock:
+            external_cmd_type = self.process_watcher.refreshExternalCmdType(self.current_cmd_type != None)
+            logging.info("DEBUG: Executor._refreshExternalCmdType: " + str(external_cmd_type) + " " + str(self.external_cmd_type) + str(self.current_cmd_type))
+            if self.external_cmd_type != external_cmd_type:
+                self.external_cmd_type = external_cmd_type
+                self.handler.notifyChangedCmdExecuterJobState(self.getJobStatus())
+                self.handler.notifyChangedExternalCmdState()
+        return self.external_cmd_type
+
     def triggerHighAccuracy(self):
         self.event.set()
 

@@ -162,20 +162,23 @@ class ProcessWatcher(watcher.Watcher):
         if not daemon_job_is_running:
             # 10 times faster then Processlist.getPids(" |".join( ProcessWatcher.process_mapping.keys()))
             current_pids = Processlist.getPids()
-            if current_pids is not None and current_pids != self.current_pids:
-                for pid in set(current_pids) - set(self.current_pids):
-                    cmdline = Processlist.getCmdLine(pid)
-                    if not cmdline:
-                        continue
-                    for term in ProcessWatcher.process_mapping:
-                        if "{} ".format(term) in cmdline and not self.operating_system.isRunning(cmdline):
-                            self.external_cmd_pids[pid] = ProcessWatcher.process_mapping[term]
-                    #logging.info("check {} {}".format(pid,cmdline))
+            if current_pids is not None:
+                current_pids.sort()
 
-                for pid in set(self.current_pids) - set(current_pids):
-                    if pid in self.external_cmd_pids:
-                        del self.external_cmd_pids[pid]
-                        cleaned = True
+                if current_pids != self.current_pids:
+                    for pid in set(current_pids) - set(self.current_pids):
+                        cmdline = Processlist.getCmdLine(pid)
+                        if not cmdline:
+                            continue
+                        for term in ProcessWatcher.process_mapping:
+                            if "{} ".format(term) in cmdline and not self.operating_system.isRunning(cmdline):
+                                self.external_cmd_pids[pid] = ProcessWatcher.process_mapping[term]
+                        #logging.info("check {} {}".format(pid,cmdline))
+
+                    for pid in set(self.current_pids) - set(current_pids):
+                        if pid in self.external_cmd_pids:
+                            del self.external_cmd_pids[pid]
+                            cleaned = True
 
                 self.current_pids = current_pids
         else:
@@ -184,7 +187,8 @@ class ProcessWatcher(watcher.Watcher):
         if cleaned and len(self.external_cmd_pids) == 0:
             self.event.set()
 
-        #logging.info(str(daemon_job_is_running) + " " + str(self.external_cmd_pids))
+        #logging.info("DEBUG: Process.refreshExternalCmdType: " + str(daemon_job_is_running) + " " + str(self.external_cmd_pids))
+        #logging.info("DEBUG: Process.refreshExternalCmdType: " + str(daemon_job_is_running) + " " + str(self.current_pids))
 
         return None if len(self.external_cmd_pids) == 0 else next(iter(self.external_cmd_pids.values()))
 
