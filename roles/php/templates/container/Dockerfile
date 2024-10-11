@@ -79,9 +79,9 @@ RUN apt-get update && \
   sed -i 's/^[;]*expose_php.*$/expose_php = Off/' /usr/local/etc/php/php.ini && \
 
   sed -i 's/^[;]*pm[^\.]*$/pm = dynamic/' /usr/local/etc/php-fpm.d/www.conf && \
-  sed -i 's/^[;]*pm.start_servers.*$/pm.start_servers = 8/' /usr/local/etc/php-fpm.d/www.conf && \
-  sed -i 's/^[;]*pm.min_spare_servers.*$/pm.min_spare_servers = 8/' /usr/local/etc/php-fpm.d/www.conf && \
-  sed -i 's/^[;]*pm.max_spare_servers.*$/pm.max_spare_servers = 16/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i "s/^[;]*pm.start_servers.*$/pm.start_servers = $(nproc)/" /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i "s/^[;]*pm.min_spare_servers.*$/pm.min_spare_servers = $(nproc)/" /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i "s/^[;]*pm.max_spare_servers.*$/pm.max_spare_servers = $(($(nproc) * 2))/" /usr/local/etc/php-fpm.d/www.conf && \
   sed -i 's/^[;]*pm.process_idle_timeout.*$/pm.process_idle_timeout = 15s/' /usr/local/etc/php-fpm.d/www.conf && \
   sed -i 's/^[;]*pm.max_children.*$/pm.max_children = 200/' /usr/local/etc/php-fpm.d/www.conf && \
   sed -i 's/^[;]*pm.max_requests.*$/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf && \

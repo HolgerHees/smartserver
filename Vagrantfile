@@ -127,10 +127,17 @@ Vagrant.configure(2) do |config|
     setup.vm.synced_folder ".", "/vagrant"
     #, automount: true
 
+    cpus = `/usr/bin/nproc`.to_i
+    if cpus < 2 then
+        cpus = 2
+    else
+        cpus = (cpus / 3).floor()
+    end
+
     setup.vm.provider :virtualbox do |vb|
         vb.name = $image_name
         vb.customize ["modifyvm", :id, "--memory", "6144"]
-        vb.customize ["modifyvm", :id, "--cpus", "2"]
+        vb.customize ["modifyvm", :id, "--cpus", cpus]
         #vb.customize ["natnetwork", "add", "--netname", "smartserver", "--network", "#{$env_ip}/24", "--enable"]
         #vb.customize ["modifyvm", :id, "--nic2", "natnetwork"]
     end
@@ -138,11 +145,11 @@ Vagrant.configure(2) do |config|
     setup.vm.provider "hyperv" do |hv|
         hv.vmname = $image_name
         hv.memory = 6144
-        hv.cpus = 2
+        hv.cpus = cpus
     end
     #setup.vm.provider "vmware_desktop" do |vw|
     #  vw.vmx["memsize"] = "6144"
-    #  vw.vmx["numvcpus"] = "2"
+    #  vw.vmx["numvcpus"] = cpus
     #end
     
     require 'time'
