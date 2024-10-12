@@ -63,7 +63,10 @@
     #  VIRTUALIZATION: "kvm"
       DOCKER_USR: "root"
       DOCKER_GRP: "root"
+#      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools nvidia-smi"
       NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools"
+      DISABLE_TELEMETRY: "1"
+      DO_NOT_TRACK: "1"
     container_volumes:
       - '/dev:/dev:rw' # smartmontools
 
@@ -81,6 +84,9 @@
 
       - '{{ global_lib }}netdata:/var/lib/netdata:rw'
       - '{{ global_lib }}netdata/cache:/var/cache/netdata:rw'
+
+#      - "{{ global_etc }}netdata/sources.list:/etc/apt/sources.list:ro"
+#      - "/usr/bin/nvidia-smi:/usr/bin/nvidia-smi:ro"
 
       - "{{ global_etc }}netdata/.environment:/etc/netdata/.environment:ro"
       - "{{ global_etc }}netdata/netdata.conf:/etc/netdata/netdata.conf:ro"
