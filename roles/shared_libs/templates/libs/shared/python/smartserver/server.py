@@ -13,7 +13,10 @@ from werkzeug.serving import WSGIRequestHandler, make_server
 from datetime import datetime, timezone
 
 from smartserver.filewatcher import FileWatcher
+from smartserver import loghandler
 
+is_daemon = not os.isatty(sys.stdin.fileno())
+loghandler.init( loghandler.HANDLER_TYPE_STDOUT, with_time = not is_daemon )
 
 serverWeb = Flask(__name__)
 serverWeb.logger = logging.getLogger()
@@ -24,41 +27,8 @@ serverSocket = SocketIO(serverWeb, async_mode="threading", cors_allowed_origins=
 class ShutdownException(Exception):
     pass
 
-class CustomFormatter(logging.Formatter):
-    def __init__(self, fmt):
-        super().__init__()
-        self.fmt = fmt
-
-    def format(self, record):
-        if "custom_module" not in record.__dict__:
-            module = record.pathname.replace("/",".")[:-3] + ":" + str(record.lineno)
-            module = module.ljust(25)
-            module = module[-25:]
-            
-            record.__dict__["custom_module"] = module
-            
-        formatter = logging.Formatter(self.fmt)
-        return formatter.format(record)
-            
 class Server():
     serverHandler = None
-
-    def initLogger(level):
-        is_daemon = not os.isatty(sys.stdin.fileno())
-
-        #journal.JournalHandler(SYSLOG_IDENTIFIER="pulp-sync")
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(CustomFormatter(
-            "[%(levelname)s] - [%(custom_module)s] - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - [%(custom_module)s] - %(message)s"
-            #"[%(levelname)s] - %(module).12s:%(lineno)d - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s:%(lineno)d - %(message)s",
-        ))
-        
-        logging.basicConfig(
-            handlers = [handler],
-            level=level,
-            #format= CustomFormatter("[%(levelname)s] - %(module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s - %(message)s"),
-            datefmt="%d.%m.%Y %H:%M:%S"
-        )
 
     def __init__(self, name, ip, port):
         self.ip = ip
@@ -316,6 +286,3 @@ def on_join(room, data = None):
 @serverSocket.on('leave')
 def on_leave(room):
     Server.serverHandler.onSocketRoomLeave(request.sid, room)
-
-Server.initLogger(logging.INFO)
-
