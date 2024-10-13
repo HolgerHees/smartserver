@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import time
 import logging
 import traceback
+import inspect
 
 from smartserver.metric import Metric
 
@@ -47,6 +48,10 @@ class MQTTHandler():
         if self.mqtt_client is None:
             return
         try:
+            if name == "network/192.168.0.69/online":
+                curframe = inspect.currentframe()
+                calframe = inspect.getouterframes(curframe, 2)
+                logging.info("DEBUG: {}:{}.{} => system_info/{} {}".format(calframe[1][1], calframe[1][2], calframe[1][3], name, payload))
             self.mqtt_client.publish('system_info/{}'.format(name), payload=payload, qos=0, retain=False)
             self.state_metrics = 1
         except Exception as e:
