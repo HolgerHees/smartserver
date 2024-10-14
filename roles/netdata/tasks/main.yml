@@ -30,8 +30,8 @@
 
 - name: copy config
   template:
-    src: "templates/netdata.conf"
-    dest: "{{ global_etc }}netdata/netdata.conf"
+    src: "templates/{{item}}"
+    dest: "{{ global_etc }}netdata/{{item}}"
     owner: root
     group: root
     mode: 0640

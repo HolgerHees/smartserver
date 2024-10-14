@@ -84,27 +84,37 @@
 
 - name: set app configs
   set_fact:
-    app_configs:
-      - { app: "user_saml", name: "type", value: "environment-variable" }
+    app_configs: |
+      [
+        { "app": "user_saml"            , "name": "type"                                , "value": "environment-variable" },
 
-      - { app: "updatenotification", name: "notify_groups", value: "[]" }
+        { "app": "updatenotification"   , "name": "notify_groups"                       , "value": "[]" },
 
-      - { app: "richdocuments", name: "disable_certificate_verification", value: "" }
-      - { app: "richdocuments", name: "enabled", value: "yes" }
-#      - { app: "richdocuments", name: "installed_version", value: "" }
-#      - { app: "richdocuments", name: "public_wopi_url", value: "" }
-      - { app: "richdocuments", name: "types", value: "prevent_group_restriction" }
-      - { app: "richdocuments", name: "wopi_allowlist", value: "{{podman_libreoffice_ip}}" }
-      - { app: "richdocuments", name: "wopi_url", value: "https://libreoffice.{{server_domain}}" }
-      - { app: "richdocuments", name: "uiDefaults-UIMode", value: "tabbed" }
+        { "app": "richdocuments"        , "name": "disable_certificate_verification"    , "value": "" },
+        { "app": "richdocuments"        , "name": "enabled"                             , "value": "yes" },
+        { "app": "richdocuments"        , "name": "types"                               , "value": "prevent_group_restriction" },
+        { "app": "richdocuments"        , "name": "wopi_allowlist"                      , "value": "{{podman_libreoffice_ip}}" },
+        { "app": "richdocuments"        , "name": "wopi_url"                            , "value": "https://libreoffice.{{server_domain}}" },
+        { "app": "richdocuments"        , "name": "uiDefaults-UIMode"                   , "value": "tabbed" },
 
-      - { app: "previewgenerator", name: "squareSizes", value: "256" }
-      - { app: "previewgenerator", name: "widthSizes", value: "256" }
-      - { app: "previewgenerator", name: "heightSizes", value: "256" }
+        { "app": "previewgenerator"     , "name": "squareSizes"                         , "value": "256" },
+        { "app": "previewgenerator"     , "name": "widthSizes"                          , "value": "256" },
+        { "app": "previewgenerator"     , "name": "heightSizes"                         , "value": "256" },
 
-      - { app: "notes", name: "fileSuffix", value: ".md" }
+        { "app": "notes"                , "name": "fileSuffix"                          , "value": ".md" },
 
-      - { app: "text", name: "workspace_available", value: "0" }
+        { "app": "text"                 , "name": "workspace_available"                 , "value": "0" },
+
+      {% if nextcloud_image_recognize_enabled %}
+        { "app": "recognize"            , "name": "faces.enabled"                       , "value": "true" },
+        { "app": "recognize"            , "name": "faces.batchSize"                     , "value": "500" },
+        { "app": "recognize"            , "name": "imagenet.enabled"                    , "value": "true" },
+        { "app": "recognize"            , "name": "imagenet.batchSize"                  , "value": "100" },
+        { "app": "recognize"            , "name": "landmarks.enabled"                   , "value": "true" },
+        { "app": "recognize"            , "name": "landmarks.batchSize"                 , "value": "100" },
+        { "app": "recognize"            , "name": "tensorflow.gpu"                      , "value": "{{'true' if gpu_type is defined and gpu_type == 'nvidia' else 'false'}}" },
+      {% endif %}
+      ]
 
 - name: set app config
   shell: "podman exec php php {{htdocs_path}}nextcloud/occ config:app:set --value='{{item.value}}' {{item.app}} {{item.name}}"
@@ -250,6 +260,7 @@
 #     - "apps/keeweb/templates/service-worker.js"    # needed by keepweb
      - "apps/news/css/custom.css"              # needed by nextcloud news <= 24.0.0
 
+# ******* initialize memories geo locaisation ******
 - name: check memories:places-setup
   shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 nextcloud -s -e \"SELECT COUNT(*) FROM  memories_planet_geometry\""
   register: memories_config_result
@@ -261,9 +272,10 @@
   shell: "podman exec php php {{htdocs_path}}nextcloud/occ memories:places-setup"
   when: "is_production and nextcloud_image_geolocation_enabled and memories_config_result.changed"
 
-- name: check recognize model folder
+# ******* initialize recognize model download ******
+- name: check recognize models folder
   stat:
-    path: "{{htdocs_path}}nextcloud/apps/recognize/models1"
+    path: "{{htdocs_path}}nextcloud/apps/recognize/models"
   register: recognize_model_state
   when: "nextcloud_image_recognize_enabled"
 
@@ -273,7 +285,7 @@
   when: "is_production and nextcloud_image_recognize_enabled and not recognize_model_state.stat.exists"
 
 # podman exec php php {{htdocs_path}}nextcloud/occ recognize:clear-background-jobs
-# podman exec php php {{htdocs_path}}nextcloud/occ recognize:classify
+# podman exec php php -d memory_limit=4096M {{htdocs_path}}nextcloud/occ recognize:classify
 # podman exec php php {{htdocs_path}}nextcloud/occ recognize:cluster-faces
 
 # APP cleanups
