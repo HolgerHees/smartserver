@@ -57,7 +57,7 @@
       {% for key in container_etc_hosts | default({}) %}
         "--add-host {{key}}:{{container_etc_hosts[key]}}",
       {% endfor %}
-      {% for value in container_device | default({}) %}
+      {% for value in container_devices | default([]) %}
         "--device {{value}}",
       {% endfor %}
       {% if container_stop_signal is defined %}

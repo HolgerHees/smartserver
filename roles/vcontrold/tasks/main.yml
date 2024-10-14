@@ -50,7 +50,7 @@
     container_ip: "{{podman_vcontrold_ip}}"
     container_exposed_ports:
       - "3002"
-#    container_device:
+#    container_devices:
 #      - "/dev/ttyVControlD:/dev/ttyVControlD:rwm"
     container_privileged: yes
     container_volumes:

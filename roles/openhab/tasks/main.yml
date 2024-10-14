@@ -265,7 +265,7 @@
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
       CRYPTO_POLICY: "unlimited"
     # all volumes needs to writeable, because openhab runs chown on OPENHAB_HOME
-#    container_device: "{{openhab_device_mounts | default([])}}"
+#    container_devices: "{{openhab_device_mounts | default([])}}"
     container_privileged: yes
     container_volumes: |
       [
