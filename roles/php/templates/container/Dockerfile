@@ -1,7 +1,19 @@
 FROM php:{{php_version}}-fpm
 
+{% if gpu_type is defined and gpu_type == 'nvidia' %}# ai computing
+RUN echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+  nvidia-cuda-toolkit \
+  nvidia-cudnn \
+  nvidia-smi && \
+
+  /usr/sbin/update-nvidia-cudnn -u
+
+{% endif %}
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
+
 # preview generator nextcloud
   ffmpeg \
 # GMP => needed by nextcloud bookmarks

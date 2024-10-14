@@ -29,14 +29,15 @@
   notify: "restart netdata"
 
 - name: copy config
-  vars:
-    netdata_container: yes
   template:
     src: "templates/netdata.conf"
     dest: "{{ global_etc }}netdata/netdata.conf"
     owner: root
     group: root
     mode: 0640
+  with_items:
+    - "netdata.conf"
+    - "go.d.conf"
   notify: "restart netdata"
 
 - name: create container service
@@ -63,10 +64,13 @@
     #  VIRTUALIZATION: "kvm"
       DOCKER_USR: "root"
       DOCKER_GRP: "root"
-#      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools nvidia-smi"
-      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools"
+      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools{{ ' nvidia-smi' if gpu_type is defined and gpu_type == 'nvidia' else '' }}"
       DISABLE_TELEMETRY: "1"
       DO_NOT_TRACK: "1"
+    container_devices: |
+      [
+          {% if gpu_type is defined and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
+      ]
     container_volumes:
       - '/dev:/dev:rw' # smartmontools
 
@@ -78,15 +82,13 @@
       - '/proc:/host/proc:ro'
       - '/sys:/host/sys:ro'
       - '/run/dbus:/run/dbus:ro'
-#      - '/var/lib/smartmontools/:/var/lib/smartmontools/:rw'
 
       - '/var/log:/host/var/log:ro'
 
       - '{{ global_lib }}netdata:/var/lib/netdata:rw'
       - '{{ global_lib }}netdata/cache:/var/cache/netdata:rw'
 
-#      - "{{ global_etc }}netdata/sources.list:/etc/apt/sources.list:ro"
-#      - "/usr/bin/nvidia-smi:/usr/bin/nvidia-smi:ro"
+      - "{{ global_etc }}netdata/sources.list:/etc/apt/sources.list:ro" # nvidia-smi
 
       - "{{ global_etc }}netdata/.environment:/etc/netdata/.environment:ro"
       - "{{ global_etc }}netdata/netdata.conf:/etc/netdata/netdata.conf:ro"

@@ -258,10 +258,23 @@
   when: "is_production and nextcloud_image_geolocation_enabled"
 
 - name: init memories:places-setup (can takes a while)
-  shell: "podman exec php php {{htdocs_path}}nextcloud/occ {{item}}"
-  with_items:
-      - "memories:places-setup"
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ memories:places-setup"
   when: "is_production and nextcloud_image_geolocation_enabled and memories_config_result.changed"
+
+- name: check recognize model folder
+  stat:
+    path: "{{htdocs_path}}nextcloud/apps/recognize/models1"
+  register: recognize_model_state
+  when: "nextcloud_image_recognize_enabled"
+
+- name: init recognize model
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ recognize:download-models"
+  changed_when: "recognize_model_state.changed"
+  when: "is_production and nextcloud_image_recognize_enabled and not recognize_model_state.stat.exists"
+
+# podman exec php php {{htdocs_path}}nextcloud/occ recognize:clear-background-jobs
+# podman exec php php {{htdocs_path}}nextcloud/occ recognize:classify
+# podman exec php php {{htdocs_path}}nextcloud/occ recognize:cluster-faces
 
 # APP cleanups
 #    Disable and remove news app

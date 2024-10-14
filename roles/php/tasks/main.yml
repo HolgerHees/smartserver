@@ -24,6 +24,10 @@
     container_etc_hosts:
       openhab: "{{default_server_ip}}" # fix to make openhab reachable
       netdata: "{{default_server_ip}}" # fix to make netdata reachable
+    container_devices: |
+      [
+          {% if gpu_type is defined and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
+      ]
     container_volumes: |
       [
         '{{htdocs_path}}:{{htdocs_path}}:rw'

@@ -72,6 +72,8 @@ default_variables: {
     #     testuser1: "<sambapassword>"
     # }
 
+    gpu_type:                                 { optional: yes },                                                    # currently only "nvidia" is supported
+
     network_devices:                          { optional: yes },                                                    # used for librenms, system_service (network monitoring) and openwrt => they are preprocessed at the end of this config file
     # *** EXAMPLE for network_devices ***
     # [
@@ -303,7 +305,7 @@ default_variables: {
     nextcloud_admin_password:                 { dependency: "{{nextcloud_enabled}}" },
     nextcloud_additional_apps:                { default: [],                                                        # additional apps for nextcloud
                                                 dependency: "{{nextcloud_enabled}}" },
-    nextcloud_image_recognize_enabled:        { default: no,                                                        # enabled the ai image object recognisation, this needs a lot of cpu and memory + a lot of huge initial data models
+    nextcloud_image_recognize_enabled:        { default: no,                                                        # enabled the ai image object recognisation, this needs a lot of cpu and memory + a lot of huge initial data models, gpu_type: 'nvidia' recommended
                                                 dependency: "{{nextcloud_enabled}}" },
     nextcloud_image_geolocation_enabled:      { default: yes,                                                       # enabled the reverse geolocation lookup in 'memories' and needs a huge initial data file download
                                                 dependency: "{{nextcloud_enabled}}" },
