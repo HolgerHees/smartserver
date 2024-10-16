@@ -90,3 +90,12 @@
     enabled: no
     masked: no
   when: "gpu_type=='nvidia'"
+
+- name: disable nvidia-persistanced # temporary => missing libnvidia-cfg.so.1 on suse
+  systemd:
+    name: nvidia-persistenced
+    state: stopped
+    daemon_reload: yes
+    enabled: no
+    masked: no
+  when: "gpu_type=='nvidia'"
