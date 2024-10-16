@@ -26,7 +26,7 @@ class Blocklists(threading.Thread):
         self.event = threading.Event()
 
         self.configs = {
-            "blocklist": { "do": schedule.every().hour.at("00:00"), "version": 1, "url": "https://lists.blocklist.de/lists/all.txt", "process": self._processFail2Ban },
+            #"blocklist": { "do": schedule.every().hour.at("00:00"), "version": 1, "url": "https://lists.blocklist.de/lists/all.txt", "process": self._processFail2Ban }, # exclude because it has no trust level and sometimes google domains are on this list
             "ipsum": { "do": schedule.every().day.at("04:00"), "version": 1, "url": "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt", "process": self._processIPSum } # list is normally updated at 3am
         }
 
