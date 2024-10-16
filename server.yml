@@ -104,7 +104,8 @@
 
     - { import_role: { name: hardware_mdadm },                                               tags: [ 'hardware_mdadm' ],                                     when: "monitoring_enabled and mdraid_exists" }     # raid weekly check cron job
     - { import_role: { name: hardware_smartd },                                              tags: [ 'hardware_smartd' ],                                    when: "monitoring_enabled" }                       # disk monitoring & checks
-    - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ],                                   when: "monitoring_enabled or netdata_enabled" }    # sensors setups
+    - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ],                                   when: "monitoring_enabled or netdata_enabled" }    # sensors setup
+    - { import_role: { name: hardware_gpu },                                                 tags: [ 'hardware_gpu' ],                                       when: "gpu_enabled" }                              # gpu setup
 
     - { import_role: { name: container },                                                    tags: [ 'container', 'macvlan', 'alpine' ] }                                                                       # container env
 

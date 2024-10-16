@@ -1,0 +1,98 @@
+- name: copy nouveau blacklist
+  template:
+    src: "templates{{item.path}}"
+    dest: "{{item.path}}"
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/nouveau-blacklist.conf" } # block iptables
+  when: "gpu_type=='nvidia'"
+
+# https://docs.nvidia.com/cuda/pdf/CUDA_Installation_Guide_Linux.pdf
+
+- name: add yum repository => is_rhel or is_fedora
+  yum_repository:
+    name: "{{item.name}}"
+    description: "{{item.name}} repository"
+    priority: "50"
+    baseurl: "{{item.url}}"
+  with_items:
+    - { name: "NVIDIA", url: "https://developer.download.nvidia.com/compute/cuda/repos/rhel{{ansible_distribution_major_version}}/$basearch/" }
+  when: "gpu_type=='nvidia' and (is_rhel|bool or is_fedora|bool)"
+
+- name: install required packages => is_rhel or is_fedora
+  yum:
+    name:
+      - nvidia-compute-G06
+      - nvidia-compute-utils-G06
+      - nvidia-container-toolkit
+      - nvtop
+    state: present
+    disable_gpg_check: true
+  when: "gpu_type=='nvidia' and (is_rhel|bool or is_fedora|bool)"
+
+#- name: install apt repository => is_ubuntu
+#  apt_repository:
+#    repo: "deb [arch=amd64] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ {{ansible_distribution_release}} main"
+#    state: present
+#  when: "gpu_type=='nvidia' and is_ubuntu|bool"
+
+#- name: install required packages => is_ubuntu
+#  apt:
+#    name:
+#      - nvidia-compute-G06
+#      - nvidia-compute-utils-G06
+#      - nvidia-container-toolkit
+#      - nvtop
+#    state: present
+#  when: "gpu_type=='nvidia' and is_ubuntu|bool"
+
+- name: add zypper repository => is_suse
+  zypper_repository:
+    name: "{{item.name}}"
+    repo: "{{item.url}}"
+    auto_import_keys: yes
+    priority: "100"
+    state: present
+  with_items:
+    - { name: "NVIDIA", url: "https://developer.download.nvidia.com/compute/cuda/repos/opensuse{{ansible_distribution_major_version}}/x86_64/" }
+  when: "gpu_type=='nvidia' and is_suse"
+
+#- name: add zypper repository => is_suse
+#  zypper_repository:
+#    name: "{{item.name}}"
+#    repo: "{{item.url}}"
+#    auto_import_keys: yes
+#    priority: "100"
+#    state: present
+#  with_items:
+#    - { name: "NVIDIA driver", url: "https://download.nvidia.com/opensuse/leap/$releasever/" }
+#    - { name: "NVIDIA cdi", url: "https://nvidia.github.io/libnvidia-container/stable/rpm/x86_64" }
+#  when: "gpu_type=='nvidia' and is_suse"
+
+- name: install required packages => is_suse
+  zypper:
+    name:
+      - nvidia-compute-G06
+      - nvidia-compute-utils-G06
+      - nvidia-container-toolkit
+      - nvtop
+    state: present
+  when: "gpu_type=='nvidia' and is_suse"
+
+- name: generate cdi config
+  shell: "test ! -f /etc/cdi/nvidia.yaml && nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml"
+  register: cdi_config_result
+  changed_when: "cdi_config_result.rc == 0"
+  failed_when: no
+  when: "gpu_type=='nvidia'"
+
+- name: disable nvidia-powerd # temporary
+  systemd:
+    name: nvidia-powerd
+    state: stopped
+    daemon_reload: yes
+    enabled: no
+    masked: no
+  when: "gpu_type=='nvidia'"

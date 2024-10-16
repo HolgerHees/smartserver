@@ -112,7 +112,9 @@
         { "app": "recognize"            , "name": "imagenet.batchSize"                  , "value": "100" },
         { "app": "recognize"            , "name": "landmarks.enabled"                   , "value": "true" },
         { "app": "recognize"            , "name": "landmarks.batchSize"                 , "value": "100" },
-        { "app": "recognize"            , "name": "tensorflow.gpu"                      , "value": "{{'true' if gpu_type is defined and gpu_type == 'nvidia' else 'false'}}" },
+        { "app": "recognize"            , "name": "concurrency.enabled"                 , "value": "true" },
+        { "app": "recognize"            , "name": "tensorflow.gpu"                      , "value": "{{'true' if gpu_enabled and gpu_type == 'nvidia' else 'false'}}" },
+        { "app": "recognize"            , "name": "tensorflow.purejs"                   , "value": "{{'false' if gpu_enabled and gpu_type == 'nvidia' else 'true'}}" },
       {% endif %}
       ]
 

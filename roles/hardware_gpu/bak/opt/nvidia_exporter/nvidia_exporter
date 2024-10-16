@@ -1,0 +1,196 @@
+#!/usr/bin/python3
+
+#import logging
+import threading
+import subprocess
+import os
+import sys
+import signal
+import time
+import http.server
+import socketserver
+import socket
+import logging
+from http import HTTPStatus
+
+from smartserver import loghandler
+from smartserver import metric
+from config import config
+
+is_daemon = not os.isatty(sys.stdin.fileno())
+loghandler.init( loghandler.HANDLER_TYPE_JOURNAL if is_daemon else loghandler.HANDLER_TYPE_STDOUT )
+
+handler = None
+
+class ShutdownException(Exception):
+    pass
+
+class HTTPHandler(http.server.SimpleHTTPRequestHandler):
+    def log_request(self, code='-', size='-'):
+        if isinstance(code, HTTPStatus):
+            code = code.value
+        logging.info("{} - \"{}\" {} {}".format(self.client_address[0], self.requestline, str(code), str(size)))
+
+    def do_GET(self):
+        if self.path == '/metrics/':
+            result = [
+                metric.Metric.buildProcessMetric("nvidia_exporter", "main", 1 if handler.isRunning() else 0 )
+            ]
+
+            metrics = handler.getMetrics()
+            for _metric in metrics:
+                metric_timestamp = _metric["timestamp"]
+                del _metric["timestamp"]
+                for metrics_name, metric_value in _metric.items():
+
+                    if "." in metrics_name:
+                        parts = metrics_name.split(".")
+                        result.append("nvidia_{}{}type=\"{}\"{} {} {}".format("_".join(parts[:-1]), "{", parts[-1], "}", metric_value, metric_timestamp))
+                    else:
+                        result.append("nvidia_{} {} {}".format(metrics_name, metric_value, metric_timestamp))
+
+            body = "\n".join(result) + "\n"
+
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-Length", len(body))
+            self.end_headers()
+
+            self.wfile.write(body.encode())
+        else:
+            super().do_GET()
+
+class Handler(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+        self.is_running = False
+
+        self.event = threading.Event()
+        self.lock = threading.Lock()
+
+        self.metrics = []
+
+        self.value_map = {
+            "pstate": lambda value: value[1:],
+            "reset_status.reset_required": lambda value: 1 if value == "Yes" else 0
+        }
+
+        self.value_map = {
+            "pstate": lambda value: value[1:],
+            "reset_status.reset_required": lambda value: 1 if value == "Yes" else 0
+        }
+
+        self.fields = [
+#            "gpu_name",
+#            "vbios_version",
+#            "driver_version",
+            "pstate",
+            "fan.speed",
+#            "power.management",
+            "power.draw",
+#            "power.draw.average",
+#            "power.draw.instant",
+            "power.limit",
+#                    "power.default_limit",
+#                    "power.min_limit",
+#                    "power.max_limit",
+#                    "enforced.power.limit",
+            "temperature.gpu",
+#                    "temperature.gpu.tlimit",
+#            "temperature.memory",
+            "clocks.current.graphics",
+            "clocks.current.sm",
+            "clocks.current.memory",
+            "clocks.current.video",
+#                    "clocks.max.graphics",
+#                    "clocks.max.sm",
+#                    "clocks.max.memory",
+#                    "mig.mode.current",
+            "utilization.gpu",
+            "utilization.memory",
+            "utilization.encoder",
+            "utilization.decoder",
+            "utilization.jpeg",
+            "utilization.ofa",
+            "memory.total",
+            "memory.free",
+            "memory.used",
+#            "compute_mode",
+
+            "reset_status.reset_required"
+        ]
+
+        socketserver.TCPServer.allow_reuse_address=True
+        self.httpd = socketserver.TCPServer((config.ip, config.port), HTTPHandler)
+
+    def start(self):
+        self.is_running = True
+        super().start()
+
+        logging.info("Running on http://{}:{}".format(config.ip, config.port))
+        try:
+            self.httpd.serve_forever()
+        except ShutdownException:
+            pass
+        finally:
+            #self.httpd.server_close()
+            self.httpd.shutdown()
+
+    def terminate(self, signum, frame):
+        self.is_running = False
+        self.event.set()
+
+        #self.httpd._shutdown_request = True
+        raise ShutdownException()
+
+    def run(self):
+        try:
+            logging.info("NVidia exporter started")
+            while self.is_running:
+
+                #start = time.time()
+                result = subprocess.run([config.cmd, "--query-gpu={}".format(",".join(self.fields)), "--format=csv,noheader,nounits"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8")
+                if result.returncode != 0:
+                    raise Exception(msg)
+                #end = time.time()
+                #logging.info(end-start)
+
+                output = result.stdout.split(",")
+
+                metric = {"timestamp": round(time.time() * 1000)}
+                for i in range(0,len(self.fields)):
+                    name = self.fields[i]
+                    value = output[i].strip()
+                    if name in self.value_map:
+                        value = self.value_map[name](value)
+
+                    metric[name] = value
+
+                with self.lock:
+                    self.metrics.append(metric)
+
+                #logging.info(self.metrics)
+
+                self.event.wait(15)
+        except Exception as e:
+            logging.error("Nvidia exporter failed")
+            self.is_running = False
+            raise e
+        finally:
+            logging.info("NVidia exporter stopped")
+
+    def isRunning(self):
+        return self.is_running
+
+    def getMetrics(self):
+        with self.lock:
+            metrics = self.metrics
+            self.metrics = []
+            return metrics
+
+handler = Handler()
+signal.signal(signal.SIGINT, handler.terminate)
+signal.signal(signal.SIGTERM, handler.terminate)
+
+handler.start()

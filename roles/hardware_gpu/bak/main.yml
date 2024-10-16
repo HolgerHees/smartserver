@@ -1,0 +1,111 @@
+#- name: prepare needed directories
+#  vars:
+#    directories:
+#      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/nvidia_exporter" }
+#      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/nvidia_exporter/config" }
+#  include_tasks: roles/_shared/create_directories.yml
+
+#- name: synchronize service
+#  synchronize:
+#    src: "templates/opt/{{item.path}}"
+#    dest: "/opt/nvidia_exporter/"
+#    archive: no
+#    checksum: yes
+#    group: yes
+#    owner: yes
+#    perms: yes
+#    recursive: yes
+#    rsync_opts:
+#      - "--chown=root:root"
+#      - "--chmod={{item.chmod}}"
+#  with_items:
+#    - { "chmod": "D750,F750", "path": "nvidia_exporter/nvidia_exporter" }
+
+#- name: copy service config
+#  template:
+#    src: "templates/config.py"
+#    dest: "/opt/nvidia_exporter/config/config.py"
+#    owner: root
+#    group: root
+#    mode: 0750
+
+- name: add zypper repository => is_suse
+  zypper_repository:
+    name: NVIDIA
+    repo: "https://download.nvidia.com/opensuse/leap/$releasever/"
+    auto_import_keys: yes
+    priority: "100"
+    state: present
+  when: "is_suse"
+
+- name: copy nouveau blacklist
+  template:
+    src: "templates{{item.path}}"
+    dest: "{{item.path}}"
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/nouveau-blacklist.conf" } # block iptables
+
+- name: install required packages => is_suse
+  zypper:
+    name:
+      - nvidia-compute-G06
+      - nvidia-compute-utils-G06
+#      - nvidia-gl-G06
+#      - nvidia-utils-G06
+      - nvtop
+#      - lib-gtk-3-0
+    state: present
+  when: is_suse
+
+- name: disable nvidia-powerd # temporary
+  systemd:
+    name: nvidia-powerd
+    state: stopped
+    daemon_reload: yes
+    enabled: no
+    masked: no
+
+#- name: copy service apache config
+#  vars:
+#    service_name: "nvidia_exporter"
+#    service_host: "127.0.0.1:8999"
+#    service_additional_config: |
+#        <Location /nvidia_exporter/metrics/>
+#          ProxyPass http://127.0.0.1:8999/metrics/
+#          ProxyPassReverse http://127.0.0.1:8999/metrics/
+#        </Location>
+#  include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+#  tags: ['apache_config']
+
+#- name: register prometheus rules & metrics
+#  vars:
+#    name: "nvidia_exporter"
+#    scrape_file: "templates/prometheus/scrape.yml"
+#  include_tasks: roles/prometheus/shared/add_config.yml
+#  tags: ['prometheus_config']
+#  when: "monitoring_enabled"
+
+#- name: create systemd service for 'nvidia_exporter'
+#  template:
+#    src: "templates/nvidia_exporter.service"
+#    dest: "/etc/systemd/system/nvidia_exporter.service"
+#    owner: root
+#    group: root
+#    mode: 0644
+#  notify: "restart nvidia_exporter"
+
+#- name: register systemd service watcher
+#  vars:
+#    watcher_name: "nvidia_exporter"
+#  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+#  tags: ['systemd_watcher_config']
+#  when: "monitoring_enabled"
+
+#- name: trigger nvidia_exporter handler
+#  vars:
+#    notify: "restart nvidia_exporter"
+#    service: "nvidia_exporter"
+#  include_tasks: roles/_shared/service_check.yml

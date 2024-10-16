@@ -72,7 +72,9 @@ default_variables: {
     #     testuser1: "<sambapassword>"
     # }
 
-    gpu_type:                                 { optional: yes },                                                    # currently only "nvidia" is supported
+    gpu_enabled:                              { default: no },
+    gpu_type:                                 { optional: yes,                                                      # currently only "nvidia" is supported
+                                                dependency: "{{gpu_enabled}}" },
 
     network_devices:                          { optional: yes },                                                    # used for librenms, system_service (network monitoring) and openwrt => they are preprocessed at the end of this config file
     # *** EXAMPLE for network_devices ***

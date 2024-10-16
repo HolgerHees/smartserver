@@ -64,12 +64,12 @@
     #  VIRTUALIZATION: "kvm"
       DOCKER_USR: "root"
       DOCKER_GRP: "root"
-      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools{{ ' nvidia-smi' if gpu_type is defined and gpu_type == 'nvidia' else '' }}"
+      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools{{ ' nvidia-smi' if gpu_enabled and gpu_type == 'nvidia' else '' }}"
       DISABLE_TELEMETRY: "1"
       DO_NOT_TRACK: "1"
     container_devices: |
       [
-          {% if gpu_type is defined and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
+          {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
       ]
     container_volumes:
       - '/dev:/dev:rw' # smartmontools

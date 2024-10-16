@@ -1,0 +1,10 @@
+[Unit]
+Description=NVidia metric exporter
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/nvidia_exporter/nvidia_exporter
+
+[Install]
+WantedBy=multi-user.target

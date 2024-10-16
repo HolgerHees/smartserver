@@ -1,0 +1,8 @@
+- name: restart nvidia_exporter
+  systemd:
+    name: nvidia_exporter
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart nvidia_exporter"

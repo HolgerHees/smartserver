@@ -1,6 +1,6 @@
 FROM php:{{php_version}}-fpm
 
-{% if gpu_type is defined and gpu_type == 'nvidia' %}# ai computing
+{% if gpu_enabled and gpu_type == 'nvidia' %}# ai computing
 RUN echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
   apt-get update && \
   apt-get install -y --no-install-recommends \
