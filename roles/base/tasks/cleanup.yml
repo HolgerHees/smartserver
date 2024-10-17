@@ -75,6 +75,7 @@
     - "{{global_etc}}prometheus/rules/update_service.yml"
     - "/etc/systemd/system/imaginary.service"
     - "{{global_etc}}systemd_watcher/services/imaginary.conf"
+    - "/etc/modprobe.d/iptables-blacklist.conf"
 
 - name: Refresh systemd
   shell:

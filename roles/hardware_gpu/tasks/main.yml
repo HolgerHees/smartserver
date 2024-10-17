@@ -6,7 +6,7 @@
     group: root
     mode: "{{item.mode}}"
   with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/nouveau-blacklist.conf" } # block iptables
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/10-ansible-nvidia.conf" } # block iptables
   when: "gpu_type=='nvidia'"
 
 # https://docs.nvidia.com/cuda/pdf/CUDA_Installation_Guide_Linux.pdf
