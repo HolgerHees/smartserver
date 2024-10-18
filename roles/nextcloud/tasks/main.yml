@@ -55,8 +55,11 @@
   when: "database_added"
 
 - name: initialise nextcloud => database does not exists
-#  shell: "podman exec -i php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'"
-  shell: "podman exec -i php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}'"
+  shell: "podman exec -i php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}' --admin-user 'admin' --admin-pass '123+456*890'"
+  when: "database_added"
+
+- name: delete initial admin user => database does not exists
+  shell: "podman exec php php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:delete admin"
   when: "database_added"
 
 - name: disable password policy => database does not exists
