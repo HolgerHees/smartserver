@@ -170,7 +170,7 @@
 
 # ***** UPDATE USERS *****
 - name: check for existing users
-  shell: "podman exec php php {{htdocs_path}}nextcloud/occ user:list | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ user:list"
   register: nextcloud_user_result
   changed_when: False
   #when: "database_added"
@@ -185,7 +185,7 @@
   shell: "podman exec --env=OC_PASS=123+456*890 php php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}"
   register: result
   failed_when: "'was created successfully' not in result.stdout"
-  when: "'user' in userdata[item].groups and item not in nextcloud_user_result.stdout_lines"
+  when: "'user' in userdata[item].groups and '- ' + item + ':' not in nextcloud_user_result.stdout"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
@@ -209,7 +209,7 @@
   shell: "podman exec php php {{htdocs_path}}nextcloud/occ group:adduser admin {{item}}"
   register: result
   failed_when: "result.rc != 0"
-  when: "'admin' in userdata[item].groups and item not in nextcloud_group_result.stdout_lines"
+  when: "'admin' in userdata[item].groups and '- ' + item not in nextcloud_group_result.stdout"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
