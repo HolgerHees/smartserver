@@ -39,8 +39,9 @@
     container_exposed_ports:
       - "25/tcp"
     container_volumes:
-      - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:ro'
-      - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:ro'
+      - '{{global_etc}}letsencrypt:/etc/letsencrypt:rw'
+      - '{{global_etc}}postfix/main.cf:/etc/postfix/main.cf:ro'
+      - '{{global_etc}}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:ro'
     container_readyness: { "type": "port_check", "ip": "{{podman_postfix_ip}}", "port": "25" }
   include_tasks: roles/container/shared/create_podman_service.yml
   tags: ['podman_container','systemd_watcher_config','systemd_service_config']

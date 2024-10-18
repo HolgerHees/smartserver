@@ -20,8 +20,24 @@ smtp_sasl_security_options = noanonymous
 smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 smtp_tls_security_level = encrypt
 #smtp_enforce_tls = yes
+
+#smtpd_tls_loglevel = 4
 #smtpd_tls_security_level = encrypt
 smtpd_tls_security_level = may
+smtpd_tls_key_file = /etc/letsencrypt/live/{{server_domain}}/privkey.pem
+smtpd_tls_cert_file = /etc/letsencrypt/live/{{server_domain}}/fullchain.pem
+#smtpd_tls_chain_files =
+#    /etc/letsencrypt/live/{{server_domain}}/privkey.pem,
+#    /etc/letsencrypt/live/{{server_domain}}/fullchain.pem
+
+#smtpd_tls_protocols = TLSv1.2, TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+#smtp_tls_protocols = TLSv1.2, TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+#smtp_tls_ciphers = high
+#smtpd_tls_ciphers = high
+#smtpd_tls_mandatory_protocols = TLSv1.2, TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+#smtp_tls_mandatory_protocols = TLSv1.2, TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+#smtp_tls_mandatory_ciphers = high
+#smtpd_tls_mandatory_ciphers = high
 
 # some tweaks
 biff = no
