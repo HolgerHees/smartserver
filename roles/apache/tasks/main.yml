@@ -44,35 +44,8 @@
     group: root
     mode: 0755
   with_items:
-    - "letsencrypt/"
-    - "letsencrypt/live"
     - "letsencrypt/live/{{server_domain}}"
-    - "letsencrypt/live/ca"
   when: not certificate_files.stat.exists
-
-# CA
-#- name: create CA key
-#  openssl_privatekey:
-#    path: "{{global_etc}}letsencrypt/live/ca/privkey.pem"
-#    mode: 0600
-#  when: not certificate_files.stat.exists
-
-#- name: create the CA CSR
-#  openssl_csr:
-#    path: "{{global_etc}}letsencrypt/live/ca/cert_csr.pem"
-#    privatekey_path: "{{global_etc}}letsencrypt/live/ca/privkey.pem"
-#    common_name: "smartserver-ca"
-#    mode: 0600
-#  when: not certificate_files.stat.exists
-
-#- name: sign the CA CSR
-#  openssl_certificate:
-#    path: "{{global_etc}}letsencrypt/live/ca/fullchain.pem"
-#    csr_path: "{{global_etc}}letsencrypt/live/ca/cert_csr.pem"
-#    privatekey_path: "{{global_etc}}letsencrypt/live/ca/privkey.pem"
-#    provider: selfsigned
-#    mode: 0640
-#  when: not certificate_files.stat.exists
 
 # Certificate
 - name: generate openssl privatekey => certificate_files not exists
@@ -95,9 +68,6 @@
     privatekey_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/privkey.pem"
     csr_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/cert.csr"
     provider: selfsigned
-#    provider: ownca
-#    ownca_path: "{{global_etc}}letsencrypt/live/ca/fullchain.pem"
-#    ownca_privatekey_path: "{{global_etc}}letsencrypt/live/ca/privkey.pem"
     mode: 0640
   when: not certificate_files.stat.exists
   
