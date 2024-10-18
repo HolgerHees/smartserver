@@ -301,9 +301,6 @@ default_variables: {
     nextcloud_mariadb_username:               { default: "nextcloud",                                               # used for nextcloud data
                                                 dependency: "{{nextcloud_enabled}}" },
     nextcloud_mariadb_password:               { dependency: "{{nextcloud_enabled}}" },
-    nextcloud_admin_username:                 { default: "admin",                                                   # used to login as a nextcloud data
-                                                dependency: "{{nextcloud_enabled}}" },
-    nextcloud_admin_password:                 { dependency: "{{nextcloud_enabled}}" },
     nextcloud_additional_apps:                { default: [],                                                        # additional apps for nextcloud
                                                 dependency: "{{nextcloud_enabled}}" },
     nextcloud_image_recognize_enabled:        { default: no,                                                        # enabled the ai image object recognisation, this needs a lot of cpu and memory + a lot of huge initial data models, gpu_type: 'nvidia' recommended

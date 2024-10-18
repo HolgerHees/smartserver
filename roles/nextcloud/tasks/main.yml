@@ -54,14 +54,9 @@
     state: absent
   when: "database_added"
 
-- name: backup old admin folder => database does not exists
-  command: "mv {{nextcloud_data_path}}{{nextcloud_admin_username}}/ {{nextcloud_data_path}}{{nextcloud_admin_username}}-{{lookup('pipe', 'date +%Y%m%d-%H%M')}}/"
-  failed_when: no
-  changed_when: no
-  when: "database_added"
-
 - name: initialise nextcloud => database does not exists
-  shell: "podman exec -i php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'"
+#  shell: "podman exec -i php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'"
+  shell: "podman exec -i php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mariadb' --database-name 'nextcloud'  --database-user '{{nextcloud_mariadb_username}}' --database-pass '{{nextcloud_mariadb_password}}'"
   when: "database_added"
 
 - name: disable password policy => database does not exists
@@ -187,8 +182,8 @@
   shell: "podman exec --env=OC_PASS=123+456*890 php php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}"
   register: result
   failed_when: "'was created successfully' not in result.stdout"
-  when: "'user' in userdata[item].groups"
-  with_items: "{{userdata | difference(nextcloud_user_result.stdout_lines)}}"
+  when: "'user' in userdata[item].groups and item not in nextcloud_user_result.stdout_lines"
+  with_items: "{{userdata}}"
   tags: [ 'user' ]
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
@@ -201,14 +196,20 @@
 #  #when: "database_added"
 #  tags: [ 'user' ]
 
-# password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
-#- name: update admin user
-#  shell: "podman exec php OC_PASS={{nextcloud_admin_password}} php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{nextcloud_admin_username}}"
-#  register: result
-#  failed_when: "'Successfully reset password for' not in result.stdout"
-#  changed_when: False
-#  when: "database_added"
-      
+- name: check for existing admin users
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ group:list -l 1"
+  register: nextcloud_group_result
+  changed_when: False
+  tags: [ 'user' ]
+
+- name: add new admin user
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ group:adduser admin {{item}}"
+  register: result
+  failed_when: "result.rc != 0"
+  when: "'admin' in userdata[item].groups and item not in nextcloud_group_result.stdout_lines"
+  with_items: "{{userdata}}"
+  tags: [ 'user' ]
+
 - name: prepare user folder # => needed for initial cloud backup links
   file:
     path: "{{nextcloud_data_path}}/{{item}}"
@@ -251,15 +252,6 @@
 #  include_tasks: roles/cron/shared/add_cronjob.yml
 #  tags: ['cron_job']
 
-- name: add admin web user
-  vars:
-    username: "{{nextcloud_admin_username}}"
-    password: "{{nextcloud_admin_password}}"
-    fullname: "Nextcloud System User"
-    usergroups: []
-  include_tasks: roles/user/shared/add_web_user.yml
-  tags: [ 'user' ]
-
 - name: register webui
   vars:
     name: "nextcloud"
@@ -273,8 +265,6 @@
   vars:
     sub_domain: "nextcloud"
     usergroup: "user"
-    additional_users:
-      - "{{nextcloud_admin_username}}"
     additional_env: yes
     include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
