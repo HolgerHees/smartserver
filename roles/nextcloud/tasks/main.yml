@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '30.0.0' # patches in "enable_apps" beim nächsten Update überprüfen
+    nextcloud_version: '30.0.1' # patches in "enable_apps" beim nächsten Update überprüfen
   tags: [ 'update_notifier_config', 'user' ]
 
 # ***** PREPARE FOLDER *****
