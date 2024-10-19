@@ -7,6 +7,7 @@
     mode: "{{item.mode}}"
   with_items:
     - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/10-ansible-nvidia.conf" } # block iptables
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/modules-load.d/10-ansible-nvidia.conf" }
   when: "gpu_type=='nvidia'"
 
 # https://docs.nvidia.com/cuda/pdf/CUDA_Installation_Guide_Linux.pdf
@@ -71,6 +72,7 @@
       - nvidia-compute-G06
       - nvidia-compute-utils-G06
       - nvidia-container-toolkit
+      - nvidia-utils-G06
       - nvtop
     state: present
   when: "gpu_type=='nvidia' and is_suse"
