@@ -264,7 +264,7 @@ do
       then
         printf "%s.1.%s\n" $type $value_index
         echo "integer"
-        echo $(expr $value_index - 1)
+        echo $(expr $value_index)
       elif [ $field_index -eq 2 ]
       then
         printf "%s.2.%s\n" $type $value_index
