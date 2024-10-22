@@ -7,4 +7,4 @@ userConfigs = {
 {% endif %}{% endfor %}
 }
 
-customConfigs = {{ openhab_custom_value_map | to_nice_json }}
+customConfigs = {{ openhab_custom_value_map | default({}) | to_nice_json }}
