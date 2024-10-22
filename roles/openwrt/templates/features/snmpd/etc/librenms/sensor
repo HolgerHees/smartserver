@@ -25,7 +25,7 @@ print_help(){
 
 sensor_1_3_6_1_4_1_2021_13_16_2(){
   COUNTER=0
-  INDEX=0
+  INDEX=-1
 
   IFS=$'\n'
 
@@ -75,7 +75,7 @@ sensor_1_3_6_1_4_1_2021_13_16_2(){
 
 sensor_1_3_6_1_4_1_2021_13_16_3(){
   COUNTER=0
-  INDEX=0
+  INDEX=-1
 
   fan_rpm=$(ls /sys/class/hwmon/hwmon*/fan*_input 2&>/dev/null)
   if [ $? -eq 0 ]
