@@ -33,13 +33,13 @@ class MQTTPublisher(_handler.Handler):
                     
                     for mac in list(self.published_values.keys()):
                         _device = self.cache.getUnlockedDevice(mac)
-                        if _device is None:
+                        if _device is None or _device.getIP() != self.published_values[mac]['ip']:
                             Helper.logInfo("CLEAN values of {}".format(mac))
                             del self.published_values[mac]
                             continue
                         
                         _to_publish = {}
-                        for [detail, topic, value, last_publish] in self.published_values[mac].values():
+                        for [detail, topic, value, last_publish] in self.published_values[mac]['values'].values():
                             
                             _diff = (now-last_publish).total_seconds()
                             if _diff >= self.config.mqtt_republish_interval:
@@ -56,7 +56,7 @@ class MQTTPublisher(_handler.Handler):
                             Helper.logInfo("REPUBLISH {} of {}".format(_msg, _device))
 
                             for [detail, topic, value] in _to_publish.values():
-                                self._publishValue(mac, detail, topic, value, now)
+                                self._publishValue(mac, _device.getIP(), detail, topic, value, now)
                 except Exception as e:
                     self._handleUnexpectedException(e)
 
@@ -117,18 +117,18 @@ class MQTTPublisher(_handler.Handler):
 
         now = datetime.now()
         for [detail, topic, value] in _to_publish.values():
-            self._publishValue(mac, detail, topic, value, now)
+            self._publishValue(mac, ip, detail, topic, value, now)
                 
         self._wakeup()
 
         return True
     
-    def _publishValue(self, mac, detail, topic, value, now):
+    def _publishValue(self, mac, ip, detail, topic, value, now):
         if mac not in self.published_values:
-            self.published_values[mac] = {}
+            self.published_values[mac] = { 'ip': ip, 'values': {} }
             
         self.mqtt.publish(topic, value )
-        self.published_values[mac][topic] = [detail, topic, value, now]
+        self.published_values[mac]['values'][topic] = [detail, topic, value, now]
     
     def getEventTypes(self):
         return [ 
