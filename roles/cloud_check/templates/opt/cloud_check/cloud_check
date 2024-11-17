@@ -9,7 +9,7 @@ import subprocess
 import time
 from datetime import datetime
 
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, Response
 from werkzeug.serving import WSGIRequestHandler
 
 import logging
@@ -436,7 +436,7 @@ app = Flask(__name__)
 
 @app.route('/metrics/', methods = ['GET'])
 def metrics():
-    return handler.getStateMetrics()
+    return Response(handler.getStateMetrics(), mimetype='text/plain')
         
 logging_handler = logging.StreamHandler(sys.stdout)
 logging.basicConfig(
