@@ -129,7 +129,6 @@
 - name: set is modifed flag
   set_fact:
     nextcloud_installed_version_changed: "{{ yes if current_nextcloud_version != installed_nextcloud_version else no}}"
-  when: "current_nextcloud_version is not defined"
 
 - name: set symbolic link to htdocs
   file:
