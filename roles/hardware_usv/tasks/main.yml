@@ -1,0 +1,57 @@
+- name: install required packages => is_rhel or is_fedora
+  yum:
+    name:
+       apcupsd
+    state: present
+    disable_gpg_check: true
+  when: is_rhel|bool or is_fedora|bool
+
+- name: install required packages => is_ubuntu
+  apt:
+    name:
+       apcupsd
+    state: present
+  when: is_ubuntu|bool
+
+- name: add zypper repository => is_suse
+  zypper_repository:
+    name: "Hardware"
+    repo: "https://download.opensuse.org/repositories/hardware/$releasever/"
+    auto_import_keys: yes
+    priority: "100"
+    state: present
+  when: is_suse|bool
+
+- name: install required packages => is_suse
+  zypper:
+    name: [
+       apcupsd
+    ]
+    state: present
+  when: is_suse|bool
+
+- name: copy config
+  copy:
+    src: "templates/etc/apcupsd/apcupsd.conf"
+    dest: "/etc/apcupsd/apcupsd.conf"
+    owner: root
+    group: root
+    mode: 750
+  notify: "restart apcupsd"
+
+- name: register prometheus rules
+  vars:
+    name: "apcupsd"
+    rules_file: "templates/prometheus/rules.yml"
+  import_tasks: roles/prometheus/shared/add_config.yml
+
+- name: register systemd service watcher
+  vars:
+    watcher_name: "apcupsd"
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+
+- name: trigger apcupsd handler
+  vars:
+    notify: "restart apcupsd"
+    service: "apcupsd"
+  import_tasks: roles/_shared/service_check.yml

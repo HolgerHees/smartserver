@@ -77,11 +77,17 @@
     state: present
   when: "gpu_type=='nvidia' and is_suse"
 
-- name: generate cdi config
-  shell: "test ! -f /etc/cdi/nvidia.yaml && nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml"
+- name: prepare cdi config
+  shell: "nvidia-ctk cdi generate"
   register: cdi_config_result
-  changed_when: "cdi_config_result.rc == 0"
+  changed_when: no
   failed_when: no
+  when: "gpu_type=='nvidia'"
+
+- name: generate cdi config
+  copy:
+    content: "{{ ( cdi_config_result.stdout_lines + [''] ) | join('\n') }}"
+    dest: /etc/cdi/nvidia.yaml
   when: "gpu_type=='nvidia'"
 
 - name: disable nvidia-powerd # temporary
@@ -101,3 +107,11 @@
     enabled: no
     masked: no
   when: "gpu_type=='nvidia'"
+
+- name: register system package dependency
+  vars:
+    tag: "gpu"
+    packages: [ "nvidia" ]
+  include_tasks: roles/update_service/shared/add_dependency.yml
+  tags: ['update_system_config']
+  when: "update_service_system_check_enabled and gpu_type=='nvidia'"

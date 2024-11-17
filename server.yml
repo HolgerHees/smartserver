@@ -106,6 +106,7 @@
     - { import_role: { name: hardware_smartd },                                              tags: [ 'hardware_smartd' ],                                    when: "monitoring_enabled" }                       # disk monitoring & checks
     - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ],                                   when: "monitoring_enabled or netdata_enabled" }    # sensors setup
     - { import_role: { name: hardware_gpu },                                                 tags: [ 'hardware_gpu' ],                                       when: "gpu_enabled" }                              # gpu setup
+    - { import_role: { name: hardware_usv },                                                 tags: [ 'hardware_usv' ],                                       when: "usv_enabled" }                              # usv setup
 
     - { import_role: { name: container },                                                    tags: [ 'container', 'macvlan', 'alpine' ] }                                                                       # container env
 
@@ -189,6 +190,17 @@
     - { import_role: { name: update_service },                                               tags: [ 'update_service' ],                                     when: "update_service_enabled" }                   # update check & handler
 
     - { import_role: { name: backup_sync },                                                  tags: [ 'backup_sync' ],                                        when: "backup_sync_enabled" }                      # synchronizes local folders to local or remote backup locations
+
+    # ********** ADDITIONAL ROLES - Should be used in config/<my_config>/roley.yml ************
+    #- { import_role: { name: wireguard_cloud },                                             tags: [ 'wireguard', 'wireguard_cloud', 'alpine' ] }                                                               # cloud vpn configuration
+    #- { import_role: { name: cloud_nfs },                                                   tags: [ 'cloud_nfs', 'alpine' ] }                                                                                  # cloud nfs
+    #- { import_role: { name: cloud_mosquitto },                                             tags: [ 'cloud_mosquitto', 'alpine' ] }                                                                            # cloud mosquitto
+    #- { import_role: { name: cloud_check },                                                 tags: [ 'cloud_check', 'alpine' ] }                                                                                # cloud check
+
+    #- { import_role: { name: vcontrold },                                                   tags: [ 'vcontrold', 'alpine' ] }                                                                                  # vcontrold
+    #- { import_role: { name: openwrt },                                                     tags: [ 'openwrt' ] }                                                                                              # openwrt config generator
+    #- { import_role: { name: ci_service },                                                  tags: [ 'ci_service' ] }                                                                                           # continues inmtegration service
+    # *****************************************************************************************
 
     # ************ FLUSH HANDLER ***********
     - { meta: flush_handlers } # Finalize everything from 'core' bevore custom roles are deployed

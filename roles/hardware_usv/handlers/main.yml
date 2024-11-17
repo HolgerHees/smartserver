@@ -1,0 +1,8 @@
+- name: restart apcupsd
+  systemd:
+    name: apcupsd
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart apcupsd"

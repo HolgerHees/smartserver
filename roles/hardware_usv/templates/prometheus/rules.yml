@@ -1,0 +1,12 @@
+groups:
+- name: apcupsd
+  rules:
+  - alert: APC Communication lost
+    expr: 'absent_over_time(netdata_apcupsd_ups_status_status_average[15m])'
+    for: 0m
+    labels:
+      notifyGroup: "apcupsd"
+      severity: critical
+    annotations:
+      summary: "APC Communication lost"
+
