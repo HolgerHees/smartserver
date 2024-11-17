@@ -262,6 +262,10 @@
 #     - "apps/keeweb/templates/service-worker.js"    # needed by keepweb
      - "apps/news/css/custom.css"              # needed by nextcloud news <= 24.0.0
 
+- name: run post migration script
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ maintenance:repair"
+  when: "is_production and nextcloud_installed_version_changed | default(no)"
+
 # ******* initialize memories geo locaisation ******
 - name: check memories:places-setup
   shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 nextcloud -s -e \"SELECT COUNT(*) FROM  memories_planet_geometry\""
@@ -295,3 +299,5 @@
 #    Remove all settings in the db: DELETE FROM oc_appconfig WHERE appid = ‘news’;
 #    Remove all migrations in the db: DELETE FROM oc_migrations WHERE app = ‘news’;
 #    Reinstall and Enable news app.
+
+
