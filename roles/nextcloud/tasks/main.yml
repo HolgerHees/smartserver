@@ -169,7 +169,7 @@
       - "db:add-missing-indices"
       - "db:add-missing-primary-keys"
       - "db:add-missing-columns"
-      - "maintenance:repair --include-expensive"
+#      - "maintenance:repair --include-expensive"
   when: "nextcloud_installed_version_changed"
 
 # ***** UPDATE USERS *****
