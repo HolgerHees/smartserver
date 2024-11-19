@@ -76,6 +76,7 @@
     - "/etc/systemd/system/imaginary.service"
     - "{{global_etc}}systemd_watcher/services/imaginary.conf"
     - "/etc/modprobe.d/iptables-blacklist.conf"
+    - "{{htdocs_path}}nextcloud/apps/news/css/"
 
 - name: Refresh systemd
   shell:

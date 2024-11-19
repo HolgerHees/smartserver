@@ -254,16 +254,16 @@
   tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
-- name: apply patches
-  copy:
-    src: "templates/patches/{{item}}"
-    dest: "{{htdocs_path}}nextcloud/{{item}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  with_items:
+#- name: apply patches
+#  copy:
+#    src: "templates/patches/{{item}}"
+#    dest: "{{htdocs_path}}nextcloud/{{item}}"
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+#    mode: 0640
+#  with_items:
 #     - "apps/keeweb/templates/service-worker.js"    # needed by keepweb
-     - "apps/news/css/custom.css"              # needed by nextcloud news <= 24.0.0
+#     - "apps/news/css/custom.css"              # needed by nextcloud news <= 24.0.0
 
 - name: run post migration script
   shell: "podman exec php php {{htdocs_path}}nextcloud/occ {{item}}"
@@ -273,7 +273,7 @@
 #      - "db:add-missing-primary-keys"
 #      - "db:add-missing-columns"
       - "maintenance:repair --include-expensive"
-  when: "is_production and nextcloud_installed_version_changed | default(no)"
+  when: "is_production and nextcloud_installed_version_changed | default(false)"
 
 # ******* initialize memories geo locaisation ******
 - name: check memories:places-setup
