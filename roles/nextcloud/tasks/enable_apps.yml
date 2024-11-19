@@ -109,12 +109,15 @@
         { "app": "recognize"            , "name": "faces.enabled"                       , "value": "true" },
         { "app": "recognize"            , "name": "faces.batchSize"                     , "value": "500" },
         { "app": "recognize"            , "name": "imagenet.enabled"                    , "value": "true" },
-        { "app": "recognize"            , "name": "imagenet.batchSize"                  , "value": "100" },
+        { "app": "recognize"            , "name": "imagenet.batchSize"                  , "value": "500" },
         { "app": "recognize"            , "name": "landmarks.enabled"                   , "value": "true" },
-        { "app": "recognize"            , "name": "landmarks.batchSize"                 , "value": "100" },
+        { "app": "recognize"            , "name": "landmarks.batchSize"                 , "value": "500" },
+        { "app": "recognize"            , "name": "movinet.enabled"                     , "value": "false" },
+        { "app": "recognize"            , "name": "musicnn.enabled"                     , "value": "false" },
         { "app": "recognize"            , "name": "concurrency.enabled"                 , "value": "true" },
         { "app": "recognize"            , "name": "tensorflow.gpu"                      , "value": "{{'true' if gpu_enabled and gpu_type == 'nvidia' else 'false'}}" },
         { "app": "recognize"            , "name": "tensorflow.purejs"                   , "value": "{{'false' if gpu_enabled and gpu_type == 'nvidia' else 'true'}}" },
+        { "app": "recognize"            , "name": "node_binary"                         , "value": "{{htdocs_path}}nextcloud/apps/recognize/bin/node" },
       {% endif %}
       ]
 
