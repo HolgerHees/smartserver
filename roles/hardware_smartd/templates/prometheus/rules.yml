@@ -2,7 +2,7 @@ groups:
 - name: smartd
   rules:
   - alert: Smartd temperature is too high (HDD/SSD)
-    expr: '{__name__=~"netdata.*",chart=~"smartctl.*",family="temperature",job="netdata"} > 50 > 50'
+    expr: '{__name__=~"netdata.*",chart=~"smartctl.*",family="temperature",job="netdata"} > {{hardware_smartd_temperature}}'
     for: 0m
     labels:
       notifyGroup: "custom"
