@@ -174,9 +174,11 @@ class INotifyWatcher(threading.Thread):
                         interrupted = True
                         break
                     raise Exception(result.stdout.decode("utf-8"))
-                date_str, _ = result.stdout.decode("utf-8").split("\t")
-
-                date =  datetime.fromisoformat(date_str).replace(microsecond=0, tzinfo=self.timezone)
+                if result.stdout.decode("utf-8") == "":
+                    date = datetime.now().replace(microsecond=0, tzinfo=self.timezone)
+                else:
+                    date_str, _ = result.stdout.decode("utf-8").split("\t")
+                    date =  datetime.fromisoformat(date_str).replace(microsecond=0, tzinfo=self.timezone)
 
                 if detected_last_modified is None or detected_last_modified < date:
                     detected_last_modified = date
