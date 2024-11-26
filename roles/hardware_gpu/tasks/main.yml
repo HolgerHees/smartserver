@@ -110,8 +110,8 @@
 
 - name: register system package dependency
   vars:
-    tag: "gpu"
-    packages: [ "nvidia" ]
+    tag: "hardware_gpu"
+    packages: [ "nvidia.*" ]
   include_tasks: roles/update_service/shared/add_dependency.yml
   tags: ['update_system_config']
   when: "update_service_system_check_enabled and gpu_type=='nvidia'"

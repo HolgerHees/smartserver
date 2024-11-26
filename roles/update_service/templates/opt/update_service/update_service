@@ -82,7 +82,7 @@ class Handler(Server):
         #if event["type"] not in [ FileWatcher.EVENT_TYPE_WRITTEN, FileWatcher.EVENT_TYPE_MOVED_TO, FileWatcher.EVENT_TYPE_MOVED_FROM, FileWatcher.EVENT_TYPE_DELETED ]:
         #    return
 
-        if event["path"] == config.outdated_roles_state_dir.rstrip("/"):
+        if event["path"].startswith(config.outdated_roles_state_dir):
             self.dependency_watcher.notifyChange(event)
         elif event["path"] == config.system_update_state_file:
             self.system_update_watcher.notifyChange(event)

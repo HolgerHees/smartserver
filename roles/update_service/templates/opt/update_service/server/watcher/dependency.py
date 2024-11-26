@@ -1,6 +1,8 @@
 import glob
 import os
 import json
+import re
+import logging
 
 from pathlib import Path
 
@@ -21,11 +23,11 @@ class DependencyWatcher(watcher.Watcher):
         self.initOutdatedRoles()
         
     def notifyChange(self, event):
-        if event["type"] not in [FileWatcher.EVENT_TYPE_EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_MOVED_TO, FileWatcher.EVENT_TYPE_MOVED_FROM, FileWatcher.EVENT_TYPE_DELETED]:
+        if event["type"] not in [FileWatcher.EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_MOVED_TO, FileWatcher.EVENT_TYPE_MOVED_FROM, FileWatcher.EVENT_TYPE_DELETED]:
             return
 
-        name = os.path.basename(event["pathname"])
-        if event["type"] in [FileWatcher.EVENT_TYPE_EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_MOVED_TO]:
+        name = os.path.basename(event["path"])
+        if event["type"] in [FileWatcher.EVENT_TYPE_CREATED, FileWatcher.EVENT_TYPE_MOVED_TO]:
             self.outdated_roles[name] = True
         else:
             del self.outdated_roles[name]
@@ -51,13 +53,15 @@ class DependencyWatcher(watcher.Watcher):
                 dependency_config = json.load(json_data)
                 for package in dependency_config["packages"]:
                     if package not in package_tag_map:
-                        package_tag_map[package] = []
-                    package_tag_map[package].append(dependency_config["tag"])
+                        package_tag_map[package] = { "regex": re.compile(package, re.IGNORECASE), "tags": [] }
+                    package_tag_map[package]["tags"].append(dependency_config["tag"])
         
         system_updates = self.system_update_watcher.getSystemUpdates()
         for update in system_updates:
             for package in package_tag_map:
-                if package == update["name"]:
-                    for tag in package_tag_map[package]:
-                        f = Path(u"{}{}".format(config.outdated_roles_state_dir,tag))
-                        f.touch(exist_ok=True)
+                if not package_tag_map[package]["regex"].match(update["name"]):
+                    continue
+
+                for tag in package_tag_map[package]["tags"]:
+                    f = Path(u"{}{}".format(config.outdated_roles_state_dir,tag))
+                    f.touch(exist_ok=True)
