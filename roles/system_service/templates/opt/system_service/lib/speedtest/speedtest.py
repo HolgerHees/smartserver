@@ -135,6 +135,8 @@ class Speedtest():
                     self.event.wait(60 - (retry * 15))
 
                     self.is_testing = False
+                    self.handler.notifyChangedSpeedtestData(self.is_testing)
+
                     self.startSpeedtest(retry - 1)
                 return
 
@@ -156,7 +158,6 @@ class Speedtest():
                 logging.error("Maximum publish retries reached. Discard results now")
 
             self.is_testing = False
-
             self.handler.notifyChangedSpeedtestData(self.is_testing)
 
     def getStateMetrics(self):
