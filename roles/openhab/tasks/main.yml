@@ -1,6 +1,6 @@
 - name: set openhab version
   set_fact:
-    openhab_version: "4.2.2"
+    openhab_version: "4.2.3"
   tags: [ 'update_notifier_config' ]
 
 - name: "create user and group => user or group does not exists"
