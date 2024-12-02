@@ -178,7 +178,7 @@ class LibreNMS(_handler.Handler):
         self.next_run["port"] = datetime.now() + timedelta(seconds=self.config.librenms_port_interval)
 
         start = datetime.now()
-        _ports_json = self._get("ports?columns=device_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
+        _ports_json = self._get("ports?columns=device_id,port_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
         Helper.logProfiler(self, start, "Ports fetched")
 
         _ports = _ports_json["ports"]
@@ -204,10 +204,11 @@ class LibreNMS(_handler.Handler):
                   continue
                 mac = self.devices[device_id]["mac"]
                 port_ifname = _port["ifName"]
-                port_id = _port["ifIndex"]
+                #port_id = _port["ifIndex"]
+                port_id = _port["port_id"]
                 
                 self.port_id_ifname_map[device_id][port_id] = port_ifname
-                
+
                 stat = self.cache.getConnectionStat(mac, port_ifname)
                 stat_data = stat.getData()
                 if port_id in self.device_ports[device_id]:
@@ -279,7 +280,7 @@ class LibreNMS(_handler.Handler):
                 target_interface = self.port_id_ifname_map[device_id][port_id]
                 if target_interface == "lo":
                     continue
-                
+
                 _mac = _connected_arp["mac_address"]
                 mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
                 

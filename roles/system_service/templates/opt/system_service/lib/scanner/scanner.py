@@ -145,10 +145,9 @@ class Scanner(threading.Thread):
             self.cache.lock(self)
             #for device in self.cache.getDevices():   
             #    device.resetConnection()
-            processed_devices = {}    
             unprocessed_devices = []
             for device in self.cache.getDevices():   
-                if device.calculateConnectionPath(processed_devices):
+                if device.calculateConnectionPath():
                     has_connection_changes = True
                 else:
                     unprocessed_devices.append(device)
@@ -203,7 +202,7 @@ class Scanner(threading.Thread):
                 if key not in connected_map:
                     connected_map[key] = []
                 connected_map[key].append( device )
-                
+
             # **** INSERT DUMMY HUBS ****
             virtual_devices = []
             for key in connected_map:
