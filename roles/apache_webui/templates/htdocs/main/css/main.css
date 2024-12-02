@@ -815,6 +815,7 @@ body.nobackground #submenu .service.button div:last-child {
     #submenu .service.imageWatcher {
         flex-direction: row;
         flex-grow: 0;
+        flex-wrap: wrap;
         margin-top: 0;
         align-items: stretch;
         justify-content: space-evenly;
