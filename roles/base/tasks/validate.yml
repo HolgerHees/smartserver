@@ -9,8 +9,8 @@
                   "{{'<network_device ' + ( loop.index | string ) + '>'}}: missing attribute(s) {{ mandatory_base_fields | difference(network_device.keys()) }}",
               {% endif %}
 
-              {% if deprecated_base_fields | intersection(network_device.keys()) | length > 0 %}
-                  "{{'<network_device ' + ( loop.index | string ) + '>'}}: has deprecated attribute(s) {{ deprecated_base_fields | intersection(network_device.keys()) }}",
+              {% if deprecated_base_fields | intersect(network_device.keys()) | length > 0 %}
+                  "{{'<network_device ' + ( loop.index | string ) + '>'}}: has deprecated attribute(s) {{ deprecated_base_fields | intersect(network_device.keys()) }}",
               {% endif %}
           {% endfor %}
       ]
