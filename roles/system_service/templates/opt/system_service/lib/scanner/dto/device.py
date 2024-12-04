@@ -58,8 +58,6 @@ class Connection():
         return "type: {}, mac: {}, interface: {}".format(self.type,self.target_mac,self.target_interface)
     
 class Device(Changeable):
-    hop_interface_count = {}
-
     def __init__(self, cache, mac, type):
         super().__init__(cache)
 
@@ -154,10 +152,6 @@ class Device(Changeable):
 
         key = "{}:{}".format(target_mac,target_interface)
         
-        if key not in Device.hop_interface_count:
-            Device.hop_interface_count[key] = 0
-        Device.hop_interface_count[key] += 1
-
         action = None
 
         if key in self.hop_connection_map:
@@ -201,10 +195,6 @@ class Device(Changeable):
 
         key = "{}:{}".format(target_mac,target_interface)
 
-        Device.hop_interface_count[key] -= 1
-        if Device.hop_interface_count[key] == 0:
-            del Device.hop_interface_count[key]
-
         if key in self.hop_connection_map:
             _connection = self.hop_connection_map[key]
 
@@ -232,9 +222,6 @@ class Device(Changeable):
     def getConnection(self):
         return self.virtual_connection if self.virtual_connection is not None else self.connection
    
-    #def resetConnection(self):
-    #    self.connection = None
-        
     def hasMultiConnections(self):
         return self.multi_connections
         
@@ -250,16 +237,18 @@ class Device(Changeable):
         if not found:
             events.append(Event(self.getEventType(), Event.ACTION_MODIFY, self, ["connection", "connection_helper"]))
         
-    def calculateConnectionPath(self):
+    def calculateConnectionPath(self, switch_uplinks):
         #logging.info("CALCULATE")
+
+        if self.getMAC() == self._getCache().getGatewayMAC():
+            return False
 
         multi_connections = False
         connection = None
-        interface_device_count = 9999
+
         for _connection in self.getHopConnections():
             if _connection.getType() == Connection.WIFI:
-                interface_device_count = 0
-                if connection is None or connection.getType() != Connection.WIFI:
+                if connection is None:
                     connection = _connection
                 else:
                     max_signal = -256
@@ -268,59 +257,60 @@ class Device(Changeable):
                         signal = int(stat_data.getDetail("signal","-256"))
                         if signal > max_signal:
                             max_signal = signal
-                            
+
                     _max_signal = -256
                     _stat = self.cache.getUnlockedConnectionStat(_connection.getTargetMAC(),_connection.getTargetInterface())
                     for _stat_data in _stat.getDataList():
                         _signal = int(_stat_data.getDetail("signal","-256"))
                         if _signal > _max_signal:
                             _max_signal = _signal
-                            
+
                     if _max_signal > max_signal:
                         connection = _connection
-                        
+
                     multi_connections = True
-            else:
-                # skip loops
-                processed_hops = { self._getCache().getWanMAC(): True }
-                self._getGWHopCount(_connection, 0, processed_hops)
-                if self.getMAC() in processed_hops:
+
+        if connection is None:
+            _tmp_connections = {}
+            _hob_connections = {}
+
+            for _connection in self.getHopConnections():
+                _target_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
+
+                if _target_device is not None and _target_device.getIP() in switch_uplinks and _connection.getTargetInterface() in switch_uplinks[_target_device.getIP()]:
                     continue
 
-                # select interface with lowest connected device count
-                _interface_device_count = Device.hop_interface_count.get("{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface()))
-                if _interface_device_count is not None and _interface_device_count <= interface_device_count:
-                    interface_device_count = _interface_device_count
-                    connection = _connection
+                _tmp_connections["{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface())] = _connection
 
-        #target_device = self.cache.getUnlockedDevice(connection.getTargetMAC())
-        #logging.info(str(self.getIP()) + " " + str(target_device.getIP() if target_device is not None else connection.getTargetMAC()) + " (" + str(interface_device_count) + ")")
+                if _target_device is None:
+                    continue
 
-        self.multi_connections = multi_connections
-        
-        if self.connection != connection:
+                for __connection in _target_device.getHopConnections():
+                    #__target_device = self.cache.getUnlockedDevice(__connection.getTargetMAC())
+                    #if __target_device is None or __target_device.getIP() in switch_uplinks and __connection.getTargetInterface() in switch_uplinks[__target_device.getIP()]:
+                    #    continue
+                    _hob_connections["{}:{}".format(__connection.getTargetMAC(),__connection.getTargetInterface())] = True
+
+            _filtered_connections = {k: v for k, v in _tmp_connections.items() if k not in _hob_connections}
+
+            if len(_filtered_connections.keys()) == 1:
+                #logging.info("OK " + self.getIP())
+                connection = list(_filtered_connections.values())[0]
+            elif len(_filtered_connections.keys()) > 1:
+                connection = list(_filtered_connections.values())[0]
+                #logging.info("Not able to detect filtered network route of " + str(self) + " " + str(_filtered_connections.keys()))
+            elif len(_tmp_connections) > 0:
+                connection = list(_tmp_connections.values())[0]
+                #logging.info("Not able to detect unfiltered network route of " + str(self) + " " + str(_tmp_connections.keys()))
+            else:
+                logging.error("Not able to detect any network route of " + str(self))
+
+        if connection != self.connection:
+            self.multi_connections = multi_connections
             self.connection = connection
             return True
-        
-        return False
-        
-        #logging.info("{} {}".format(self,len(self.getHopConnections())))
 
-    def _getGWHopCount(self, connection, count, processed_hops):
-        #if connection is None:
-        #    return count
-
-        count += 1
-
-        if connection.getTargetMAC() not in processed_hops:
-            processed_hops[connection.getTargetMAC()] = True
-            _device = self._getCache().getUnlockedDevice(connection.getTargetMAC())
-            if _device is not None:
-                if _device.connection is None:
-                    _device.calculateConnectionPath()
-                count = self._getGWHopCount(_device.connection, count, processed_hops)
-
-        return count
+        return True
 
     def supportsWifi(self):
         return self.supports_wifi

@@ -1,0 +1,15 @@
+- name: "system_service: validate_config : process config"
+  vars:
+    system_service_fields: "{{ ['switch_uplink'] }}"
+    system_service_device_result: |
+      [
+          {% for system_service_device in system_service_devices %}
+              {% if system_service_fields | difference(system_service_device.config.system_service.keys()) | length > 0 %}
+                  "{{'<system_service_device ' + ( loop.index | string ) + '>'}}: missing system service attribute(s) {{ system_service_fields | difference(system_service_device.config.system_service.keys()) }}",
+              {% endif %}
+          {% endfor %}
+      ]
+  debug:
+    msg: "{{ system_service_device_result if system_service_device_result | length > 0 else 'System service config is ok'}}"
+  failed_when: "system_service_device_result | length > 0"
+  tags: ["all", "system_service"]

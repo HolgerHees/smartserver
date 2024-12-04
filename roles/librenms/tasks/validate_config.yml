@@ -1,0 +1,15 @@
+- name: "librenms: validate_config : process config"
+  vars:
+    librenms_fields: "{{ ['snmp_method', 'snmp_community_string'] }}"
+    librenms_device_result: |
+      [
+          {% for librenms_device in librenms_devices %}
+              {% if librenms_fields | difference(librenms_device.config.librenms.keys()) | length > 0 %}
+                  "{{'<librenms_device ' + ( loop.index | string ) + '>'}}: missing librenms attribute(s) {{ librenms_fields | difference(librenms_device.config.librenms.keys()) }}",
+              {% endif %}
+          {% endfor %}
+      ]
+  debug:
+    msg: "{{ librenms_device_result if librenms_device_result | length > 0 else 'Librenms config is ok'}}"
+  failed_when: "librenms_device_result | length > 0"
+  tags: ["all", "librenms", "librenms_config"]

@@ -32,6 +32,14 @@ fritzbox_username = "{% if fritzbox_devices|length > 0 %}{{system_service_fritzb
 fritzbox_password = "{% if fritzbox_devices|length > 0 %}{{system_service_fritzbox_api_password}}{% endif %}"
 fritzbox_devices = [{% if fritzbox_devices|length > 0 %}"{{fritzbox_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
 
+switch_uplinks = {
+{% for system_service_device in system_service_devices %}
+{% if system_service_device.config.system_service.switch_uplink is defined %}
+    {% if loop.index > 1 %},{% endif %}"{{system_service_device.host}}": "{{system_service_device.config.system_service.switch_uplink}}"
+{% endif %}
+{% endfor %}
+}
+
 influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
 influxdb_token = "{{influxdb_admin_token}}"

@@ -42,25 +42,24 @@ default_variables: {
     backup_path:                              { default: "{{data_path}}backups/" },                                 # path for local backup data
 
     userdata:                                 {},
-    # *** EXAMPLE for userdata ***
     # userdata: {
     #     testuser1: {                                                                                              # key is the username
-    #         name: "Test User 1",                                                                                  # mandatory name (not username)
-    #         email: "test1@test.de",                                                                               # mandatory email
-    #         groups: [ "admin", "user" ],                                                                          # mandatory usergroups - missing 'user' group, this user is not added as a real account (samba,web,nextcloud)
-    #         password: "{{vault_userpasswords['testuser1']}}",                                                     # mandatory password
-    #         phone_device: {                                                                                       # optional. used by system_service device_ping
+    #         name: "Test User 1",                                                                                  # name (not username)
+    #         email: "test1@test.de",                                                                               # email
+    #         groups: [ "admin", "user" ],                                                                          # usergroups - missing 'user' group, this user is not added as a real account (samba,web,nextcloud)
+    #         password: "{{vault_userpasswords['testuser1']}}",                                                     # password
+    #         phone_device: { # OPTIONAL                                                                            # used by system_service device_ping
     #             ip: "{{default_server_subnet}}.69",
     #             timeout: 60
     #         },
-    #         vpn_gates: {                                                                                          # optional. used by wireguard_mobile role
+    #         vpn_gates: {    # OPTIONAL                                                                            # used by wireguard_mobile role
     #             phone: "{{vpn_mobile_subnet}}.11",
     #             tablet: "{{vpn_mobile_subnet}}.12"
     #         },
-    #         media_dir: {                                                                                          # optional. nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
+    #         media_dir: {    # OPTIONAL                                                                            # nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
     #             test_media: "/"
     #         },
-    #         openhab: {                                                                                            # optional. used by openhab to create a python configuration for later usage in custom roles
+    #         openhab: {      # OPTIONAL                                                                            # used by openhab to create a python configuration for later usage in custom roles
     #             state_item: "pOther_Presence_Testuser1_State",
     #             notification_config: [ "pushover", "pushover:pushover-account:account", "Testuser" ]
     #         }
@@ -78,15 +77,27 @@ default_variables: {
     usv_enabled:                              { default: no },
 
     network_devices:                          { optional: yes },                                                    # used for librenms, system_service (network monitoring) and openwrt => they are preprocessed at the end of this config file
-    # *** EXAMPLE for network_devices ***
-    # [
+    # network_devices: [
     #     {
-    #         host: { optional: yes },                                                                              # "{{default_server_subnet}}.100"
-    #         name: { optional: yes },                                                                              # "WLan AP Inhouse" => will be used in webui for openwrt devices
-    #         snmp_method: { optional: yes },                                                                       # "v2c"
-    #         snmp_community_string: { optional: yes }                                                              # "public"
-    #         type: { optional: yes }                                                                               # 'openwrt', 'fritzbox', or absend
-    #         config: { optional: yes }                                                                             # only related to openwrt deployment
+    #         host: "{{default_server_subnet}}.100",                                                                # ip address
+    #         name: "WLan AP Inhouse",                                                                              # device Name will be used in webui for openwrt devices
+    #         config: {
+    #             system_service: {   # OPTIONAL used in system_service
+    #                 switch_uplink: "GigabitEthernet1,                                                             # outgoing portname of uplinkport visible in librenms used to avoid loops in network topology of network scanner
+    #             }
+    #             librenms: {         # OPTIONAL used in librenms
+    #                 snmp_method: "v2c",                                                                           # snmp method (v2, v3)
+    #                 snmp_community_string: "intern"                                                               # snmp community string
+    #             },
+    #             openwrt: {          # OPTIONAL used in openwrt and system_service
+    #                 roles: ["gateway"],                                                                           # 'ap' or 'gateway'
+    #                 features: [ "ipv6-to-host", "softflowd", "ddns" ],
+    #                 install_packages: [ "kmod-usb-net-cdc-ether", "usb-modeswitch", "stress", "procps-ng-watch", "ethtool-full", "xdpdump xdp-filter", "xdp-loader", "luci-ssl", "luci-app-opkg" ],
+    #                 remove_packages: [ "ntpclient" ]
+    #             }
+    #             fritzbox: {         # OPTIONAL used in system_service
+    #             }
+    #         }
     #     }
     # ]
 
@@ -170,6 +181,7 @@ default_variables: {
     # **** BEGIN LIBRENMS                                                              ***
     # Roles:
     # - 'librenms'
+    # Additional related variable 'network_devices' with example is on top of this file
     librenms_enabled:                         { default: "{{librenms_devices | length > 0}}",
                                                 requirement: "mariadb_enabled,redis_enabled" },                     # enabled if there are network_devices with attribute 'snmp_method'
     librenms_poller_interval:                 { default: 5,                                                         # interval in minutes
@@ -200,10 +212,9 @@ default_variables: {
     dns_type:                                 { optional: yes },                                                    # 'dnsmasq' or 'pihole' (pihole_ip must be defined)
     dns_overrides:                            { default: [],
                                                 dependency: "{{dns_enabled}}" },
-     # *** EXAMPLE for dns_overrides ***
-     # [
-     #     {ip: {{default_server_subnet}}.73, custom_dns: "tv.other.domain.com"}
-     # ]
+    # dns_overrides: [
+    #     {ip: {{default_server_subnet}}.73, custom_dns: "tv.other.domain.com"}
+    # ]
     dns_default_domain:                       { default: "lan",
                                                 dependency: "{{dns_enabled}}" },
 
@@ -216,10 +227,9 @@ default_variables: {
                                                 dependency: "{{dhcp_enabled}}" },
     dhcp_reservations:                        { default: [],                                                        # dhcp entries
                                                 dependency: "{{dhcp_enabled}}" },
-     # *** EXAMPLE for dhcp_reservations ***
-     # [
-     #     { mac: 12:34:56:78:90:11, ip: {{default_server_subnet}}.73, hostname: tv-livingroom, custom_dns: ["smarttv"]}
-     # ]
+    # dhcp_reservations: [
+    #     { mac: 12:34:56:78:90:11, ip: {{default_server_subnet}}.73, hostname: tv-livingroom, custom_dns: ["smarttv"]}
+    # ]
     dhcp_dns_server:                          { default: "{{ pihole_ip if pihole_ip is defined else default_server_ip }}",
                                                 dependency: "{{dhcp_enabled}}" },
 
@@ -306,13 +316,7 @@ default_variables: {
                                                 dependency: "{{nextcloud_enabled}}" },
     nextcloud_mariadb_password:               { dependency: "{{nextcloud_enabled}}" },
     nextcloud_additional_apps:                { default: [],                                                        # additional apps for nextcloud
-                                                dependency: "{{nextcloud_enabled}}" },
-    nextcloud_image_recognize_enabled:        { default: no,                                                        # enabled the ai image object recognisation, this needs a lot of cpu and memory + a lot of huge initial data models, gpu_type: 'nvidia' recommended
-                                                dependency: "{{nextcloud_enabled}}" },
-    nextcloud_image_geolocation_enabled:      { default: yes,                                                       # enabled the reverse geolocation lookup in 'memories' and needs a huge initial data file download
-                                                dependency: "{{nextcloud_enabled}}" },
-    # *** EXAMPLE for nextcloud_additional_apps ***
-    # [
+    # nextcloud_additional_apps: [
     #     {
     #         "app: { optional: yes },                                                                              # app id. e.g. "cookbook"
     #         "name: { optional: yes },                                                                             # webui menu name. e.g. "Cookbook"
@@ -323,6 +327,11 @@ default_variables: {
     #         "order: { default: 200 }                                                                              # optional. control order in webui menu
     #     }
     # ]
+                                                dependency: "{{nextcloud_enabled}}" },
+    nextcloud_image_recognize_enabled:        { default: no,                                                        # enabled the ai image object recognisation, this needs a lot of cpu and memory + a lot of huge initial data models, gpu_type: 'nvidia' recommended
+                                                dependency: "{{nextcloud_enabled}}" },
+    nextcloud_image_geolocation_enabled:      { default: yes,                                                       # enabled the reverse geolocation lookup in 'memories' and needs a huge initial data file download
+                                                dependency: "{{nextcloud_enabled}}" },
     # *** END NEXTCLOUD                                                                ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -341,8 +350,7 @@ default_variables: {
 
     openhab_custom_value_map:                 { optional: yes,                                                      # value map to provide custom variables (like vault vars) to openhab jython scripting
                                                 dependency: "{{openhab_enabled}}" },
-    # *** EXAMPLE for camera_devices ***
-    # [
+    # openhab_custom_value_map: [
     #     {
     #         my_token: "{{my_token}}",
     #         my_map: [
@@ -361,8 +369,7 @@ default_variables: {
     # - 'camera_ftp'
     camera_enabled:                           { default: "{{camera_devices | length > 0}}" },                       # enabled if there are camera devices configured
     camera_devices:                           { default: [] },                                                      # used for ftp upload, image gallkery and menu entries
-    # *** EXAMPLE for camera_devices ***
-    # [
+    # camera_devices: [
     #     {
     #         uid: {},                                                                                              # unique identifier for this device. Will be used to generate proxy urls like /camera{uid | capelized}Image
     #         name: {},                                                                                             # menu and gallery name
@@ -400,6 +407,7 @@ default_variables: {
     # **** BEGIN SYSTEM SERVICE                                                        ***
     # Roles:
     # - 'system_service'
+    # Additional related variable 'network_devices' with example is on top of this file
     system_service_enabled:                   { default: yes,                                                       # enabled by default
                                                 requirement: "influxdb_enabled,mosquitto_enabled" },
 
@@ -408,8 +416,7 @@ default_variables: {
 
     system_service_default_isp:               { default: {},                                                        # is used to detect a fallback internet connection in system_service
                                                 dependency: "{{system_service_enabled}}" },
-    # *** EXAMPLE for default_isp ***
-    # {
+    # system_service_default_isp: {
     #     org: [ ".+ Sverige AB" ],                                                                                 # external ip must be registered to a organisation or isp named ".+ Sverige AB"
     #     hostname: [ ".+d1-online\\\\.com" ],                                                                      # external ip must be resolved to a spcific dns name
     #     ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ]                                                                # fixed external ip ranges
@@ -423,8 +430,7 @@ default_variables: {
                                                 dependency: "{{system_service_enabled}}" },
     system_service_netflow_incoming_traffic:  { default: [],                                                        # from internet expected and allowed traffic, (used to detect netflow traffic direction and for traffic blocker to decide which traffic is suspicious)
                                                 dependency: "{{system_service_enabled}}" },
-    # *** EXAMPLE for netflow_incoming_traffic ***
-    # {
+    # system_service_netflow_incoming_traffic: {
     #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] }, log="apache" }, # Letsencrypt, CLOUD PING Test
     #   { target: "{{production_ip}}:10114", name: "alexa api", allowed: { org: [ "AWS EC2 .+" ] }, log="apache" }, # ALEXA
     #   { target: "{{production_ip}}:51820", name: "wireguard", allowed: { wireguard_peers: [ "check" ] } }, # system check for connected wireguard peers
@@ -456,7 +462,6 @@ default_variables: {
     # This service runs a sync of a local source folder to local or remote destination folder
     # Roles:
     # - 'backup_sync'
-
     backup_sync_enabled:                      { default: "{{backup_syncs is defined and backup_syncs | length > 0}}" },
     backup_syncs:                             { optional: yes },
 
@@ -465,8 +470,7 @@ default_variables: {
     # - check https://rclone.org/docs/#metadata and https://rclone.org/overview/#features
     # If you use a custom destination like "mygoogledrive:/" (2. example) you have to create a configuration in '/opt/backup_sync/config/rclone/mybackup.conf' with a '[mygoogledrive]' part in it.
 
-    # *** EXAMPLE rclone for backup_syncs ***
-    # [
+    # backup_syncs: [
     #   {
     #     name: "smartserver",                                                                                      # sync name (mandatory)
     #     type: "rclone",                                                                                           # sync tool (mandatory)
@@ -575,7 +579,7 @@ default_variables: {
     # - 'weather_service'
     guest_wifi_enabled:                       { default: "{{wifi_networks is defined and wifi_networks | length > 0}}" },
     wifi_networks:                            { optional: yes },
-    # {
+    # wifi_networks: {
     #     test1: { password: "1234", type: "public" },
     #     test2: { password: "3456", type: "intern" }
     # }
@@ -598,8 +602,6 @@ default_variables: {
     # - 'cloud_nfs'
     # - 'cloud_mosquitto'
     # - 'cloud_check'
-    # Related variable is 'cloud_vpn'
-    # *** EXAMPLE ***
     # cloud_vpn: {
     #    name: "peer1",
     #    interface: { address: "{{vpn_cloud_subnet}}.0.1", port: "51829", network: "{{vpn_cloud_subnet}}.1.0/24" },
@@ -616,24 +618,9 @@ default_variables: {
     # **** BEGIN OPENWRT CONFIG GENERATOR                                              ***
     # The role is used to preprocess and generate openwrt configurations which can be deployed to openwrt devices like access points, gateways or switches
     # The openwrt configurations can be found in {{global_etc}}openwrt/ap/ including a script 'deploy.sh'
-    # Related role is
+    # Roles;
     # - 'openwrt'
-    # Related variable 'network_devices' which is preprocessed into 'openwrt_devices' end of this config file
-    # *** EXAMPLE ***
-    # network_devices: [
-    #    {
-    #       host: "{{default_server_subnet}}.1",
-    #       name: "Gateway",
-    #       type: "openwrt",
-    #       config: { roles: ["gateway"], features: [ "ipv6-to-hosts", "softflowd", "ddns" ], install_packages: "kmod-usb-net-cdc-ether usb-modeswitch", remove_packages: [ "ntpclient" ] }
-    #    },
-    #    {
-    #       host: "{{default_server_subnet}}.137",
-    #       name: "Wlan AP Garden",
-    #       type: "openwrt",
-    #       config: { roles: ["ap"], features: [ "custom_ap" ] }
-    #    }
-    # ]
+    # Additional related variable 'network_devices' with example is on top of this file
     # openwrt_api_username: "<api_username>"
     # openwrt_api_password: "<api_password>"
     #
@@ -655,7 +642,6 @@ default_variables: {
     # This service communicates with Viessmann heating systems and published values and cmd's to mosquitto
     # Roles:
     # - 'vcontrol'
-    # Related variables are 'vault_deployment_config_git' and 'vault_deployment_token_git'
     # **** END VCONTROLD SERVICE                                                       ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }
@@ -798,9 +784,10 @@ dlna_volumes:                    "{
 }"
 
 
-librenms_devices: "{{network_devices | default([]) | selectattr('snmp_method', 'defined') | list}}"
-openwrt_devices: "{{network_devices | default([]) | selectattr('type', 'defined') | selectattr('type','==','openwrt') | list}}"
-fritzbox_devices: "{{network_devices | default([]) | selectattr('type', 'defined') | selectattr('type','==','fritzbox') | list}}"
+system_service_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.system_service','defined') | list}}"
+librenms_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.librenms','defined') | list}}"
+openwrt_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.openwrt','defined') | list}}"
+fritzbox_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.fritzbox','defined') | list}}"
 
 user_key_maps: {
   "wwwrun": "www",

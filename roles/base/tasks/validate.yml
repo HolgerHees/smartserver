@@ -1,3 +1,24 @@
+- name: "base: validate : process config"
+  vars:
+    mandatory_base_fields: "{{ ['name', 'host'] }}"
+    deprecated_base_fields: "{{ ['snmp_method', 'snmp_community_string', 'type'] }}"
+    network_device_result: |
+      [
+          {% for network_device in network_devices %}
+              {% if mandatory_base_fields | difference(network_device.keys()) | length > 0 %}
+                  "{{'<network_device ' + ( loop.index | string ) + '>'}}: missing attribute(s) {{ mandatory_base_fields | difference(network_device.keys()) }}",
+              {% endif %}
+
+              {% if deprecated_base_fields | intersection(network_device.keys()) | length > 0 %}
+                  "{{'<network_device ' + ( loop.index | string ) + '>'}}: has deprecated attribute(s) {{ deprecated_base_fields | intersection(network_device.keys()) }}",
+              {% endif %}
+          {% endfor %}
+      ]
+  debug:
+    msg: "{{ network_device_result if network_device_result | length > 0 else 'Network devices are ok'}}"
+  failed_when: "network_device_result | length > 0"
+  tags: ["all"]
+
 - name: "user : validate_config"
   include_tasks: "roles/user/tasks/validate_config.yml"
   tags: ["all", "user"]
@@ -11,3 +32,13 @@
   include_tasks: "roles/backup_sync/tasks/validate_config.yml"
   tags: ["all", "backup_sync"]
   when: "backup_sync_enabled"
+
+- name: "librenms : validate_config"
+  include_tasks: "roles/librenms/tasks/validate_config.yml"
+  tags: ["all", "librenms", "librenms_config"]
+  when: "librenms_enabled"
+
+- name: "system_service : validate_config"
+  include_tasks: "roles/system_service/tasks/validate_config.yml"
+  tags: ["all", "system_service"]
+  when: "system_service_enabled"

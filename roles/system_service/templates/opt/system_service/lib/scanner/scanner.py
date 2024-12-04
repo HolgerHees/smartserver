@@ -143,14 +143,15 @@ class Scanner(threading.Thread):
         if has_connection_changes:
             has_connection_changes = False
             self.cache.lock(self)
-            #for device in self.cache.getDevices():   
-            #    device.resetConnection()
+
             unprocessed_devices = []
             for device in self.cache.getDevices():   
-                if device.calculateConnectionPath():
+                if device.calculateConnectionPath(self.config.switch_uplinks):
                     has_connection_changes = True
                 else:
                     unprocessed_devices.append(device)
+
+            self.cache.unlock(self)
 
             # cleanup
             for event in list(events):
@@ -158,8 +159,6 @@ class Scanner(threading.Thread):
                     if event.hasDetail("connection_helper"):
                         #logging.info(">>>>>>>>>>>>>> CLEAN")
                         events.remove(event)
-                    
-            self.cache.unlock(self)
 
             if len(events) == 0:
                 #logging.info(">>>>>>>>>>>>>> SKIP")
