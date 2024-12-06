@@ -240,66 +240,67 @@ class Device(Changeable):
     def calculateConnectionPath(self, _backward_interfaces):
         #logging.info("CALCULATE")
 
-        if self.getMAC() == self._getCache().getGatewayMAC():
-            return False
-
         multi_connections = False
-        connection = None
 
-        for _connection in self.getHopConnections():
-            if _connection.getType() == Connection.WIFI:
-                if connection is None:
-                    connection = _connection
-                else:
-                    max_signal = -256
-                    stat = self.cache.getUnlockedConnectionStat(connection.getTargetMAC(),connection.getTargetInterface())
-                    for stat_data in stat.getDataList():
-                        signal = int(stat_data.getDetail("signal","-256"))
-                        if signal > max_signal:
-                            max_signal = signal
-
-                    _max_signal = -256
-                    _stat = self.cache.getUnlockedConnectionStat(_connection.getTargetMAC(),_connection.getTargetInterface())
-                    for _stat_data in _stat.getDataList():
-                        _signal = int(_stat_data.getDetail("signal","-256"))
-                        if _signal > _max_signal:
-                            _max_signal = _signal
-
-                    if _max_signal > max_signal:
-                        connection = _connection
-
-                    multi_connections = True
-
-        if connection is None:
-            _tmp_connections = {}
-            _hob_connections = {}
+        if self.getMAC() == self._getCache().getGatewayMAC():
+            connection = self.getHopConnections()[0]
+        else:
+            connection = None
 
             for _connection in self.getHopConnections():
-                if _connection.getTargetMAC() in _backward_interfaces and _connection.getTargetInterface() in _backward_interfaces[_connection.getTargetMAC()]:
-                    continue
+                if _connection.getType() == Connection.WIFI:
+                    if connection is None:
+                        connection = _connection
+                    else:
+                        max_signal = -256
+                        stat = self.cache.getUnlockedConnectionStat(connection.getTargetMAC(),connection.getTargetInterface())
+                        for stat_data in stat.getDataList():
+                            signal = int(stat_data.getDetail("signal","-256"))
+                            if signal > max_signal:
+                                max_signal = signal
 
-                _tmp_connections["{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface())] = _connection
+                        _max_signal = -256
+                        _stat = self.cache.getUnlockedConnectionStat(_connection.getTargetMAC(),_connection.getTargetInterface())
+                        for _stat_data in _stat.getDataList():
+                            _signal = int(_stat_data.getDetail("signal","-256"))
+                            if _signal > _max_signal:
+                                _max_signal = _signal
 
-                _target_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
-                if _target_device is None:
-                    continue
+                        if _max_signal > max_signal:
+                            connection = _connection
 
-                for __connection in _target_device.getHopConnections():
-                    _hob_connections["{}:{}".format(__connection.getTargetMAC(),__connection.getTargetInterface())] = True
+                        multi_connections = True
 
-            _filtered_connections = {k: v for k, v in _tmp_connections.items() if k not in _hob_connections}
+            if connection is None:
+                _tmp_connections = {}
+                _hob_connections = {}
 
-            if len(_filtered_connections.keys()) == 1:
-                #logging.info("OK " + self.getIP())
-                connection = list(_filtered_connections.values())[0]
-            elif len(_filtered_connections.keys()) > 1:
-                connection = list(_filtered_connections.values())[0]
-                #logging.info("Not able to detect filtered network route of " + str(self) + " " + str(_filtered_connections.keys()) + " => " + str(connection))
-            elif len(_tmp_connections) > 0:
-                connection = list(_tmp_connections.values())[0]
-                #logging.info("Not able to detect unfiltered network route of " + str(self) + " " + str(_tmp_connections.keys()) + " => " + str(connection))
-            else:
-                logging.error("Not able to detect any network route of " + str(self))
+                for _connection in self.getHopConnections():
+                    if _connection.getTargetMAC() in _backward_interfaces and _connection.getTargetInterface() in _backward_interfaces[_connection.getTargetMAC()]:
+                        continue
+
+                    _tmp_connections["{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface())] = _connection
+
+                    _target_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
+                    if _target_device is None:
+                        continue
+
+                    for __connection in _target_device.getHopConnections():
+                        _hob_connections["{}:{}".format(__connection.getTargetMAC(),__connection.getTargetInterface())] = True
+
+                _filtered_connections = {k: v for k, v in _tmp_connections.items() if k not in _hob_connections}
+
+                if len(_filtered_connections.keys()) == 1:
+                    #logging.info("OK " + self.getIP())
+                    connection = list(_filtered_connections.values())[0]
+                elif len(_filtered_connections.keys()) > 1:
+                    connection = list(_filtered_connections.values())[0]
+                    #logging.info("Not able to detect filtered network route of " + str(self) + " " + str(_filtered_connections.keys()) + " => " + str(connection))
+                elif len(_tmp_connections) > 0:
+                    connection = list(_tmp_connections.values())[0]
+                    #logging.info("Not able to detect unfiltered network route of " + str(self) + " " + str(_tmp_connections.keys()) + " => " + str(connection))
+                else:
+                    logging.error("Not able to detect any network route of " + str(self))
 
         if connection != self.connection:
             self.multi_connections = multi_connections

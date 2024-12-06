@@ -75,7 +75,7 @@ class MQTTPublisher(_handler.Handler):
 
         ip = device.getIP()
         if ip not in self.allowed_details:
-            self.allowed_details[ip] = ["wan_type","wan_state"]
+            self.allowed_details[ip] = [] # "wan_type","wan_state"]
             if ip in self.config.user_devices:
                 self.allowed_details[ip].append("online_state")
         
@@ -98,14 +98,14 @@ class MQTTPublisher(_handler.Handler):
                     topic = "network/{}/{}".format(device.getIP(),"online")
                     value = "ON" if stat.isOnline() else "OFF"
                     _to_publish[detail] = [detail,topic,value]
-        else:
-            for detail in _details:
-                #if detail == "signal":
-                #    self.mqtt.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
-                for data in stat.getDataList():
-                    if detail in ["wan_type","wan_state"] and data.getDetail(detail) is not None:
-                        topic = "network/{}/{}".format(device.getIP(),detail)
-                        _to_publish[detail] = [detail,topic,data.getDetail(detail)]
+        #else:
+        #    for detail in _details:
+        #        #if detail == "signal":
+        #        #    self.mqtt.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
+        #        for data in stat.getDataList():
+        #            if detail in ["wan_type","wan_state"] and data.getDetail(detail) is not None:
+        #                topic = "network/{}/{}".format(device.getIP(),detail)
+        #                _to_publish[detail] = [detail,topic,data.getDetail(detail)]
                 
         if len(_to_publish.values()) == 0:
             return False
