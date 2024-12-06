@@ -33,6 +33,11 @@
   tags: ["all", "backup_sync"]
   when: "backup_sync_enabled"
 
+- name: "system_service : validate_config"
+  include_tasks: "roles/system_service/tasks/validate_config.yml"
+  tags: ["all", "system_service"]
+  when: "system_service_enabled"
+
 - name: "librenms : validate_config"
   include_tasks: "roles/librenms/tasks/validate_config.yml"
   tags: ["all", "librenms", "librenms_config"]

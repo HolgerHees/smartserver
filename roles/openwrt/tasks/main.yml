@@ -18,12 +18,12 @@
       {
         {% for device in openwrt_devices %}
           '{{device.host}}': {
-             'host': '{{device.host}}', 'name': '{{device.name}}', 'is_ap': {{'1' if 'ap' in device.config.openwrt.roles else '0'}},
+             'host': '{{device.host}}', 'name': '{{device.name}}', 'is_ap': {{'1' if 'ap' in device.config.openwrt.deployment_roles else '0'}}, 'index': {{loop.index - 1}},
              'features': [
                {% for feature in default_features %}
                  { 'name': '{{feature}}', 'cfg': 'service_config_{{feature}}'},
                {% endfor %}
-               {% if device.config.openwrt.features is defined %}{% for feature in device.config.openwrt.features %}
+               {% if device.config.openwrt.deployment_features is defined %}{% for feature in device.config.openwrt.deployment_features %}
                  { 'name': '{{feature}}', 'cfg': 'service_config_{{feature}}'},
                {% endfor %}{% endif %}
              ]
@@ -73,7 +73,7 @@
                     '{{package}}',
                   {% endfor %}{% endif %}
               {% endfor %}
-              {% if device.config.openwrt.remove_packages is defined %}{% for package in device.config.openwrt.remove_packages %}
+              {% if device.config.openwrt.deployment_remove_packages is defined %}{% for package in device.config.openwrt.deployment_remove_packages %}
                   '{{package}}',
               {% endfor %}{% endif %}
           ],
@@ -104,7 +104,7 @@
                     '{{package}}',
                   {% endfor %}{% endif %}
               {% endfor %}
-              {% if device.config.openwrt.install_packages is defined %}{% for package in device.config.openwrt.install_packages %}
+              {% if device.config.openwrt.deployment_install_packages is defined %}{% for package in device.config.openwrt.deployment_install_packages %}
                   '{{package}}',
               {% endfor %}{% endif %}
           ],
@@ -174,7 +174,8 @@
   vars:
     device_email: "{{root_email}}"
     device_name:  "{{item['name']}}"
-    device_is_ap: "{{devices[item.host]['is_ap']}}"
+    device_is_ap: "{{devices[item.host].is_ap}}"
+    device_config: "{{openwrt_devices[devices[item.host].index].config.openwrt}}"
   template:
     src: "{{item.src}}"
     dest: "{{global_etc}}openwrt/ap/{{item.host}}/{{item.filename}}"

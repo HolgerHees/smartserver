@@ -284,8 +284,8 @@ class LibreNMS(_handler.Handler):
                 _mac = _connected_arp["mac_address"]
                 mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
                 
-                if mac == self.cache.getGatewayMAC():
-                    continue
+                #if mac == self.cache.getGatewayMAC():
+                #    continue
                 
                 device = self.cache.getUnlockedDevice(mac)
                 if device is not None:

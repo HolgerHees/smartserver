@@ -64,13 +64,13 @@ class Scanner(threading.Thread):
         self._register(MQTTPublisher(config, self.cache, mqtt ))
         self._register(InfluxDBPublisher(config, self.cache, influxdb ))
 
-    def _filterLocalIPs(self, network, ips):
-        _ips = []
-        for ip in ips:
+    def _filterLocalIPs(self, network, devices):
+        _devices = {}
+        for ip, data in devices.items():
             if ipaddress.ip_address(ip) not in network:
                 continue
-            _ips.append(ip)
-        return _ips
+            _devices[ip] = data
+        return _devices
 
     def _register(self, handler):
         handler.setDispatcher(self)
@@ -152,6 +152,8 @@ class Scanner(threading.Thread):
                     if _backward_device is not None:
                         _backward_interface = _connection.getTargetInterface()
                         _backward_interfaces[_backward_device.getIP()] = _backward_interface
+
+            #logging.info(_backward_interfaces)
 
             unprocessed_devices = []
             for device in self.cache.getDevices():

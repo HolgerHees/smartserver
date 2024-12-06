@@ -1,0 +1,21 @@
+- name: "system_service: validate_config : process config"
+  vars:
+    openwrt_fields: "{{ ['api_username', 'api_password'] }}"
+    fritzbox_fields: "{{ ['api_username', 'api_password'] }}"
+    system_service_device_result: |
+      [
+          {% for openwrt_device in openwrt_devices %}
+              {% if openwrt_fields | difference(openwrt_device.config.openwrt.keys()) | length > 0 %}
+                  "{{'<openwrt_device ' + ( loop.index | string ) + '>'}}: missing openwrt attribute(s) {{ openwrt_fields | difference(openwrt_device.config.openwrt.keys()) }}",
+              {% endif %}
+          {% endfor %}
+          {% for fritzbox_device in fritzbox_devices %}
+              {% if fritzbox_fields | difference(fritzbox_device.config.openwrt.keys()) | length > 0 %}
+                  "{{'<fritzbox_device ' + ( loop.index | string ) + '>'}}: missing fritzbox attribute(s) {{ fritzbox_fields | difference(fritzbox_device.config.openwrt.keys()) }}",
+              {% endif %}
+          {% endfor %}
+      ]
+  debug:
+    msg: "{{ system_service_device_result if system_service_device_result | length > 0 else 'System service config is ok'}}"
+  failed_when: "system_service_device_result | length > 0"
+  tags: ["all", "system_service"]

@@ -53,7 +53,7 @@ class OpenWRT(_handler.Handler):
 
     def _initNextRuns(self, limit_openwrt_ip = None):
         now = datetime.now()
-        for openwrt_ip in self.openwrt_devices:
+        for openwrt_ip in self.openwrt_devices.keys():
             if limit_openwrt_ip is not None and limit_openwrt_ip != openwrt_ip:
                 continue
             self.sessions[openwrt_ip] = [ None, datetime.now()]
@@ -62,7 +62,7 @@ class OpenWRT(_handler.Handler):
     def _run(self):
         self._initNextRuns()
 
-        for openwrt_ip in self.openwrt_devices:
+        for openwrt_ip in self.openwrt_devices.keys():
             self.active_vlans[openwrt_ip] = {}
 
             self.wifi_networks[openwrt_ip] = {}
@@ -73,7 +73,7 @@ class OpenWRT(_handler.Handler):
             self._setDeviceMetricState(openwrt_ip, -1)
 
         while self._isRunning():
-            for openwrt_ip in self.openwrt_devices:
+            for openwrt_ip, openwrt_device in self.openwrt_devices.items():
                 try:
                     if self._isSuspended(openwrt_ip):
                         continue
@@ -81,7 +81,7 @@ class OpenWRT(_handler.Handler):
                     session_retries = 1
                     while True:
                         try:
-                            self._processDevice(openwrt_ip)
+                            self._processDevice(openwrt_ip, openwrt_device)
                         except UbusCallException as e:
                             if session_retries > 0 and self.sessions[openwrt_ip][0] is not None and e.getCode() == -32002:
                                 logging.info("OpenWRT '{}' has invalid session. Will refresh.".format(openwrt_ip))
@@ -116,7 +116,7 @@ class OpenWRT(_handler.Handler):
                 
             timeout = 9999999999
             now = datetime.now()
-            for openwrt_ip in self.openwrt_devices:
+            for openwrt_ip in self.openwrt_devices.keys():
                 suspend_timeout = self._getSuspendTimeout(openwrt_ip)
                 if suspend_timeout > 0:
                     if suspend_timeout < timeout:
@@ -130,13 +130,13 @@ class OpenWRT(_handler.Handler):
             if timeout > 0:
                 self._wait(timeout)
                                         
-    def _processDevice(self, openwrt_ip ):
+    def _processDevice(self, openwrt_ip, openwrt_device ):
         openwrt_mac = self.cache.ip2mac(openwrt_ip, self._isRunning)
         if openwrt_mac is None:
             raise NetworkException("OpenWRT '{}' not resolvable".format(openwrt_ip), 15)
 
         if datetime.now() >= self.sessions[openwrt_ip][1]:
-            result = self._getSession( openwrt_ip, self.config.openwrt_username, self.config.openwrt_password )
+            result = self._getSession( openwrt_ip, openwrt_device["username"], openwrt_device["password"] )
             self.sessions[openwrt_ip] = [ result["ubus_rpc_session"], datetime.now() + timedelta(seconds=result["expires"] - 10 ) ];
 
         if self.sessions[openwrt_ip][0] is None:
@@ -339,7 +339,7 @@ class OpenWRT(_handler.Handler):
             self.cache.unlock(self)
 
         has_wifi_networks = False
-        for _openwrt_ip in self.openwrt_devices:
+        for _openwrt_ip in self.openwrt_devices.keys():
             if self.wifi_networks[_openwrt_ip]:
                 has_wifi_networks = True
                 break
@@ -535,7 +535,7 @@ class OpenWRT(_handler.Handler):
         return self._parseResult(ip, r, "client_list of '{}'".format(interface))
     
     def _isKnownWifiClient(self, mac):
-        for openwrt_ip in self.openwrt_devices:
+        for openwrt_ip in self.openwrt_devices.keys():
             if mac in self.wifi_clients[openwrt_ip]:
                 return True
         return False

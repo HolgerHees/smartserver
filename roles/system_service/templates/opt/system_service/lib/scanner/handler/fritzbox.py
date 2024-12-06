@@ -62,13 +62,13 @@ class Fritzbox(_handler.Handler):
 
     def _initNextRuns(self):
         now = datetime.now()
-        for fritzbox_ip in self.fritzbox_devices:
+        for fritzbox_ip in self.fritzbox_devices.keys():
             self.next_run[fritzbox_ip] = {"device": now, "dhcp_clients": now, "mesh_clients": now}
         
     def _run(self):
         self._initNextRuns()
 
-        for fritzbox_ip in self.fritzbox_devices:
+        for fritzbox_ip in self.fritzbox_devices.keys():
             self.wifi_networks[fritzbox_ip] = {}
             
             self.wifi_associations[fritzbox_ip] = {}
@@ -81,11 +81,11 @@ class Fritzbox(_handler.Handler):
 
             self._setDeviceMetricState(fritzbox_ip, -1)
         
-        for fritzbox_ip in self.fritzbox_devices:
+        for fritzbox_ip, fritzbox_device in self.fritzbox_devices.items():
             while self._isRunning():
                 try:
-                    self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
-                    self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
+                    self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=fritzbox_device["username"], password=fritzbox_device["password"])
+                    self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=fritzbox_device["username"], password=fritzbox_device["password"])
 
                     self._setDeviceMetricState(fritzbox_ip, 1)
                     break
@@ -101,7 +101,7 @@ class Fritzbox(_handler.Handler):
         while self._isRunning():
             events = []
 
-            for fritzbox_ip in self.fritzbox_devices:
+            for fritzbox_ip in self.fritzbox_devices.keys():
                 try:
                     if self._isSuspended(fritzbox_ip):
                         continue
@@ -124,7 +124,7 @@ class Fritzbox(_handler.Handler):
 
             timeout = 9999999999
             now = datetime.now()
-            for fritzbox_ip in self.fritzbox_devices:
+            for fritzbox_ip in self.fritzbox_devices.keys():
                 suspend_timeout = self._getSuspendTimeout(fritzbox_ip)
                 if suspend_timeout > 0:
                     if suspend_timeout < timeout:

@@ -87,12 +87,16 @@ default_variables: {
     #                 snmp_community_string: "intern"                                                               # snmp community string
     #             },
     #             openwrt: {          # OPTIONAL used in openwrt and system_service
-    #                 roles: ["gateway"],                                                                           # 'ap' or 'gateway'
-    #                 features: [ "ipv6-to-host", "softflowd", "ddns" ],
-    #                 install_packages: [ "kmod-usb-net-cdc-ether", "usb-modeswitch", "stress", "procps-ng-watch", "ethtool-full", "xdpdump xdp-filter", "xdp-loader", "luci-ssl", "luci-app-opkg" ],
-    #                 remove_packages: [ "ntpclient" ]
+    #                 api_username: "<username>",
+    #                 api_password: "<password>",
+    #                 deployment_roles: ["gateway"],                                                                # 'ap' or 'gateway'
+    #                 deployment_features: [ "ipv6-to-host", "softflowd", "ddns" ],
+    #                 deployment_install_packages: [ "kmod-usb-net-cdc-ether", "usb-modeswitch", "stress", "procps-ng-watch", "ethtool-full", "xdpdump xdp-filter", "xdp-loader", "luci-ssl", "luci-app-opkg" ],
+    #                 deployment_remove_packages: [ "ntpclient" ]
     #             }
     #             fritzbox: {         # OPTIONAL used in system_service
+    #                 api_username: "<username>",
+    #                 api_password: "<password>"
     #             }
     #         }
     #     }
@@ -440,15 +444,6 @@ default_variables: {
     # 'target' is a combination of the target ip and port number
     system_service_speedtest_server_id:       { default: "auto",                                                    # used for speedtest
                                                 dependency: "{{system_service_enabled}}" },
-
-    system_service_openwrt_api_username:      { default: "api",                                                     # will be used to fetch network structure related data from openwrt
-                                                dependency: "{{system_service_enabled and openwrt_devices | length > 0}}" },
-    system_service_openwrt_api_password:      { dependency: "{{system_service_enabled and openwrt_devices | length > 0}}" },
-    #"vault_openwrt_root_password:             { optional: yes, dependency: "{{system_service_enabled and openwrt_devices | length > 0}}" },
-
-    system_service_fritzbox_api_username:     { default: "api",                                                     # will be used to fetch network structure related data from avm fritzbox
-                                                dependency: "{{system_service_enabled and fritzbox_devices | length > 0}}" },
-    system_service_fritzbox_api_password:     { dependency: "{{system_service_enabled and fritzbox_devices | length > 0}}" },
     # **** END SYSTEM SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
