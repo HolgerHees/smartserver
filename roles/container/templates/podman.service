@@ -26,7 +26,7 @@ RestartSec=60
 {% elif container_readyness['type'] == 'port_check' %}
     {%- set readyness_cmd="nc -w 1 -z" + ( ' -u' if 'protocol' in container_readyness and container_readyness['protocol'] == 'udp' else '' ) + " " + container_readyness['ip'] + " " + container_readyness['port'] %}
 {% elif container_readyness['type'] == 'url_check' %}
-    {%- set readyness_cmd="wget -q " + container_readyness['url'] %}
+    {%- set readyness_cmd="wget -q -O /dev/null " + container_readyness['url'] %}
 {% elif container_readyness['type'] == 'container_exec' %}
     {%- set readyness_cmd="podman exec " + container_name + " sh -c \\\"" + container_readyness['cmd'] + "\\\" 2> /dev/null" %}
 {% elif container_readyness['type'] == 'host_exec' %}

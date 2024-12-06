@@ -70,11 +70,13 @@
       LD_PRELOAD: "" # fix SEGFAULT => https://github.com/fluent/fluentd-docker-image/issues/378
     container_network: "isolated"
     container_ip: "{{podman_fluentd_ip}}"
+    container_exposed_ports:
+      - "24444/tcp"
     container_volumes:
       - '{{ global_etc }}fluentd:/fluentd/etc/:ro'
       - '{{ global_log }}:{{ global_log }}:rw'
       - '/run/log/journal:/run/log/journal:rw'
-    container_reload_exec: "/usr/bin/podman kill --signal=USR2 fluentd"
+    container_reload_exec: "wget -q -O /dev/null http://fluentd:24444/api/config.gracefulReload"
     container_after: [ "loki" ]
     container_readyness: { "type": "ping_check", "ip": "{{podman_fluentd_ip}}" }
   include_tasks: roles/container/shared/create_podman_service.yml
