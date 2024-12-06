@@ -276,17 +276,20 @@ class Device(Changeable):
                 _hob_connections = {}
 
                 for _connection in self.getHopConnections():
-                    if _connection.getTargetMAC() in _backward_interfaces and _connection.getTargetInterface() in _backward_interfaces[_connection.getTargetMAC()]:
+                    _key = "{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface())
+                    if _key in _backward_interfaces:
                         continue
-
-                    _tmp_connections["{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface())] = _connection
+                    _tmp_connections[_key] = _connection
 
                     _target_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
                     if _target_device is None:
                         continue
 
                     for __connection in _target_device.getHopConnections():
-                        _hob_connections["{}:{}".format(__connection.getTargetMAC(),__connection.getTargetInterface())] = True
+                        __key = "{}:{}".format(__connection.getTargetMAC(),__connection.getTargetInterface())
+                        if __key in _backward_interfaces:
+                            continue
+                        _hob_connections[__key] = True
 
                 _filtered_connections = {k: v for k, v in _tmp_connections.items() if k not in _hob_connections}
 
