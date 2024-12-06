@@ -10,8 +10,8 @@
               {% endif %}
           {% endfor %}
           {% for fritzbox_device in fritzbox_devices %}
-              {% if fritzbox_fields | difference(fritzbox_device.config.openwrt.keys()) | length > 0 %}
-                  "{{'<fritzbox_device ' + ( loop.index | string ) + '>'}}: missing fritzbox attribute(s) {{ fritzbox_fields | difference(fritzbox_device.config.openwrt.keys()) }}",
+              {% if fritzbox_fields | difference(fritzbox_device.config.fritzbox.keys()) | length > 0 %}
+                  "{{'<fritzbox_device ' + ( loop.index | string ) + '>'}}: missing fritzbox attribute(s) {{ fritzbox_fields | difference(fritzbox_device.config.fritzbox.keys()) }}",
               {% endif %}
           {% endfor %}
       ]
