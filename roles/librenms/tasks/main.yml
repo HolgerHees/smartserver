@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    librenms_version: '24.10.1'
+    librenms_version: '24.11.0'
   tags: [ 'update_notifier_config' ]    
 
 - name: "create user and group => user or group does not exists"
