@@ -82,9 +82,6 @@ default_variables: {
     #         host: "{{default_server_subnet}}.100",                                                                # ip address
     #         name: "WLan AP Inhouse",                                                                              # device Name will be used in webui for openwrt devices
     #         config: {
-    #             system_service: {   # OPTIONAL used in system_service
-    #                 switch_uplink: "GigabitEthernet1,                                                             # outgoing portname of uplinkport visible in librenms used to avoid loops in network topology of network scanner
-    #             }
     #             librenms: {         # OPTIONAL used in librenms
     #                 snmp_method: "v2c",                                                                           # snmp method (v2, v3)
     #                 snmp_community_string: "intern"                                                               # snmp community string
@@ -407,7 +404,6 @@ default_variables: {
     # **** BEGIN SYSTEM SERVICE                                                        ***
     # Roles:
     # - 'system_service'
-    # Additional related variable 'network_devices' with example is on top of this file
     system_service_enabled:                   { default: yes,                                                       # enabled by default
                                                 requirement: "influxdb_enabled,mosquitto_enabled" },
 
@@ -784,7 +780,6 @@ dlna_volumes:                    "{
 }"
 
 
-system_service_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.system_service','defined') | list}}"
 librenms_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.librenms','defined') | list}}"
 openwrt_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.openwrt','defined') | list}}"
 fritzbox_devices: "{{network_devices | default([]) | selectattr('config', 'defined') | selectattr('config.fritzbox','defined') | list}}"

@@ -286,9 +286,6 @@ class Device(Changeable):
                     continue
 
                 for __connection in _target_device.getHopConnections():
-                    #__target_device = self.cache.getUnlockedDevice(__connection.getTargetMAC())
-                    #if __target_device is None or __target_device.getIP() in switch_uplinks and __connection.getTargetInterface() in switch_uplinks[__target_device.getIP()]:
-                    #    continue
                     _hob_connections["{}:{}".format(__connection.getTargetMAC(),__connection.getTargetInterface())] = True
 
             _filtered_connections = {k: v for k, v in _tmp_connections.items() if k not in _hob_connections}
@@ -298,10 +295,10 @@ class Device(Changeable):
                 connection = list(_filtered_connections.values())[0]
             elif len(_filtered_connections.keys()) > 1:
                 connection = list(_filtered_connections.values())[0]
-                #logging.info("Not able to detect filtered network route of " + str(self) + " " + str(_filtered_connections.keys()))
+                #logging.info("Not able to detect filtered network route of " + str(self) + " " + str(_filtered_connections.keys()) + " => " + str(connection))
             elif len(_tmp_connections) > 0:
                 connection = list(_tmp_connections.values())[0]
-                #logging.info("Not able to detect unfiltered network route of " + str(self) + " " + str(_tmp_connections.keys()))
+                #logging.info("Not able to detect unfiltered network route of " + str(self) + " " + str(_tmp_connections.keys()) + " => " + str(connection))
             else:
                 logging.error("Not able to detect any network route of " + str(self))
 

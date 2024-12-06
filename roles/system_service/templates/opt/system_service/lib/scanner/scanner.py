@@ -139,14 +139,23 @@ class Scanner(threading.Thread):
             if event.getType() == Event.TYPE_DEVICE and event.hasDetail("connection"):
                 has_connection_changes = True
                 break
-        
+
         if has_connection_changes:
             has_connection_changes = False
             self.cache.lock(self)
 
+            _backward_interfaces = {}
+            gateway_device = self.cache.getUnlockedDevice(self.cache.getGatewayMAC())
+            if gateway_device is not None:
+                for _connection in gateway_device.getHopConnections():
+                    _backward_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
+                    if _backward_device is not None:
+                        _backward_interface = _connection.getTargetInterface()
+                        _backward_interfaces[_backward_device.getIP()] = _backward_interface
+
             unprocessed_devices = []
-            for device in self.cache.getDevices():   
-                if device.calculateConnectionPath(self.config.switch_uplinks):
+            for device in self.cache.getDevices():
+                if device.calculateConnectionPath(_backward_interfaces):
                     has_connection_changes = True
                 else:
                     unprocessed_devices.append(device)
