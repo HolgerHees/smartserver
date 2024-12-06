@@ -148,10 +148,7 @@ class Scanner(threading.Thread):
             gateway_device = self.cache.getUnlockedDevice(self.cache.getGatewayMAC())
             if gateway_device is not None:
                 for _connection in gateway_device.getHopConnections():
-                    _backward_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
-                    if _backward_device is not None:
-                        _backward_interface = _connection.getTargetInterface()
-                        _backward_interfaces[_backward_device.getIP()] = _backward_interface
+                    _backward_interfaces[_connection.getTargetMAC()] = _connection.getTargetInterface()
 
             #logging.info(_backward_interfaces)
 

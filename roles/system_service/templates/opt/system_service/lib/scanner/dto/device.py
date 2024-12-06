@@ -237,7 +237,7 @@ class Device(Changeable):
         if not found:
             events.append(Event(self.getEventType(), Event.ACTION_MODIFY, self, ["connection", "connection_helper"]))
         
-    def calculateConnectionPath(self, switch_uplinks):
+    def calculateConnectionPath(self, _backward_interfaces):
         #logging.info("CALCULATE")
 
         if self.getMAC() == self._getCache().getGatewayMAC():
@@ -275,13 +275,12 @@ class Device(Changeable):
             _hob_connections = {}
 
             for _connection in self.getHopConnections():
-                _target_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
-
-                if _target_device is not None and _target_device.getIP() in switch_uplinks and _connection.getTargetInterface() in switch_uplinks[_target_device.getIP()]:
+                if _connection.getTargetMAC() in _backward_interfaces and _connection.getTargetInterface() in _backward_interfaces[_connection.getTargetMAC()]:
                     continue
 
                 _tmp_connections["{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface())] = _connection
 
+                _target_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
                 if _target_device is None:
                     continue
 
