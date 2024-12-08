@@ -18,7 +18,7 @@
       {
         {% for device in openwrt_devices %}
           '{{device.host}}': {
-             'host': '{{device.host}}', 'name': '{{device.name}}', 'is_ap': {{'1' if 'ap' in device.config.openwrt.deployment_roles else '0'}}, 'index': {{loop.index - 1}},
+             'host': '{{device.host}}', 'name': '{{device.name}}', 'sshauth': '{{device.config.openwrt.sshauth | default("password")}}', 'is_ap': {{'1' if 'ap' in device.config.openwrt.deployment_roles else '0'}}, 'index': {{loop.index - 1}},
              'features': [
                {% for feature in default_features %}
                  { 'name': '{{feature}}', 'cfg': 'service_config_{{feature}}'},
@@ -150,6 +150,7 @@
       ]
     hostname: "{{item.name | lower}}"
     is_ap: "{{ item.is_ap }}"
+    sshauth: "{{ item.sshauth }}"
   template:
     src: "templates/deploy.env"
     dest: "{{global_etc}}openwrt/ap/{{item.host}}.env"
