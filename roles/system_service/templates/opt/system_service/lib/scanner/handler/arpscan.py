@@ -369,7 +369,7 @@ class ArpScanner(_handler.Handler):
                 collected_arps.append([ip, mac, dns, info])
         return collected_arps
                 
-    def _possibleOfflineStates(self, stat):
+    def _possibleOfflineStates(self, device, stat):
         now = datetime.now()
  
         validated_last_seen_diff = (now - stat.getValidatedLastSeen()).total_seconds()
@@ -384,7 +384,7 @@ class ArpScanner(_handler.Handler):
         # ping could be unvalidated, means it is only valid until "arp_hard_offline_device_timeout"
         ping_check = validated_last_seen_diff < self.config.arp_hard_offline_device_timeout
         
-        outdated = validated_last_seen_diff > self.config.arp_clean_device_timeout
+        outdated = validated_last_seen_diff > ( 60 * 60 if device.getIP() is None else self.config.arp_clean_device_timeout )
         
         return [outdated, maybe_offline, ping_check]
 
@@ -400,7 +400,7 @@ class ArpScanner(_handler.Handler):
             maybe_offline = True
             ping_check = True
         else:
-            [outdated, maybe_offline, ping_check] = self._possibleOfflineStates(stat)
+            [outdated, maybe_offline, ping_check] = self._possibleOfflineStates(device, stat)
             
             if outdated:
                 self._removeDevice(mac)
@@ -437,7 +437,7 @@ class ArpScanner(_handler.Handler):
                 self.cache.unlock(self)
                 return
             
-            [_, maybe_offline, ping_check] = self._possibleOfflineStates(stat)
+            [_, maybe_offline, ping_check] = self._possibleOfflineStates(device, stat)
             
             if maybe_offline or not ping_check:
                 logging.info("Device {} is offline. Checked with {} in {} seconds".format(device," & ".join(methods),duration))

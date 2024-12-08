@@ -34,7 +34,7 @@ class MQTTPublisher(_handler.Handler):
                     for mac in list(self.published_values.keys()):
                         _device = self.cache.getUnlockedDevice(mac)
                         if _device is None or _device.getIP() != self.published_values[mac]['ip']:
-                            Helper.logInfo("CLEAN values of {}".format(mac))
+                            Helper.logInfo("CLEAN values of mac: {}, device: {}, published: {}".format(mac, device, self.published_values[mac] ))
                             del self.published_values[mac]
                             continue
                         
@@ -68,28 +68,27 @@ class MQTTPublisher(_handler.Handler):
 
     def _publishValues(self, device, stat, changed_details = None):
         mac = device.getMAC()
-        
-        if device.getIP() is None:
-            self.skipped_macs[mac] = True
-            return False
-
         ip = device.getIP()
-        if ip not in self.allowed_details:
-            self.allowed_details[ip] = [] # "wan_type","wan_state"]
-            if ip in self.config.user_devices:
-                self.allowed_details[ip].append("online_state")
+
+        if ip is None:
+            self.skipped_macs[mac] = True
+            return
+
+        allowed_details = ["wan_type","wan_state"]
+        if ip in self.config.user_devices:
+            allowed_details.append("online_state")
         
         _details = []
         if changed_details is None:
-            _details = self.allowed_details[ip]
+            _details = allowed_details
         else:
             for detail in changed_details:
-                if detail not in self.allowed_details[ip]:
+                if detail not in allowed_details:
                     continue
                 _details.append(detail)
                 
         if len(_details) == 0:
-            return False
+            return
 
         _to_publish = {}
         if type(stat) is DeviceStat:
@@ -98,17 +97,15 @@ class MQTTPublisher(_handler.Handler):
                     topic = "network/{}/{}".format(device.getIP(),"online")
                     value = "ON" if stat.isOnline() else "OFF"
                     _to_publish[detail] = [detail,topic,value]
-        #else:
-        #    for detail in _details:
-        #        #if detail == "signal":
-        #        #    self.mqtt.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
-        #        for data in stat.getDataList():
-        #            if detail in ["wan_type","wan_state"] and data.getDetail(detail) is not None:
-        #                topic = "network/{}/{}".format(device.getIP(),detail)
-        #                _to_publish[detail] = [detail,topic,data.getDetail(detail)]
+        else:
+            for detail in _details:
+                for data in stat.getDataList():
+                    if detail in ["wan_type","wan_state"] and data.getDetail(detail) is not None:
+                        topic = "network/{}/{}".format(device.getIP(),detail)
+                        _to_publish[detail] = [detail,topic,data.getDetail(detail)]
                 
         if len(_to_publish.values()) == 0:
-            return False
+            return
 
         _msg = []
         for detail,topic,value in _to_publish.values():
@@ -121,7 +118,8 @@ class MQTTPublisher(_handler.Handler):
                 
         self._wakeup()
 
-        return True
+        if mac in self.skipped_macs:
+            del self.skipped_macs[mac]
     
     def _publishValue(self, mac, ip, detail, topic, value, now):
         if mac not in self.published_values:
@@ -153,13 +151,8 @@ class MQTTPublisher(_handler.Handler):
                         if stat is not None:
                             stats.append(stat)
                         
-                    all_stats_published = True
                     for stat in stats:
-                        if not self._publishValues(device, stat):
-                            all_stats_published = False
-                    if all_stats_published and device.getMAC() in self.skipped_macs:
-                        del self.skipped_macs[device.getMAC()]
-
+                        self._publishValues(device, stat)
             else:
                 stat = event.getObject()
                 device = stat.getUnlockedDevice()
