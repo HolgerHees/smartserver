@@ -1,17 +1,59 @@
 #!/bin/bash
- 
+
+execute() {
+  if [ -z "$1" ]
+  then
+    echo "Nothing to execute"
+    RETCODE=0
+  fi
+
+  COMMAND=$@
+
+  if [ "$SSHAUTH" == "password" ]
+  then
+    echo "Execute " $COMMAND
+    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP $COMMAND
+    RETCODE=$?
+  elif [ "$SSHAUTH" == "publickey" ]
+  then
+    echo "Execute " $COMMAND
+    ssh $HOSTNAME $COMMAND
+    RETCODE=$?
+  else
+    RETCODE=-1
+  fi
+  unset COMMAND
+  return $RETCODE
+}
+
+execute_scp() {
+  if [ "$SSHAUTH" == "password" ]
+  then
+    COMMAND="scp -rp $SOURCE/$IP/* root@$IP:/"
+    echo "Execute " $COMMAND
+    sshpass -f <(printf '%s\n' $PASSWORD) $COMMAND
+  elif [ "$SSHAUTH" == "publickey" ]
+  then
+    COMMAND="scp -rp $SOURCE/$IP/* $HOSTNAME:/"
+    echo "Execute " $COMMAND
+    $COMMAND
+  fi
+
+  unset COMMAND
+}
+
 authenticate() {
   N=5
   for i in $(seq 1 $N); do
-    if [ -z "$PASSWORD" ]
+    if [ "$SSHAUTH" == "password" ]
     then
       echo -n "Enter password": 
       read -s PASSWORD
       echo
     fi
     
-    echo -n "Check password ... "
-    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP /bin/true
+    echo -n "Authenticate ... "
+    execute "/bin/true"
     
     EXIT_CODE=`echo $?`
     
@@ -29,7 +71,7 @@ authenticate() {
     fi
   done
   
-  if [ -z "$PASSWORD" ]
+  if test "$SSHAUTH" == "password" && test -z "$PASSWORD"
   then
     echo "Exit... Got no valid password after $N retries."
     exit
@@ -83,48 +125,49 @@ authenticate
 TZ=`tail -1 "/usr/share/zoneinfo/$TIMEZONE"`
 
 echo "Refresh package lists ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update > /dev/null"
+execute "opkg update > /dev/null"
 
 if [[ "$INSTALL_PACKAGES" != "" ]]; then
   echo "Install packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install" $INSTALL_PACKAGES " > /dev/null"
+  execute "opkg install" $INSTALL_PACKAGES " > /dev/null"
 fi
 
 if [[ "$REMOVE_PACKAGES" != "" ]]; then
   echo "Uninstall packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove" $REMOVE_PACKAGES " > /dev/null"
+  execute "opkg remove" $REMOVE_PACKAGES " > /dev/null"
 fi
 
 if [[ "$IS_AP" == 1 ]]; then
   echo "Install wifi packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl wpad-basic-mbedtls > /dev/null"
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install wpad-wolfssl hostapd-utils > /dev/null"
+  execute "opkg remove wpad-basic-wolfssl wpad-basic-mbedtls > /dev/null"
+  execute "opkg install wpad-wolfssl hostapd-utils > /dev/null"
 
   grep "ieee80211r '1'" "$SOURCE/$IP/etc/config/wireless" > /dev/null
   if [ $? -eq 0 ]; then
     echo "Install roaming packages ..."
-    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install umdns dawn luci-app-dawn > /dev/null"
-    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "[ -f /etc/seccomp/umdns.json ] && mv /etc/seccomp/umdns.json /etc/seccomp/umdns.json.disabled"
+    execute "opkg install umdns dawn luci-app-dawn > /dev/null"
+    execute "[ -f /etc/seccomp/umdns.json ] && mv /etc/seccomp/umdns.json /etc/seccomp/umdns.json.disabled"
   fi
 fi
 
 echo "Copy configs ..."
-sshpass -f <(printf '%s\n' $PASSWORD) scp -rp $SOURCE/$IP/* root@$IP:/
+execute_scp
 
 #authenticate
 
 echo "Apply hostname and timezone ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set system.cfg01e48a.hostname='$HOSTNAME' & uci commit;"
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set system.cfg01e48a.zonename='$TIMEZONE'  & uci set system.cfg01e48a.timezone='$TZ' & uci commit;"
+execute "uci set system.@system[0].hostname='$HOSTNAME' & uci commit system;"
+execute "uci set system.@system[0].zonename='$TIMEZONE' & uci set system.@system[0].timezone='$TZ' & uci commit system & /etc/init.d/system reload;"
 
 echo "Force web redirect ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set uhttpd.main.redirect_https='on' & uci commit;"
+execute "uci set uhttpd.main.redirect_https='on' & uci commit uhttpd;"
 
 if [[ "$ENABLED_SERVICES" != "" ]]; then
-  for SERVICE in "$ENABLED_SERVICES";
+  read -ra SERVICES <<< "$ENABLED_SERVICES"
+  for SERVICE in "${SERVICES[@]}";
   do
     echo "Enable and start $SERVICE ..."
-    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "/etc/init.d/$SERVICE enable & /etc/init.d/$SERVICE start"
+    execute "/etc/init.d/$SERVICE enable & /etc/init.d/$SERVICE start"
   done
 fi
 
@@ -154,7 +197,7 @@ echo
 if [[ $REBOOT =~ ^[Yy]$ ]]
 then
   echo "Rebooting now ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "reboot now"
+  execute "reboot now"
 fi
 
 echo "done"
