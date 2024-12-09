@@ -832,13 +832,13 @@ mx.NetworkStructure = (function( ret )
             .attr("font-family", "sans-serif");
         
         //svg.selectAll("g").remove()
-        
         link = svg.append("g")
                 .classed("links", true)
             .selectAll("path")
                 .data(root.links())
             .join("path")
-                .attr("d", linkGenerator);
+                .attr("d", linkGenerator)
+                .attr("class", function(d){ return "state_" + d.source.data["device"]["connection_state"] } );
                 
         //var tooltip = d3.select("#tooltip");
                         
@@ -897,8 +897,7 @@ mx.NetworkStructure = (function( ret )
 
                 mx.NetworkTooltip.positionTooltip(this.querySelector("rect.container"));
             });
-                
-                
+
         node.append("rect")
             .attr("class", "container")
             .attr("width", box_width)
@@ -990,6 +989,7 @@ mx.NetworkStructure = (function( ret )
         foreignobject.node().setAttribute("data-update", d.data.device.update);
 
         let rect = foreignobject.node().parentNode.querySelector("rect");
+
         rect.setAttribute("class", "container " + d.data.device.type + ( searchTerm && mx.NetworkHelper.isSearchMatch(searchTerm, d.data.device) ? " match" : "" ) );
         let circle = foreignobject.node().parentNode.querySelector("circle");
         circle.setAttribute("class", d.data.device.isOnline ? "online" : "offline");

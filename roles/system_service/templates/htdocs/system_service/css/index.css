@@ -115,6 +115,14 @@ svg g.links path.offline {
     stroke: var(--color-red);
 }
 
+svg g.links path.state_0 {}
+svg g.links path.state_1,
+svg g.links path.state_2,
+svg g.links path.state_3 {
+    stroke-width: 5.0;
+    stroke: red !important;
+}
+
 svg g.nodes foreignObject.traffic:not(.bottom) > div {
     text-align: end;
     height: 100%;

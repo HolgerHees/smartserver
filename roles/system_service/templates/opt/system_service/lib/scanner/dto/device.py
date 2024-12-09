@@ -66,15 +66,16 @@ class Device(Changeable):
         self.info = None
         
         self.hop_connection_map = {}
-        self.connection = None
         self.multi_connections = False
-        
+        self.connection = None
+        self.connection_state = 0
+
         self.services = {}
 
         # internal variables without change detection
         self.virtual_connection = None
         self.supports_wifi = False
-        
+
         self._initPriorizedData([ 
             {"key": "type", "source": "default", "priority": 0, "value": type},
             {"key": "ip"},
@@ -244,13 +245,16 @@ class Device(Changeable):
 
         if self.getMAC() == self._getCache().getGatewayMAC():
             connection = self.getHopConnections()[0]
+            connection_state = 0
         else:
             connection = None
+            connection_state = 3
 
             for _connection in self.getHopConnections():
                 if _connection.getType() == Connection.WIFI:
                     if connection is None:
                         connection = _connection
+                        connection_state = 0
                     else:
                         max_signal = -256
                         stat = self.cache.getUnlockedConnectionStat(connection.getTargetMAC(),connection.getTargetInterface())
@@ -296,11 +300,14 @@ class Device(Changeable):
                 if len(_filtered_connections.keys()) == 1:
                     #logging.info("OK " + self.getIP())
                     connection = list(_filtered_connections.values())[0]
+                    connection_state = 0
                 elif len(_filtered_connections.keys()) > 1:
                     connection = list(_filtered_connections.values())[0]
+                    connection_state = 1
                     #logging.info("Not able to detect filtered network route of " + str(self) + " " + str(_filtered_connections.keys()) + " => " + str(connection))
                 elif len(_tmp_connections) > 0:
                     connection = list(_tmp_connections.values())[0]
+                    connection_state = 2
                     #logging.info("Not able to detect unfiltered network route of " + str(self) + " " + str(_tmp_connections.keys()) + " => " + str(connection))
                 else:
                     logging.error("Not able to detect any network route of " + str(self))
@@ -308,6 +315,7 @@ class Device(Changeable):
         if connection != self.connection:
             self.multi_connections = multi_connections
             self.connection = connection
+            self.connection_state = connection_state
             return True
 
         return True
@@ -336,6 +344,7 @@ class Device(Changeable):
             "info": self.info,
             
             "connection": connection.getSerializeable() if connection else None,
+            "connection_state": self.connection_state,
 
             "services": self.services,
             "details": self._getDetails()
