@@ -130,7 +130,7 @@ class DeviceChecker(threading.Thread):
                         
                     loopIndex += 1
                     if loopIndex == arpRetries:
-                        [_, maybe_offline, _] = self.arpscanner._possibleOfflineStates(self.stat)
+                        [_, maybe_offline, _] = self.arpscanner._possibleOfflineStates(self.device, self.stat)
                         if maybe_offline:
                             logging.info("Device {} is offline. Checked with {} in {} seconds".format(ip_address," & ".join(methods),duration))
                             if self.stat.isOnline():
@@ -384,7 +384,7 @@ class ArpScanner(_handler.Handler):
         # ping could be unvalidated, means it is only valid until "arp_hard_offline_device_timeout"
         ping_check = validated_last_seen_diff < self.config.arp_hard_offline_device_timeout
         
-        outdated = validated_last_seen_diff > ( 60 * 60 if device.getIP() is None else self.config.arp_clean_device_timeout )
+        outdated = validated_last_seen_diff > ( self.config.arp_clean_unknown_device_timeout if device.getIP() is None else self.config.arp_clean_known_device_timeout )
         
         return [outdated, maybe_offline, ping_check]
 
