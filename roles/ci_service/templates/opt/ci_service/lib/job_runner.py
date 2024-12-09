@@ -445,7 +445,10 @@ class JobExecutor():
             self.cleanLogfile()
 
             if self.config.auth_token != "":
-                GitHub.cancelPendingStates(repository_owner, self.config.auth_token, self.current_git_hash, "Build crashed")
+                try:
+                    GitHub.cancelPendingStates(repository_owner, self.config.auth_token, self.current_git_hash, "Build crashed")
+                except Exception as e:
+                    logging.info( traceback.format_exc(), "err" )
 
         self.job_state.setState("finished")
         self.job_state.save()
