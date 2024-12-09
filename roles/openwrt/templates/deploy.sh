@@ -11,13 +11,13 @@ execute() {
 
   if [ "$SSHAUTH" == "password" ]
   then
-    echo "Execute " $COMMAND
-    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP $COMMAND
+    echo "Execute '$COMMAND'"
+    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$SSHHOST $COMMAND
     RETCODE=$?
   elif [ "$SSHAUTH" == "publickey" ]
   then
-    echo "Execute " $COMMAND
-    ssh $HOSTNAME $COMMAND
+    echo "Execute '$COMMAND'"
+    ssh $SSHHOST $COMMAND
     RETCODE=$?
   else
     RETCODE=-1
@@ -29,12 +29,12 @@ execute() {
 execute_scp() {
   if [ "$SSHAUTH" == "password" ]
   then
-    COMMAND="scp -rp $SOURCE/$IP/* root@$IP:/"
+    COMMAND="scp -rp $SOURCE/$IP/* root@$SSHHOST:/"
     echo "Execute " $COMMAND
     sshpass -f <(printf '%s\n' $PASSWORD) $COMMAND
   elif [ "$SSHAUTH" == "publickey" ]
   then
-    COMMAND="scp -rp $SOURCE/$IP/* $HOSTNAME:/"
+    COMMAND="scp -rp $SOURCE/$IP/* $SSHHOST:/"
     echo "Execute " $COMMAND
     $COMMAND
   fi
@@ -43,38 +43,54 @@ execute_scp() {
 }
 
 authenticate() {
-  N=5
-  for i in $(seq 1 $N); do
-    if [ "$SSHAUTH" == "password" ]
-    then
-      echo -n "Enter password": 
-      read -s PASSWORD
-      echo
-    fi
-    
-    echo -n "Authenticate ... "
-    execute "/bin/true"
-    
-    EXIT_CODE=`echo $?`
-    
-    if [ "$EXIT_CODE" -eq 6 ]
-    then
-      echo "unknown key fingerprint."
-      echo "Login manually first"
-      exit
-    elif [ "$EXIT_CODE" -eq 0 ]
-    then
-      echo "ok"
-      break
-    else
-      unset PASSWORD
-    fi
-  done
-  
-  if test "$SSHAUTH" == "password" && test -z "$PASSWORD"
+
+  echo -n "Check auth type ... "
+  if ssh-keygen -F $HOSTNAME > /dev/null; then
+      export SSHHOST="$HOSTNAME"
+  else
+      export SSHHOST="$IP"
+  fi
+
+  ssh -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o ChallengeResponseAuthentication=no $SSHHOST /bin/true 2> /dev/null
+  EXIT_CODE=`echo $?`
+
+  if [ "$EXIT_CODE" -eq 6 ]
   then
-    echo "Exit... Got no valid password after $N retries."
+    echo "Unknown key fingerprint."
+    echo "Login manually first"
     exit
+  elif [ "$EXIT_CODE" -eq 0 ]
+  then
+    echo "publickey"
+  else
+    echo "password"
+    export SSHHOST="$IP"
+    export SSHAUTH="password"
+
+    N=5
+    for i in $(seq 1 $N); do
+      read -p "Enter password: " -s PASSWORD
+      echo
+
+      echo -n "Check authentication ... "
+      execute "/bin/true"
+
+      EXIT_CODE=`echo $?`
+
+      if [ "$EXIT_CODE" -eq 0 ]
+      then
+        echo "Authentication ok"
+        break
+      else
+        unset PASSWORD
+      fi
+    done
+
+    if test -z "$PASSWORD"
+    then
+      echo "Exit... Got no valid password after $N retries."
+      exit
+    fi
   fi
 }
 
@@ -83,10 +99,9 @@ connectivity() {
   for i in $(seq 1 $N); do
     if [ -z "$IP" ]
     then
-      echo -n "Enter IP adress": 
-      read IP
+      read -p "Enter IP adress: " IP
     fi
-    
+
     echo -n "Check connectivity ... "
     ping -c1 -W 1 $IP > /dev/null 2>&1
     if [ $? -eq 0 ]
@@ -98,7 +113,7 @@ connectivity() {
       unset IP
     fi
   done
-  
+
   if [ -z "$IP" ]
   then
     echo "Exit... Got no valid IP address after $N retries."
@@ -190,8 +205,7 @@ fi
 #  fi
 #fi
 
-echo -n "Reboot now? [y/N]": 
-read REBOOT
+read -p "Reboot now? [y/N]: " REBOOT
 echo
 
 if [[ $REBOOT =~ ^[Yy]$ ]]

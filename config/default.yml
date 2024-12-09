@@ -89,7 +89,6 @@ default_variables: {
     #             openwrt: {          # OPTIONAL used in openwrt and system_service
     #                 api_username: "<username>",
     #                 api_password: "<password>",
-    #                 sshauth: "<auth_type>",                                                                            # 'password' or 'publickey' ssh authentication method => default is 'password'
     #                 deployment_roles: ["gateway"],                                                                # 'ap' or 'gateway'
     #                 deployment_features: [ "ipv6-to-host", "softflowd", "ddns" ],
     #                 deployment_install_packages: [ "kmod-usb-net-cdc-ether", "usb-modeswitch", "stress", "procps-ng-watch", "ethtool-full", "xdpdump xdp-filter", "xdp-loader", "luci-ssl", "luci-app-opkg" ],
