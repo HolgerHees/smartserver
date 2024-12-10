@@ -24,6 +24,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/cont-init.d" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/jsondb" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/config" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/persistance" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_log}}openhab" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{database_backup_path}}openhab" }
@@ -275,7 +276,8 @@
         '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:rw',
         '{{global_etc}}openhab/addons:/openhab/addons:rw',
         '{{global_etc}}openhab/python:/openhab/python:rw',
-        '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:rw',
+        '{{global_lib}}openhab/jsondb:/openhab/userdata/config:rw',
+        '{{global_lib}}openhab/config:/openhab/userdata/jsondb:rw',
         '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:rw',
         '{{global_log}}openhab:/openhab/userdata/logs:rw',
         {% for name in conf_folder_result.stdout_lines %}
