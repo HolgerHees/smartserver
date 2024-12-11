@@ -136,8 +136,8 @@ mx.NetworkTooltip = (function( ret )
         Object.entries(device.services).forEach(function([key, value])
         {
             row = { "name": key, "value": value };
-            if( value == "http" ) row["link"] = "http://" + device.dns;
-            else if( value == "https" ) row["link"] = "https://" + device.dns;
+            if( value == "http" ) row["link"] = "http://" + device.ip;
+            else if( value == "https" ) row["link"] = "https://" + device.ip;
             services.push( row );
         });
         
@@ -337,10 +337,19 @@ mx.NetworkTooltip = (function( ret )
         active_tooltip_d = null;
     }
     
+    ret._clickTooltip = function(e)
+    {
+        e.stopPropagation();
+    }
+
     ret.showTooltip = function(device, callback)
     {
         active_tooltip_d = device;
         _buildTooltip(active_tooltip_d, callback);
+
+        let tooltip = mx.Tooltip.getRootElement();
+        tooltip.removeEventListener("click", mx.NetworkTooltip._clickTooltip );
+        tooltip.addEventListener("click", mx.NetworkTooltip._clickTooltip );
     }
     
     ret.toggleTooltip = function(device)
