@@ -156,33 +156,30 @@ class ProcessWatcher(watcher.Watcher):
         if not self.is_reboot_needed_by_core_update:
             self.forced_reboot_state_refresh_after_reboot = None
 
-    def refreshExternalCmdType(self, daemon_job_is_running):
+    def refreshExternalCmdType(self):
         cleaned = False
 
-        if not daemon_job_is_running:
-            # 10 times faster then Processlist.getPids(" |".join( ProcessWatcher.process_mapping.keys()))
-            current_pids = Processlist.getPids()
-            if current_pids is not None:
-                current_pids.sort()
+        # 10 times faster then Processlist.getPids(" |".join( ProcessWatcher.process_mapping.keys()))
+        current_pids = Processlist.getPids()
+        if current_pids is not None:
+            current_pids.sort()
 
-                if current_pids != self.current_pids:
-                    for pid in set(current_pids) - set(self.current_pids):
-                        cmdline = Processlist.getCmdLine(pid)
-                        if not cmdline:
-                            continue
-                        for term in ProcessWatcher.process_mapping:
-                            if "{} ".format(term) in cmdline and not self.operating_system.isRunning(cmdline):
-                                self.external_cmd_pids[pid] = ProcessWatcher.process_mapping[term]
-                        #logging.info("check {} {}".format(pid,cmdline))
+            if current_pids != self.current_pids:
+                for pid in set(current_pids) - set(self.current_pids):
+                    cmdline = Processlist.getCmdLine(pid)
+                    if not cmdline:
+                        continue
+                    for term in ProcessWatcher.process_mapping:
+                        if "{} ".format(term) in cmdline and not self.operating_system.isRunning(cmdline):
+                            self.external_cmd_pids[pid] = ProcessWatcher.process_mapping[term]
+                    #logging.info("check {} {}".format(pid,cmdline))
 
-                    for pid in set(self.current_pids) - set(current_pids):
-                        if pid in self.external_cmd_pids:
-                            del self.external_cmd_pids[pid]
-                            cleaned = True
+                for pid in set(self.current_pids) - set(current_pids):
+                    if pid in self.external_cmd_pids:
+                        del self.external_cmd_pids[pid]
+                        cleaned = True
 
-                self.current_pids = current_pids
-        else:
-            self.current_pids = []
+            self.current_pids = current_pids
 
         if cleaned and len(self.external_cmd_pids) == 0:
             self.event.set()
