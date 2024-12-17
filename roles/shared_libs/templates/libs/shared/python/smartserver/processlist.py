@@ -95,8 +95,9 @@ class Processlist():
             hid, hsub, cgroup = line.split(':')
             if cgroup.startswith("/system.slice/"):
                 name = cgroup[14:]
-                if name.endswith('.service'):
-                    return name[:-8]
+                service_index = name.find('.service')
+                if service_index != -1:
+                    return name[:service_index]
         return None
 
     @staticmethod
@@ -111,10 +112,15 @@ class Processlist():
         # inspired by https://github.com/stdevel/yum-plugin-needs-restarting/blob/master/needs-restarting.py
         for line in smaps:
             slash = line.find('/')
-            if slash == -1 or line.find(' 00:') != -1: # if we don't have a '/' or if we fine 00: in the file then it's not _REALLY_ a file
+            if slash == -1: # or line.find(' 00:') != -1: # if we don't have a '/' or if we fine 00: in the file then it's not _REALLY_ a file
                 continue
             line = line.replace('\n', '')
             filename = line[slash:]
+
+            #7fa1f04ac000-7fa1f04ad000 rw-s 00000000 00:12 60518                      /[aio] (deleted)
+            if filename[0:2] == "/[":
+                continue
+
             filename = filename.split(';')[0]
             filename = filename.strip()
             if filename[-9:] != "(deleted)":
@@ -169,14 +175,14 @@ class Processlist():
         #start = time.time()
         outdated_pids = set()
         for pid in Processlist.getPids():
+            #files = Processlist._getOpenFiles(pid)
+            #if len(files) > 0:
+            #    logging.info(pid)
+            #    logging.info(files)
             for fn in Processlist._getOpenFiles(pid):
-                if re.search('^(?!.*/(tmp|var|run)).*$', fn):
+                if re.search('^(?!.*/(tmp|var|run|dev)).*$', fn):
                     outdated_pids.add(pid)
                     break
-
-        #logging.info(outdated_pids)
-        #end = time.time()
-        #logging.info(end-start)
 
         outdated = {}
         if len(outdated_pids) > 0:
