@@ -55,15 +55,21 @@ class DeviceChecker(threading.Thread):
             self.offlineArpRetries =  1
         else:
             # needed for multiple calls of 'knock' during offline check time
-            self.offlineArpRetries =  int( math.floor( (timeout / 4) * 1 / 10 ) )
-          
-        # needed for multiple calls of 'ping' and 'knock' during online check time
-        self.onlineArpRetries =  int( math.floor( (timeout / 4) * 3 / 10 ) )
+            #self.offlineArpRetries =  int( math.floor( (timeout / 4) * 1 / 10 ) )
+            self.offlineArpRetries =  3
 
-        self.onlineArpCheckTime = int( math.floor( (timeout / 4) * 3 / self.onlineArpRetries ) )
-        self.offlineArpCheckTime = int( math.floor( (timeout / 4) * 1 / self.offlineArpRetries ) )
-        self.onlineSleepTime = timeout - (self.onlineArpRetries * self.onlineArpCheckTime)
-        self.offlineSleepTime = timeout - (self.offlineArpRetries * self.offlineArpCheckTime)
+        # needed for multiple calls of 'ping' and 'knock' during online check time
+        self.onlineArpRetries =  10
+
+        self.onlineArpCheckTime = int( math.floor( (timeout / self.onlineArpRetries ) ) )
+        #self.onlineSleepTime = timeout - (self.onlineArpRetries * self.onlineArpCheckTime)
+        self.onlineSleepTime = 60
+
+        #self.offlineArpCheckTime = int( math.floor( (timeout / self.offlineArpRetries ) ) )
+        self.offlineArpCheckTime = 10
+        #self.offlineSleepTime = timeout - (self.offlineArpRetries * self.offlineArpCheckTime)
+        self.offlineSleepTime = 300
+
 
         #self.lastSeen = datetime(1, 1, 1, 0, 0)
         #self.lastPublished = datetime(1, 1, 1, 0, 0)
@@ -106,7 +112,7 @@ class DeviceChecker(threading.Thread):
                     if self.type != "android":
                         AddressHelper.knock(self.address_family,ip_address)
                         time.sleep(0.05)
-                        
+
                     methods = ["arping"]
                     answering_mac = Helper.getMacFromArpPing(ip_address, self.interface, timeout, self._isRunning)
                     if answering_mac is None and self.stat.isOnline():
