@@ -70,6 +70,7 @@ class DeviceChecker(threading.Thread):
         #self.offlineSleepTime = timeout - (self.offlineArpRetries * self.offlineArpCheckTime)
         self.offlineSleepTime = 300
 
+        self.is_online = self.stat.isOnline()
 
         #self.lastSeen = datetime(1, 1, 1, 0, 0)
         #self.lastPublished = datetime(1, 1, 1, 0, 0)
@@ -91,15 +92,20 @@ class DeviceChecker(threading.Thread):
                     logging.warning("Resume DeviceChecker")
                     is_supended = False
                 
-                sleepTime = self.onlineSleepTime if self.stat.isOnline() else self.offlineSleepTime
+                sleepTime = self.onlineSleepTime if self.is_online else self.offlineSleepTime
                 
                 self.event.wait(sleepTime)
+                self.event.clear()
                     
                 if not self._isRunning():
                     break
-                
-                timeout = self.onlineArpCheckTime if self.stat.isOnline() else self.offlineArpCheckTime
-                arpRetries = self.onlineArpRetries if self.stat.isOnline() else self.offlineArpRetries
+
+                if self.is_online:
+                    timeout = self.onlineArpCheckTime
+                    arpRetries = self.onlineArpRetries
+                else:
+                    timeout = self.offlineArpCheckTime
+                    arpRetries = self.offlineArpRetries
                     
                 startTime = datetime.now()
                 
@@ -115,7 +121,7 @@ class DeviceChecker(threading.Thread):
 
                     methods = ["arping"]
                     answering_mac = Helper.getMacFromArpPing(ip_address, self.interface, timeout, self._isRunning)
-                    if answering_mac is None and self.stat.isOnline():
+                    if answering_mac is None and self.is_online:
                         methods.append("ping")
                         answering_mac = Helper.getMacFromPing(ip_address, timeout, self._isRunning)
                         
@@ -146,6 +152,8 @@ class DeviceChecker(threading.Thread):
                                 self.cache.confirmStat( self, self.stat )
                                 self.cache.unlock(self)
                         break
+
+                self.is_online = self.stat.isOnline()
                     
             except Exception as e:
                 self.cache.cleanLocks(self, events)
@@ -158,11 +166,13 @@ class DeviceChecker(threading.Thread):
                 
             if is_supended:
                 self.event.wait(900)
+                self.event.clear()
 
         logging.info("Device checker for {} stopped".format(self.device))
 
     def wakeup(self):
         self.event.set()
+        self.is_online = True
 
     def terminate(self):
         self.is_running = False
