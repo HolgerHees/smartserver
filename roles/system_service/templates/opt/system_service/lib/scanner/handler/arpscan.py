@@ -83,6 +83,7 @@ class DeviceChecker(threading.Thread):
                     arpRetries = 10
                     timeout = int( math.floor( (self.timeout / arpRetries ) ) )
                 else:
+                    # non android devices neededs more retries because of for multiple calls of 'knock' during offline check time
                     arpRetries = 1 if self.type == "android" else 3
                     timeout = 10
                     
