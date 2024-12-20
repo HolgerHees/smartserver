@@ -80,8 +80,9 @@ class DeviceChecker(threading.Thread):
                     self.longCheck = True
 
                 if self.longCheck:
-                    arpRetries = 10
-                    timeout = int( math.floor( (self.timeout / arpRetries ) ) )
+                    arpRetries = 5
+                    # divided by 2, because the timeout is applied twice. One time for arpping and one time for normal ping
+                    timeout = int( math.floor( (self.timeout / arpRetries / 2 ) ) )
                 else:
                     # non android devices neededs more retries because of for multiple calls of 'knock' during offline check time
                     arpRetries = 1 if self.type == "android" else 3
@@ -152,7 +153,6 @@ class DeviceChecker(threading.Thread):
 
     def wakeup(self):
         self.event.set()
-        self.longCheck = True
 
     def terminate(self):
         self.is_running = False
@@ -340,7 +340,7 @@ class ArpScanner(_handler.Handler):
                     for device in self.cache.getDevices():
                         if device.getMAC() in refreshed_macs:
                             continue
-                        self._checkDevice(device)
+                        self._checkDevice(device, False)
                 
                 except Exception as e:
                     self.cache.cleanLocks(self)
@@ -387,12 +387,12 @@ class ArpScanner(_handler.Handler):
         
         return [outdated, maybe_offline, ping_check]
 
-    def _checkDevice(self, device, force = False):
+    def _checkDevice(self, device, force_maybe_offline = False):
         mac = device.getMAC()
         
         # UserIP's should be delegated to DeviceChecker
         if mac in self.registered_devices and self.registered_devices[mac] is not None:
-            if force:
+            if force_maybe_offline:
                 self.registered_devices[mac].wakeup()
             return
 
@@ -401,7 +401,7 @@ class ArpScanner(_handler.Handler):
             logging.info("Can't check device {}. Stat is missing.".format(device))
             return
  
-        if force:
+        if force_maybe_offline:
             maybe_offline = True
             ping_check = True
         else:
@@ -473,7 +473,8 @@ class ArpScanner(_handler.Handler):
         
         if mac not in self.registered_devices:
             self.registered_devices[mac] = None
-        elif self.registered_devices[mac] is not None:
+
+        if self.registered_devices[mac] is not None:
             return
         
         if device.getIP() in self.config.user_devices:
