@@ -161,6 +161,9 @@ class DeviceChecker(threading.Thread):
 
         logging.info("Device checker for {} stopped".format(self.device))
 
+    def wakeup(self):
+        self.event.set()
+
     def terminate(self):
         self.is_running = False
         self.event.set()
@@ -405,6 +408,11 @@ class ArpScanner(_handler.Handler):
         if force:
             maybe_offline = True
             ping_check = True
+
+            # State checke delegated to DeviceChecker
+            if mac in self.registered_devices and self.registered_devices[mac] is not None:
+                self.registered_devices[mac].wakeup()
+                return
         else:
             [outdated, maybe_offline, ping_check] = self._possibleOfflineStates(device, stat)
             
@@ -479,8 +487,7 @@ class ArpScanner(_handler.Handler):
         
         if mac not in self.registered_devices:
             self.registered_devices[mac] = None
-            
-        if self.registered_devices[mac] is not None:
+        elif self.registered_devices[mac] is not None:
             return
         
         if device.getIP() in self.config.user_devices:
