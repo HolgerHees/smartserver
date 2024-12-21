@@ -240,7 +240,7 @@ class ProviderConsumer():
             end = datetime.now()
             start = end.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            result["currentRainLast15MinInMillimeter"] = 0
+            result["currentRainRateInMillimeterPerHour"] = 0
             result["currentRainLastHourInMillimeter"] = 0
             result["currentRainLevel"] = 0
 
@@ -265,9 +265,9 @@ class ProviderConsumer():
         elif currentRainLevel > 0:
             if self.current_is_raining or currentRainLevel > 2:
                 currentRain = 0.1
-                currentRain15Min = self.station_values["currentRainLast15MinInMillimeter"]
-                if currentRain15Min * 4 > currentRain:
-                    currentRain = currentRain15Min * 4
+                currentRainRatePerHour = self.station_values["currentRainRateInMillimeterPerHour"]
+                if currentRainRatePerHour > currentRain:
+                    currentRain = currentRainRatePerHour
 
                 currentRain1Hour = self.station_values["currentRainLastHourInMillimeter"]
                 if currentRain1Hour > currentRain:
@@ -299,7 +299,7 @@ class ProviderConsumer():
     def notifyCurrentValue(self, field, value):
         self.handler.notifyChangedCurrentData(field, value)
 
-        if field in ["currentRainLevel", "currentRainLast15MinInMillimeter", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
+        if field in ["currentRainLevel", "currentRainRateInMillimeterPerHour", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
             if self.station_cloud_timer is not None:
                 self.station_cloud_timer.cancel()
             self.station_cloud_timer = threading.Timer(15, self._notifyCloudValue)
@@ -347,7 +347,7 @@ class ProviderConsumer():
 
         result["currentCloudsAsSVG"] = self.station_cloud_svg
 
-        is_raining = result["currentRainLast15MinInMillimeter"] > 0 or result["currentRainLastHourInMillimeter"] > 0 or result["currentRainLevel"] > 0
+        is_raining = result["currentRainLevel"] > 0 or result["currentRainLastHourInMillimeter"] > 0
         result["currentRainProbabilityInPercent"] = 0 if self.current_values is None or not is_raining else self.current_values["precipitationProbabilityInPercent"]
         result["currentSunshineDurationInMinutes"] = 0 if self.current_values is None else self.current_values["sunshineDurationInMinutes"]
         return result

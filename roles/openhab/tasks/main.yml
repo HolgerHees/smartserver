@@ -1,6 +1,6 @@
 - name: set openhab version
   set_fact:
-    openhab_version: "4.2.3"
+    openhab_version: "4.3.0"
   tags: [ 'update_notifier_config' ]
 
 - name: "create user and group => user or group does not exists"
@@ -26,6 +26,7 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/jsondb" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/config" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/persistance" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab/homeconnectdirect" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_log}}openhab" }
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{database_backup_path}}openhab" }
   include_tasks: roles/_shared/create_directories.yml
@@ -137,9 +138,6 @@
     rsync_opts:
       - "--chown={{system_users['openhab'].name}}:{{system_groups['openhab'].name}}"
       - "--chmod=D750,F640"
-#    group: yes
-#    owner: yes
-#    perms: yes
     recursive: yes
 
 # SERVICES
@@ -154,9 +152,6 @@
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D755,F644"
-#    group: yes
-#    owner: yes
-#    perms: yes
     recursive: yes
   changed_when: no
 
@@ -217,10 +212,6 @@
   changed_when: no
   failed_when: no
   
-#- name:
-#  debug:
-#    msg: "{{device_result}}"
-
 - name: prepare device javaopts
   set_fact:
     openhab_device_java_opts: "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
@@ -240,6 +231,7 @@
   with_indexed_items: "{{device_result.stdout_lines}}"
   when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
   
+# conf volumens must be mounted seperatly, because openhab has problems internaly to follow symlinks
 - name: check conf volumens
   shell: "ls -1 {{global_etc}}openhab/conf"
   register: conf_folder_result
@@ -261,29 +253,35 @@
       GROUP_ID: "{{system_groups['openhab'].id}}"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
       EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
-      #EXTRA_SHELL_OPTS: "-x"
-      #EXTRA_SHELL_OPTS: "-v"
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
       CRYPTO_POLICY: "unlimited"
+#      OPENHAB_LOGDIR: "/openhab/logs"
     # all volumes needs to writeable, because openhab runs chown on OPENHAB_HOME
 #    container_devices: "{{openhab_device_mounts | default([])}}"
     container_privileged: yes
     container_volumes: |
       [
         '/dev:/dev:rw',
-        '{{global_etc}}openhab/cont-init.d:/etc/cont-init.d:rw',
+
         '{{projects_path}}openhab_config:{{projects_path}}openhab_config:rw',
         '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:rw',
+
+        '{{global_etc}}openhab/cont-init.d:/etc/cont-init.d:rw',
         '{{global_etc}}openhab/addons:/openhab/addons:rw',
         '{{global_etc}}openhab/python:/openhab/python:rw',
-        '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:rw',
+
         '{{global_lib}}openhab/config:/openhab/userdata/config:rw',
+        '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:rw',
+        '{{global_lib}}openhab/homeconnectdirect:/openhab/userdata/homeconnectdirect:rw',
         '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:rw',
+
         '{{global_log}}openhab:/openhab/userdata/logs:rw',
+
         {% for name in conf_folder_result.stdout_lines %}
             '{{global_etc}}openhab/conf/{{name}}:/openhab/conf/{{name}}:rw',
         {% endfor %}
       ]
+#        '{{global_etc}}openhab/conf:/openhab/conf:rw',
     container_timeout_stop_sec: 60
     container_after: [ "mariadb", "influxdb", "mosquitto" ]
     container_readyness: { "type": "port_check", "ip": "127.0.0.1", "port": "8080" }
