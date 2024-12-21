@@ -1,6 +1,6 @@
 RewriteCond %{HTTP:Connection} Upgrade [NC]
 RewriteCond %{HTTP:Upgrade} websocket [NC]
-RewriteRule /rest/(.*) ws://openhab:8080/rest/$1 [P,L]
+RewriteRule /(.*) ws://openhab:8080/$1 [P,L]
 
 ProxyTimeout 3000
 RemoteIPHeader X-Forwarded-For
