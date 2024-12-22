@@ -139,9 +139,9 @@ mx.WeatherCore = (function( ret ) {
             mx.$(".current .summary .wind .value").innerHTML = wind + ' km/h';
         }
 
-        if( "currentRainLastHourInMillimeter" in changed_data || "currentRainDailyInMillimeter" in changed_data )
+        if( "currentRainRateInMillimeterPerHour" in changed_data || "currentRainDailyInMillimeter" in changed_data )
         {
-            let rainValue = mx.WeatherHelper.formatNumber(data["currentRainLastHourInMillimeter"]);
+            let rainValue = mx.WeatherHelper.formatNumber(data["currentRainRateInMillimeterPerHour"]);
             let rainDaily = mx.WeatherHelper.formatNumber(data["currentRainDailyInMillimeter"]);
             let rain = rainValue
             if( rainValue != rainDaily && data["currentRainDailyInMillimeter"] > 0 )

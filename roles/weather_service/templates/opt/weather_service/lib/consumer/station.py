@@ -26,6 +26,25 @@ class StationConsumer():
 
         self.provider_consumer = provider_consumer
 
+        self.valid_mqtt_topic = [
+            "cloudCoverInOcta",
+            "rainLevel",
+            "rainDailyInMillimeter",
+            "rainLastHourInMillimeter",
+            "rainRateInMillimeterPerHour",
+            "windDirectionInDegree",
+            "windSpeedInKilometerPerHour",
+            "windGustInKilometerPerHour",
+            "dewpointInCelsius",
+            "airTemperatureInCelsius",
+            "airHumidityInPercent",
+            "perceivedTemperatureInCelsius",
+            "pressureInHectopascals",
+            "solarRadiationInWatt",
+            "lightLevelInLux",
+            "uvIndex"
+        ]
+
     def start(self):
         self._restore()
         if not os.path.exists(self.dump_path):
@@ -41,7 +60,7 @@ class StationConsumer():
     def _restore(self):
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
-            self.station_values = data["station_values"]
+            self.station_values = {k: v for k, v in data["station_values"].items() if k in self.valid_mqtt_topic}
             for key, data in self.station_values.items():
                 key = "current{}{}".format(key[0].upper(),key[1:])
                 self.provider_consumer.notifyStationValue(False, key, data["value"], data["time"] )
@@ -62,6 +81,9 @@ class StationConsumer():
         value = msg.payload.decode("utf-8")
         value = float(value) if "." in value else int(value)
         field = topic[3]
+
+        if field not in self.valid_mqtt_topic:
+            return
 
         if field not in self.station_values or self.station_values[field]["value"] != value:
             self.provider_consumer.notifyStationValue(True, "current{}{}".format(field[0].upper(),field[1:]), value, time.time() )
