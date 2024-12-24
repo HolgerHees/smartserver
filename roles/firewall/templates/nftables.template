@@ -7,7 +7,7 @@ table bridge filter {
         {%- if 'daddr' in rule %}ip daddr {{ rule['daddr'] if rule['daddr'] is string else '{ ' + rule['daddr'] | join(', ') + ' }' }} {% endif %}
         {%- if 'dport' in rule %}th dport {{ rule['dport'] if rule['dport'] is string else '{ ' + rule['dport'] | join(', ') + ' }' }} {% endif %}
         {%- if 'dport' not in rule and 'protocol' in rule %}ip protocol {{ rule['protocol'] }} {% endif %}
-        {%- if true %}accept comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
+        {%- if true %}{{ rule['type'] if 'type' in rule else 'accept' }} comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
 
 {% endfor %}
     }
@@ -24,7 +24,7 @@ table inet filter {
         {%- if 'dport' in rule %}th dport {{ rule['dport'] if rule['dport'] is string else '{ ' + rule['dport'] | join(', ') + ' }' }} {% endif %}
         {%- if 'dport' not in rule and 'protocol' in rule %}ip protocol {{ rule['protocol'] }} {% endif %}
         {%- if 'iif' in rule %}iif "{{ rule['iif'] }}" {% endif %}
-        {%- if true %}accept comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
+        {%- if true %}{{ rule['type'] if 'type' in rule else 'accept' }} comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
 
 {% endfor %}
     }
@@ -39,7 +39,7 @@ table inet filter {
         {%- if 'dport' in rule %}th dport {{ rule['dport'] if rule['dport'] is string else '{ ' + rule['dport'] | join(', ') + ' }' }} {% endif %}
         {%- if 'dport' not in rule and 'sport' not in rule and 'protocol' in rule %}ip protocol {{ rule['protocol'] }} {% endif %}
         {%- if 'oif' in rule %}oif "{{ rule['oif'] }}" {% endif %}
-        {%- if true %}accept comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
+        {%- if true %}{{ rule['type'] if 'type' in rule else 'accept' }} comment "{{rule_name}}: {{ rule['comment'] }}"{% endif %}
 
 {% endfor %}
     }
