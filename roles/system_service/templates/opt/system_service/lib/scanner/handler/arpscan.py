@@ -371,7 +371,7 @@ class ArpScanner(_handler.Handler):
     def _possibleOfflineStates(self, device, stat):
         now = datetime.now()
  
-        validated_last_seen_diff = (now - stat.getValidatedLastSeen() if stat.isValidated() else stat.getUnvalidatedLastSeen()).total_seconds()
+        validated_last_seen_diff = (now - (stat.getValidatedLastSeen() if stat.isValidated() else stat.getUnvalidatedLastSeen())).total_seconds()
         unvalidated_last_seen_diff = (now - stat.getUnvalidatedLastSeen()).total_seconds()
         
         # maybe offline if unvalidated check (arpping or ping) was older then "arp_soft_offline_device_timeout"
