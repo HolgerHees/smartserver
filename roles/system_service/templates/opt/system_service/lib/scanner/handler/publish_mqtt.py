@@ -34,7 +34,7 @@ class MQTTPublisher(_handler.Handler):
                     for mac in list(self.published_values.keys()):
                         _device = self.cache.getUnlockedDevice(mac)
                         if _device is None or _device.getIP() != self.published_values[mac]['ip']:
-                            Helper.logInfo("CLEAN values of mac: {}, device: {}, published: {}".format(mac, device, self.published_values[mac] ))
+                            Helper.logInfo("CLEAN values of mac: {}, device: {}, published: {}".format(mac, _device, self.published_values[mac] ))
                             del self.published_values[mac]
                             continue
                         

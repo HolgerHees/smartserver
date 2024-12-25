@@ -13,7 +13,7 @@ class DeviceStat(Changeable):
         self.offline_since = datetime.now()
         
         # internal variables without change detection
-        self.last_validated_seen = datetime.now()
+        self.last_validated_seen = None
         self.last_unvalidated_seen = datetime.now()
         
     def getEventType(self):
@@ -45,6 +45,9 @@ class DeviceStat(Changeable):
             
     def isOnline(self):
         return self.offline_since is None
+
+    def isValidated(self):
+        return self.last_validated_seen is not None
 
     def getValidatedLastSeen(self):
         return self.last_validated_seen
