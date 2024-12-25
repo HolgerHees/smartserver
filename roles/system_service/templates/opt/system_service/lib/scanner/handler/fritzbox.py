@@ -280,10 +280,14 @@ class Fritzbox(_handler.Handler):
                         self.cache.confirmDevice( self, device )
                         
                         # mark as online for new clients or if it is not a user device (is checked in arpscan)
-                        if mac not in self.wifi_clients[fritzbox_ip] or device.getIP() is None or device.getIP() not in self.config.user_devices:
+                        #if mac not in self.wifi_clients[fritzbox_ip] or device.getIP() is None or device.getIP() not in self.config.user_devices:
+                        #    stat = self.cache.getDeviceStat(mac)
+                        #    stat.setLastSeen(False) # because no IP validation
+                        #    #stat.setOnline(True)
+                        #    self.cache.confirmStat( self, stat )
+                        if mac not in self.wifi_clients[fritzbox_ip]:
                             stat = self.cache.getDeviceStat(mac)
                             stat.setLastSeen(False) # because no IP validation
-                            #stat.setOnline(True)
                             self.cache.confirmStat( self, stat )
 
                         stat = self.cache.getConnectionStat(target_mac,target_interface)
