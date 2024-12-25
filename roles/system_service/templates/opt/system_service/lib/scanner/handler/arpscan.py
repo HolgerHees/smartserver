@@ -400,9 +400,6 @@ class ArpScanner(_handler.Handler):
         if stat is None:
             logging.info("Can't check device {}. Stat is missing.".format(device))
             return
-
-        if not stat.isValidated():
-            return
  
         if force_maybe_offline:
             maybe_offline = True
@@ -414,7 +411,10 @@ class ArpScanner(_handler.Handler):
                 return
 
         if maybe_offline:
-            if device.getIP() is not None and ping_check:
+            if not stat.isValidated() or device.getIP() in self.config.disabled_active_scans_for_ips:
+                logging.info("Device {} is offline. No active checks applied".format(device))
+
+            elif device.getIP() is not None and ping_check:
                 check_thread = threading.Thread(target=self._pingDevice, args=(device, stat, ))
                 check_thread.start()
                 return

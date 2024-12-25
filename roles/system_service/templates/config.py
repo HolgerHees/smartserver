@@ -69,7 +69,6 @@ arp_hard_offline_device_timeout = 900
 arp_clean_known_device_timeout = 60 * 60 * 24 * 7
 arp_clean_unknown_device_timeout = 60 * 60
 
-
 openwrt_network_interval = 900
 openwrt_client_interval = 60
 
@@ -94,6 +93,8 @@ user_devices = {
 {% endif %}
 {% endfor %}
 }
+
+disabled_active_scans_for_ips = [{% if system_service_disable_active_scans_for_ips|length > 0 %}"{{system_service_disable_active_scans_for_ips | join('","') }}"{% endif %}]
 
 fping_test_hosts = [ {% for host in system_service_fping_test_hosts %}"{{host}}", {% endfor %}{% if cloud_vpn is defined %}{% for peer in cloud_vpn.peers %}"{{cloud_vpn.peers[peer].host}}", {% endfor %}{% endif %} ]
 

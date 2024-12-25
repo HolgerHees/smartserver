@@ -444,6 +444,9 @@ default_variables: {
     # 'target' is a combination of the target ip and port number
     system_service_speedtest_server_id:       { default: "auto",                                                    # used for speedtest
                                                 dependency: "{{system_service_enabled}}" },
+
+    system_service_disable_active_scans_for_ips:  { default: [],                                                    # used for 'silent' devices like nuki to avoid wakeups
+                                                dependency: "{{system_service_enabled}}" },
     # **** END SYSTEM SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
