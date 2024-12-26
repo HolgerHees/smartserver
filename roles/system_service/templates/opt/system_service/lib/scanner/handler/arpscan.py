@@ -249,6 +249,7 @@ class ArpScanner(_handler.Handler):
     def __init__(self, config, cache ):
         super().__init__(config,cache)
         
+        self.lock = threading.Lock()
         self.registered_devices = {}
 
         self.dhcp_listener = DHCPListener(self, self.cache, self.config.main_interface)
@@ -260,9 +261,10 @@ class ArpScanner(_handler.Handler):
 
     def terminate(self):
         self.dhcp_listener.terminate()
-        for mac in self.registered_devices:
-            if self.registered_devices[mac] is not None:
-                self.registered_devices[mac].terminate()
+        with self.lock:
+            for mac in self.registered_devices:
+                if self.registered_devices[mac] is not None:
+                    self.registered_devices[mac].terminate()
         super().terminate()
 
     def _run(self):
@@ -302,33 +304,34 @@ class ArpScanner(_handler.Handler):
                     
                     self.cache.lock(self)
                     
-                    refreshed_macs = []
-                    for entry in processed_macs.values():
-                        mac = entry["mac"]
-                        device = self.cache.getDevice(mac)
-                        device.setIP("arpscan", 1, entry["ip"])
-                        device.setDNS("nslookup", 1, entry["dns"])
-                        device.setInfo(entry["info"])
+                    with self.lock:
+                        refreshed_macs = []
+                        for entry in processed_macs.values():
+                            mac = entry["mac"]
+                            device = self.cache.getDevice(mac)
+                            device.setIP("arpscan", 1, entry["ip"])
+                            device.setDNS("nslookup", 1, entry["dns"])
+                            device.setInfo(entry["info"])
+                            self.cache.confirmDevice( self, device )
+
+                            self._refreshDevice( device, True)
+                            refreshed_macs.append(mac)
+
+                        device = self.cache.getDevice(server_mac)
+                        device.setIP("arpscan", 1, self.config.server_ip)
+                        device.setDNS("nslookup", 1, self.config.server_domain)
+                        device.setInfo(self.config.server_name)
                         self.cache.confirmDevice( self, device )
-                                            
+
                         self._refreshDevice( device, True)
-                        refreshed_macs.append(mac)
-                                    
-                    device = self.cache.getDevice(server_mac)
-                    device.setIP("arpscan", 1, self.config.server_ip)
-                    device.setDNS("nslookup", 1, self.config.server_domain)
-                    device.setInfo(self.config.server_name)
-                    self.cache.confirmDevice( self, device )
-                        
-                    self._refreshDevice( device, True)
-                    refreshed_macs.append(server_mac)
+                        refreshed_macs.append(server_mac)
 
-                    self.cache.unlock(self)
+                        self.cache.unlock(self)
 
-                    for device in self.cache.getDevices():
-                        if device.getMAC() in refreshed_macs:
-                            continue
-                        self._cleanDevice(device)
+                        for device in self.cache.getDevices():
+                            if device.getMAC() in refreshed_macs:
+                                continue
+                            self._cleanDevice(device)
                 
                 except Exception as e:
                     self.cache.cleanLocks(self)
@@ -410,7 +413,8 @@ class ArpScanner(_handler.Handler):
                 else:
                     logging.info("Device {} is online. Checked with {} in {} seconds".format(device," & ".join(methods),duration))
                     self.cache.lock(self)
-                    self._refreshDevice(device, True)
+                    with self.lock:
+                        self._refreshDevice(device, True)
                     self.cache.unlock(self)
 
         except Exception as e:
@@ -439,7 +443,8 @@ class ArpScanner(_handler.Handler):
             self.registered_devices[mac].start()
 
     def _stopDeviceChecker(self, device):
-        self.registered_devices[mac] = None
+        with self.lock:
+            self.registered_devices[mac] = None
 
     def _setDeviceOnline(self,stat,flag):
         if stat.isOnline() == flag:
@@ -476,22 +481,23 @@ class ArpScanner(_handler.Handler):
         disabled_devices = []
         unregistered_devices = []
 
-        for event in events:
-            device = event.getObject()
+        with self.lock:
+            for event in events:
+                device = event.getObject()
 
-            connection = device.getConnection()
-            if event.hasDetail("connection") and (connection is None or not connection.isEnabled()):
-                disabled_devices.append(device)
-            elif device.getMAC() not in self.registered_devices:
-                unregistered_devices.append(device)
+                connection = device.getConnection()
+                if event.hasDetail("connection") and (connection is None or not connection.isEnabled()):
+                    disabled_devices.append(device)
+                elif device.getMAC() not in self.registered_devices:
+                    unregistered_devices.append(device)
 
-        if len(disabled_devices) > 0:
-            for device in set(disabled_devices):
-                logging.info("Recheck device {}".format(device))
-                self._checkDevice(device)
-        
-        if len(unregistered_devices) > 0:
-            for device in set(unregistered_devices):
-                logging.info("Check lazy device {}".format(device))
-                self._checkDevice(device)
+            if len(disabled_devices) > 0:
+                for device in set(disabled_devices):
+                    logging.info("Recheck device {}".format(device))
+                    self._checkDevice(device)
+
+            if len(unregistered_devices) > 0:
+                for device in set(unregistered_devices):
+                    logging.info("Check lazy device {}".format(device))
+                    self._checkDevice(device)
             
