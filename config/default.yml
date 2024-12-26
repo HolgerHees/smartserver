@@ -445,7 +445,7 @@ default_variables: {
     system_service_speedtest_server_id:       { default: "auto",                                                    # used for speedtest
                                                 dependency: "{{system_service_enabled}}" },
 
-    system_service_disable_active_scans_for_ips:  { default: [],                                                    # used for 'silent' devices like nuki to avoid wakeups
+    system_service_silent_device_macs:        { default: [],                                                        # list of mac addresses from devices, which should never be pinged... used for 'silent' devices like nuki to avoid wakeups
                                                 dependency: "{{system_service_enabled}}" },
     # **** END SYSTEM SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

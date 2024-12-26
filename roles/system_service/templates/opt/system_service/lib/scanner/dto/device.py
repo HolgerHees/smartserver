@@ -113,6 +113,10 @@ class Device(Changeable):
         self._checkLock()
         self._removePriorizedData("ip", source)
 
+    def clearIP(self):
+        self._checkLock()
+        self._clearPriorizedData("ip")
+
     def hasIP(self,source):
         return self._hasPriorizedData("ip", source)
 

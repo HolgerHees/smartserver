@@ -64,10 +64,8 @@ cache_ip_dns_revalidation_interval = 900
 cache_ip_mac_revalidation_interval = 900
 
 arp_scan_interval = 60
-arp_soft_offline_device_timeout = 60
-arp_hard_offline_device_timeout = 900
-arp_clean_known_device_timeout = 60 * 60 * 24 * 7
-arp_clean_unknown_device_timeout = 60 * 60
+arp_offline_timeout = 900
+arp_clean_timeout = 60 * 60 * 24
 
 openwrt_network_interval = 900
 openwrt_client_interval = 60
@@ -94,7 +92,7 @@ user_devices = {
 {% endfor %}
 }
 
-disabled_active_scans_for_ips = [{% if system_service_disable_active_scans_for_ips|length > 0 %}"{{system_service_disable_active_scans_for_ips | join('","') }}"{% endif %}]
+silent_device_macs = [{% if system_service_silent_device_macs|length > 0 %}"{{system_service_silent_device_macs | join('","') }}"{% endif %}]
 
 fping_test_hosts = [ {% for host in system_service_fping_test_hosts %}"{{host}}", {% endfor %}{% if cloud_vpn is defined %}{% for peer in cloud_vpn.peers %}"{{cloud_vpn.peers[peer].host}}", {% endfor %}{% endif %} ]
 

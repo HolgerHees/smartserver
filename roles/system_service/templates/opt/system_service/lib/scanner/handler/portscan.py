@@ -148,7 +148,7 @@ class PortScanner(_handler.Handler):
 
     def _checkPorts(self, device):
         _start = time.time()
-        services = Helper.nmap(device.getIP(), self._isRunning) if device.getIP() not in self.config.disabled_active_scans_for_ips else {}
+        services = Helper.nmap(device.getIP(), self._isRunning) if device.getMAC() not in self.config.silent_device_macs else {}
         _end = time.time()
         logging.info("Scanning device {} done after {} seconds".format(device.getIP(), round(_end-_start,0)))
 
