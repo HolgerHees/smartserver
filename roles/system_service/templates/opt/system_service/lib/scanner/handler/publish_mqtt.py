@@ -43,11 +43,11 @@ class MQTTPublisher(_handler.Handler):
                                 continue
 
                             _to_publish = {}
-                            for [detail, topic, value, last_publish] in self.published_values[mac]['values'].values():
+                            for detail, topic, value, last_publish in self.published_values[mac]['values'].values():
 
-                                _diff = (now-last_publish).total_seconds()
-                                if _diff >= self.config.mqtt_republish_interval:
-                                    _to_publish[detail] = [detail, topic, value]
+                                _diff = (now-last_publish).total_seconds() if last_publish is not None else None
+                                if _diff is None or _diff >= self.config.mqtt_republish_interval:
+                                    _to_publish[detail] = [detail, topic, value, last_publish]
                                 else:
                                     _timeout = self.config.mqtt_republish_interval - _diff
                                     if _timeout < timeout:
@@ -55,12 +55,13 @@ class MQTTPublisher(_handler.Handler):
 
                             if len(_to_publish) > 0:
                                 _msg = []
-                                for detail,topic,value in _to_publish.values():
+                                for detail, topic, value, last_publish in _to_publish.values():
                                     _msg.append("{} => {}".format(detail,value))
-                                Helper.logInfo("REPUBLISH {} of {}".format(_msg, _device))
+                                Helper.logInfo("{} {} of {}".format("PUBLISH" if last_publish is None else "REPUBLISH", _msg, _device))
 
-                                for [detail, topic, value] in _to_publish.values():
-                                    self._publishValue(mac, _device.getIP(), detail, topic, value, now)
+                                for detail, topic, value, last_publish in _to_publish.values():
+                                    self.mqtt.publish(topic, value )
+                                    self.published_values[mac]['values'][topic][3] = now
                 except Exception as e:
                     self._handleUnexpectedException(e)
 
@@ -111,27 +112,17 @@ class MQTTPublisher(_handler.Handler):
         if len(_to_publish.values()) == 0:
             return
 
-        _msg = []
-        for detail,topic,value in _to_publish.values():
-            _msg.append("{} => {}".format(detail,value))
-        Helper.logInfo("PUBLISH {} of {}".format(_msg, device))
-
         now = datetime.now()
         for [detail, topic, value] in _to_publish.values():
-            self._publishValue(mac, ip, detail, topic, value, now)
+            if mac not in self.published_values:
+                self.published_values[mac] = { 'ip': ip, 'values': {} }
+            self.published_values[mac]['values'][topic] = [detail, topic, value, None]
                 
         self._wakeup()
 
         if mac in self.skipped_macs:
             del self.skipped_macs[mac]
-    
-    def _publishValue(self, mac, ip, detail, topic, value, now):
-        if mac not in self.published_values:
-            self.published_values[mac] = { 'ip': ip, 'values': {} }
-            
-        self.mqtt.publish(topic, value )
-        self.published_values[mac]['values'][topic] = [detail, topic, value, now]
-    
+
     def getEventTypes(self):
         return [ 
             { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": ["ip"] },

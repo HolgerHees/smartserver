@@ -387,7 +387,7 @@ class ArpScanner(_handler.Handler):
             logging.info("Device {} is offline.".format(device))
             self._setDeviceOnline(stat, False)
 
-    def _checkDevice(self, device):
+    def _checkDevice(self, device, type):
         if device.getMAC() not in self.registered_devices:
             self.cache.lock(self)
             self._refreshDevice( device, False)
@@ -396,26 +396,27 @@ class ArpScanner(_handler.Handler):
         if device.getMAC() in self.config.silent_device_macs or device.getIP() is None:
             logging.info("Device {} skipped. No active checks applied".format(device))
         else:
-            check_thread = threading.Thread(target=self._pingDevice, args=(device,))
+            check_thread = threading.Thread(target=self._pingDevice, args=(device,type))
             check_thread.start()
     
-    def _pingDevice(self, device):
+    def _pingDevice(self, device, type):
         startTime = datetime.now()
         
         try:
-            methods = ["arping"]
             answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 10, self._isRunning)
+            duration = round((datetime.now() - startTime).total_seconds(),2)
             if answering_mac is not None:
-                duration = round((datetime.now() - startTime).total_seconds(),2)
                 if answering_mac != device.getMAC():
-                    logging.info("Device {} has wrong ip. Answering MAC was {}".format(device,answering_mac))
+                    logging.info("{} device {} has wrong ip. Answering MAC was {}".format(type, device, answering_mac))
                     self._handleDeviceIPChange(device, self.cache.getUnlockedDeviceStat(device.getMAC()))
                 else:
-                    logging.info("Device {} is online. Checked with {} in {} seconds".format(device," & ".join(methods),duration))
+                    logging.info("{} device {} is online. Checked in {} seconds".format(type, device, duration))
                     self.cache.lock(self)
                     with self.lock:
                         self._refreshDevice(device, True)
                     self.cache.unlock(self)
+            else:
+                logging.info("{} device {} not answering. Checked in {} seconds".format(type, device, duration))
 
         except Exception as e:
             self.cache.cleanLocks(self)
@@ -493,11 +494,9 @@ class ArpScanner(_handler.Handler):
 
             if len(disabled_devices) > 0:
                 for device in set(disabled_devices):
-                    logging.info("Recheck device {}".format(device))
-                    self._checkDevice(device)
+                    self._checkDevice(device, "Disabled")
 
             if len(unregistered_devices) > 0:
                 for device in set(unregistered_devices):
-                    logging.info("Check lazy device {}".format(device))
-                    self._checkDevice(device)
+                    self._checkDevice(device, "New")
             
