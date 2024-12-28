@@ -291,31 +291,26 @@ class ArpScanner(_handler.Handler):
                     raise e
 
                 try:
-                    processed_ips = {}
-                    processed_macs = {}
-                    for [ip, mac, dns, info] in collected_arps:
-                        if mac not in processed_macs:
-                            if ip not in processed_ips:
-                                info = re.sub(r"\s\(DUP: [0-9]+\)", "", info) # eleminate dublicate marker
-                                if info == "(Unknown)":
-                                    info = None
-                                processed_macs[mac] = {"mac": mac, "ip": ip, "dns": dns, "info": info}
-                                processed_ips[ip] = mac
-                    
-                    self.cache.lock(self)
-                    
                     with self.lock:
-                        refreshed_macs = []
-                        for entry in processed_macs.values():
-                            mac = entry["mac"]
+                        self.cache.lock(self)
+
+                        processed_ips = {}
+                        processed_macs = {}
+                        for [ip, mac, dns, info] in collected_arps:
+                            if ip in processed_ips:
+                                logging.warning("Duplicated IP address {} found. Will be ignored".format(ip))
+                                continue
+
                             device = self.cache.getDevice(mac)
-                            device.setIP("arpscan", 1, entry["ip"])
-                            device.setDNS("nslookup", 1, entry["dns"])
-                            device.setInfo(entry["info"])
+                            device.setIP("arpscan", 1, ip)
+                            device.setDNS("nslookup", 1, dns)
+                            device.setInfo(info)
                             self.cache.confirmDevice( self, device )
 
                             self._refreshDevice( device, True)
-                            refreshed_macs.append(mac)
+
+                            processed_macs[mac] = ip
+                            processed_ips[ip] = mac
 
                         device = self.cache.getDevice(server_mac)
                         device.setIP("arpscan", 1, self.config.server_ip)
@@ -324,12 +319,12 @@ class ArpScanner(_handler.Handler):
                         self.cache.confirmDevice( self, device )
 
                         self._refreshDevice( device, True)
-                        refreshed_macs.append(server_mac)
+                        processed_macs[server_mac] = self.config.server_ip
 
                         self.cache.unlock(self)
 
                         for device in self.cache.getDevices():
-                            if device.getMAC() in refreshed_macs:
+                            if device.getMAC() in processed_macs:
                                 continue
                             self._cleanDevice(device)
                 
@@ -353,9 +348,7 @@ class ArpScanner(_handler.Handler):
                 ip = arp_data["ip"]
                 mac = arp_data["mac"]
                 info = arp_data["info"]
-                
                 dns = self.cache.nslookup(ip)
-                        
                 collected_arps.append([ip, mac, dns, info])
         return collected_arps
                 
@@ -405,21 +398,26 @@ class ArpScanner(_handler.Handler):
             self._refreshDevice( device, False)
             self.cache.unlock(self)
 
-        if device.getIP() is None or device.getMAC() in self.config.silent_device_macs:
-            logging.info("{} device {} skipped. No active checks applied".format(type, device))
+        if device.getIP() is None:
+            logging.info("{} device {} not pinged. Device has no IP".format(type, device))
+        elif device.getMAC() in self.config.silent_device_macs:
+            logging.info("{} device {} not pinged. Device is a silent device".format(type, device))
         else:
             check_thread = threading.Thread(target=self._pingDevice, args=(device, type, long_check))
             check_thread.start()
     
     def _pingDevice(self, device, type, long_check):
-        startTime = datetime.now()
         try:
+            startTime = datetime.now()
+
             methods = ["arping"]
             answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 20 if long_check else 10, self._isRunning)
             if answering_mac is None:
                 methods.append("ping")
                 answering_mac = Helper.getMacFromPing(device.getIP(), 20 if long_check else 10, self._isRunning)
+
             duration = round((datetime.now() - startTime).total_seconds(),2)
+
             if answering_mac is not None:
                 if answering_mac != device.getMAC():
                     logging.info("{} device {} has wrong ip. Answering MAC was {}".format(type, device, answering_mac))

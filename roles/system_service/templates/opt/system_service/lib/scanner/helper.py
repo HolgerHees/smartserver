@@ -70,15 +70,22 @@ class Helper():
         if returncode != 0:
             raise Exception("Cmd 'arpscan' was not successful")
 
-        arp_result = []
+        arp_result = {}
         for row in result.split("\n"):
             columns = row.split("\t")
             if len(columns) != 3:
                 continue
+            columns[2] = re.sub(r"\s\(DUP: [0-9]+\)", "", columns[2]) # eleminate dublicate marker
+            if columns[2] == "(Unknown)":
+                columns[2] = None
 
-            arp_result.append({"ip": columns[0], "mac": columns[1], "info": columns[2] })
 
-        return arp_result
+            if columns[1] in arp_result:
+                continue
+
+            arp_result[columns[1]] = {"ip": columns[0], "mac": columns[1], "info": columns[2] }
+
+        return list(arp_result.values())
             
     def _nmap_parser(result, services):
         for row in result.split("\n"):
