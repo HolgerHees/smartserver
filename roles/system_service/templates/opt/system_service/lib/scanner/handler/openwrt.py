@@ -554,14 +554,13 @@ class OpenWRT(_handler.Handler):
             for mac in list(self.delayed_wifi_devices.keys()):
                 if not self._isKnownWifiClient(mac):
                     missing_wifi_macs.append(mac)
-                    
                 del self.delayed_wifi_devices[mac]
-            
+
             triggered_types = {}
-            for openwrt_ip in self.next_run:
-                if len(missing_wifi_macs) > 0:
-                    self.next_run[openwrt_ip]["wifi_clients"] = datetime.now()
-                    triggered_types["wifi"] = True
+            if len(missing_wifi_macs) > 0:
+                for openwrt_ip in self.next_run:
+                        self.next_run[openwrt_ip]["wifi_clients"] = datetime.now()
+                        triggered_types["wifi"] = True
                     
             if triggered_types:
                 logging.info("Delayed trigger runs for {}".format(" & ".join(triggered_types)))
@@ -582,7 +581,7 @@ class OpenWRT(_handler.Handler):
                 if device is None:
                     logging.error("Unknown device for stat {}".format(stat))
                 
-                if not self.has_wifi_networks or not device.supportsWifi() or not stat.isOnline():
+                if not self.has_wifi_networks or not device.supportsWifi() or not stat.isOnline() or self._isKnownWifiClient(device.getMAC()):
                     continue
                     
                 self.delayed_wifi_devices[device.getMAC()] = device

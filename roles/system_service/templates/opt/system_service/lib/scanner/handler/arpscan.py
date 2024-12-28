@@ -84,7 +84,7 @@ class DeviceChecker(threading.Thread):
                     total_timeout = self.timeout
                 else:
                     # non android devices neededs more retries because of for multiple calls of 'knock' during offline check time
-                    total_timeout = ( 1 if self.type == "android" else 3 ) * arp_timeout
+                    total_timeout = ( 1 if self.type == "android" else 3 ) * ( arp_timeout + ping_timeout )
                     
                 startTime = datetime.now()
                 
@@ -100,7 +100,7 @@ class DeviceChecker(threading.Thread):
 
                     methods = ["arping"]
                     answering_mac = Helper.getMacFromArpPing(ip_address, self.interface, arp_timeout, self._isRunning)
-                    if answering_mac is None and self.longCheck:
+                    if answering_mac is None:
                         methods.append("ping")
                         answering_mac = Helper.getMacFromPing(ip_address, ping_timeout, self._isRunning)
                         
@@ -387,26 +387,38 @@ class ArpScanner(_handler.Handler):
         if stat.isOnline() and last_seen > self.config.arp_offline_timeout:
             self._checkDevice(device, "Cleaned", True)
 
-    def _checkDevice(self, device, type, mark_as_offline):
+    def _checkDevice(self, device, type, long_check):
+        # must be handled before "_refreshDevice", because DeviceChecker is depending from IP address
+        if device.getIP() is None:
+            ip_address = Helper.getIPFromArpTable(device.getMAC())
+            if ip_address is not None:
+                self.cache.lock(self)
+                device.lock(self)
+                dns = self.cache.nslookup(ip_address)
+                device.setIP("arpscan", 1, ip_address)
+                device.setDNS("nslookup", 1, dns)
+                self.cache.confirmDevice( self, device )
+                self.cache.unlock(self)
+
         if device.getMAC() not in self.registered_devices:
             self.cache.lock(self)
             self._refreshDevice( device, False)
             self.cache.unlock(self)
 
-        if device.getMAC() in self.config.silent_device_macs or device.getIP() is None:
+        if device.getIP() is None or device.getMAC() in self.config.silent_device_macs:
             logging.info("{} device {} skipped. No active checks applied".format(type, device))
         else:
-            check_thread = threading.Thread(target=self._pingDevice, args=(device, type, mark_as_offline))
+            check_thread = threading.Thread(target=self._pingDevice, args=(device, type, long_check))
             check_thread.start()
     
-    def _pingDevice(self, device, type, mark_as_offline):
+    def _pingDevice(self, device, type, long_check):
         startTime = datetime.now()
         try:
             methods = ["arping"]
-            answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 20 if mark_as_offline else 10, self._isRunning)
-            if answering_mac is None and self.longCheck:
+            answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 20 if long_check else 10, self._isRunning)
+            if answering_mac is None:
                 methods.append("ping")
-                answering_mac = Helper.getMacFromPing(device.getIP(), 20 if mark_as_offline else 10, self._isRunning)
+                answering_mac = Helper.getMacFromPing(device.getIP(), 20 if long_check else 10, self._isRunning)
             duration = round((datetime.now() - startTime).total_seconds(),2)
             if answering_mac is not None:
                 if answering_mac != device.getMAC():
@@ -419,11 +431,11 @@ class ArpScanner(_handler.Handler):
                         self._refreshDevice(device, True)
                     self.cache.unlock(self)
             else:
-                if mark_as_offline:
-                    logging.info("{} device {} is offline. Checked with {} in {} seconds".format(type, device, " & ".join(methods), duration))
-                    self._setDeviceOnline(stat, False)
-                else:
-                    logging.info("{} device {} not answering. Checked with {} in {} seconds".format(type, device, " & ".join(methods), duration))
+                #if long_check:
+                logging.info("{} device {} is offline. Checked with {} in {} seconds".format(type, device, " & ".join(methods), duration))
+                self._setDeviceOnline(stat, False)
+                #else:
+                #    logging.info("{} device {} not answering. Checked with {} in {} seconds".format(type, device, " & ".join(methods), duration))
 
         except Exception as e:
             self.cache.cleanLocks(self)

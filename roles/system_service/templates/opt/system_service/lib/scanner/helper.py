@@ -55,6 +55,16 @@ class Helper():
             return match[1]
         return None
 
+    def getIPFromArpTable(mac):
+        returncode, result = command.exec2(["/sbin/ip", "neighbor"])
+        if returncode != 0:
+            raise Exception("Cmd 'arpscan' was not successful")
+
+        match = re.search(r"({}) .*{}.*".format("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}",mac), result)
+        if match:
+            return match[1]
+        return None
+
     def arpscan(interface, network, is_running_callback = None):
         returncode, result = command.exec2(["/usr/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], is_running_callback=is_running_callback)
         if returncode != 0:
