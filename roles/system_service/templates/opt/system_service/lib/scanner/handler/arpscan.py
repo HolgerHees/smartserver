@@ -294,12 +294,12 @@ class ArpScanner(_handler.Handler):
                     with self.lock:
                         self.cache.lock(self)
 
-                        processed_ips = {}
+                        #processed_ips = {}
                         processed_macs = {}
                         for [ip, mac, dns, info] in collected_arps:
-                            if ip in processed_ips:
-                                logging.warning("Duplicated IP address {} found. Will be ignored".format(ip))
-                                continue
+                            #if ip in processed_ips:
+                            #    logging.warning("Duplicated IP address {} found. Will be ignored".format(ip))
+                            #    continue
 
                             device = self.cache.getDevice(mac)
                             device.setIP("arpscan", 1, ip)
@@ -310,7 +310,7 @@ class ArpScanner(_handler.Handler):
                             self._refreshDevice( device, True)
 
                             processed_macs[mac] = ip
-                            processed_ips[ip] = mac
+                            #processed_ips[ip] = mac
 
                         device = self.cache.getDevice(server_mac)
                         device.setIP("arpscan", 1, self.config.server_ip)
@@ -399,9 +399,9 @@ class ArpScanner(_handler.Handler):
             self.cache.unlock(self)
 
         if device.getIP() is None:
-            logging.info("{} device {} not pinged. Device has no IP".format(type, device))
+            logging.info("{} device {} has no IP. Ping skipped".format(type, device))
         elif device.getMAC() in self.config.silent_device_macs:
-            logging.info("{} device {} not pinged. Device is a silent device".format(type, device))
+            logging.info("{} device {} is a silent device. Ping skipped".format(type, device))
         else:
             check_thread = threading.Thread(target=self._pingDevice, args=(device, type, long_check))
             check_thread.start()

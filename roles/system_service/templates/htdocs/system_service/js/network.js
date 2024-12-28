@@ -975,7 +975,7 @@ mx.NetworkStructure = (function( ret )
         node.selectAll("foreignObject.traffic").each( setTrafficContent );
 
         let online_circle = node.selectAll("circle");
-        online_circle.attr("class", d => ( d.data.device.isOnline ? "online" : "offline" ) );
+        online_circle.attr("class", d => ( d.data.device.isOnline ? "online" : ( d.data.device.silent == 1 ? "silent" : "offline" ) ) );
     };
     
     function redrawMatch(){
@@ -1001,7 +1001,7 @@ mx.NetworkStructure = (function( ret )
 
         rect.setAttribute("class", "container " + d.data.device.type + ( searchTerm && mx.NetworkHelper.isSearchMatch(searchTerm, d.data.device) ? " match" : "" ) );
         let circle = foreignobject.node().parentNode.querySelector("circle");
-        circle.setAttribute("class", d.data.device.isOnline ? "online" : "offline");
+        circle.setAttribute("class", d.data.device.isOnline ? "online" : ( d.data.device.silent == 1 ? "silent" : "offline" ) );
 
         let fontSize = foreignobject.attr("font-size");
         let infoFontSize = fontSize * 0.9;

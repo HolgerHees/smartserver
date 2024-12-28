@@ -335,7 +335,7 @@ class Device(Changeable):
     def getServices(self):
         return self.services
 
-    def getSerializeable(self, devices ):
+    def getSerializeable(self, config ):
         connection = self.getConnection()
 
         return {
@@ -346,6 +346,8 @@ class Device(Changeable):
             "dns": self.getDNS(),
             
             "info": self.info,
+
+            "silent": 1 if self.getMAC() in config.silent_device_macs else 0,
             
             "connection": connection.getSerializeable() if connection else None,
             "connection_state": self.connection_state,

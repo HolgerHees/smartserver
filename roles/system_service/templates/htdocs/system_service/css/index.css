@@ -171,16 +171,19 @@ svg g.nodes rect.container.network {
 }
 
 svg g.nodes circle.online,
-svg g.nodes circle.offline {
+svg g.nodes circle.offline,
+svg g.nodes circle.silent {
     stroke-width: 0.5;
     stroke: var(--content-text);
 }
 #networkList .row .online,
-#networkList .row .offline {
+#networkList .row .offline
+#networkList .row .silent {
     text-align: center;
 }
 #networkList .row .online span,
-#networkList .row .offline span {
+#networkList .row .offline span,
+#networkList .row .silent span {
     display: inline-block;
     width: 8px;
     height: 8px;
@@ -198,7 +201,12 @@ svg g.nodes circle.online {
 svg g.nodes circle.offline {
     fill: var(--color-red);
 }
-
+#networkList .row .silent span {
+    background: var(--color-yellow);
+}
+svg g.nodes circle.silent {
+    fill: var(--color-yellow);
+}
 svg g.nodes foreignObject.traffic,
 svg g.nodes foreignObject.details {
     color: var(--content-text);

@@ -294,14 +294,14 @@ class Scanner(threading.Thread):
         if has_connection_changes or devices_added or devices_deleted:
             changed_data["devices"]["replace"] = True
             for device in all_devices:
-                changed_data["devices"]["values"].append(device.getSerializeable(all_devices))
+                changed_data["devices"]["values"].append(device.getSerializeable(self.config))
         else:
             #for device in devices_added:
-            #    changed_data["devices"]["added"].append(device.getSerializeable(all_devices))
+            #    changed_data["devices"]["added"].append(device.getSerializeable(self.config))
             for device in devices_modified:
-                changed_data["devices"]["values"].append(device.getSerializeable(all_devices))
+                changed_data["devices"]["values"].append(device.getSerializeable(self.config))
             #for device in devices_deleted:
-            #    changed_data["devices"]["deleted"].append(device.getSerializeable(all_devices))
+            #    changed_data["devices"]["deleted"].append(device.getSerializeable(self.config))
 
         changed_data["groups"] = { "added": [], "modified": [], "deleted": [] }
         for group in groups_added:
