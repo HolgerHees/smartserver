@@ -347,7 +347,7 @@ class Device(Changeable):
             
             "info": self.info,
 
-            "silent": 1 if self.getMAC() in config.silent_device_macs else 0,
+            "silent": 1 if self.mac in config.silent_device_macs else 0,
             
             "connection": connection.getSerializeable() if connection else None,
             "connection_state": self.connection_state,

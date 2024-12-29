@@ -165,7 +165,7 @@ class Cache():
         device.lock(self._lock_owner)
 
         return device
-            
+
     def confirmDevice(self, source_handler, device, caller_frame = 1 ):
         self._checkLock()
 

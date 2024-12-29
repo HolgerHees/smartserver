@@ -68,7 +68,8 @@ class Changeable():
                 self._markAsChanged("_{}".format(key), "remove {}".format(key))
 
     def _clearPriorizedData(self, key):
-        del self.priorized_data[key]
+        self.priorized_data[key] = {}
+        self.priorized_value[key] = None
         self._markAsChanged("{}".format(key), "{}{}".format("clear ", key))
 
     def getDetail(self, key, fallback = None):

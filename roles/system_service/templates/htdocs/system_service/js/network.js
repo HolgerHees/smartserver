@@ -105,27 +105,17 @@ mx.NetworkTooltip = (function( ret )
         let device_stat = device.deviceStat;
         if( device_stat )
         {
-            let dateTimeMsg = "";
-            
-            if( device.isOnline )
+            let lastSeenTimestamp = Date.parse(device_stat["last_seen"]);
+            let lastSeenDatetime = new Date(lastSeenTimestamp)
+
+            let statusMsg = lastSeenDatetime.toLocaleTimeString();
+            if( ( ( new Date().getTime() - lastSeenTimestamp ) / 1000 ) > 60 * 60 * 12 )
             {
-                dateTimeMsg = "Online";
+                statusMsg = lastSeenDatetime.toLocaleDateString() + " " + statusMsg
             }
-            else
-            {
-                let lastSeenTimestamp = Date.parse(device_stat["offline_since"]);
-                let lastSeenDatetime = new Date(lastSeenTimestamp)
-                
-                dateTimeMsg = lastSeenDatetime.toLocaleTimeString();
-                if( ( ( new Date().getTime() - lastSeenTimestamp ) / 1000 ) > 60 * 60 * 12 )
-                {
-                    dateTimeMsg = lastSeenDatetime.toLocaleDateString() + " " + dateTimeMsg
-                }
-                
-                dateTimeMsg = "Offline since " + dateTimeMsg;
-            }
+            statusMsg = ( device.isOnline ? "Online " : "Offline " ) + statusMsg;
             
-            html += "<div><div>Status:</div><div>" + dateTimeMsg + "</div></div>";
+            html += "<div><div>Status:</div><div>" + statusMsg + "</div></div>";
         }
         if( device.info ) html += "<div><div>Info:</div><div>" + device.info + "</div></div>";
         html += "<div><div>Type:</div><div>" + device.type + "</div></div>";

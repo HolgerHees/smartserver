@@ -70,7 +70,8 @@ class Helper():
         if returncode != 0:
             raise Exception("Cmd 'arpscan' was not successful")
 
-        arp_result = {}
+        processed_ips = {}
+        processed_macs = {}
         for row in result.split("\n"):
             columns = row.split("\t")
             if len(columns) != 3:
@@ -80,12 +81,13 @@ class Helper():
                 columns[2] = None
 
 
-            if columns[1] in arp_result:
+            if columns[0] in processed_ips or columns[1] in processed_macs:
                 continue
 
-            arp_result[columns[1]] = {"ip": columns[0], "mac": columns[1], "info": columns[2] }
+            processed_ips[columns[0]] = columns[1]
+            processed_macs[columns[1]] = {"ip": columns[0], "mac": columns[1], "info": columns[2] }
 
-        return list(arp_result.values())
+        return list(processed_macs.values())
             
     def _nmap_parser(result, services):
         for row in result.split("\n"):

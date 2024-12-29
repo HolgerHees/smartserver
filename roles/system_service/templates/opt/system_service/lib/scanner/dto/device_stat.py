@@ -10,9 +10,8 @@ class DeviceStat(Changeable):
         
         self.mac = mac
         
-        self.offline_since = datetime.now()
+        self.is_online = False
         
-        # internal variables without change detection
         self.last_validated_seen = None
         self.last_unvalidated_seen = datetime.now()
         
@@ -26,28 +25,28 @@ class DeviceStat(Changeable):
         return self._getCache().getUnlockedDevice(self.mac)
     
     def setLastSeen(self,validated):
-        if validated:
-            self.last_validated_seen = datetime.now()
         self.last_unvalidated_seen = datetime.now()
 
-    def setOnline(self,flag):
-        self._checkLock()
-        if flag:
-            offline_since = None
-        else:
-            offline_since = self.last_validated_seen
-        
-        if self.offline_since != offline_since:
-            self._markAsChanged( "online_state", "offline" if offline_since else "online")
-            self.offline_since = offline_since
-            return True
-        return False
-            
-    def isOnline(self):
-        return self.offline_since is None
+        if validated:
+            self.last_validated_seen = self.last_unvalidated_seen
 
-    def isValidated(self):
-        return self.last_validated_seen is not None
+            if not self.is_online:
+                self._checkLock()
+
+                self._markAsChanged( "online_state", "online")
+                self.is_online = True
+
+    def setOffline(self):
+        if not self.is_online:
+            return
+
+        self._checkLock()
+
+        self._markAsChanged( "online_state", "offline")
+        self.is_online = False
+
+    def isOnline(self):
+        return self.is_online
 
     def getValidatedLastSeen(self):
         return self.last_validated_seen
@@ -58,7 +57,8 @@ class DeviceStat(Changeable):
     def getSerializeable(self):
         _stat = {
             "mac": self.mac,
-            "offline_since": self.offline_since.astimezone().isoformat('T') if self.offline_since is not None else None,
+            "is_online": 1 if self.is_online else 0,
+            "last_seen": self.last_validated_seen.astimezone().isoformat('T') if self.last_validated_seen is not None else self.last_unvalidated_seen.astimezone().isoformat('T'),
             "details": self._getDetails()
         }
             

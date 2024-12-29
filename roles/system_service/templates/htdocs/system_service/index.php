@@ -89,7 +89,7 @@ mx.UNCore = (function( ret ) {
             for(let child_device of device.connected_from) 
             {
                 let child_device_stat = getDeviceStat(child_device);
-                if( !child_device_stat || child_device_stat.offline_since != null )
+                if( !child_device_stat || child_device_stat.is_online == 0 )
                 {
                     all_children_online = false;
                     break;
@@ -99,7 +99,7 @@ mx.UNCore = (function( ret ) {
         }
 
         let device_stat = getDeviceStat(device);
-        return device_stat && device_stat.offline_since == null;
+        return device_stat && device_stat.is_online == 1;
     }
 
     function initNode(device)
