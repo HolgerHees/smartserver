@@ -55,13 +55,13 @@ class DeviceWatcherJob(threading.Thread):
         return self.is_running
       
     def run(self):
-        logging.info("Device checker for {} started".format(self.device))
+        logging.info("Device watcher for {} started".format(self.device))
         is_supended = False
         
         while self._isRunning():
             try:
                 if is_supended:
-                    logging.warning("Resume DeviceChecker")
+                    logging.warning("Resume device watcher")
                     is_supended = False
 
                 while self._isRunning():
@@ -73,7 +73,7 @@ class DeviceWatcherJob(threading.Thread):
                             reason = ""
 
                         if self.force:
-                            logging.info(">>> DeviceChecker Device: {}, Step: FORCE{}".format(self.device, reason))
+                            logging.info(">>> Device: {}, Step: FORCE{}".format(self.device, reason))
                             break
 
                         # online devices waiting time = 60 + 5 seconds
@@ -81,14 +81,14 @@ class DeviceWatcherJob(threading.Thread):
                             last_seen = (datetime.now() - self.stat.getValidatedLastSeen()).total_seconds()
                             diff = 65 - last_seen # use 65 seconds instead of 60 seconds, to have some overlapping with interval timeouts from e.g. openwrt collector. They will maybe change 'validatedLastSeen'
                             if diff <= 0:
-                                logging.info(">>> DeviceChecker Device: {}, Step: BREAK{}".format(self.device, reason))
+                                logging.info(">>> Device: {}, Step: BREAK{}".format(self.device, reason))
                                 break
 
-                            logging.info(">>> DeviceChecker Device: {}, Step: SLEEP {:.2f}{}".format(self.device, diff, reason))
+                            logging.info(">>> Device: {}, Step: SLEEP {:.2f}{}".format(self.device, diff, reason))
                             sleeptime = diff
                         # offline devices waiting time = 300 seconds
                         else:
-                            logging.info(">>> DeviceChecker Device: {}, Step: SLEEP forever{}".format(self.device, reason))
+                            logging.info(">>> Device: {}, Step: SLEEP forever{}".format(self.device, reason))
                             sleeptime = -1
 
                         self.event.clear()
@@ -160,7 +160,7 @@ class DeviceWatcherJob(threading.Thread):
 
             except Exception as e:
                 self.cache.cleanLocks(self)
-                logging.error("DeviceChecker got unexpected exception. Will suspend for 15 minutes.")
+                logging.error("Device watcher got unexpected exception. Will suspend for 15 minutes.")
                 logging.error(traceback.format_exc())
                 is_supended = True
                     
@@ -172,7 +172,7 @@ class DeviceWatcherJob(threading.Thread):
                 self.force = False
                 self.wakeup_reasons = []
 
-        logging.info("Device checker for {} stopped".format(self.device))
+        logging.info("Device watcher for {} stopped".format(self.device))
 
     def wakeup(self, reason, force):
         with self.lock:
