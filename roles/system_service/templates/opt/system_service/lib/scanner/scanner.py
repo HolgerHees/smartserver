@@ -48,7 +48,7 @@ class Scanner(threading.Thread):
         self.cache = Cache(config)
 
         self._register(ArpScanner(config, self.cache ))
-        self._register(DeviceChecker(config, self.cache ))
+        self._register(DeviceWatcher(config, self.cache ))
 
         network = ipaddress.ip_network(config.default_server_network)#.hosts()
 
