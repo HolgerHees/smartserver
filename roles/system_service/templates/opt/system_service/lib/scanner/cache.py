@@ -23,7 +23,7 @@ class Cache():
         
         self._lock = threading.Lock()
         self._lock_owner = None
-        
+
         self.groups = {}
         self.devices = {}
         self.stats = {}
@@ -67,10 +67,13 @@ class Cache():
         return "wan"
     
     def lock(self, owner):
-        self._lock.acquire()
+        #Helper.logInfo("LOCKDEBUG: lock", 2)
+        if not self._lock.acquire(timeout=15):
+            raise Exception("Not able to aquire lock. TIMEOUT: 15 seconds, REQUESTING OWNER: {}, ACTIVE OWNER: {}".format(owner, self._lock_owner))
         self._lock_owner = owner
         
     def unlock(self, owner):
+        #Helper.logInfo("LOCKDEBUG: unlock", 2)
         self._lock.release()
         self._lock_owner = None
 
@@ -125,6 +128,7 @@ class Cache():
         group.unlock(self._lock_owner)
 
         [state, change_raw, change_details] = group.confirmModificationState()
+
         if state == Changeable.NEW:
             event_action = Event.ACTION_CREATE
             Helper.logInfo("Add group {} - [{}]".format(group, change_details), caller_frame + 1 )

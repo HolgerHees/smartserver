@@ -34,5 +34,8 @@ class Event():
     def hasDetail(self, key):
         return key in self.details
 
+    def getDetail(self, key):
+        return self.details.get(key, None)
+
     def __repr__(self):
         return "{}-{}".format(self.type, self.action)

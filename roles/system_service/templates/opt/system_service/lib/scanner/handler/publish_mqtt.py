@@ -71,7 +71,7 @@ class MQTTPublisher(_handler.Handler):
 
             self._wait(timeout)
 
-    def _publishValues(self, device, stat, changed_details = None):
+    def _publishValues(self, device, stat, event_details = None):
         mac = device.getMAC()
         ip = device.getIP()
 
@@ -84,13 +84,13 @@ class MQTTPublisher(_handler.Handler):
             allowed_details.append("online_state")
         
         _details = []
-        if changed_details is None:
+        if event_details is None:
             _details = allowed_details
         else:
-            for detail in changed_details:
-                if detail not in allowed_details:
+            for key in event_details.keys():
+                if key not in allowed_details:
                     continue
-                _details.append(detail)
+                _details.append(key)
                 
         if len(_details) == 0:
             return

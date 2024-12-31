@@ -9,9 +9,8 @@ class Changeable():
     
     def __init__(self, cache, locked = False):
         self.is_created = True
-        self.is_changed_raw = []
-        self.is_changed_details = []
-        
+        self.changed_data = []
+
         self.details = {}
         
         self.cache = cache
@@ -95,29 +94,34 @@ class Changeable():
     def _getCache(self):
         return self.cache
 
-    def _markAsChanged(self, type, details = None):
-        self.is_changed_raw.append(type)
-        self.is_changed_details.append( details if details else type)
+    def _markAsChanged(self, key, info = None, details = None):
+        self.changed_data.append( [ key, info if info else key, details ])
 
     def _getModificationState(self):
         if self.is_created:
             return Changeable.NEW
-        if len(self.is_changed_raw) > 0:
+        if len(self.changed_data) > 0:
             return Changeable.CHANGED
         return Changeable.UNCHANGED
         
     def confirmModificationState(self):
         state = self._getModificationState()
-        changed_raw = self.is_changed_raw;
-        changed_details = self.is_changed_details;
-        
+        changed_data = self.changed_data;
+
         self.is_created = False
-        self.is_changed_raw = []
-        self.is_changed_details = []
+        self.changed_data = []
         
-        changed_details = list(set(changed_details))
-        changed_details.sort()
-        return [state, list(set(changed_raw)), ", ".join(changed_details)]
+        changed_raw = {}
+        changed_infos = []
+        for key, info, details in changed_data:
+            changed_infos.append(info)
+            if key not in changed_raw:
+                changed_raw[key] = []
+            changed_raw[key].append(details)
+        changed_infos = list(set(changed_infos))
+        changed_infos.sort()
+
+        return [state, changed_raw, ", ".join(changed_infos)]
     
     def _checkLock(self):
         if not self._lock:

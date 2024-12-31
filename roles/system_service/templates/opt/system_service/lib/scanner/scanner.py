@@ -14,6 +14,8 @@ from lib.scanner.cache import Cache
 
 from lib.scanner.handler.arpscan import ArpScanner
 
+from lib.scanner.handler.device_watcher import DeviceWatcher
+
 from lib.scanner.handler.openwrt import OpenWRT
 from lib.scanner.handler.librenms import LibreNMS
 from lib.scanner.handler.fritzbox import Fritzbox
@@ -46,6 +48,7 @@ class Scanner(threading.Thread):
         self.cache = Cache(config)
 
         self._register(ArpScanner(config, self.cache ))
+        self._register(DeviceChecker(config, self.cache ))
 
         network = ipaddress.ip_network(config.default_server_network)#.hosts()
 

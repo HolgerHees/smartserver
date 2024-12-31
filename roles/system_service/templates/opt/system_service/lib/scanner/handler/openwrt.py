@@ -412,13 +412,13 @@ class OpenWRT(_handler.Handler):
                                 byte_diff = details["bytes"]["rx"] - in_bytes
                                 if byte_diff > 0:
                                     stat_data.setInAvg(byte_diff / time_diff)
-                                
+                                    validated = True
+
                             out_bytes = stat_data.getOutBytes()
                             if out_bytes is not None:
                                 byte_diff = details["bytes"]["tx"] - out_bytes
                                 if byte_diff > 0:
                                     stat_data.setOutAvg(byte_diff / time_diff)
-                                    validated = True
 
                         stat_data.setInBytes(details["bytes"]["rx"])
                         stat_data.setOutBytes(details["bytes"]["tx"])
@@ -432,12 +432,8 @@ class OpenWRT(_handler.Handler):
                         events.append(event)
 
                     stat = self.cache.getDeviceStat(mac)
-                    #if validated:
-                    #    logging.info("OPENWRT LAST SEEN: {}".format(device))
-                    stat.setLastSeen(validated)
-                    event = self.cache.confirmStat( self, stat )
-                    if event:
-                        events.append(event)
+                    stat.setLastSeen( validated and details["auth"] and details["assoc"] and details["authorized"] )
+                    self.cache.confirmStat( self, stat )
 
                     _active_associations.append(uid)
                     self.wifi_associations[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface, connection_details ]

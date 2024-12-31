@@ -58,6 +58,11 @@ class Connection():
         return "type: {}, mac: {}, interface: {}".format(self.type,self.target_mac,self.target_interface)
     
 class Device(Changeable):
+    EVENT_DETAIL_CONNECTION_ADD = "add"
+    EVENT_DETAIL_CONNECTION_ENABLE = "enable"
+    EVENT_DETAIL_CONNECTION_REMOVE = "remove"
+    EVENT_DETAIL_CONNECTION_DISABLE = "disable"
+
     def __init__(self, cache, mac, type):
         super().__init__(cache)
 
@@ -167,33 +172,33 @@ class Device(Changeable):
             
             if details is not None and not _connection.hasDetails(details):
                 _connection.addDetails(details)
-                action = "add"
+                action = Device.EVENT_DETAIL_CONNECTION_ADD
 
             if not _connection.isEnabled():
                 _connection.setEnabled(True)
-                action = "enable"
+                action = Device.EVENT_DETAIL_CONNECTION_ENABLE
         else:
             if type == Connection.WIFI:
                 self.supports_wifi = True
                 
             self.hop_connection_map[key] = Connection(type, target_mac, target_interface, [ details ] if details is not None else [] )
-            action = "add"
+            action = Device.EVENT_DETAIL_CONNECTION_ADD
             
         if action is None:
             return
 
         target_device = self.cache.getUnlockedDevice(target_mac)
-        self._markAsChanged("connection", "{} connection to {}:{}".format(action, target_device if target_device else target_mac, details))    
+        self._markAsChanged("connection", "{} connection to {}:{}".format(action, target_device if target_device else target_mac, details), action)
 
         # *** CLEANUP only needed for added connections and NOT for enabled or unchanged ones ***
-        if action == "add":
+        if action == Device.EVENT_DETAIL_CONNECTION_ADD:
             _connections = list(filter(lambda c: c.getType() == type and not c.isEnabled(), self.hop_connection_map.values() ))
             for _connection in _connections:
                 target_mac = _connection.getTargetMAC()
                 target_device = self.cache.getUnlockedDevice(target_mac)
                 key = "{}:{}".format(target_mac,_connection.getTargetInterface())
                 del self.hop_connection_map[key]
-                self._markAsChanged("connection", "remove disabled connection to {}:{}".format(target_device if target_device else target_mac, _connection.getDetailsList() ))
+                self._markAsChanged("connection", "remove disabled connection to {}:{}".format(target_device if target_device else target_mac, _connection.getDetailsList() ), Device.EVENT_DETAIL_CONNECTION_REMOVE)
 
     def removeHopConnection(self, type, target_mac, target_interface, details, disable_last_of_type = False):
         self._checkLock()
@@ -203,7 +208,7 @@ class Device(Changeable):
         if key in self.hop_connection_map:
             _connection = self.hop_connection_map[key]
 
-            action = "remove"
+            action = Device.EVENT_DETAIL_CONNECTION_REMOVE
 
             if _connection.hasDetails(details):
                 _connection.removeDetails(details)
@@ -211,12 +216,12 @@ class Device(Changeable):
             if len(_connection.getDetailsList()) == 0:
                 if disable_last_of_type and len(list(filter(lambda c: c.getType() == type, self.hop_connection_map.values() ))) == 1:
                     _connection.setEnabled(False)
-                    action = "disable"
+                    action = Device.EVENT_DETAIL_CONNECTION_DISABLE
                 else:
                     del self.hop_connection_map[key]
 
             target_device = self.cache.getUnlockedDevice(target_mac)
-            self._markAsChanged("connection", "{} connection from {}:{}".format(action, target_device if target_device else target_mac, details))            
+            self._markAsChanged("connection", "{} connection from {}:{}".format(action, target_device if target_device else target_mac, details), action)
 
     def getHopConnections(self):
         return list(self.hop_connection_map.values())

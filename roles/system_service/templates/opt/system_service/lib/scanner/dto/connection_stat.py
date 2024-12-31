@@ -178,5 +178,6 @@ class ConnectionStat(Changeable):
         return _stat
             
     def __repr__(self):
-        device = self._getCache().getUnlockedDevice(self.target_mac)
-        return "{}:{}".format(device if device is not None else self.target_mac,self.target_interface)
+        source_device = self._getCache().getUnlockedDevice(self.target_mac)
+        target_device = self._getCache().getUnlockedDevice(self.target_interface)
+        return "{} <= {}".format(source_device if source_device is not None else self.target_mac, target_device if target_device is not None else self.target_interface)
