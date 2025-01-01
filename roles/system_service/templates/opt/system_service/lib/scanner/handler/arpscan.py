@@ -10,6 +10,7 @@ import logging
 
 from lib.scanner.handler import _handler
 
+from lib.scanner.dto.device import Device
 from lib.scanner.dto.event import Event
 
 from lib.scanner.helper import Helper
@@ -198,7 +199,7 @@ class ArpScanner(_handler.Handler):
                                 continue
 
                             if device.getIP() is None:
-                                self._initDeviceIP(device, lambda: self._cleanDevice(device) )
+                                self._initDeviceIP(device, lambda d: self._cleanDevice(d), lambda device: self._cleanDevice(d) )
                             else:
                                 self._cleanDevice(device)
                 
@@ -235,15 +236,28 @@ class ArpScanner(_handler.Handler):
         if device.getIP() in self.config.user_devices:
             return
 
-        if stat.getValidatedLastSeen() is None or ( now - stat.getValidatedLastSeen() ).total_seconds() > self.config.arp_offline_timeout:
-            if mac not in self.last_cleanup or (now - self.last_cleanup[mac]).total_seconds() > self.config.arp_offline_timeout:
-                self.last_cleanup[mac] = now
-                self._pingDevice(device, "cleanup", True)
+        if stat.isOnline() and ( stat.getValidatedLastSeen() is None or ( now - stat.getValidatedLastSeen() ).total_seconds() > self.config.arp_offline_timeout ):
+            if device.getIP() is None:
+                stat.lock(self)
+                stat.setOffline()
+                self.cache.confirmStat( self, stat )
+            else:
+                if mac not in self.last_cleanup or (now - self.last_cleanup[mac]).total_seconds() > self.config.arp_offline_timeout:
+                    self.last_cleanup[mac] = now
+                    self._pingDevice(device, "cleanup", True)
+
+    def _processDevice(self, device):
+        # UserIP's should be delegated to DeviceChecker
+        if device.getIP() in self.config.user_devices:
+            return
+
+        self._pingDevice(device, "init", False)
 
     def _pingDevice(self, device, reason, long_check):
-        if device.getIP() is None:
-            logging.info("Device {} has no IP. Ping skipped [{}]".format(device, reason))
-        elif device.getMAC() in self.config.silent_device_macs:
+        #if device.getIP() is None:
+        #    raise Exception("test")
+        #    logging.error("Device {} has no IP. Ping skipped [{}]".format(device, reason)) # should never happen
+        if device.getMAC() in self.config.silent_device_macs:
             logging.info("Device {} is a silent device. Ping skipped [{}]".format(device, reason))
         else:
             check_thread = threading.Thread(target=self._pingDeviceJob, args=(device, reason, long_check))
@@ -291,13 +305,15 @@ class ArpScanner(_handler.Handler):
             self.cache.cleanLocks(self)
             self._handleUnexpectedException(e, None, -1)
 
-    def _initDeviceIP(self, device, callback):
-        check_thread = threading.Thread(target=self._initDeviceIPJob, args=(device, callback,))
+    def _initDeviceIP(self, device, success_callback, failure_callback = None):
+        check_thread = threading.Thread(target=self._initDeviceIPJob, args=(device, success_callback, failure_callback,))
         check_thread.start()
 
-    def _initDeviceIPJob(self, device, callback):
+    def _initDeviceIPJob(self, device, success_callback, failure_callback):
         ip_address = Helper.getIPFromArpTable(device.getMAC())
         if ip_address is None:
+            if failure_callback is not None:
+                failure_callback(device)
             return
 
         self.cache.lock(self)
@@ -310,15 +326,11 @@ class ArpScanner(_handler.Handler):
 
         self.cache.unlock(self)
 
-        # UserIP's should be delegated to DeviceChecker
-        if device.getIP() in self.config.user_devices:
-            return
-
-        callback()
+        success_callback(device)
 
     def getEventTypes(self):
         return [ 
-            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None }
+            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE,Event.ACTION_MODIFY], "details": None }
         ]
 
     def processEvents(self, events):
@@ -326,11 +338,28 @@ class ArpScanner(_handler.Handler):
 
         with self.lock:
             for event in events:
-                if event.hasDetail("ip"):
-                    continue
+                if event.getAction() == Event.ACTION_CREATE:
+                    if event.hasDetail("ip"):
+                        continue
 
-                device = event.getObject()
-                if device.getIP() is not None:
-                    continue
+                    device = event.getObject()
+                    if device.getIP() is not None:
+                        continue
 
-                self._initDeviceIP(device, lambda: self._pingDevice(device, "init", False) )
+                    self._initDeviceIP(device, lambda d: self._processDevice(d) )
+                else:
+                    if not event.hasDetail("connection"):
+                        continue
+
+                    device = event.getObject()
+                    if device.getIP() is not None:
+                        continue
+
+                    detail = event.getDetail("connection")
+                    if Device.EVENT_DETAIL_CONNECTION_DISABLE in detail:
+                        self.cache.lock(self)
+                        stat = self.cache.getDeviceStat(device.getMAC())
+                        stat.setOffline()
+                        self.cache.confirmStat( self, stat )
+                        self.cache.unlock(self)
+                    continue
