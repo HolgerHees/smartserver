@@ -199,7 +199,7 @@ class ArpScanner(_handler.Handler):
                                 continue
 
                             if device.getIP() is None:
-                                self._initDeviceIP(device, lambda d: self._cleanDevice(d), lambda device: self._cleanDevice(d) )
+                                self._initDeviceIP(device, lambda d: self._cleanDevice(d), lambda d: self._cleanDevice(d) )
                             else:
                                 self._cleanDevice(device)
                 
@@ -294,7 +294,6 @@ class ArpScanner(_handler.Handler):
             else:
                 #if long_check:
                 logging.info("Device {} is offline. Checked with {} in {} seconds [{}]".format(device, " & ".join(methods), duration, reason))
-
                 stat = self.cache.getDeviceStat(device.getMAC())
                 stat.setOffline()
                 self.cache.confirmStat( self, stat )
