@@ -240,15 +240,18 @@ svg g.nodes foreignObject.details > div > div.info {
 }
 
 svg g.nodes foreignObject.details > div > div.details {
-    right: 0;
+    right: 2px;
     bottom: 0;
     text-align: end;
 }
 
-svg g.nodes foreignObject.details > div > div.details div.top {
+svg g.nodes foreignObject.details > div > div.details div.wifi_signal {
+    margin-bottom: -10px;
+}
+
+svg g.nodes foreignObject.details > div > div.details div.wifi_details {
     opacity: 0.7;
     font-weight: 300;
-    margin-bottom: -2px;
 }
 
 #networkList .row .signal.signal6,

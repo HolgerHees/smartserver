@@ -211,14 +211,14 @@ class Device(Changeable):
             action = Device.EVENT_DETAIL_CONNECTION_REMOVE
 
             if _connection.hasDetails(details):
-                _connection.removeDetails(details)
-
-            if len(_connection.getDetailsList()) == 0:
-                if disable_last_of_type and len(list(filter(lambda c: c.getType() == type, self.hop_connection_map.values() ))) == 1:
-                    _connection.setEnabled(False)
-                    action = Device.EVENT_DETAIL_CONNECTION_DISABLE
+                if len(_connection.getDetailsList()) == 1:
+                    if disable_last_of_type and len(list(filter(lambda c: c.getType() == type, self.hop_connection_map.values() ))) == 1:
+                        _connection.setEnabled(False)
+                        action = Device.EVENT_DETAIL_CONNECTION_DISABLE
+                    else:
+                        del self.hop_connection_map[key]
                 else:
-                    del self.hop_connection_map[key]
+                    _connection.removeDetails(details)
 
             target_device = self.cache.getUnlockedDevice(target_mac)
             self._markAsChanged("connection", "{} connection from {}:{}".format(action, target_device if target_device else target_mac, details), action)

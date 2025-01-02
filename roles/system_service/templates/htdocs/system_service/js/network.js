@@ -1001,13 +1001,13 @@ mx.NetworkStructure = (function( ret )
         
         let name = d.data["device"]["ip"] ? d.data["device"]["_demo_ip"] ? d.data["device"]["_demo_ip"] : d.data["device"]["ip"] : d.data["device"]["_demo_mac"] ? d.data["device"]["_demo_mac"] : d.data["device"]["mac"];
         html += "<div class='name'>" + name + '</div>';
-        
+
         let info = d.data["device"]["dns"] ? d.data["device"]["dns"] : d.data["device"]["type"];
         html += "<div class='info' style='font-size:" + infoFontSize + "px'>" + info + '</div>';
 
         html += "<div class='state " + ( d.data.device.isOnline ? "online" : "offline" ) + "'></div>";
 
-        if( d.data.device["wifi_signal"] )
+        if( d.data.device["wifi_ssid"] )
         {
             let signal_value = d.data.device["wifi_signal"];
             let band_value = d.data.device["wifi_band"];
@@ -1015,9 +1015,11 @@ mx.NetworkStructure = (function( ret )
             
             let signal_class = mx.NetworkHelper.getSignalClass(signal_value);
             
-            html += "<div class='details' style='font-size:" + detailsFontSize + "px'>";
-            html += "<div class='top'>" + ssid_value + "</div>";
-            html += "<div class='bottom'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
+            html += "<div class='details'>";
+            html += "<div class='wifi_signal' style='font-size:" + detailsFontSize + "px'>";
+            if( signal_value != "" ) html += "<span class='signal " + signal_class + "'>" + signal_value + "db</span>";
+            html += "</div>";
+            html += "<div class='wifi_details' style='font-size:" + infoFontSize + "px'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='ssid'>" + ssid_value + "</div></span>";
             html += "</div>";
         }  
         else if(root == d  && d.data.device.interfaceStat)

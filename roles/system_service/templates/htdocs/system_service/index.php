@@ -23,11 +23,9 @@ mx.UNCore = (function( ret ) {
     var demo_ip_map = {};
     var demo_mac_map = {};
 
-    function getDeviceSignal(device)
+    function getDeviceGroup(device)
     {
         let group = null;
-        let stat = null;
-        
         device.groups.forEach(function(_group)
         {
             if( group == null || group.details.priority["value"] < _group.details.priority["value"] )
@@ -35,27 +33,29 @@ mx.UNCore = (function( ret ) {
                 group = _group;
             }
         });
+        return group;
+    }
 
-        if( group != null )
+    function getDeviceInterfaceStat(device, group)
+    {
+        let stat = null;
+        let _stat = device.interfaceStat.data.filter(data => data["connection_details"]["gid"] == group.gid);
+        if( _stat.length > 0)
         {
-            let _stat = device.interfaceStat.data.filter(data => data["connection_details"]["gid"] == group.gid);
-            if( _stat.length > 0)
-            {
-                stat = _stat[0];
-            }
-            else
-            {
-                console.log("----");
-                console.log(device.groups);
-                console.log(device.interfaceStat);
-                console.log(group);
-                console.log(stats);
-            }
+            stat = _stat[0];
         }
-        
-        if( group && stat && stat.details["signal"] )
-        {    
-            return { "group": group, "stat": stat }
+        else
+        {
+            console.log("----");
+            console.log(device.groups);
+            console.log(device.interfaceStat);
+            console.log(group);
+            console.log(stats);
+        }
+
+        if( stat && stat.details["signal"] )
+        {
+            return stat
         }
         
         return null;
@@ -292,16 +292,34 @@ mx.UNCore = (function( ret ) {
             device["wifi_signal"] = "";
             device["wifi_band"] = "";
             device["wifi_ssid"] = "";
-            if( _groups.length > 0 && device["interfaceStat"] )
+            if( _groups.length > 0 )
+            // && device["interfaceStat"] )
             {
-                let signal = getDeviceSignal(device);
-                if( signal )
+                let group = getDeviceGroup(device);
+                if( group != null )
                 {
-                    device["wifi_signal"] = signal["stat"].details.signal["value"];
-                    device["wifi_band"] = signal["group"].details.band["value"];
-                    device["wifi_ssid"] = signal["group"].details.ssid["value"];
+                    device["wifi_band"] = group.details.band["value"];
+                    device["wifi_ssid"] = group.details.ssid["value"];
+
+                    if( device["interfaceStat"] )
+                    {
+                        let stat = getDeviceInterfaceStat(device, group);
+                        if( stat )
+                        {
+                            device["wifi_signal"] = stat.details.signal["value"];
+                        }
+                    }
                 }
             }
+
+            if( device['mac'] == "0c:c4:13:18:ad:83" ){
+                console.log(device);
+                /*device.groups.forEach(function(_group)
+                {
+                    console.log(_group);
+                });*/
+            }
+
         });
         
         //console.log(stats);
