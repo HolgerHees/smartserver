@@ -34,6 +34,16 @@ body, svg {
 #networkToolbar .networkSearchInput input:focus {
     outline: 0;
 }
+
+#networkToolbar .networkSearchWifi .form.button {
+    font-size: 14px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    height: 38px;
+    box-sizing: border-box;
+    line-height: 25px;
+}
+
 #networkDataPages > div {
     display: none;
     /*transition: transform 0.15s;*/
@@ -250,7 +260,7 @@ svg g.nodes foreignObject.details > div > div.details {
 }
 
 svg g.nodes foreignObject.details > div > div.details.wifi {
-    border-right: 15px solid transparent;
+    border-right: 13px solid transparent;
 }
 
 svg g.nodes foreignObject.details > div > div.details div.top {

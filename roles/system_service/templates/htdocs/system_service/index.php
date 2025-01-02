@@ -8,7 +8,22 @@ require "../shared/libs/ressources.php";
 <?php echo Ressources::getModules(["/shared/mod/websocket/","/system_service/"]); ?>
 <script>
 mx.UNCore = (function( ret ) {
-    var groups = {};    
+    var wifiColors = [
+        "#66C5CC",
+        //"#F6CF71",
+        //"#F89C74",
+        "#DCB0F2",
+        "#87C55F",
+        "#9EB9F3",
+        //"#FE88B1",
+        "#C9DB74",
+        "#8BE0A4",
+        "#B497E7",
+        "#B3B3B3"
+    ];
+    var wifiNetworks = {};
+
+    var groups = {};
     var devices = {};    
     var stats = {};    
     var root_device_mac = null;
@@ -23,7 +38,32 @@ mx.UNCore = (function( ret ) {
     var demo_ip_map = {};
     var demo_mac_map = {};
 
-    var wifi_networks = {};
+    function initWifiNetworks(_wifi_networks)
+    {
+        var clients = {};
+        var tuples = [];
+        for (var key in _wifi_networks) tuples.push([key, _wifi_networks[key]]);
+        tuples.sort(function(a, b) {
+            a = a[1];
+            b = b[1];
+            return a > b ? -1 : (a < b ? 1 : 0);
+        });
+        for (var k in tuples)
+        {
+            clients[tuples[k][0]] = tuples[k][1];
+
+            if( wifiNetworks.hasOwnProperty(tuples[k][0]) ) continue;
+
+            wifiNetworks[tuples[k][0]] = wifiColors[Object.keys(wifiNetworks).length];
+        }
+
+        /*let toolbar = mx.$("#networkToolbar .networkSearchWifi");
+        let html = "";
+        Object.entries(wifiNetworks).forEach(([key,value]) => {
+            html += "<div class='form button' style='background-color:" + value + "99'>" + key.toLowerCase() + " (" + clients[key] + ")</div>";
+        });
+        toolbar.innerHTML = html;*/
+    }
 
     function getDeviceGroup(device)
     {
@@ -272,19 +312,6 @@ mx.UNCore = (function( ret ) {
             delete stats[key];
         });
         
-        let wifi_colors = [
-            "#66C5CC",
-            //"#F6CF71",
-            //"#F89C74",
-            "#DCB0F2",
-            "#87C55F",
-            "#9EB9F3",
-            //"#FE88B1",
-            "#C9DB74",
-            "#8BE0A4",
-            "#B497E7",
-            "#B3B3B3"
-        ];
         let _wifi_networks = [];
         Object.values(devices).forEach(function(device)
         {
@@ -332,19 +359,7 @@ mx.UNCore = (function( ret ) {
             }
         });
 
-        var tuples = [];
-        for (var key in _wifi_networks) tuples.push([key, _wifi_networks[key]]);
-        tuples.sort(function(a, b) {
-            a = a[1];
-            b = b[1];
-            return a > b ? -1 : (a < b ? 1 : 0);
-        });
-        for (var k in tuples)
-        {
-            if( wifi_networks.hasOwnProperty(tuples[k][0]) ) continue;
-
-            wifi_networks[tuples[k][0]] = wifi_colors[Object.keys(wifi_networks).length];
-        }
+        initWifiNetworks(_wifi_networks)
 
         if( rootNode == null )
         {
@@ -358,7 +373,7 @@ mx.UNCore = (function( ret ) {
             }
             else
             {
-                mx.NetworkStructure.draw( activeTerm, replacesNodes ? rootNode : null, groups, stats, wifi_networks);
+                mx.NetworkStructure.draw( activeTerm, replacesNodes ? rootNode : null, groups, stats, wifiNetworks);
             }
         }
     }
@@ -383,7 +398,7 @@ mx.UNCore = (function( ret ) {
             else
             {
                 mx.$("#networkToolbar .networkDisplay.button span").className = "icon-table";
-                mx.NetworkStructure.draw( activeTerm, rootNode, groups, stats);
+                mx.NetworkStructure.draw( activeTerm, rootNode, groups, stats, wifiNetworks);
             }
         });
         
@@ -464,6 +479,6 @@ mx.OnSharedModWebsocketReady.push(function(){
 <div id="networkStructure"></div>
 <div id="networkList"></div>
 </div>
-<div id="networkToolbar"><div class="networkDisplay form button"><span class="icon-table"></span></div><div class="networkSearch form button"><span class="icon-search-1"></span></div><div class="networkSearchInput"><input></div></div>
+<div id="networkToolbar"><div class="networkDisplay form button"><span class="icon-table"></span></div><div class="networkSearch form button"><span class="icon-search-1"></span></div><div class="networkSearchInput"><input></div><div class="networkSearchWifi"></div></div>
 </body>
 </html>
