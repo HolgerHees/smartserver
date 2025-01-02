@@ -557,21 +557,31 @@ mx.NetworkHelper = (function( ret )
     
     ret.isSearchMatch = function(searchTerm, device)
     {
-        if( device["ip"] && device["ip"].includes(searchTerm) )
-            return true;
-            
-        if( device["mac"] && device["mac"].includes(searchTerm) )
-            return true;
-        
-        if( device["dns"] && device["dns"].includes(searchTerm) )
-            return true;
+        if( Array.isArray(searchTerm) )
+        {
+            searchField = searchTerm[0];
+            searchTerm = searchTerm[1];
 
-        if( device["wifi_ssid"] && device["wifi_ssid"].includes(searchTerm) )
-            return true;
+            if( device[searchField] == searchTerm )
+                return true;
+        }
+        else
+        {
+            if( device["ip"] && device["ip"].includes(searchTerm) )
+                return true;
 
-        if( device["wifi_band"] && device["wifi_band"].includes(searchTerm) )
-            return true;
+            if( device["mac"] && device["mac"].includes(searchTerm) )
+                return true;
 
+            if( device["dns"] && device["dns"].includes(searchTerm) )
+                return true;
+
+            if( device["wifi_ssid"] && device["wifi_ssid"].includes(searchTerm) )
+                return true;
+
+            if( device["wifi_band"] && device["wifi_band"].includes(searchTerm) )
+                return true;
+        }
         return false;
     }
     

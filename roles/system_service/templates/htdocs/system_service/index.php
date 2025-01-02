@@ -38,7 +38,7 @@ mx.UNCore = (function( ret ) {
     var demo_ip_map = {};
     var demo_mac_map = {};
 
-    function initWifiNetworks(_wifi_networks)
+    function initWifiNetworks(_wifi_networks, _wifi_bands)
     {
         var clients = {};
         var tuples = [];
@@ -57,12 +57,59 @@ mx.UNCore = (function( ret ) {
             wifiNetworks[tuples[k][0]] = wifiColors[Object.keys(wifiNetworks).length];
         }
 
-        /*let toolbar = mx.$("#networkToolbar .networkSearchWifi");
+        let toolbar = mx.$("#networkToolbar .networkSearchWifi");
         let html = "";
+        let buttons = [];
         Object.entries(wifiNetworks).forEach(([key,value]) => {
-            html += "<div class='form button' style='background-color:" + value + "99'>" + key.toLowerCase() + " (" + clients[key] + ")</div>";
+            html += "<div id='ssid_" + key + "' class='form button' style='background-color:" + value + "99'>" + key.toLowerCase() + " (" + clients[key] + ")</div>";
+            buttons.push(["ssid", key]);
         });
-        toolbar.innerHTML = html;*/
+        Object.entries(_wifi_bands).forEach(([key,value]) => {
+            html += "<div id='band_" + key + "' class='form button' style='background-color:" + key + "99'>" + key.toLowerCase() + " (" + value + ")</div>";
+            buttons.push(["band", key]);
+        });
+        toolbar.innerHTML = html;
+
+        for( _key in buttons )
+        {
+            let group = buttons[_key][0];
+            let name = buttons[_key][1];
+            let button = mx.$("#" + group + "_" + name);
+
+            button.addEventListener("click",function()
+            {
+                let is_active = button.classList.toggle("active");
+                mx.$$("#networkToolbar .networkSearchWifi .button").forEach((_button) => {
+                    if( _button == button ) return;
+                    _button.classList.remove("active");
+                });
+
+                if( is_active )
+                {
+                    if( group == "ssid" )
+                    {
+                        activeTerm = ["wifi_ssid", name];
+                    }
+                    else if( group == "band" )
+                    {
+                        activeTerm = ["wifi_band", name];
+                    }
+                }
+                else
+                {
+                    activeTerm = "";
+                }
+
+                if( isTable)
+                {
+                    mx.NetworkTable.search(activeTerm);
+                }
+                else
+                {
+                    mx.NetworkStructure.search(activeTerm);
+                }
+            });
+        }
     }
 
     function getDeviceGroup(device)
@@ -313,6 +360,7 @@ mx.UNCore = (function( ret ) {
         });
         
         let _wifi_networks = [];
+        let _wifi_bands = [];
         Object.values(devices).forEach(function(device)
         {
             device["isOnline"] = isOnline(device);
@@ -346,6 +394,8 @@ mx.UNCore = (function( ret ) {
 
                     if( !_wifi_networks.hasOwnProperty(device["wifi_ssid"]) ) _wifi_networks[device["wifi_ssid"]] = 0;
                     _wifi_networks[device["wifi_ssid"]] += 1;
+                    if( !_wifi_bands.hasOwnProperty(device["wifi_band"]) ) _wifi_bands[device["wifi_band"]] = 0;
+                    _wifi_bands[device["wifi_band"]] += 1;
 
                     if( device["interfaceStat"] )
                     {
@@ -359,7 +409,7 @@ mx.UNCore = (function( ret ) {
             }
         });
 
-        initWifiNetworks(_wifi_networks)
+        initWifiNetworks(_wifi_networks, _wifi_bands);
 
         if( rootNode == null )
         {
@@ -433,6 +483,9 @@ mx.UNCore = (function( ret ) {
                     return;
 
                 activeTerm = _term.toLowerCase();
+
+                let activeSearchButton = mx.$("#networkToolbar .networkSearchWifi .button.active");
+                if( activeSearchButton ) activeSearchButton.classList.remove("active");
                 
                 if( isTable)
                 {

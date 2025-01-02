@@ -44,6 +44,10 @@ body, svg {
     line-height: 25px;
 }
 
+#networkToolbar .networkSearchWifi .form.button.active {
+    border: 1px solid var(--button-text);
+}
+
 #networkDataPages > div {
     display: none;
     /*transition: transform 0.15s;*/
@@ -51,6 +55,7 @@ body, svg {
 #networkList {
     max-width: 1024px;
     margin: auto;
+    margin-top: 56px;
 }
 #networkList .row:not(:first-child) {
     cursor: pointer;
