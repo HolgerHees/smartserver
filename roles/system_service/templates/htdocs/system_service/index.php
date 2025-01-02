@@ -58,23 +58,38 @@ mx.UNCore = (function( ret ) {
         }
 
         let toolbar = mx.$("#networkToolbar .networkSearchWifi");
-        let html = "";
-        let buttons = [];
+        let new_buttons = [];
         Object.entries(wifiNetworks).forEach(([key,value]) => {
-            html += "<div id='ssid_" + key + "' class='form button' style='background-color:" + value + "99'>" + key.toLowerCase() + " (" + clients[key] + ")</div>";
-            buttons.push(["ssid", key]);
+            let id = "ssid_" + key;
+            let button = mx.$("#" + id);
+            if( !button )
+            {
+                button = document.createElement("div");
+                button.id = id;
+                button.setAttribute("class", "form button");
+                button.style.backgroundColor = value + "99";
+                button.innerHTML = key.toLowerCase() + " (" + clients[key] + ")";
+                toolbar.appendChild(button);
+                new_buttons.push([button,"ssid",key]);
+            }
         });
         Object.entries(_wifi_bands).forEach(([key,value]) => {
-            html += "<div id='band_" + key + "' class='form button' style='background-color:" + key + "99'>" + key.toLowerCase() + " (" + value + ")</div>";
-            buttons.push(["band", key]);
+            let id = "band_" + key;
+            let button = mx.$("#" + id);
+            if( !button )
+            {
+                button = document.createElement("div");
+                button.id = id;
+                button.setAttribute("class", "form button");
+                button.innerHTML = key.toLowerCase() + " (" + value + ")";
+                toolbar.appendChild(button);
+                new_buttons.push([button,"band",key]);
+            }
         });
-        toolbar.innerHTML = html;
 
-        for( _key in buttons )
+        for( _key in new_buttons )
         {
-            let group = buttons[_key][0];
-            let name = buttons[_key][1];
-            let button = mx.$("#" + group + "_" + name);
+            let [ button, group, name ] = new_buttons[_key];
 
             button.addEventListener("click",function()
             {
@@ -244,7 +259,7 @@ mx.UNCore = (function( ret ) {
         if( rootDevices.length > 0 )
         {
             rootNode = initNode(rootDevices[0], stats);
-        
+
             if( rootNode["device"]["connected_from"].length > 0 )
             {
                 initChildren(rootNode, devices, stats);

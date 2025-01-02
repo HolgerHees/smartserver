@@ -45,7 +45,18 @@ body, svg {
 }
 
 #networkToolbar .networkSearchWifi .form.button.active {
-    border: 1px solid var(--button-text);
+    border: 1px solid var(--button-hover-bg);
+}
+#networkToolbar .networkSearchWifi .form.button.active:after {
+    content: '\A';
+    position: absolute;
+    width: 100%;
+    height:100%;
+    top:0;
+    left:0;
+    background:rgba(0,0,0,0.1);
+    opacity: 1;
+    transition: all 0.15s;
 }
 
 #networkDataPages > div {

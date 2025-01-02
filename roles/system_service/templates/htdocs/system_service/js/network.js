@@ -559,10 +559,7 @@ mx.NetworkHelper = (function( ret )
     {
         if( Array.isArray(searchTerm) )
         {
-            searchField = searchTerm[0];
-            searchTerm = searchTerm[1];
-
-            if( device[searchField] == searchTerm )
+            if( device[searchTerm[0]] == searchTerm[1] )
                 return true;
         }
         else
@@ -850,6 +847,7 @@ mx.NetworkStructure = (function( ret )
             root.y = dy;
         }
         
+        d3.selectAll("#networkStructure svg").remove();
         const svg = d3.selectAll("#networkStructure").append("svg")
             //.attr("viewBox", [-dy / 2 + ( dy / 3 ), x0 - box_height, viewboxWidth, viewboxWidth])
             .attr("viewBox", [0, 0, viewboxWidth, viewboxHeight])
