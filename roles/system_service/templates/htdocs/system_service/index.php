@@ -23,6 +23,8 @@ mx.UNCore = (function( ret ) {
     var demo_ip_map = {};
     var demo_mac_map = {};
 
+    var wifi_networks = {};
+
     function getDeviceGroup(device)
     {
         let group = null;
@@ -270,6 +272,20 @@ mx.UNCore = (function( ret ) {
             delete stats[key];
         });
         
+        let wifi_colors = [
+            "#66C5CC",
+            //"#F6CF71",
+            //"#F89C74",
+            "#DCB0F2",
+            "#87C55F",
+            "#9EB9F3",
+            //"#FE88B1",
+            "#C9DB74",
+            "#8BE0A4",
+            "#B497E7",
+            "#B3B3B3"
+        ];
+        let _wifi_networks = [];
         Object.values(devices).forEach(function(device)
         {
             device["isOnline"] = isOnline(device);
@@ -301,6 +317,9 @@ mx.UNCore = (function( ret ) {
                     device["wifi_band"] = group.details.band["value"];
                     device["wifi_ssid"] = group.details.ssid["value"];
 
+                    if( !_wifi_networks.hasOwnProperty(device["wifi_ssid"]) ) _wifi_networks[device["wifi_ssid"]] = 0;
+                    _wifi_networks[device["wifi_ssid"]] += 1;
+
                     if( device["interfaceStat"] )
                     {
                         let stat = getDeviceInterfaceStat(device, group);
@@ -311,19 +330,22 @@ mx.UNCore = (function( ret ) {
                     }
                 }
             }
-
-            if( device['mac'] == "0c:c4:13:18:ad:83" ){
-                console.log(device);
-                /*device.groups.forEach(function(_group)
-                {
-                    console.log(_group);
-                });*/
-            }
-
         });
-        
-        //console.log(stats);
-        
+
+        var tuples = [];
+        for (var key in _wifi_networks) tuples.push([key, _wifi_networks[key]]);
+        tuples.sort(function(a, b) {
+            a = a[1];
+            b = b[1];
+            return a > b ? -1 : (a < b ? 1 : 0);
+        });
+        for (var k in tuples)
+        {
+            if( wifi_networks.hasOwnProperty(tuples[k][0]) ) continue;
+
+            wifi_networks[tuples[k][0]] = wifi_colors[Object.keys(wifi_networks).length];
+        }
+
         if( rootNode == null )
         {
             mx.Error.handleError( mx.I18N.get("Network analysis is in progress")  );
@@ -336,7 +358,7 @@ mx.UNCore = (function( ret ) {
             }
             else
             {
-                mx.NetworkStructure.draw( activeTerm, replacesNodes ? rootNode : null, groups, stats);
+                mx.NetworkStructure.draw( activeTerm, replacesNodes ? rootNode : null, groups, stats, wifi_networks);
             }
         }
     }

@@ -215,6 +215,7 @@ svg g.nodes foreignObject.details {
 svg g.nodes foreignObject.details > div {
     height: 100%;
     position: relative;
+    box-sizing: border-box;
 }
 
 svg g.nodes foreignObject.details > div > div {
@@ -222,13 +223,12 @@ svg g.nodes foreignObject.details > div > div {
     overflow: hidden;
     text-overflow: ellipsis;
     position: absolute;
-    padding: 1px 2px;
 }
 
 svg g.nodes foreignObject.details > div > div.name {
     left: 0;
     top: 0;
-    right: 10px;
+    padding: 5px 0 0 7px;
 }
 
 svg g.nodes foreignObject.details > div > div.info {
@@ -236,22 +236,31 @@ svg g.nodes foreignObject.details > div > div.info {
     bottom: 0;
     opacity: 0.7;
     font-weight: 300;
-    right: 35px;
+    padding: 0 0 5px 7px;
 }
 
 svg g.nodes foreignObject.details > div > div.details {
-    right: 2px;
+    right: 0;
+    top: 0;
     bottom: 0;
     text-align: end;
+    display: flex;
+    flex-direction: column;
+    padding: 5px 7px 5px 0;
 }
 
-svg g.nodes foreignObject.details > div > div.details div.wifi_signal {
-    margin-bottom: -10px;
+svg g.nodes foreignObject.details > div > div.details.wifi {
+    border-right: 15px solid transparent;
 }
 
-svg g.nodes foreignObject.details > div > div.details div.wifi_details {
+svg g.nodes foreignObject.details > div > div.details div.top {
     opacity: 0.7;
-    font-weight: 300;
+    font-weight: 400;
+    flex-grow: 1;
+}
+
+svg g.nodes foreignObject.details > div > div.details div.bottom {
+    font-weight: 400;
 }
 
 #networkList .row .signal.signal6,

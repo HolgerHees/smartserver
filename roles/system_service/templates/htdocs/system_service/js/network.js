@@ -709,6 +709,8 @@ mx.NetworkStructure = (function( ret )
     let box_height = 0;
     let font_size = 0;
 
+    let wifiColors = null;
+
     let groups = null;
     let stats = null;
     let searchTerm = null;
@@ -718,6 +720,18 @@ mx.NetworkStructure = (function( ret )
     let link = null;
     let node = null;
     
+    function isBottomTrafficPosition(d)
+    {
+        if( isSpecialRootLayout() )
+        {
+            if( root==d.parent || root==d )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function isSpecialRootLayout()
     {
         return root.children && root.children.length == 1;
@@ -729,11 +743,12 @@ mx.NetworkStructure = (function( ret )
         redrawMatch();
     }
     
-    ret.draw = function(_searchTerm, rootNode, _groups, _stats) {
+    ret.draw = function(_searchTerm, rootNode, _groups, _stats, _wifiColors) {
         groups = _groups;
         stats = _stats;
         searchTerm = _searchTerm;
-        
+        wifiColors = _wifiColors;
+
         if( rootNode )
         {
             mx.NetworkHelper.preparePage("#networkStructure");
@@ -902,11 +917,16 @@ mx.NetworkStructure = (function( ret )
             .attr("width", box_width)
             .attr("height", box_height);
 
-        node.append("circle")
-            .attr("cx", box_width - ( 5 * scale ))
-            .attr("cy", 6 * scale)
-            .attr("r", 3 * scale);
+        let traffic_dot = node.append("circle")
+                .attr("r", 3 * scale);
+        traffic_dot.each( setTrafficDot );
 
+        let traffic_font_size = box_height / 4;
+        let traffic_info = node.append("foreignObject")
+            .classed("traffic", true)
+            .attr("font-size", traffic_font_size);
+        traffic_info.each( setTrafficContent );
+        
         let details_info = node.append("foreignObject")
             .classed("details", true)
             .attr("font-size", font_size)
@@ -916,12 +936,6 @@ mx.NetworkStructure = (function( ret )
             .attr("x", 0);
         details_info.each( setDetailsContent );
 
-        let traffic_font_size = box_height / 4;
-        let traffic_info = node.append("foreignObject")
-            .classed("traffic", true)
-            .attr("font-size", traffic_font_size);
-        traffic_info.each( setTrafficContent );
-        
         // calculate global bounding box
         let _svg = document.querySelector('svg');
         const { xMin, xMax, yMin, yMax } = [..._svg.children].reduce((acc, el) => {
@@ -995,7 +1009,7 @@ mx.NetworkStructure = (function( ret )
 
         let fontSize = foreignobject.attr("font-size");
         let infoFontSize = fontSize * 0.9;
-        let detailsFontSize = box_height / 4;
+        let detailsFontSize = fontSize * 0.9; //box_height / 4;
             
         let html = "<div>";
         
@@ -1015,11 +1029,15 @@ mx.NetworkStructure = (function( ret )
             
             let signal_class = mx.NetworkHelper.getSignalClass(signal_value);
             
-            html += "<div class='details'>";
-            html += "<div class='wifi_signal' style='font-size:" + detailsFontSize + "px'>";
+            html += "<div class='details wifi'";
+
+            html += " style='border-color:" + wifiColors[ssid_value] + "99'";
+
+            html += ">";
+            html += "<div class='top' style='font-size:" + infoFontSize + "px'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='ssid'>" + ssid_value + "</div></span>";
+            html += "<div class='bottom' style='font-size:" + detailsFontSize + "px'>";
             if( signal_value != "" ) html += "<span class='signal " + signal_class + "'>" + signal_value + "db</span>";
             html += "</div>";
-            html += "<div class='wifi_details' style='font-size:" + infoFontSize + "px'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='ssid'>" + ssid_value + "</div></span>";
             html += "</div>";
         }  
         else if(root == d  && d.data.device.interfaceStat)
@@ -1039,6 +1057,22 @@ mx.NetworkStructure = (function( ret )
 
         foreignobject.html(d => html );
     }
+
+    function setTrafficDot(d)
+    {
+        let foreignobject = d3.select(this);
+
+        if( isBottomTrafficPosition(d) )
+        {
+            foreignobject.attr("cx", box_width / 2 ) //box_width - ( 5 * scale ))
+                         .attr("cy", box_height ) //6 * scale)
+        }
+        else
+        {
+            foreignobject.attr("cx", 0 ) //box_width - ( 5 * scale ))
+                         .attr("cy", box_height / 2 ) //6 * scale)
+        }
+    }
     
     function setTrafficContent(d)
     {
@@ -1049,15 +1083,6 @@ mx.NetworkStructure = (function( ret )
 
         let font_size = foreignobject.attr("font-size");
         
-        let position = "default";
-        if( isSpecialRootLayout() )
-        {
-            if( root==d.parent || root==d )
-            {
-                position = "bottom";
-            }
-        }
-            
         if( !d.data.device.interfaceStat ) return;
         
         let in_data = 0;
@@ -1088,7 +1113,7 @@ mx.NetworkStructure = (function( ret )
         
         foreignobject.html(d => "<div><div>" + html + "</div></div>" );
         
-        if( position == "bottom" )
+        if( isBottomTrafficPosition(d) )
         {
             foreignobject.classed("bottom",true)
                         .attr("height", 20 * scale )
@@ -1102,7 +1127,7 @@ mx.NetworkStructure = (function( ret )
                         .attr("height", box_height )
                         .attr("width", box_width / 2)
                         .attr("y", 0 )
-                        .attr("x", ( box_width / 2 ) * -1 - 6);
+                        .attr("x", ( box_width / 2 ) * -1 - 20);
         }
     }
     
