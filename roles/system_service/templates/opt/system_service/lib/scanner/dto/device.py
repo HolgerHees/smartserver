@@ -232,22 +232,7 @@ class Device(Changeable):
     def getConnection(self):
         return self.virtual_connection if self.virtual_connection is not None else self.connection
    
-    def hasMultiConnections(self):
-        return self.multi_connections
-        
-    def generateMultiConnectionEvents(self, event, events):
-        if not event.hasDetail("signal"):
-            return
-        
-        found = False
-        for event in events:
-            if event.getType() == self.getEventType() and event.getObject() == self and event.hasDetail("connection"):
-                found = True
-        
-        if not found:
-            events.append(Event(self.getEventType(), Event.ACTION_MODIFY, self, ["connection", "connection_helper"]))
-        
-    def calculateConnectionPath(self, _backward_interfaces):
+    def calculateConnectionPath(self):
         #logging.info("CALCULATE")
 
         multi_connections = False
@@ -290,8 +275,6 @@ class Device(Changeable):
 
                 for _connection in self.getHopConnections():
                     _key = "{}:{}".format(_connection.getTargetMAC(),_connection.getTargetInterface())
-                    if _key in _backward_interfaces:
-                        continue
                     _tmp_connections[_key] = _connection
 
                     _target_device = self.cache.getUnlockedDevice(_connection.getTargetMAC())
@@ -300,8 +283,6 @@ class Device(Changeable):
 
                     for __connection in _target_device.getHopConnections():
                         __key = "{}:{}".format(__connection.getTargetMAC(),__connection.getTargetInterface())
-                        if __key in _backward_interfaces:
-                            continue
                         _hob_connections[__key] = True
 
                 _filtered_connections = {k: v for k, v in _tmp_connections.items() if k not in _hob_connections}

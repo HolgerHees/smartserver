@@ -359,6 +359,7 @@ mx.NetworkTooltip = (function( ret )
         
         let tooltipRect = mx.Tooltip.getRootElementRect();
         let body_height = window.innerHeight;
+        let body_width = window.innerWidth;
 
         if( element.clientX )
         {
@@ -393,7 +394,7 @@ mx.NetworkTooltip = (function( ret )
             let nodeRect = element.getBoundingClientRect();
 
             arrowOffset = 0;
-            arrowPosition = "right";
+            arrowPosition = "left";
             
             top = nodeRect.top;
             if( top + tooltipRect.height > body_height ) 
@@ -403,14 +404,14 @@ mx.NetworkTooltip = (function( ret )
             }
             else
             {
-                arrowOffset = nodeRect.height / 2;
+                arrowOffset = nodeRect.height / 2 - 4;
             }
 
-            left = nodeRect.left - tooltipRect.width - 6;
-            if( left < 0 )
+            left = nodeRect.left + nodeRect.width + 6;
+            if( left > body_width - tooltipRect.width )
             {
-                left = nodeRect.left + nodeRect.width + 6;
-                arrowPosition = "left";
+                left = nodeRect.left - tooltipRect.width - 12;
+                arrowPosition = "right";
             }
         }
 
@@ -791,9 +792,9 @@ mx.NetworkStructure = (function( ret )
         if( tooltip_device != null )
         {
             let element = node.filter(n => tooltip_device["mac"] == n.data.device["mac"] );
-            if( element.length > 0)
+
+            if( element.size() > 0)
             {
-                console.log("refresh");
                 mx.NetworkTooltip.showTooltip(tooltip_device);
                 mx.NetworkTooltip.positionTooltip(element.node().querySelector("rect.container"));
             }

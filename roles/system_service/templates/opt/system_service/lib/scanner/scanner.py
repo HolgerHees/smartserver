@@ -133,47 +133,19 @@ class Scanner(threading.Thread):
         finally:
             logging.info("Scanner stopped")
 
-    #def dispatch(self, source_handler, events):
     def _dispatch(self, source_handler, events):
         # *** recalculate main connection ***
         has_connection_changes = False
         for event in events:
-            #logging.info("DEBUG: {} {}".format(str(source_handler.__class__),event))
             if event.getType() == Event.TYPE_DEVICE and event.hasDetail("connection"):
                 has_connection_changes = True
                 break
 
         if has_connection_changes:
             has_connection_changes = False
-            self.cache.lock(self)
-
-            _backward_interfaces = {}
-            gateway_device = self.cache.getUnlockedDevice(self.cache.getGatewayMAC())
-            if gateway_device is not None:
-                for _connection in gateway_device.getHopConnections():
-                    _backward_interfaces[_connection.getTargetMAC() + ":" + _connection.getTargetInterface()] = True
-
-            #logging.info(_backward_interfaces)
-
-            unprocessed_devices = []
             for device in self.cache.getDevices():
-                if device.calculateConnectionPath(_backward_interfaces):
+                if device.calculateConnectionPath():
                     has_connection_changes = True
-                else:
-                    unprocessed_devices.append(device)
-
-            self.cache.unlock(self)
-
-            # cleanup
-            for event in list(events):
-                if event.getObject() in unprocessed_devices:
-                    if event.hasDetail("connection_helper"):
-                        #logging.info(">>>>>>>>>>>>>> CLEAN")
-                        events.remove(event)
-
-            if len(events) == 0:
-                #logging.info(">>>>>>>>>>>>>> SKIP")
-                return
         # ***********************************
         
         for [event_types, handler] in self.event_pipeline:

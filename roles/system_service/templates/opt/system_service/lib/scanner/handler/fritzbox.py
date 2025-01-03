@@ -288,9 +288,7 @@ class Fritzbox(_handler.Handler):
                         stat_data.setInSpeed(node_link["cur_data_rate_rx"] * 1000)
                         stat_data.setOutSpeed(node_link["cur_data_rate_tx"] * 1000)
                         stat_data.setDetail("signal", node_link["rx_rcpi"], "attenuation")
-                        if self.cache.confirmStat( self, stat ):
-                            if device.hasMultiConnections():
-                                device.generateMultiConnectionEvents(events[-1],events)
+                        self.cache.confirmStat( self, stat )
                         
                         _active_associations.append(uid)
                         self.wifi_associations[fritzbox_ip][uid] = [ uid, mac, gid, vlan, target_mac, target_interface, connection_details ]

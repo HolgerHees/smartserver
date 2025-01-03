@@ -370,7 +370,6 @@ class OpenWRT(_handler.Handler):
             _active_client_macs = []
             _active_associations = []
 
-            events = []
             for [client_result,wlan_network] in client_results:
                 #logging.info(client_result)
                 for mac in client_result["clients"]:
@@ -392,9 +391,7 @@ class OpenWRT(_handler.Handler):
 
                     device = self.cache.getDevice(mac)
                     device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
-                    event = self.cache.confirmDevice( self, device )
-                    if event:
-                        events.append(event)
+                    self.cache.confirmDevice( self, device )
 
                     details = client_result["clients"][mac]
 
@@ -425,11 +422,7 @@ class OpenWRT(_handler.Handler):
                         stat_data.setInSpeed(details["rate"]["rx"] * 1000)
                         stat_data.setOutSpeed(details["rate"]["tx"] * 1000)
                         stat_data.setDetail("signal", details["signal"], "attenuation")
-                    event = self.cache.confirmStat( self, stat )
-                    if event:
-                        if device.hasMultiConnections():
-                            device.generateMultiConnectionEvents(event,events)
-                        events.append(event)
+                    self.cache.confirmStat( self, stat )
 
                     stat = self.cache.getDeviceStat(mac)
                     stat.setLastSeen( validated and details["auth"] and details["assoc"] and details["authorized"] )

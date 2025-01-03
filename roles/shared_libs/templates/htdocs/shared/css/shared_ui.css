@@ -31,6 +31,16 @@ body.dark .form.button:focus {
     cursor: default;
     opacity: 0.5;
 }
+.form.button.active:after {
+    content: '\A';
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 5px);
+    top:0;
+    left:0;
+    border-bottom: 5px solid rgba(0,0,0,0.1);
+    transition: all 0.15s;
+}
 .form.button span.ripple {
   position: absolute;
   border-radius: 50%;
