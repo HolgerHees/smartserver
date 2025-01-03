@@ -344,8 +344,14 @@ mx.NetworkTooltip = (function( ret )
     
     ret.toggleTooltip = function(device)
     {
-        if( active_tooltip_d && active_tooltip_d == device ) mx.NetworkTooltip.hideTooltip();
-        else mx.NetworkTooltip.showTooltip(device);
+        if( active_tooltip_d && active_tooltip_d == device )
+        {
+            mx.NetworkTooltip.hideTooltip();
+            return false;
+        }
+
+        mx.NetworkTooltip.showTooltip(device);
+        return true;
     }
     
     ret.positionTooltip = function(element)
@@ -426,10 +432,11 @@ mx.NetworkTooltip = (function( ret )
         return active_tooltip_d;
     }
     
-    ret.init = function()
+    ret.init = function( callback )
     {
         mx.$("body").addEventListener("click", function(e){
             mx.NetworkTooltip.hideTooltip();
+            callback();
         });
     }
     
@@ -804,6 +811,11 @@ mx.NetworkStructure = (function( ret )
             }
         }
     }
+
+    ret.tooltipCleanup = function()
+    {
+        link.classed("highlighted", false)
+    }
         
     function initTree(endCount, maxDepth)
     {
@@ -879,12 +891,18 @@ mx.NetworkStructure = (function( ret )
 
                 mx.NetworkTooltip.showTooltip(d.data.device, function()
                 {
+                    _targets = [];
+                    let _d = d;
+                    while( _d.parent != null )
+                    {
+                        _targets.push(_d.data.device.mac);
+                        _d = _d.parent;
+                    }
+
                     link
-                        .classed("online", false)
-                        .classed("offline", false)
-                        .filter(l => l.source.data === d.data || l.target.data === d.data)
-                        .classed("online", d.data.device.isOnline )
-                        .classed("offline", !d.data.device.isOnline );
+                        .classed("highlighted", false)
+                        .filter(l => _targets.includes(l.target.data.device.mac))
+                        .classed("highlighted", true );
                 });
                 mx.NetworkTooltip.positionTooltip(this.querySelector("rect.container"));
             })
@@ -901,21 +919,35 @@ mx.NetworkStructure = (function( ret )
             .on("click", function(e, d){
                 e.stopPropagation();
 
+                _targets = [];
+                let _d = d;
+                while( _d.parent != null )
+                {
+                    _targets.push(_d.data.device.mac);
+                    _d = _d.parent;
+                }
+
                 if( mx.Core.isTouchDevice() )
                 {
                     mx.NetworkTooltip.showTooltip(d.data.device, function()
                     {
-                        link
-                            .classed("online", false)
-                            .classed("offline", false)
-                            .filter(l => l.source.data === d.data || l.target.data === d.data)
-                            .classed("online", d.data.device.isOnline )
-                            .classed("offline", !d.data.device.isOnline );
+                        link.classed("highlighted", false)
+                            .filter(l => _targets.includes(l.target.data.device.mac))
+                            .classed("highlighted", true );
                     });
                 }
                 else
                 {
-                    mx.NetworkTooltip.toggleTooltip(d.data.device);
+                    if( mx.NetworkTooltip.toggleTooltip(d.data.device) )
+                    {
+                        link.classed("highlighted", false)
+                            .filter(l => _targets.includes(l.target.data.device.mac))
+                            .classed("highlighted", true );
+                    }
+                    else
+                    {
+                        link.classed("highlighted", false);
+                    }
                 }
 
                 mx.NetworkTooltip.positionTooltip(this.querySelector("rect.container"));
