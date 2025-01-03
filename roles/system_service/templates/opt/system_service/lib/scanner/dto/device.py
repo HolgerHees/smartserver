@@ -71,7 +71,6 @@ class Device(Changeable):
         self.info = None
         
         self.hop_connection_map = {}
-        self.multi_connections = False
         self.connection = None
         self.connection_state = 0
 
@@ -183,7 +182,7 @@ class Device(Changeable):
                 
             self.hop_connection_map[key] = Connection(type, target_mac, target_interface, [ details ] if details is not None else [] )
             action = Device.EVENT_DETAIL_CONNECTION_ADD
-            
+
         if action is None:
             return
 
@@ -235,8 +234,6 @@ class Device(Changeable):
     def calculateConnectionPath(self):
         #logging.info("CALCULATE")
 
-        multi_connections = False
-
         if self.getMAC() == self._getCache().getGatewayMAC():
             connection = self.getHopConnections()[0]
             connection_state = 0
@@ -244,8 +241,11 @@ class Device(Changeable):
             connection = None
             connection_state = 3
 
-            for _connection in self.getHopConnections():
-                if _connection.getType() == Connection.WIFI:
+            if self.supportsWifi():
+                for _connection in self.getHopConnections():
+                    if _connection.getType() != Connection.WIFI:
+                        continue
+
                     if connection is None:
                         connection = _connection
                         connection_state = 0
@@ -266,8 +266,6 @@ class Device(Changeable):
 
                         if _max_signal > max_signal:
                             connection = _connection
-
-                        multi_connections = True
 
             if connection is None:
                 _tmp_connections = {}
@@ -303,7 +301,6 @@ class Device(Changeable):
                     logging.error("Not able to detect any network route of " + str(self))
 
         if connection != self.connection:
-            self.multi_connections = multi_connections
             self.connection = connection
             self.connection_state = connection_state
             return True
