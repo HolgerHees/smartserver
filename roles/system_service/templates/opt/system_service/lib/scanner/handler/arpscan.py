@@ -164,47 +164,45 @@ class ArpScanner(_handler.Handler):
                     raise e
 
                 try:
-                    with self.lock:
-                        self.cache.lock(self)
+                    self.cache.lock(self)
 
-                        processed_macs = {}
-                        for [ip, mac, dns, info] in collected_arps:
-                            device = self.cache.getDevice(mac)
-                            device.setIP("arpscan", 1, ip)
-                            device.setDNS("nslookup", 1, dns)
-                            device.setInfo(info)
-                            self.cache.confirmDevice( self, device )
-
-                            stat = self.cache.getDeviceStat(mac)
-                            stat.setLastSeen(True)
-                            self.cache.confirmStat( self, stat )
-
-                            processed_macs[mac] = ip
-                            #processed_ips[ip] = mac
-
-                        device = self.cache.getDevice(server_mac)
-                        device.setIP("arpscan", 1, self.config.server_ip)
-                        device.setDNS("nslookup", 1, self.config.server_domain)
-                        device.setInfo(self.config.server_name)
+                    processed_macs = {}
+                    for [ip, mac, dns, info] in collected_arps:
+                        device = self.cache.getDevice(mac)
+                        device.setIP("arpscan", 1, ip)
+                        device.setDNS("nslookup", 1, dns)
+                        device.setInfo(info)
                         self.cache.confirmDevice( self, device )
 
-                        stat = self.cache.getDeviceStat(server_mac)
+                        stat = self.cache.getDeviceStat(mac)
                         stat.setLastSeen(True)
                         self.cache.confirmStat( self, stat )
 
-                        processed_macs[server_mac] = self.config.server_ip
+                        processed_macs[mac] = ip
+                        #processed_ips[ip] = mac
 
-                        for device in self.cache.getDevices():
-                            if device.getMAC() in processed_macs:
-                                continue
+                    device = self.cache.getDevice(server_mac)
+                    device.setIP("arpscan", 1, self.config.server_ip)
+                    device.setDNS("nslookup", 1, self.config.server_domain)
+                    device.setInfo(self.config.server_name)
+                    self.cache.confirmDevice( self, device )
 
-                            if device.getIP() is None:
-                                self._initDeviceIP(device, lambda d: self._cleanDevice(d), lambda d: self._cleanDevice(d) )
-                            else:
-                                self._cleanDevice(device)
-                
-                        self.cache.unlock(self)
+                    stat = self.cache.getDeviceStat(server_mac)
+                    stat.setLastSeen(True)
+                    self.cache.confirmStat( self, stat )
 
+                    processed_macs[server_mac] = self.config.server_ip
+
+                    for device in self.cache.getDevices():
+                        if device.getMAC() in processed_macs:
+                            continue
+
+                        if device.getIP() is None:
+                            self._initDeviceIP(device, lambda d: self._cleanDeviceLazy(d), lambda d: self._cleanDeviceLazy(d) )
+                        else:
+                            self._cleanDevice(device)
+
+                    self.cache.unlock(self)
                 except Exception as e:
                     self.cache.cleanLocks(self)
                     self._handleUnexpectedException(e)
@@ -216,6 +214,14 @@ class ArpScanner(_handler.Handler):
                 timeout = self.config.arp_scan_interval
                         
             self._wait(timeout)
+
+    def _cleanDeviceLazy(self, device):
+        try:
+            self.cache.lock(self)
+            self._cleanDevice(device)
+            self.cache.unlock(self)
+        except Exception as e:
+            self.cache.cleanLocks(self)
 
     def _cleanDevice(self, device):
         mac = device.getMAC()
@@ -335,30 +341,29 @@ class ArpScanner(_handler.Handler):
     def processEvents(self, events):
         changed_devices = {}
 
-        with self.lock:
-            for event in events:
-                if event.getAction() == Event.ACTION_CREATE:
-                    if event.hasDetail("ip"):
-                        continue
-
-                    device = event.getObject()
-                    if device.getIP() is not None:
-                        continue
-
-                    self._initDeviceIP(device, lambda d: self._processDevice(d) )
-                else:
-                    if not event.hasDetail("connection"):
-                        continue
-
-                    device = event.getObject()
-                    if device.getIP() is not None:
-                        continue
-
-                    detail = event.getDetail("connection")
-                    if Device.EVENT_DETAIL_CONNECTION_DISABLE in detail:
-                        self.cache.lock(self)
-                        stat = self.cache.getDeviceStat(device.getMAC())
-                        stat.setOffline()
-                        self.cache.confirmStat( self, stat )
-                        self.cache.unlock(self)
+        for event in events:
+            if event.getAction() == Event.ACTION_CREATE:
+                if event.hasDetail("ip"):
                     continue
+
+                device = event.getObject()
+                if device.getIP() is not None:
+                    continue
+
+                self._initDeviceIP(device, lambda d: self._processDevice(d) )
+            else:
+                if not event.hasDetail("connection"):
+                    continue
+
+                device = event.getObject()
+                if device.getIP() is not None:
+                    continue
+
+                detail = event.getDetail("connection")
+                if Device.EVENT_DETAIL_CONNECTION_DISABLE in detail:
+                    self.cache.lock(self)
+                    stat = self.cache.getDeviceStat(device.getMAC())
+                    stat.setOffline()
+                    self.cache.confirmStat( self, stat )
+                    self.cache.unlock(self)
+                continue
