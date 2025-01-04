@@ -336,6 +336,16 @@ div.buttonSelection > div.buttonSelectionLayer > div:hover {
 .autoCompleteLayer > div.row.active {
   background-color: rgba(51,122,183,.20);
 }
+.autoCompletionInputWrapper {
+    position: relative;
+}
+.autoCompletionInputClear {
+    position: absolute;
+    right: 3px;
+    top: 0;
+    visibility: hidden;
+    cursor: pointer;
+}
 .autoCompletionSelection {
     display: none;
     flex-flow: wrap;
@@ -362,7 +372,7 @@ div.buttonSelection > div.buttonSelectionLayer > div:hover {
     display: inline-block;
     position: absolute;
     right: 4px;
-    top: 0;
+    top: -1px;
     bottom: 0;
     margin: auto;
 }

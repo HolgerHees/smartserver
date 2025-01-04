@@ -27,6 +27,9 @@ body, svg {
     min-width: 0px;
     max-width: 0px;
     transition: all 0.3s;
+    overflow-y: visible;
+    margin-top: -5px;
+    margin-bottom: -7px;
 }
 #networkToolbar .networkSearchInput.active {
     max-width: 205px;
@@ -34,12 +37,16 @@ body, svg {
 }
 #networkToolbar .networkSearchInput input {
     width: 200px;
-    margin-right: 5px;
 }
 #networkToolbar .networkSearchInput input:focus {
     outline: 0;
 }
-
+#networkToolbar .networkSearchInput .networkSearchClose {
+    position: absolute;
+    right: 7px;
+    top: 1px;
+    visibility: hidden;
+}
 #networkToolbar .networkSearchWifi {
     white-space: nowrap;
 }

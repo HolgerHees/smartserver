@@ -38,6 +38,32 @@ mx.UNCore = (function( ret ) {
     var demo_ip_map = {};
     var demo_mac_map = {};
 
+    var searchInputBox = null;
+    var searchInputField = null;
+    var searchInputClear = null;
+
+    function clearSearchInput()
+    {
+        searchInputField.value = "";
+        searchInputClear.style.visibility = "hidden";
+    }
+
+    function processSearch(searchTerm, group)
+    {
+        if( group == "button" )
+        {
+            clearSearchInput();
+        }
+        else if( group == "input" )
+        {
+            let activeSearchButton = mx.$("#networkToolbar .networkSearchWifi .button.active");
+            if( activeSearchButton ) activeSearchButton.classList.remove("active");
+        }
+
+        if( isTable) mx.NetworkTable.search(searchTerm);
+        else mx.NetworkStructure.search(searchTerm);
+    }
+
     function initWifiNetworks(_wifi_networks, _wifi_bands)
     {
         var clients = {};
@@ -67,7 +93,7 @@ mx.UNCore = (function( ret ) {
                 button = document.createElement("div");
                 button.id = id;
                 button.setAttribute("class", "form button");
-                button.style.backgroundColor = value + "99";
+                button.style.backgroundColor = value + "66";
                 button.innerHTML = key.toLowerCase() + " (" + clients[key] + ")";
                 toolbar.appendChild(button);
                 new_buttons.push([button,"ssid",key]);
@@ -101,28 +127,15 @@ mx.UNCore = (function( ret ) {
 
                 if( is_active )
                 {
-                    if( group == "ssid" )
-                    {
-                        activeTerm = ["wifi_ssid", name];
-                    }
-                    else if( group == "band" )
-                    {
-                        activeTerm = ["wifi_band", name];
-                    }
+                    if( group == "ssid" ) activeTerm = ["wifi_ssid", name];
+                    else if( group == "band" ) activeTerm = ["wifi_band", name];
                 }
                 else
                 {
                     activeTerm = "";
                 }
 
-                if( isTable)
-                {
-                    mx.NetworkTable.search(activeTerm);
-                }
-                else
-                {
-                    mx.NetworkStructure.search(activeTerm);
-                }
+                processSearch(activeTerm, "button");
             });
         }
     }
@@ -447,15 +460,24 @@ mx.UNCore = (function( ret ) {
     { 
         mx.I18N.process(document);
         
-        mx.NetworkTooltip.init(function()
-        {
+        searchInputBox = mx.$("#networkToolbar .networkSearchInput");
+        searchInputField = mx.$("#networkToolbar .networkSearchInput input");
+        searchInputClear = mx.$("#networkToolbar .networkSearchInput .networkSearchClose");
+
+        mx.$("body").addEventListener("click", function(event){
+            mx.NetworkTooltip.hideTooltip();
+
             if( !isTable ) mx.NetworkStructure.tooltipCleanup();
+
+            if( searchInputField.value == "" ) searchInputBox.classList.remove("active");
         });
         
-        //refreshDaemonState(null, function(state){});
-        
-        mx.$("#networkToolbar .networkDisplay.button").addEventListener("click",function()
+        mx.$("#networkToolbar .networkDisplay.button").addEventListener("click",function(event)
         {
+            event.stopPropagation();
+
+            if( event.target == searchInputField ) return;
+
             isTable = !isTable;
 
             if( isTable )
@@ -470,21 +492,22 @@ mx.UNCore = (function( ret ) {
             }
         });
         
-        let searchInputBox = mx.$("#networkToolbar .networkSearchInput");
-        let searchInputField = mx.$("#networkToolbar .networkSearchInput input");
-        let lastBlur = 0;
-        
-        mx.$("#networkToolbar .networkSearch.button").addEventListener("click",function()
+        searchInputClear.addEventListener("click",function(event)
         {
-            if( window.performance.now() - lastBlur  < 500 )
-                return;
-            
+            event.stopPropagation();
+
+            clearSearchInput();
+        });
+
+        mx.$("#networkToolbar .networkSearch.button").addEventListener("click",function(event)
+        {
+            event.stopPropagation();
+
+            if( event.target == searchInputField ) return;
+
             searchInputBox.classList.toggle("active");
             
-            if( searchInputBox.classList.contains("active") ) 
-            {
-                searchInputField.focus();
-            }
+            if( searchInputBox.classList.contains("active") ) searchInputField.focus();
         });
         
         searchInputField.addEventListener("keyup",function(event)
@@ -497,37 +520,17 @@ mx.UNCore = (function( ret ) {
             else
             {
                 var _term = searchInputField.value.toLowerCase();
-                if( _term == activeTerm )
-                    return;
+                if( _term == activeTerm ) return;
 
-                activeTerm = _term.toLowerCase();
+                searchInputClear.style.visibility = _term == "" ? "hidden" : "visible";
 
-                let activeSearchButton = mx.$("#networkToolbar .networkSearchWifi .button.active");
-                if( activeSearchButton ) activeSearchButton.classList.remove("active");
-                
-                if( isTable)
-                {
-                    mx.NetworkTable.search(activeTerm);
-                }
-                else
-                {
-                    mx.NetworkStructure.search(activeTerm);
-                }
+                processSearch(_term.toLowerCase(), "input");
             }
         });
         
         searchInputField.addEventListener("focus",function(event)
         {
             searchInputField.select();
-        });
-
-        searchInputField.addEventListener("blur",function(event)
-        {   
-            if( searchInputField.value == "" )
-            {
-                searchInputBox.classList.remove("active");
-                lastBlur = window.performance.now();
-            }
         });
     }
     return ret;
@@ -550,6 +553,6 @@ mx.OnSharedModWebsocketReady.push(function(){
 <div id="networkStructure"></div>
 <div id="networkList"></div>
 </div>
-<div id="networkToolbar"><div class="networkDisplay form button"><span class="icon-table"></span></div><div class="networkSearch form button"><span class="icon-search-1"></span></div><div class="networkSearchInput"><input></div><div class="networkSearchWifi"></div></div>
+<div id="networkToolbar"><div class="networkDisplay form button"><span class="icon-table"></span></div><div class="networkSearch form button"><span class="icon-search-1"></span><span class="networkSearchInput"><input><span class="networkSearchClose">✖</span></span></div><div class="networkSearchWifi"></div></div>
 </body>
 </html>

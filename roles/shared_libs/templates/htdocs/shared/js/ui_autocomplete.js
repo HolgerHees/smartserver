@@ -94,6 +94,8 @@ mx.Autocomplete = (function( ret ) {
 
     function selectValue(options, value, element)
     {
+        options.elements.inputClear.style.display = "hidden";
+
         options.elements.input.value = "";
         options.elements.input.focus();
         
@@ -139,6 +141,9 @@ mx.Autocomplete = (function( ret ) {
     function buildValues(options,force)
     {
         var term = options.elements.input.value.toLowerCase();
+
+        options.elements.inputClear.style.visibility = ( term == "" ? "hidden" : "visible" );
+
         if( options.lastTerm == term && !force ) return;
         options.lastTerm = term;
         
@@ -182,6 +187,13 @@ mx.Autocomplete = (function( ret ) {
         options.elements.selectionLayer.style.display = options.selected_values.length > 0 ? "flex": "";
     }
     
+    function onClear(event, options)
+    {
+        options.elements.input.value = "";
+        options.elements.input.select();
+        buildValues(options,false);
+    }
+
     function onFocus(event, options)
     {
         show(options);
@@ -287,20 +299,36 @@ mx.Autocomplete = (function( ret ) {
     function createAutocomplete(options)
     {
         options.elements.input.autocomplete = "off";
-        
+        options.elements.input.classList.add("autoCompletionInput");
+
+        options.elements.inputWrapper = document.createElement("span");
+        options.elements.inputWrapper.classList.add("autoCompletionInputWrapper");
+        mx.Core.insertAfter(options.elements.inputWrapper,options.elements.input);
+
+        options.elements.inputWrapper.appendChild(options.elements.input);
+
+        options.elements.inputClear = document.createElement("span");
+        options.elements.inputClear.classList.add("autoCompletionInputClear");
+        options.elements.inputClear.innerHTML = "✖";
+        options.elements.inputWrapper.appendChild(options.elements.inputClear);
+
         options.elements.selectionLayer = document.createElement("div");
         options.elements.selectionLayer.classList.add("autoCompletionSelection");
-        mx.Core.insertBefore(options.elements.selectionLayer,options.elements.input);
+        mx.Core.insertBefore(options.elements.selectionLayer,options.elements.inputWrapper);
 
         options.elements.autocompleteLayer = document.createElement("div");
         options.elements.autocompleteLayer.classList.add("autocompleteLayer");
         options.elements.autocompleteLayer.innerHTML = "";
         var positionInfo = options.elements.input.getBoundingClientRect();
         options.elements.autocompleteLayer.style.width = positionInfo.width + "px";
-        mx.Core.insertAfter(options.elements.autocompleteLayer,options.elements.input);
+        mx.Core.insertAfter(options.elements.autocompleteLayer,options.elements.inputWrapper);
         
+        options.onClear = function(event) { onClear(event, options); }
+        options.elements.inputClear.addEventListener("click",options.onClear);
+
         options.onFocus = function(event) { onFocus(event, options); }
         options.elements.input.addEventListener("focus",options.onFocus);
+
         options.onKeyUp = function(event) { onKeyUp(event, options); }
         options.elements.input.addEventListener("keyup",options.onKeyUp);
 
