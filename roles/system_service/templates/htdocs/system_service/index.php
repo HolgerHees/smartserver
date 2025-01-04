@@ -464,11 +464,14 @@ mx.UNCore = (function( ret ) {
         searchInputField = mx.$("#networkToolbar .networkSearchInput input");
         searchInputClear = mx.$("#networkToolbar .networkSearchInput .networkSearchClose");
 
+        window.addEventListener("resize", function(event){
+            mx.NetworkTooltip.hideTooltip();
+            if( !isTable ) mx.NetworkStructure.tooltipCleanup();
+        });
+
         mx.$("body").addEventListener("click", function(event){
             mx.NetworkTooltip.hideTooltip();
-
             if( !isTable ) mx.NetworkStructure.tooltipCleanup();
-
             if( searchInputField.value == "" ) searchInputBox.classList.remove("active");
         });
         
