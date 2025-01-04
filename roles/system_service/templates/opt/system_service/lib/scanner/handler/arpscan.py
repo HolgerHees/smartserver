@@ -118,7 +118,6 @@ class ArpScanner(_handler.Handler):
     def __init__(self, config, cache ):
         super().__init__(config,cache)
         
-        self.lock = threading.Lock()
         self.last_cleanup = {}
 
         self.dhcp_listener = DHCPListener(self, self.cache, self.config.main_interface)
