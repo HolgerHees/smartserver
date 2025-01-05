@@ -276,7 +276,7 @@ def on_connect():
     Server.serverHandler.onSocketConnect(request.sid)
 
 @serverSocket.on('disconnect')
-def on_disconnect():
+def on_disconnect(reason = None): # reason is available from engineio version 4.11.2, before it is None
     Server.serverHandler.onSocketDisconnect(request.sid)
 
 @serverSocket.on('join')
