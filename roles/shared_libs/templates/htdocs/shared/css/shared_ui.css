@@ -41,6 +41,11 @@ body.dark .form.button:focus {
     border-bottom: 5px solid rgba(0,0,0,0.1);
     transition: all 0.15s;
 }
+:root body.dark {
+    .form.button.active:after {
+        border-bottom: 5px solid rgba(255,255,255,0.3);
+    }
+}
 .form.button span.ripple {
   position: absolute;
   border-radius: 50%;

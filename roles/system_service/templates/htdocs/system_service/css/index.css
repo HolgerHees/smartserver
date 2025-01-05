@@ -182,7 +182,11 @@ svg g.nodes rect.container.match {
     fill: var(--color-red) !important;
     filter: brightness(2.0);
 }
-
+:root body.dark {
+    svg g.nodes rect.container.match {
+        filter: brightness(0.5);
+    }
+}
 svg g.nodes rect.container.hub,
 svg g.nodes rect.container.network {
     fill: var(--content-hightlight-bg);
