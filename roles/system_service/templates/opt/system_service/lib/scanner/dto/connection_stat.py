@@ -18,8 +18,6 @@ class ConnectionStatDetails(Changeable):
         self.out_avg = None
         self.in_speed = None
         self.out_speed = None
-
-        self.details = {}
         
     def _checkLock(self):
         self.connection_stat._checkLock()
@@ -28,18 +26,12 @@ class ConnectionStatDetails(Changeable):
         self.connection_stat._markAsChanged(type,details)
         
     def reset(self):
-        if self.in_avg is not None:
-            self.setInAvg(0)
-        if self.out_avg is not None:
-            self.setOutAvg(0)
-        if self.in_bytes is not None:
-            self.setInBytes(0)
-        if self.out_bytes is not None:
-            self.setOutBytes(0)
-        if self.in_speed is not None:
-            self.setInSpeed(0)
-        if self.out_speed is not None:
-            self.setOutSpeed(0)
+        self.setInAvg(0)
+        self.setOutAvg(0)
+        self.setInBytes(0)
+        self.setOutBytes(0)
+        self.setInSpeed(0)
+        self.setOutSpeed(0)
         for key in list(self._getDetails()):
             self.removeDetail(key)
 
