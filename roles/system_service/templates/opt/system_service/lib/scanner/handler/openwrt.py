@@ -376,12 +376,10 @@ class OpenWRT(_handler.Handler):
                     if mac == self.cache.getGatewayMAC():
                         continue
 
-
-                                
                     vlan = wlan_network["vlan"]
                     gid = wlan_network["gid"]
                     band = wlan_network["band"]
-                    
+
                     target_mac = openwrt_mac
                     target_interface = mac
 
@@ -433,7 +431,7 @@ class OpenWRT(_handler.Handler):
 
                     _active_client_macs.append(mac)
                     self.wifi_clients[openwrt_ip][mac] = True
-                    
+
             for [ _, uid, mac, gid, vlan, target_mac, target_interface, connection_details ] in list(self.wifi_associations[openwrt_ip].values()):
                 if uid not in _active_associations:
                     device = self.cache.getUnlockedDevice(mac)

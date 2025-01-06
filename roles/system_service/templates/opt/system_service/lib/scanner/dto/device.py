@@ -243,7 +243,7 @@ class Device(Changeable):
 
             if self.supportsWifi():
                 for _connection in self.getHopConnections():
-                    if _connection.getType() != Connection.WIFI:
+                    if _connection.getType() != Connection.WIFI or not _connection.isEnabled():
                         continue
 
                     if connection is None:
@@ -252,17 +252,19 @@ class Device(Changeable):
                     else:
                         max_signal = -256
                         stat = self.cache.getUnlockedConnectionStat(connection.getTargetMAC(),connection.getTargetInterface())
-                        for stat_data in stat.getDataList():
-                            signal = int(stat_data.getDetail("signal","-256"))
-                            if signal > max_signal:
-                                max_signal = signal
+                        if stat is not None:
+                            for stat_data in stat.getDataList():
+                                signal = int(stat_data.getDetail("signal","-256"))
+                                if signal > max_signal:
+                                    max_signal = signal
 
                         _max_signal = -256
                         _stat = self.cache.getUnlockedConnectionStat(_connection.getTargetMAC(),_connection.getTargetInterface())
-                        for _stat_data in _stat.getDataList():
-                            _signal = int(_stat_data.getDetail("signal","-256"))
-                            if _signal > _max_signal:
-                                _max_signal = _signal
+                        if _stat is not None:
+                            for _stat_data in _stat.getDataList():
+                                _signal = int(_stat_data.getDetail("signal","-256"))
+                                if _signal > _max_signal:
+                                    _max_signal = _signal
 
                         if _max_signal > max_signal:
                             connection = _connection
