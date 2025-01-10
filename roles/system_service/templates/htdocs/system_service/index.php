@@ -21,7 +21,7 @@ mx.UNCore = (function( ret ) {
         "#B497E7",
         "#B3B3B3"
     ];
-    var wifiNetworks = {};
+    var wifiNetworkColors = {};
 
     var groups = {};
     var devices = {};    
@@ -77,15 +77,13 @@ mx.UNCore = (function( ret ) {
         for (var k in tuples)
         {
             clients[tuples[k][0]] = tuples[k][1];
-
-            if( wifiNetworks.hasOwnProperty(tuples[k][0]) ) continue;
-
-            wifiNetworks[tuples[k][0]] = wifiColors[Object.keys(wifiNetworks).length];
+            if( wifiNetworkColors.hasOwnProperty(tuples[k][0]) ) continue;
+            wifiNetworkColors[tuples[k][0]] = wifiColors[Object.keys(wifiNetworkColors).length];
         }
 
         let toolbar = mx.$("#networkToolbar .networkSearchWifi");
         let new_buttons = [];
-        Object.entries(wifiNetworks).forEach(([key,value]) => {
+        Object.entries(clients).forEach(([key,value]) => {
             let id = "ssid_" + key;
             let button = mx.$("#" + id);
             if( !button )
@@ -93,13 +91,31 @@ mx.UNCore = (function( ret ) {
                 button = document.createElement("div");
                 button.id = id;
                 button.setAttribute("class", "form button");
-                button.style.backgroundColor = value + "66";
-                button.innerHTML = key.toLowerCase() + " (" + clients[key] + ")";
+                button.style.backgroundColor = wifiNetworkColors[key] + "66";
+                button.innerHTML = key.toLowerCase() + " (" + value + ")";
                 toolbar.appendChild(button);
                 new_buttons.push([button,"ssid",key]);
             }
+            else
+            {
+                button.innerHTML = key.toLowerCase() + " (" + value + ")";
+            }
         });
-        Object.entries(_wifi_bands).forEach(([key,value]) => {
+
+        clients = {};
+        tuples = [];
+        for (var key in _wifi_bands) tuples.push([key, _wifi_bands[key]]);
+        tuples.sort(function(a, b) {
+            a = a[1];
+            b = b[1];
+            return a > b ? -1 : (a < b ? 1 : 0);
+        });
+        for (var k in tuples)
+        {
+            clients[tuples[k][0]] = tuples[k][1];
+        }
+
+        Object.entries(clients).forEach(([key,value]) => {
             let id = "band_" + key;
             let button = mx.$("#" + id);
             if( !button )
@@ -110,6 +126,10 @@ mx.UNCore = (function( ret ) {
                 button.innerHTML = key.toLowerCase() + " (" + value + ")";
                 toolbar.appendChild(button);
                 new_buttons.push([button,"band",key]);
+            }
+            else
+            {
+                button.innerHTML = key.toLowerCase() + " (" + value + ")";
             }
         });
 
@@ -451,7 +471,7 @@ mx.UNCore = (function( ret ) {
             }
             else
             {
-                mx.NetworkStructure.draw( activeTerm, replacesNodes ? rootNode : null, groups, stats, wifiNetworks);
+                mx.NetworkStructure.draw( activeTerm, replacesNodes ? rootNode : null, groups, stats, wifiNetworkColors);
             }
         }
     }
@@ -491,7 +511,7 @@ mx.UNCore = (function( ret ) {
             else
             {
                 mx.$("#networkToolbar .networkDisplay.button span").className = "icon-table";
-                mx.NetworkStructure.draw( activeTerm, rootNode, groups, stats, wifiNetworks);
+                mx.NetworkStructure.draw( activeTerm, rootNode, groups, stats, wifiNetworkColors);
             }
         });
         
