@@ -159,16 +159,16 @@ class OpenWRT(_handler.Handler):
 
         self.next_run[openwrt_ip]["interfaces"] = now + timedelta(seconds=self.config.openwrt_client_interval if is_gateway else self.config.openwrt_network_interval)
 
+        _active_vlans = {}
+        _interfaces = {}
+        device_result = self._getDevices(openwrt_ip, ubus_session_id)
+
         self.cache.lock(self)
 
         if is_gateway:
             openhab_device = self.cache.getDevice(openwrt_mac)
             openhab_device.addHopConnection(Connection.ETHERNET, self.cache.getWanMAC(), self.cache.getWanInterface() );
             self.cache.confirmDevice( self, openhab_device )
-
-        _active_vlans = {}
-        _interfaces = {}
-        device_result = self._getDevices(openwrt_ip, ubus_session_id)
 
         wan_stats = { "max_up": 0, "max_down": 0, "sum_sent": 0, "sum_received": 0 }
         lan_stats = { "max_up": 0, "max_down": 0, "sum_sent": 0, "sum_received": 0 }
@@ -474,7 +474,7 @@ class OpenWRT(_handler.Handler):
             return requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
         except requests.exceptions.ConnectionError as e:
             msg = "OpenWRT {} currently not available".format(ip)
-            if retry > 0: 
+            if retry > 0:
                 logging.info(msg)
                 for i in range(3):
                     if Helper.ping(ip, 5, self._isRunning): # ubus calls are sometimes (~ones every 2 days) answered with a 500

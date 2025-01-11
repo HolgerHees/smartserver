@@ -320,10 +320,11 @@ class ArpScanner(_handler.Handler):
                 failure_callback(device)
             return
 
+        dns = self.cache.nslookup(ip_address)
+
         self.cache.lock(self)
 
         device.lock(self)
-        dns = self.cache.nslookup(ip_address)
         device.setIP("arpscan", 1, ip_address)
         device.setDNS("nslookup", 1, dns)
         self.cache.confirmDevice( self, device )

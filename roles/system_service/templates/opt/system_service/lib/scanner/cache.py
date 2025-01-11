@@ -22,7 +22,9 @@ class Cache():
         self.config = config
         
         self._lock = threading.Lock()
+        self._lock_source = None
         self._lock_owner = None
+        self._lock_start = None
 
         self.groups = {}
         self.devices = {}
@@ -68,14 +70,30 @@ class Cache():
     
     def lock(self, owner):
         #Helper.logInfo("LOCKDEBUG: lock", 2)
-        if not self._lock.acquire(timeout=15):
-            raise Exception("Not able to aquire lock. TIMEOUT: 15 seconds, REQUESTING OWNER: {}, ACTIVE OWNER: {}".format(owner, self._lock_owner))
+        if not self._lock.acquire(timeout=60):
+            raise Exception("Not able to aquire lock. TIMEOUT: 60 seconds, REQUESTING OWNER: {}, ACTIVE OWNER: {}, OWNER SOURCE: {}".format(owner, self._lock_owner, self._lock_source))
+
+        frame = sys._getframe(1)
+        self._lock_source = "{}:{}".format( frame.f_code.co_filename.replace("/",".")[:-3] , frame.f_lineno )
         self._lock_owner = owner
-        
+        self._lock_start = time.time()
+
+        #logging.info(">>>>>>>>>> CACHE LOCK {}".format(self._lock_owner))
+
     def unlock(self, owner):
-        #Helper.logInfo("LOCKDEBUG: unlock", 2)
+        if self._lock_owner != owner:
+            raise Exception("Not able to unlock. REQUESTING OWNER: {}, ACTIVE OWNER: {}, OWNER SOURCE: {}".format(owner, self._lock_owner, self._lock_source))
+            return
+
+        duration = time.time() - self._lock_start
+
+        if duration > 5.0:
+            logging.warning("Cache was {:.2f} seconds locked: ACTIVE OWNER: {}, OWNER SOURCE: {}".format(duration, self._lock_owner, self._lock_source))
+
         self._lock.release()
+        self._lock_source = None
         self._lock_owner = None
+        self._lock_start = None
 
         self.event_trigger.set()
 
