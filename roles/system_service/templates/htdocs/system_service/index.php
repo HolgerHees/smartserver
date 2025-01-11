@@ -520,6 +520,8 @@ mx.UNCore = (function( ret ) {
             event.stopPropagation();
 
             clearSearchInput();
+
+            processSearch("", "input");
         });
 
         mx.$("#networkToolbar .networkSearch.button").addEventListener("click",function(event)

@@ -202,7 +202,7 @@
   register: sysctlchanged
    
 - name: refresh sysctl to activate sysctl changes => sysctl changed
-  shell: "/usr/sbin/sysctl -p"
+  shell: sysctl -p
   when: sysctlchanged.changed
 
 - name: copy missing logind.conf # => was missing on opensuse leap15.6
