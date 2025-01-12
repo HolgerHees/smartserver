@@ -541,6 +541,10 @@ mx.UNCore = (function( ret ) {
             {
                 searchInputBox.classList.toggle("active");
                 searchInputField.blur();
+
+                clearSearchInput();
+
+                processSearch("", "input");
             }
             else
             {
