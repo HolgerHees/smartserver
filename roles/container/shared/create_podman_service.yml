@@ -95,7 +95,7 @@
 
 - name: "container : create_podman_service : prepare changed flag"
   set_fact:
-    podman_service_container_changed: "{{ true if podman_create_cmd_old != ( podman_create_cmd_new | join(' ') | regex_replace(\"--(env|entrypoint) '(.*?)' \",\"--\\1 \\2 \") ) else false }}"
+    podman_service_container_changed: "{{ true if container_force_recreation | default(false) or podman_create_cmd_old != ( podman_create_cmd_new | join(' ') | regex_replace(\"--(env|entrypoint) '(.*?)' \",\"--\\1 \\2 \") ) else false }}"
   tags: ['podman_container']
 
 - name: "container : create_podman_service_container_task"

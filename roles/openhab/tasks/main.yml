@@ -49,123 +49,84 @@
     git_mode:  "u=rwX,g=rX,o="
   include_tasks: roles/_shared/git_clone.yml
 
-# conf folder
+# ***** PROCESS AND MERGE CONF FOLDER SYMLINKS *****
 - name: check custom conf folder
-  shell: "ls -1 {{projects_path}}openhab_config/conf/"
-  register: custom_result
-  changed_when: no
-  
-- name: link custom conf folder
-  file:
-    src: "{{projects_path}}openhab_config/conf/{{item}}"
-    dest: "{{global_etc}}openhab/conf/{{item}}"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  with_items: "{{custom_result.stdout_lines}}"
-  notify: "restart openhab"
-
-- name: check custom conf folder
-  shell: "find -L . -type d"
+  shell: "find . -type d | cut -c 3-"
   args:
-    chdir: "{{global_etc}}openhab/conf/"
+    chdir: "{{projects_path}}openhab_config/conf/"
   register: custom_result
   changed_when: no
+  check_mode: false
 
-- name: check custom conf folder
-  shell: "find . -type d"
+- name: check shared conf folder
+  shell: "find . -type d | cut -c 3-"
   args:
     chdir: "{{projects_path}}openhab_shared/conf/"
   register: shared_result
   changed_when: no
+  check_mode: false
 
-- name: collect shared conf folder
+- name: collect conf folder links
   set_fact:
-    shared_link_folders: |
+    collected_folder_links: |
       [
-        {% set ns = namespace(active_line = 'xxx') %}
+        {% set ns = namespace(active_line = 'xxx', has_python = 'automation/python' in custom_result.stdout_lines) %}
+        {% for line in custom_result.stdout_lines %}
+          {% if line | length > 0 and not line.startswith(ns.active_line) %}
+              { "src": "{{projects_path}}openhab_config/conf/{{line}}"                  , "dest": "{{global_etc}}openhab/conf/{{line}}", "is_main": "{{ '1' if '/' not in line else '0'}}" },
+              {% set ns.active_line = line %}
+          {% endif %}
+        {% endfor %}
         {% for line in shared_result.stdout_lines %}
-          {% if line not in custom_result.stdout_lines and not line.startswith(ns.active_line) %}
-              { "src": "{{projects_path}}openhab_shared/conf/{{line[2:]}}"                  , "dest": "{{global_etc}}openhab/conf/{{line[2:]}}" },
+          {% if line | length > 0 and line not in custom_result.stdout_lines and not line.startswith(ns.active_line) and ( ns.has_python or 'automation/python' not in line ) %}
+              { "src": "{{projects_path}}openhab_shared/conf/{{line}}"                  , "dest": "{{global_etc}}openhab/conf/{{line}}", "is_main": "{{ '1' if '/' not in line else '0'}}" },
               {% set ns.active_line = line %}
           {% endif %}
         {% endfor %}
       ]
 
-- name: link shared conf folder
-  file:
-    src: "{{item.src}}"
-    dest: "{{item.dest}}"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  with_items: "{{shared_link_folders}}"
-  notify: "restart openhab"
+- name: check for wrong conf folder links
+  stat:
+    path: "{{item.dest}}"
+  changed_when: "not checked_folder_links.stat.exists or not checked_folder_links.stat.islnk"
+  register: checked_folder_links
+  with_items: "{{collected_folder_links}}"
 
-# python folder
-- name: check custom python folder
-  shell: "ls -1 {{projects_path}}openhab_config/python/"
-  register: custom_result
-  changed_when: no
-
-- name: link custom python folder
-  file:
-    src: "{{projects_path}}openhab_config/python/{{item}}"
-    dest: "{{global_etc}}openhab/python/{{item}}"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  with_items: "{{custom_result.stdout_lines}}"
-  notify: "restart openhab"
-
-- name: check custom python folder
-  shell: "find -L . -type d"
-  args:
-    chdir: "{{global_etc}}openhab/python/"
-  register: custom_result
-  changed_when: no
-
-- name: check custom python folder
-  shell: "find . -type d"
-  args:
-    chdir: "{{projects_path}}openhab_shared/python/"
-  register: shared_result
-  changed_when: no
-
-- name: collect shared python folder
+- name: collect wrong conf folder links
   set_fact:
-    shared_link_folders: |
+    collected_wrong_folder_links: |
       [
-        {% set ns = namespace(active_line = 'xxx') %}
-        {% for line in shared_result.stdout_lines %}
-          {% if line not in custom_result.stdout_lines and not line.startswith(ns.active_line) %}
-              { "src": "{{projects_path}}openhab_shared/python/{{line[2:]}}"                  , "dest": "{{global_etc}}openhab/python/{{line[2:]}}" },
-              {% set ns.active_line = line %}
+        {% for result in checked_folder_links.results %}
+          {% if result.changed %}
+              { "src": "{{result.item.src}}"                  , "dest": "{{result.item.dest}}", "is_main": "{{result.item.is_main}}" },
           {% endif %}
         {% endfor %}
       ]
 
-- name: link shared python folder
+- name: clean main conf folder
+  file:
+    path: "{{item.dest}}"
+    state: absent
+  when: "{{item.is_main == '1'}}"
+  with_items: "{{collected_wrong_folder_links}}"
+
+- name: create conf folder links
   file:
     src: "{{item.src}}"
     dest: "{{item.dest}}"
     state: link
-    follow: no
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
-  with_items: "{{shared_link_folders}}"
-  notify: "restart openhab"
+  register: conf_folder_links_created
+  with_items: "{{collected_wrong_folder_links}}"
 
-# missing folder
-- name: check conf folder
+- name: check for missing conf folder
   shell: "ls -1 {{global_etc}}openhab/conf/"
   register: config_folder_result
   changed_when: no
+  check_mode: false
 
-- name: create missing folder
+- name: create missing conf folder
   file:
     path: "{{global_etc}}openhab/conf/{{item}}"
     state: directory
@@ -173,13 +134,14 @@
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
     mode: "u=rwx,g=rx,o="
+  register: conf_folder_links_missing
   when: "item not in config_folder_result.stdout_lines"
   with_items:
       - "automation"
       - "html"
       - "icons"
       - "items"
-      - "persistance"
+      - "persistence"
       - "rules"
       - "scripts"
       - "services"
@@ -187,6 +149,18 @@
       - "things"
       - "transform"
   notify: "restart openhab"
+
+# ***** PROCES PYTHON FOLDER ****
+- name: create python folder links
+  file:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    state: link
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+  with_items:
+    - { "src": "{{projects_path}}openhab_config/python/custom"        , "dest": "{{global_etc}}openhab/python/custom" }
+    - { "src": "{{projects_path}}openhab_shared/python/shared"        , "dest": "{{global_etc}}/openhab/python/shared" }
 
 # habpanel if exists
 - name: check habpanel config
@@ -327,6 +301,7 @@
 
 - name: create container service
   vars:
+    container_force_recreation: "{{true if conf_folder_links_created.changed or conf_folder_links_missing.changed else false}}"
     container_name: "openhab"
     container_image: "openhab/openhab:{{openhab_version}}-debian"
     container_network: "host"
