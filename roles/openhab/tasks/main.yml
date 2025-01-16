@@ -16,10 +16,6 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/addons" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf" }
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/html" }
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/icons" }
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/services" }
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/conf/things" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/python" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_etc}}openhab/cont-init.d" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['openhab'].name}}", group: "{{system_groups['openhab'].name}}", path: "{{global_lib}}openhab" }
@@ -54,45 +50,50 @@
   include_tasks: roles/_shared/git_clone.yml
 
 # conf folder
-- name: check conf folder
+- name: check custom conf folder
   shell: "ls -1 {{projects_path}}openhab_config/conf/"
-  register: config_result
+  register: custom_result
   changed_when: no
   
-# custom conf sub folder (html & icons)
-- name: check html & icons folder
-  shell: "ls -1 {{projects_path}}openhab_config/conf/{{item}}/"
-  register: config_sub_folder_result
+- name: link custom conf folder
+  file:
+    src: "{{projects_path}}openhab_config/conf/{{item}}"
+    dest: "{{global_etc}}openhab/conf/{{item}}"
+    state: link
+    follow: no
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+  with_items: "{{custom_result.stdout_lines}}"
+  notify: "restart openhab"
+
+- name: check custom conf folder
+  shell: "find -L . -type d"
+  args:
+    chdir: "{{global_etc}}openhab/conf/"
+  register: custom_result
   changed_when: no
-  when: "item in config_result.stdout_lines"
-  with_items:
-    - html
-    - icons
-    
-- name: collect conf folder
+
+- name: check custom conf folder
+  shell: "find . -type d"
+  args:
+    chdir: "{{projects_path}}openhab_shared/conf/"
+  register: shared_result
+  changed_when: no
+
+- name: collect shared conf folder
   set_fact:
-    config_link_folders: |
+    shared_link_folders: |
       [
-        { "src": "{{projects_path}}openhab_shared/python/shared"        , "dest": "{{global_etc}}/openhab/python/shared" },
-        { "src": "{{projects_path}}openhab_shared/conf/html/shared"     , "dest": "{{global_etc}}/openhab/conf/html/shared" },
-        { "src": "{{projects_path}}openhab_shared/conf/icons/classic"   , "dest": "{{global_etc}}/openhab/conf/icons/classic" },
-
-        { "src": "{{projects_path}}openhab_config/python/custom"        , "dest": "{{global_etc}}openhab/python/custom" },
-
-        {% for line in config_result.stdout_lines | difference(['html','icons','services','things']) %}
-          { "src": "{{projects_path}}openhab_config/conf/{{line}}"    , "dest": "{{global_etc}}openhab/conf/{{line}}" },
-        {% endfor %}
-
-        {% for result in config_sub_folder_result.results %}
-        {% if result.stdout_lines is defined %}
-        {% for line in result.stdout_lines %}
-          { "src": "{{projects_path}}openhab_config/conf/{{result.item}}/{{line}}", "dest": "{{global_etc}}openhab/conf/{{result.item}}/{{line}}" },
-        {% endfor %}
-        {% endif %}
+        {% set ns = namespace(active_line = 'xxx') %}
+        {% for line in shared_result.stdout_lines %}
+          {% if line not in custom_result.stdout_lines and not line.startswith(ns.active_line) %}
+              { "src": "{{projects_path}}openhab_shared/conf/{{line[2:]}}"                  , "dest": "{{global_etc}}openhab/conf/{{line[2:]}}" },
+              {% set ns.active_line = line %}
+          {% endif %}
         {% endfor %}
       ]
 
-- name: link conf folder
+- name: link shared conf folder
   file:
     src: "{{item.src}}"
     dest: "{{item.dest}}"
@@ -100,9 +101,93 @@
     follow: no
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
-  with_items: "{{config_link_folders}}"
+  with_items: "{{shared_link_folders}}"
   notify: "restart openhab"
-    
+
+# python folder
+- name: check custom python folder
+  shell: "ls -1 {{projects_path}}openhab_config/python/"
+  register: custom_result
+  changed_when: no
+
+- name: link custom python folder
+  file:
+    src: "{{projects_path}}openhab_config/python/{{item}}"
+    dest: "{{global_etc}}openhab/python/{{item}}"
+    state: link
+    follow: no
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+  with_items: "{{custom_result.stdout_lines}}"
+  notify: "restart openhab"
+
+- name: check custom python folder
+  shell: "find -L . -type d"
+  args:
+    chdir: "{{global_etc}}openhab/python/"
+  register: custom_result
+  changed_when: no
+
+- name: check custom python folder
+  shell: "find . -type d"
+  args:
+    chdir: "{{projects_path}}openhab_shared/python/"
+  register: shared_result
+  changed_when: no
+
+- name: collect shared python folder
+  set_fact:
+    shared_link_folders: |
+      [
+        {% set ns = namespace(active_line = 'xxx') %}
+        {% for line in shared_result.stdout_lines %}
+          {% if line not in custom_result.stdout_lines and not line.startswith(ns.active_line) %}
+              { "src": "{{projects_path}}openhab_shared/python/{{line[2:]}}"                  , "dest": "{{global_etc}}openhab/python/{{line[2:]}}" },
+              {% set ns.active_line = line %}
+          {% endif %}
+        {% endfor %}
+      ]
+
+- name: link shared python folder
+  file:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    state: link
+    follow: no
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+  with_items: "{{shared_link_folders}}"
+  notify: "restart openhab"
+
+# missing folder
+- name: check conf folder
+  shell: "ls -1 {{global_etc}}openhab/conf/"
+  register: config_folder_result
+  changed_when: no
+
+- name: create missing folder
+  file:
+    path: "{{global_etc}}openhab/conf/{{item}}"
+    state: directory
+    follow: no
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+    mode: "u=rwx,g=rx,o="
+  when: "item not in config_folder_result.stdout_lines"
+  with_items:
+      - "automation"
+      - "html"
+      - "icons"
+      - "items"
+      - "persistance"
+      - "rules"
+      - "scripts"
+      - "services"
+      - "sitemaps"
+      - "things"
+      - "transform"
+  notify: "restart openhab"
+
 # habpanel if exists
 - name: check habpanel config
   shell: "ls {{projects_path}}openhab_config/jsondb/uicomponents_habpanel_panelconfig.json"
@@ -193,10 +278,13 @@
 - name: copy python configuration
   template:
     src: "templates/python/configuration.py"
-    dest: "{{global_etc}}openhab/python/configuration.py"
+    dest: "{{item}}"
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
     mode: 0640
+  with_items:
+      - "{{global_etc}}openhab/python/configuration.py"
+      - "{{global_etc}}openhab/conf/automation/python/lib"
   notify: "restart openhab"
   
 - name: copy init.sh

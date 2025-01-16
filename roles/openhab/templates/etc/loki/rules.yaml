@@ -7,7 +7,7 @@
               count by (item,state)
                   (count_over_time(
                         {group="openhab"}
-                        |~ "ErrorMessage.*STATE: .*"
+                        |~ "(ErrorMessage|error\\.Message).*STATE: .*"
                         | pattern `<_>STATE: <item> - <state>"`
                         [2m]
                   ))
