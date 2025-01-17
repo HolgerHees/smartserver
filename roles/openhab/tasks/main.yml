@@ -54,7 +54,7 @@
   shell: "find . -type d | cut -c 3-"
   args:
     chdir: "{{projects_path}}openhab_config/conf/"
-  register: custom_result
+  register: custom_conf_folder_result
   changed_when: no
   check_mode: false
 
@@ -62,93 +62,89 @@
   shell: "find . -type d | cut -c 3-"
   args:
     chdir: "{{projects_path}}openhab_shared/conf/"
-  register: shared_result
+  register: shared_conf_folder_result
   changed_when: no
   check_mode: false
 
 - name: collect conf folder links
   set_fact:
-    collected_folder_links: |
+    collected_conf_folders: |
       [
-        {% set ns = namespace(active_line = 'xxx', has_python = 'automation/python' in custom_result.stdout_lines) %}
-        {% for line in custom_result.stdout_lines %}
-          {% if line | length > 0 and not line.startswith(ns.active_line) %}
-              { "src": "{{projects_path}}openhab_config/conf/{{line}}"                  , "dest": "{{global_etc}}openhab/conf/{{line}}", "is_main": "{{ '1' if '/' not in line else '0'}}" },
-              {% set ns.active_line = line %}
+        {% set ns = namespace(active_line = 'xxx', has_python = 'automation/python' in custom_conf_folder_result.stdout_lines) %}
+        {% for path in custom_conf_folder_result.stdout_lines %}
+          {% if path | length > 0 and not path.startswith(ns.active_line) %}
+              { "type": "link", "src": "{{projects_path}}openhab_config/conf/{{path}}", "dest": "{{global_etc}}openhab/conf/{{path}}", "is_root": "{{ '1' if '/' not in path else '0'}}" },
+              {% set ns.active_line = path %}
           {% endif %}
         {% endfor %}
-        {% for line in shared_result.stdout_lines %}
-          {% if line | length > 0 and line not in custom_result.stdout_lines and not line.startswith(ns.active_line) and ( ns.has_python or 'automation/python' not in line ) %}
-              { "src": "{{projects_path}}openhab_shared/conf/{{line}}"                  , "dest": "{{global_etc}}openhab/conf/{{line}}", "is_main": "{{ '1' if '/' not in line else '0'}}" },
-              {% set ns.active_line = line %}
+        {% for path in shared_conf_folder_result.stdout_lines %}
+          {% if path | length > 0 and path not in custom_conf_folder_result.stdout_lines and not path.startswith(ns.active_line) and ( ns.has_python or 'automation/python' not in path ) %}
+              { "type": "link", "src": "{{projects_path}}openhab_shared/conf/{{path}}", "dest": "{{global_etc}}openhab/conf/{{path}}", "is_root": "{{ '1' if '/' not in path else '0'}}" },
+              {% set ns.active_line = path %}
+          {% endif %}
+        {% endfor %}
+
+        {% for path in ["html", "icons", "items", "persistence", "rules", "scripts", "services", "sitemaps", "things", "transform"] %}
+          {% if path not in custom_conf_folder_result.stdout_lines and path not in shared_conf_folder_result.stdout_lines %}
+              { "type": "directory", "dest": "{{global_etc}}openhab/conf/{{path}}", "is_root": "1" },
           {% endif %}
         {% endfor %}
       ]
 
-- name: check for wrong conf folder links
+- name: check for invalid conf folders
   stat:
     path: "{{item.dest}}"
-  changed_when: "not checked_folder_links.stat.exists or not checked_folder_links.stat.islnk"
-  register: checked_folder_links
-  with_items: "{{collected_folder_links}}"
+  changed_when: "not checked_conf_folders.stat.exists or (item.type == 'link' and not checked_conf_folders.stat.islnk)"
+  register: checked_conf_folders
+  loop_control:
+    label: "{{item.dest if item.type == 'directory' else item.src + ' => ' + item.dest }}"
+  with_items: "{{collected_conf_folders}}"
 
-- name: collect wrong conf folder links
+- name: collect invalid conf folders
   set_fact:
-    collected_wrong_folder_links: |
+    collected_invalid_conf_folder_cmds: |
       [
-        {% for result in checked_folder_links.results %}
+        {% for result in checked_conf_folders.results %}
           {% if result.changed %}
-              { "src": "{{result.item.src}}"                  , "dest": "{{result.item.dest}}", "is_main": "{{result.item.is_main}}" },
+            {
+              "cmd": {
+                  {% if result.item.type == 'link' %}
+                      "src": "{{result.item.src}}",
+                      "dest": "{{result.item.dest}}",
+                  {% else %}
+                      "path": "{{result.item.dest}}",
+                  {% endif %}
+                  "state": "{{result.item.type}}",
+                  "owner": "{{system_users['openhab'].name}}",
+                  "group": "{{system_groups['openhab'].name}}"
+              },
+              "dest": "{{result.item.dest}}",
+              "is_root": "{{result.item.is_root}}"
+            },
+          {% endif %}
+        {% endfor %}
+      ]
+    collected_invalid_conf_folders_needs_container_rebuild: |
+      [
+        {% for result in checked_conf_folders.results %}
+          {% if result.changed and result.item.is_root == '1'%}
+              1,
           {% endif %}
         {% endfor %}
       ]
 
-- name: clean main conf folder
+- name: clean root conf folder
   file:
     path: "{{item.dest}}"
     state: absent
-  when: "{{item.is_main == '1'}}"
-  with_items: "{{collected_wrong_folder_links}}"
+  when: "item.is_root == '1'"
+  loop_control:
+    label: '{{item.dest}}'
+  with_items: "{{collected_invalid_conf_folder_cmds}}"
 
-- name: create conf folder links
-  file:
-    src: "{{item.src}}"
-    dest: "{{item.dest}}"
-    state: link
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-  register: conf_folder_links_created
-  with_items: "{{collected_wrong_folder_links}}"
-
-- name: check for missing conf folder
-  shell: "ls -1 {{global_etc}}openhab/conf/"
-  register: config_folder_result
-  changed_when: no
-  check_mode: false
-
-- name: create missing conf folder
-  file:
-    path: "{{global_etc}}openhab/conf/{{item}}"
-    state: directory
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-    mode: "u=rwx,g=rx,o="
-  register: conf_folder_links_missing
-  when: "item not in config_folder_result.stdout_lines"
-  with_items:
-      - "automation"
-      - "html"
-      - "icons"
-      - "items"
-      - "persistence"
-      - "rules"
-      - "scripts"
-      - "services"
-      - "sitemaps"
-      - "things"
-      - "transform"
-  notify: "restart openhab"
+- name: create conf folders
+  file: "{{item.cmd}}"
+  with_items: "{{collected_invalid_conf_folder_cmds}}"
 
 # ***** PROCES PYTHON FOLDER ****
 - name: create python folder links
@@ -301,7 +297,7 @@
 
 - name: create container service
   vars:
-    container_force_recreation: "{{true if conf_folder_links_created.changed or conf_folder_links_missing.changed else false}}"
+    container_force_recreation: "{{true if collected_invalid_conf_folders_needs_container_rebuild | length > 0 else false}}"
     container_name: "openhab"
     container_image: "openhab/openhab:{{openhab_version}}-debian"
     container_network: "host"
