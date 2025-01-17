@@ -224,7 +224,7 @@
 
     - { import_role: { name: grafana, tasks_from: create_users, handlers_from: empty },      tags: [ 'grafana', 'grafana_users' ],                           when: "grafana_enabled"}                           # create grafana users
 
-    - { import_role: { name: openhab, tasks_from: create_users, handlers_from: empty },      tags: [ 'openhab', 'openhab_users' ],                           when: "openhab_enabled" }                          # create openhab users
+    - { import_role: { name: openhab, tasks_from: apply_config, handlers_from: empty },      tags: [ 'openhab', 'openhab_users', 'openhab_config' ],         when: "openhab_enabled" }                          # create openhab users and setting various log level
 
     - { import_role: { name: update_service, tasks_from: collect_deployment_tags, handlers_from: empty }, tags: [ 'all', 'collect_deployment_tags' ],        when: "update_service_system_check_enabled" }      # get ansible tags
 

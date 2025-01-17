@@ -257,13 +257,6 @@
       - "{{global_etc}}openhab/conf/automation/python/lib"
   notify: "restart openhab"
   
-- name: copy init.sh
-  copy:
-    src: "templates/init.sh"
-    dest: "{{global_etc}}openhab/cont-init.d/init.sh"
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"
-
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
   register: device_result
