@@ -45,13 +45,6 @@
   changed_when: False
   tags: [ 'user' ]
  
-- name: get log level
-  shell: "sshpass -p \"habopen\" ssh -p 8101 openhab@openhab \"{{item}}\""
-  with_items:
-    - "log:set DEBUG jsr223.jython"
-    - "log:set ERROR org.eclipse.jetty.util.ssl.SslContextFactory.config"
-  changed_when: False
-
 - name: set additional configs
   shell: "sshpass -p \"habopen\" ssh -p 8101 openhab@openhab \"{{item}}\""
   with_items:
