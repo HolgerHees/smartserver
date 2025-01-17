@@ -314,6 +314,9 @@
       EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
       CRYPTO_POLICY: "unlimited"
+      LC_ALL: "{{locale}}" # Language settings are needed to have correct 'locale' support in graal based scripting languages like javascript or python
+      LANG: "{{locale}}"
+      LANGUAGE: "{{locale}}"
 #      OPENHAB_LOGDIR: "/openhab/logs"
     # all volumes needs to writeable, because openhab runs chown on OPENHAB_HOME
 #    container_devices: "{{openhab_device_mounts | default([])}}"
