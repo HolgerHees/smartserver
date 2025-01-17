@@ -165,6 +165,8 @@
 
 #      , gcc                # used for ansible gem module => to build native extension
 #      , make               # used for installing ferm
+
+      , procps             # needed for systl
       
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
