@@ -93,7 +93,7 @@
     - { import_role: { name: firewall },                                                     tags: [ 'firewall' ] }                                                                                             # firewall configuration
 
     # ************ FLUSH HANDLER ***********    
-    - { meta: flush_handlers } # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
+    - { meta: flush_handlers, tags: always } # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
     # **************************************
 
     - { import_role: { name: cron },                                                         tags: [ 'cron' ] }                                                                                                 # basic cron configuration + common cron jobs
@@ -144,14 +144,14 @@
     - { import_role: { name: fluentd },                                                      tags: [ 'fluentd' ],                                            when: "monitoring_enabled" }                       # log collector
 
     # ************ FLUSH HANDLER ***********    
-    - { meta: flush_handlers } # Previous roles are independent from upcoming roles, But lot of upcoming roles are depending from previous roles
+    - { meta: flush_handlers, tags: always } # Previous roles are independent from upcoming roles, But lot of upcoming roles are depending from previous roles
     # **************************************
 
     - { import_role: { name: openhab },                                                      tags: [ 'openhab' ],                                            when: "openhab_enabled" }                          # openhab iot server
     - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools
 
     # ************ FLUSH HANDLER ***********
-    - { meta: flush_handlers } # Activate openhab as soon as possible to give openhab more time to initialize until post_tasks are running
+    - { meta: flush_handlers, tags: always } # Activate openhab as soon as possible to give openhab more time to initialize until post_tasks are running
     # **************************************
 
     - { import_role: { name: user },                                                         tags: [ 'user' ] }                                                                                                 # users (linux, samba, web ...)
@@ -203,7 +203,7 @@
     # *****************************************************************************************
 
     # ************ FLUSH HANDLER ***********
-    - { meta: flush_handlers } # Finalize everything from 'core' bevore custom roles are deployed
+    - { meta: flush_handlers, tags: always } # Finalize everything from 'core' bevore custom roles are deployed
     # **************************************
 
     # ************ CUSTOM ROLES ************
