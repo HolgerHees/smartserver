@@ -156,13 +156,6 @@ if [[ "$IS_AP" == 1 ]]; then
   echo "Install wifi packages ..."
   execute "opkg remove wpad-basic-wolfssl wpad-basic-mbedtls > /dev/null"
   execute "opkg install wpad-wolfssl hostapd-utils > /dev/null"
-
-  grep "ieee80211r '1'" "$SOURCE/$IP/etc/config/wireless" > /dev/null
-  if [ $? -eq 0 ]; then
-    echo "Install roaming packages ..."
-    execute "opkg install umdns dawn luci-app-dawn > /dev/null"
-    execute "[ -f /etc/seccomp/umdns.json ] && mv /etc/seccomp/umdns.json /etc/seccomp/umdns.json.disabled"
-  fi
 fi
 
 echo "Copy configs ..."

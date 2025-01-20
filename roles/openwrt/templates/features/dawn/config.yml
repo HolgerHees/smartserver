@@ -1,0 +1,9 @@
+install_packages: [ "umdns", "dawn", "luci-app-dawn" ]
+initd: yes
+
+#grep "ieee80211r '1'" "$SOURCE/$IP/etc/config/wireless" > /dev/null
+#if [ $? -eq 0 ]; then
+#  echo "Install roaming packages ..."
+#  execute "opkg install umdns dawn luci-app-dawn > /dev/null"
+#  execute "[ -f /etc/seccomp/umdns.json ] && mv /etc/seccomp/umdns.json /etc/seccomp/umdns.json.disabled"
+#fi
