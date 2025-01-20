@@ -33,6 +33,8 @@
     service_name: "libreoffice"
     container_to_host_rules:
       - { saddr: "{{podman_libreoffice_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (nextcloud)" }
+      # DROP [INET INPUT]: IN=podman1 OUT= MAC=92:cc:2c:e7:d1:6b:8a:ef:65:e8:73:5d:08:00 SRC=172.16.0.108 DST=172.16.0.1 LEN=52 TOS=0x00 PREC=0x00 TTL=64 ID=0 DF PROTO=TCP SPT=9980 DPT=57098 WINDOW=674 RES=0x00 ACK URGP=0
+      - { saddr: "{{podman_libreoffice_ip}}", protocol: "tcp", sport: "9980", comment: "=> ack response" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
