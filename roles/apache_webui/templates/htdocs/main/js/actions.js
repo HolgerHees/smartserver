@@ -293,7 +293,14 @@ mx.Actions = (function( ret ) {
         },0);
     }
 
-    function showMenuContent(content, callbacks, title )
+    function replaceMenuContent(is_column_layout, content)
+    {
+        var submenu = mx.$('#content #submenu');
+        if( is_column_layout ) submenu.classList.add("multi_column");
+        else submenu.classList.remove("multi_column");
+    }
+
+    function showMenuContent(is_column_layout, content, callbacks, title )
     {
         setTitle(title);
 
@@ -332,6 +339,9 @@ mx.Actions = (function( ret ) {
         if( isIFrameVisible() || submenu.innerHTML.length == 0 )
         //mx.History.getActiveNavigation() == null || mx.History.getActiveNavigation().getType() == "entry" )
         {
+            if( is_column_layout ) submenu.classList.add("multi_column");
+            else submenu.classList.remove("multi_column");
+
             submenu.style.opacity = "0";
             submenu.innerHTML = content;
             init_callbacks.forEach( (callback) => callback(submenu) );
@@ -344,6 +354,9 @@ mx.Actions = (function( ret ) {
             {
                 mx.Core.waitForTransitionEnd(submenu,function()
                 {
+                    if( is_column_layout ) submenu.classList.add("multi_column");
+                    else submenu.classList.remove("multi_column");
+
                     submenu.innerHTML = content;
                     init_callbacks.forEach( (callback) => callback(submenu) );
                     _fadeInMenu(submenu, post_callbacks);
@@ -405,7 +418,7 @@ mx.Actions = (function( ret ) {
         }
         else
         {
-            showMenuContent(entry.getHtml(), entry.getCallbacks(), entry.getTitle());
+            showMenuContent(false, entry.getHtml(), entry.getCallbacks(), entry.getTitle());
         }
 
         if( visualisationType != "desktop" ) menuPanel.close();
@@ -435,9 +448,11 @@ mx.Actions = (function( ret ) {
         {
             if( mx.History.getActiveNavigation() !== subGroup || isIFrameVisible() )
             {
-                let data = mx.Menu.buildContentSubMenu( subGroup); // prepare menu content
+                let data = mx.Menu.buildContentSubMenu(subGroup); // prepare menu content
                 
-                showMenuContent(data['content'], data['callbacks'], subGroup.getTitle());
+                let is_column_layout = subGroup.getEntries().length > 8 ? true : false;
+
+                showMenuContent(is_column_layout, data['content'], data['callbacks'], subGroup.getTitle());
             
                 mx.History.addMenu(subGroup);
             }
@@ -480,7 +495,7 @@ mx.Actions = (function( ret ) {
 
         if( !isActive || isIFrameVisible() )
         {
-            showMenuContent( content, {"init": [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ], "destructor": mx.Widgets.clean }, subGroup.getTitle());
+            showMenuContent(false, content, {"init": [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ], "destructor": mx.Widgets.clean }, subGroup.getTitle());
 
             mx.History.addMenu(subGroup);
 
@@ -488,7 +503,7 @@ mx.Actions = (function( ret ) {
         }
         else
         {
-            mx.$('#content #submenu').innerHTML = content;
+            replaceMenuContent(false, content);
             mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box"));
             mx.Actions.refreshHome();
         }
