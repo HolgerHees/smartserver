@@ -49,7 +49,6 @@
   shell: "sshpass -p \"habopen\" ssh -p 8101 openhab@openhab \"{{item}}\""
   with_items:
     - "log:set DEBUG jsr223.jython"
-    - "log:set ERROR org.eclipse.jetty.util.ssl.SslContextFactory.config" # needed to avoid samsung binding to spam with ssl errors
   changed_when: False
 
 
