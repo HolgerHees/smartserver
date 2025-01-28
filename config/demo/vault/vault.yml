@@ -16,9 +16,7 @@ vault_nextcloud_instance_id:            "234sdgzw87399443s"
 vault_nextcloud_password_salt:          "9ad9aus92z4ij20j20idj928912hd1jd0"
 vault_nextcloud_secret:                 "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
 
-vault_camera_ftp_password:              "default123"
-
-vault_camera_login_password:            "default123"
+vault_camera_password:                  "default123"
 
 vault_system_service_openwrt_api_password: "default123"
 vault_system_service_fritzbox_api_password: "default123"
