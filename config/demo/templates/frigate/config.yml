@@ -1,0 +1,64 @@
+# check https://docs.frigate.video/configuration/reference for details
+#
+# check also "roles/frigate/templates/etc/frigate/config.yaml" to see default values which are already predefined
+
+#detectors:
+#  tensorrt:
+#    type: tensorrt
+#    device: 0  # TODO NVIDIA
+
+#model:
+#  path: /config/model_cache/tensorrt/yolov7-320.trt
+#  input_tensor: nchw
+#  input_pixel_format: rgb
+#  width: 320
+#  height: 320
+
+#ffmpeg:
+#  hwaccel_args: preset-nvidia-h264 # TODO NVIDIA
+
+go2rtc:
+  streams:
+    streedside_main:
+      - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_streedside_ip}}:554/11"
+    toolshed_main:
+      - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_toolshed_ip}}:554/h264Preview_01_main"
+    toolshed_sub:
+      - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_toolshed_ip}}:554/h264Preview_01_sub"
+
+cameras:
+  streedside:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/streedside_main
+          roles:
+            - record
+            - detect
+    zones:
+      grundstueck:
+        coordinates: 0.002,0.008,0.303,0.009,0.292,0.133,0.996,0.673,0.998,0.991,0.002,0.991
+    review:
+      alerts:
+        required_zones:
+          - grundstueck
+    live:
+      stream_name: streedside_main
+    detect:
+      enabled: true
+    webui_url: "http://{{custom_camera_streedside_ip}}"
+  toolshed:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/toolshed_main
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/toolshed_sub
+          roles:
+            - detect
+    live:
+      stream_name: toolshed_main
+    detect:
+      enabled: true
+    webui_url: "https://{{custom_camera_toolshed_ip}}"

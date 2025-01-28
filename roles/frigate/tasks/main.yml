@@ -1,0 +1,116 @@
+- name: set version
+  set_fact:
+    frigate_version: '0.15.0-rc1'
+    frigate_config: "{{ lookup('template', '{{config_path}}templates/frigate/config.yml') | from_yaml }}"
+  tags: [ 'update_notifier_config' ]
+
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}frigate/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}frigate/" }
+  include_tasks: roles/_shared/create_directories.yml
+
+- name: copy configs
+  template:
+    src: "{{item}}"
+    dest: "{{global_etc}}frigate/{{item | basename}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "templates/etc/frigate/config.yaml"
+    - "templates/etc/frigate/nginx.conf"
+  notify: "restart frigate"
+
+# ***** SERVICE CONFIGS *****
+- name: create container service
+  vars:
+    container_name: "frigate"
+    container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}" #{{ '-tensorrt' if gpu_enabled and gpu_type == 'nvidia' else '' }}"
+    container_network: "isolated"
+    container_ip: "{{podman_frigate_ip}}"
+    container_shm_size: "128m"
+#    container_published_ports:
+#      - "8555/tcp" # WebRTC
+#      - "8555/udp" # WebRTC
+    container_exposed_ports:
+      - "5000" # Internal unauthenticated access
+      - "8971" # WebUI
+      - "8554" # RTSP feeds
+      - "8555" # WebRTC
+    container_env:
+      FRIGATE_RTSP_PASSWORD: "test"
+    container_devices: |
+      [
+          {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
+      ]
+    container_volumes: |
+      [
+        "{{global_etc}}frigate:/config:rw",
+        "{{global_etc}}frigate/nginx.conf:/usr/local/nginx/conf/nginx.conf:ro",
+        "{{global_lib}}frigate:/media/frigate:rw",
+        {% if gpu_enabled and gpu_type == 'nvidia' %}"/usr/lib/libcuda.so:/usr/lib/libcuda.so:ro"{% endif %}
+      ]
+    container_mounts:
+      - "type=tmpfs,tmpfs-size=1G,destination=/tmp/cache"
+    container_readyness: { "type": "port_check", "ip": "{{podman_frigate_ip}}", "port": "8971" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+- name: allow container service
+  vars:
+    service_name: "frigate"
+    container_to_container_rules:
+      - { saddr: "{{podman_frigate_ip}}", daddr: "{{podman_mosquitto_ip}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "frigate => mosquitto" }
+#      - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_frigate_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => frigate" }
+    container_to_outside_rules:
+      - { saddr: "{{podman_frigate_ip}}", oif: "{{default_network_interface}}", comment: "frigate => all outgoing networks" }
+#    nat_rules: { ip: "{{podman_frigate_ip}}", ports: ["8555"] }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
+
+- name: add service name
+  vars:
+    host_name: "frigate"
+    host_ip_address: "{{podman_frigate_ip}}"
+  include_tasks: roles/_shared/add_to_hosts.yml
+
+- name: register webui
+  vars:
+    name: "frigate"
+    js_file: "templates/webui/frigate.js"
+    i18n_files: [ { language: "de", file: "templates/webui/frigate.de.json" } ]
+    icons: []
+  include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "frigate"
+    usergroup: "user"
+    additional_env: yes
+    include: "templates/etc/apache2/_.ansible.vhost.d/frigate.inc"
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
+
+#- name: copy service fluentd config
+#  vars:
+#    service_name: "frigate"
+#  include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+#  tags: ['fluentd_config']
+#  when: "monitoring_enabled"
+
+- name: register frigate update notifier
+  vars:
+    name: "frigate"
+    type: "github"
+    url: "https://github.com/blakeblackshear/frigate/releases"
+    config: {
+      project: "blakeblackshear/frigate",
+      pattern: "^v([0-9\\.]+)$",
+      version: "v{{frigate_version}}"
+    }
+  include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
+  when: "update_service_software_check_enabled"

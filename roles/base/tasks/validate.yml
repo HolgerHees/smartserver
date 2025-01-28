@@ -42,3 +42,8 @@
   include_tasks: "roles/librenms/tasks/validate_config.yml"
   tags: ["all", "librenms", "librenms_config"]
   when: "librenms_enabled"
+
+- name: "frigate : validate_config"
+  include_tasks: "roles/frigate/tasks/validate_config.yml"
+  tags: ["all", "frigate"]
+  when: "frigate_enabled"

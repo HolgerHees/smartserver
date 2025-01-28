@@ -38,6 +38,9 @@
       {% for value in container_capabilities | default([]) %}
         "--cap-add {{value}}",
       {% endfor %}
+      {% if container_shm_size is defined %}
+        "--shm-size {{container_shm_size}}",
+      {% endif %}
       {% if container_no_healthcheck is defined and container_no_healthcheck %}
         "--no-healthcheck",
       {% endif %}
@@ -69,6 +72,9 @@
       {% endfor %}
       {% for value in container_volumes | default([]) %}
         "--volume {{value}}",
+      {% endfor %}
+      {% for value in container_mounts | default([]) %}
+        "--mount {{value}}",
       {% endfor %}
       {% if container_entrypoint is defined %}
         "--entrypoint '{{container_entrypoint | replace('"', '\"') }}'",

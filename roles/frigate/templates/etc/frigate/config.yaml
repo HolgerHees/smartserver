@@ -1,0 +1,70 @@
+proxy:
+  header_map:
+    user: x-forwarded-user
+
+database:
+  path: /media/frigate/frigate.db
+
+mqtt:
+  enabled: true
+  host: mosquitto
+
+birdseye:
+  enabled: false
+
+{% if "record" not in frigate_config %}
+record:
+  enabled: true
+  sync_recordings: true
+#  pre_capture: 5
+#  post_capture: 15
+  retain:
+    days: 0
+    mode: all
+  alerts:
+    retain:
+      days: 7
+      mode: motion
+  detections:
+    retain:
+      days: 7
+      mode: motion
+{% endif %}
+
+{% if "snapshots" not in frigate_config %}
+snapshots:
+  enabled: true
+  retain:
+    default: 30
+{% endif %}
+
+{% if "objects" not in frigate_config %}
+objects:
+  track:
+      - person
+      - dog
+      - cat
+      - car
+      - vehicle
+      - truck
+      - bicycle
+#  filters:
+#    person:
+#      min_score: 0.5
+#      threshold: 0.6
+{% endif %}
+
+{% if "review" not in frigate_config %}
+review:
+  alerts:
+    labels:
+      - person
+#  detections:
+#    labels:
+#      - car
+#      - person
+{% endif %}
+
+{{frigate_config | to_yaml}}
+
+version: 0.15-1

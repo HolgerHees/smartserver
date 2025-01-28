@@ -1,0 +1,19 @@
+- name: "frigate: validate_config : lookup config"
+  stat:
+    path: "{{config_path}}templates/frigate/config.yml"
+  register: config_result
+  tags: ["all", "frigate"]
+
+- name: "frigate: validate_config : check config"
+  debug:
+    msg: "{{ 'Frigate is enabled, but config  \"' + config_path + 'templates/frigate/config.yml\" is missing. You can copy \"config/demo/templates/frigate/config.yml\" to your configuration and use it as a template.' if not config_result.stat.exists else 'Frigate config found'}}"
+  failed_when: "not config_result.stat.exists"
+  tags: ["all", "frigate"]
+
+- name: "frigate: validate_config : process config"
+  vars:
+    config: "{{ lookup('template', '{{config_path}}templates/frigate/config.yml') | from_yaml }}"
+  debug:
+    msg: "{{ 'Frigate config has no cameras' if 'cameras' not in config else 'Frigate config is ok'}}"
+  failed_when: "'cameras' not in config"
+  tags: ["all", "frigate"]

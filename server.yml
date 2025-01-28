@@ -178,6 +178,7 @@
      
     - { import_role: { name: camera_service },                                               tags: [ 'camera_service', 'alpine' ],                           when: "camera_enabled" }                           # camera image gallery
     - { import_role: { name: camera_ftp },                                                   tags: [ 'camera_ftp', 'alpine' ],                               when: "camera_enabled" }                           # ftp file server
+    - { import_role: { name: frigate },                                                      tags: [ 'frigate' ],                                            when: "frigate_enabled" }                          # alternate new camera service
 
     - { import_role: { name: speedtest },                                                    tags: [ 'speedtest' ],                                          when: "speedtest_enabled" }                        # inhouse network performance test
 

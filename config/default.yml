@@ -386,6 +386,7 @@ default_variables: {
     camera_ftp_password:                      { dependency: "{{camera_enabled}}" },
     camera_ftp_max_file_age:                  { default: "{{2 * 24 * 60}}",                                         # images, older then 2 days are discarded
                                                 dependency: "{{camera_enabled}}" },
+    frigate_enabled:                          { default: no },                                                      # frigate is the successor/replacement of camera_service and camera_ftp => check https://frigate.video/ for details
     # **** END CAMERA SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -727,6 +728,7 @@ podman_cloud_check_ip:            "172.16.0.202"
 podman_camera_ftp_ip:             "172.16.0.203"
 podman_camera_service_ip:         "172.16.0.204"
 podman_ci_service_ip:             "172.16.0.205"
+podman_frigate_ip:                "172.16.0.206"
 
 podman_vcontrold_ip:              "172.16.0.230"
 

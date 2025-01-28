@@ -80,9 +80,22 @@ mx.Actions = (function( ret ) {
         {
             //console.log(event.data['type']);
 
+            if( activeCallbacks["iframe"] != null )
+            {
+                if( activeCallbacks["iframe"][event.data['type']] != undefined )
+                {
+                    iframeElement.contentWindow.postMessage(activeCallbacks["iframe"][event.data['type']](), "*");
+                }
+
+                if( activeCallbacks["iframe"]["*"] != undefined )
+                {
+                    let message = activeCallbacks["iframe"]["*"](event.data['type']);
+                    if( message != null ) iframeElement.contentWindow.postMessage(message, "*");
+                }
+            }
+
             if( event.data['type'] == 'ping' )
             {
-                if( activeCallbacks["iframe"] != null && activeCallbacks["iframe"]["ping"] != undefined ) iframeElement.contentWindow.postMessage(activeCallbacks["iframe"]["ping"](), "*");
                 clearIFrameTimer();
                 return;
             }
