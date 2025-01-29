@@ -65,7 +65,8 @@
       - { saddr: "{{podman_frigate_ip}}", daddr: "{{podman_mosquitto_ip}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "frigate => mosquitto" }
 #      - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_frigate_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => frigate" }
     container_to_outside_rules:
-      - { saddr: "{{podman_frigate_ip}}", oif: "{{default_network_interface}}", comment: "frigate => all outgoing networks" }
+      - { saddr: "{{podman_frigate_ip}}", comment: "frigate => all outgoing networks" }
+#      - { saddr: "{{podman_frigate_ip}}", oif: "{{default_network_interface}}", comment: "frigate => all outgoing networks" }
 #    nat_rules: { ip: "{{podman_frigate_ip}}", ports: ["8555"] }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
