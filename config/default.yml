@@ -387,6 +387,10 @@ default_variables: {
     camera_ftp_max_file_age:                  { default: "{{2 * 24 * 60}}",                                         # images, older then 2 days are discarded
                                                 dependency: "{{camera_enabled}}" },
     frigate_enabled:                          { default: no },                                                      # frigate is the successor/replacement of camera_service and camera_ftp => check https://frigate.video/ for details
+    frigate_shm_size:                         { default: "128m",
+                                                dependency: "{{frigate_enabled}}" },
+    frigate_tmpfs_size:                       { default: "1g",
+                                                dependency: "{{frigate_enabled}}" },
     # **** END CAMERA SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
