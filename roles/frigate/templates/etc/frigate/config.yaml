@@ -67,4 +67,5 @@ review:
 
 {{frigate_config | to_yaml}}
 
-version: 0.15-1
+# use frigate_version_string if available to allow frigate migration scripts to run
+version: {{frigate_version_string.stdout if frigate_version_string.stdout != '' else frigate_version}}
