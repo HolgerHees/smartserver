@@ -186,7 +186,11 @@ class CmdExecuter(watcher.Watcher):
         function = self.handler
         for part in name.split("."):
             function = getattr(function, part )
-        function()
+
+        if "args" in _cmd:
+            function(*_cmd["args"], **_cmd["kwargs"])
+        else:
+            function()
         
         return 0
 

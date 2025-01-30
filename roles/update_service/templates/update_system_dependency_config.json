@@ -1,4 +1,9 @@
 {
-    "tag": "{{tag}}",
-    "packages": [ "{{packages | join("\",\"") }}" ]
+    "tag": "{{tag}}"
+{% if packages is defined %}
+    ,"packages": [ "{{packages | join("\",\"") }}" ]
+{% endif %}
+{% if roles is defined %}
+    ,"roles": [ "{{roles | join("\",\"") }}" ]
+{% endif %}
 }

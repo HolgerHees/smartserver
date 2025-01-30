@@ -23,8 +23,8 @@ class CmdBuilder:
     def buildCmd(self, cmd, interaction, cwd, env ):
         return { "cmd": cmd, "interaction": interaction, "cwd": cwd, "env": env }
       
-    def buildFunction(self, function ):
-        return { "function": function }
+    def buildFunction(self, function, *args, **kwargs ):
+        return { "function": function, "args": args, "kwargs": kwargs }
 
     def buildCmdBlock(self, username, cmd_type, cmds ):
         return { "username": username, "cmd_type": cmd_type, "cmds": cmds }
@@ -92,7 +92,7 @@ class CmdBuilder:
           
     def buildInstallSystemUpdateCmdBlock(self, username):
         cmds = []
-        cmds.append( self.buildFunction("dependency_watcher.checkSmartserverRoles") )
+        cmds.append( self.buildFunction("dependency_watcher.checkSmartserverSystemUpdateDependedRoles") )
         for cmd in self.system_update_cmds:
             cmds.append( self.buildCmd(cmd, interaction=None,cwd=None,env=None) )
         cmds.append( self.buildProcessWatcherFunction(False) )
@@ -118,6 +118,7 @@ class CmdBuilder:
             cmd_deploy_system = "{} server.yml".format(cmd_deploy_system)
 
             cmds = []
+            cmds.append( self.buildFunction("dependency_watcher.checkSmartserverSmartserverUpdateDependedRoles", tags = tags) )
             cmds.append( self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.deployment_directory,env={"ANSIBLE_FORCE_COLOR": "1","ANSIBLE_CONFIG": "ansible_us.cfg"}) )
             cmds.append( self.buildSystemUpdateCheckCmd("deployment_update") )
             cmds.append( self.buildCmd(config.cmd_container_cleanup, interaction=None,cwd=None,env=None) )

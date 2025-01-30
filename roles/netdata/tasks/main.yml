@@ -152,6 +152,14 @@
   tags: ['prometheus_config']
   when: "monitoring_enabled"
 
+- name: register system package dependency
+  vars:
+    tag: "netdata"
+    roles: ["hardware_gpu"]
+  include_tasks: roles/update_service/shared/add_dependency.yml
+  tags: ['update_system_config']
+  when: "update_service_system_check_enabled"
+
 - name: register update notifier
   vars:
     name: "netdata"

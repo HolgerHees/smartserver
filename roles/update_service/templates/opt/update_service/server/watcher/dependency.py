@@ -45,12 +45,15 @@ class DependencyWatcher(watcher.Watcher):
     def getOutdatedRoles(self):
         return list(self.outdated_roles.keys())
             
-    def checkSmartserverRoles(self):
+    def checkSmartserverSystemUpdateDependedRoles(self):
         files = glob.glob("{}*.conf".format(config.dependencies_config_dir))
         package_tag_map = {}
         for config_file in files:
             with open(config_file) as json_data:
                 dependency_config = json.load(json_data)
+                if "packages" not in dependency_config:
+                    continue
+
                 for package in dependency_config["packages"]:
                     if package not in package_tag_map:
                         package_tag_map[package] = { "regex": re.compile(package, re.IGNORECASE), "tags": [] }
@@ -62,6 +65,26 @@ class DependencyWatcher(watcher.Watcher):
                 if not package_tag_map[package]["regex"].match(update["name"]):
                     continue
 
-                for tag in package_tag_map[package]["tags"]:
-                    f = Path(u"{}{}".format(config.outdated_roles_state_dir,tag))
-                    f.touch(exist_ok=True)
+                self._touchOutdatedRole(package_tag_map[package]["tags"])
+
+    def checkSmartserverSmartserverUpdateDependedRoles(self, tags):
+        files = glob.glob("{}*.conf".format(config.dependencies_config_dir))
+        for config_file in files:
+            with open(config_file) as json_data:
+                dependency_config = json.load(json_data)
+                if "roles" not in dependency_config:
+                    continue
+
+                if len(tags) == 0:
+                    self._touchOutdatedRole(dependency_config["tag"])
+                    continue
+
+                for role in dependency_config["roles"]:
+                    if role not in tags:
+                        continue
+                    self._touchOutdatedRole(dependency_config["tag"])
+                    continue
+
+    def _touchOutdatedRole(self, tag):
+        f = Path(u"{}{}".format(config.outdated_roles_state_dir,tag))
+        f.touch(exist_ok=True)
