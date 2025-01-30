@@ -18,6 +18,8 @@ record:
   sync_recordings: true
 #  pre_capture: 5
 #  post_capture: 15
+  preview:
+    quality: high
   retain:
     days: 0
     mode: all
@@ -27,7 +29,7 @@ record:
       mode: motion
   detections:
     retain:
-      days: 7
+      days: 2
       mode: motion
 {% endif %}
 
@@ -41,13 +43,13 @@ snapshots:
 {% if "objects" not in frigate_config %}
 objects:
   track:
-      - person
-      - dog
-      - cat
-      - car
-      - vehicle
-      - truck
-      - bicycle
+    - person
+    - dog
+    - cat
+    - car
+    - vehicle
+    - truck
+    - bicycle
 #  filters:
 #    person:
 #      min_score: 0.5

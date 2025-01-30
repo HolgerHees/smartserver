@@ -72,8 +72,10 @@ default_variables: {
     #     testuser1: "<sambapassword>"
     # }
 
-    gpu_enabled:                              { default: no },
-    gpu_type:                                 { dependency: "{{gpu_enabled}}" },                                    # currently only "nvidia" is supported
+    tpu_enabled:                              { default: "{{ true if tpu_type is defined else false}}" },
+    tpu_type:                                 { optional: yes },                                                    # currently only "coral" is supported
+    gpu_enabled:                              { default: "{{ true if gpu_type is defined else false}}" },
+    gpu_type:                                 { optional: yes },                                                    # currently only "nvidia" is supported
 
     usv_enabled:                              { default: no },
 
@@ -389,7 +391,7 @@ default_variables: {
     frigate_enabled:                          { default: no },                                                      # frigate is the successor/replacement of camera_service and camera_ftp => check https://frigate.video/ for details
     frigate_shm_size:                         { default: "128m",
                                                 dependency: "{{frigate_enabled}}" },
-    frigate_tmpfs_size:                       { default: "1g",
+    frigate_tmpfs_size:                       { default: "512m",
                                                 dependency: "{{frigate_enabled}}" },
     # **** END CAMERA SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
