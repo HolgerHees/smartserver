@@ -31,6 +31,9 @@
   include_tasks: _cleanup_mysql.yml
   when: "cleanup_mysql_check.stat.exists"
 
+- name: cleanup camera_service
+  include_tasks: _cleanup_camera_service.yml
+  when: "not camera_enabled"
 
 
 

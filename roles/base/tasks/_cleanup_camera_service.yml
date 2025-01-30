@@ -1,0 +1,66 @@
+- name: check for podman container
+  shell:
+    cmd: "podman ps -a --format '{{ '{{' }}.Names {{ '}}' }}'"
+  changed_when: no
+  failed_when: no
+  register: podman_container_check
+
+- name: check if cleanup is needed
+  set_fact:
+    is_camera_cleanup_needed: "{{'vsftpd' in podman_container_check or 'camera_service' in podman_container_check}}"
+
+- name: stop vsftpd and camera_service
+  shell:
+    cmd: "systemctl stop vsftpd camera_service"
+  failed_when: no
+  when: "is_camera_cleanup_needed"
+
+- name: clean vsftpd and camera_service images
+  shell:
+    cmd: "podman rm -f vsftpd camera_service"
+  failed_when: no
+  when: "is_camera_cleanup_needed"
+
+- name: clean apache files
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "{{global_etc}}apache2/_.ansible.conf.d/custom_cameras.conf"
+    - "{{global_etc}}apache2/_.ansible.conf.d/custom_camera_service.conf"
+    - "{{global_etc}}prometheus/scrapes/camera_service.yml"
+    - "{{global_etc}}systemd_watcher/services/camera_service.yml"
+  notify: "refresh apache2"
+  when: "is_camera_cleanup_needed"
+
+- name: clean prometheus files
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "{{global_etc}}prometheus/scrapes/camera_service.yml"
+  notify: "refresh prometheus"
+  when: "is_camera_cleanup_needed"
+
+- name: clean files
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "/etc/systemd/system/vsftpd.service"
+    - "/etc/systemd/system/camera_service.service"
+    - "{{global_etc}}vsftpd/"
+    - "{{global_opt}}camera_service"
+    - "{{global_lib}}camera_service"
+    - "{{htdocs_path}}camera_service"
+    - "{{htdocs_path}}main/components/camera_service.de.json"
+    - "{{htdocs_path}}main/components/camera_service.js"
+    - "{{global_etc}}systemd_watcher/services/camera_service.conf"
+    - "{{global_etc}}systemd_watcher/services/vsftpd.conf"
+  when: "is_camera_cleanup_needed"
+
+- name: check for podman container
+  shell:
+    cmd: "systemctl daemon-reload && systemctl reset-failed"
+  failed_when: no
+  when: "is_camera_cleanup_needed"

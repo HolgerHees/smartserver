@@ -83,8 +83,13 @@ default_variables: {
     # network_devices: [
     #     {
     #         host: "{{default_server_subnet}}.100",                                                                # ip address
-    #         name: "WLan AP Inhouse",                                                                              # device Name will be used in webui for openwrt devices
+    #         name: "WLan AP Inhouse",                                                                              # device name will be used in webui
     #         config: {
+    #             webui: {                                                                                          # optional metadata, used for webui menuentries
+    #                 info: "Model Name",                                                                           # optional device info
+    #                 order: 250                                                                                    # optional device menu
+    #                 icon: "device_printer.svg"                                                                    # optional device icon
+    #             }
     #             librenms: {         # OPTIONAL used in librenms
     #                 snmp_method: "v2c",                                                                           # snmp method (v2, v3)
     #                 snmp_community_string: "intern"                                                               # snmp community string

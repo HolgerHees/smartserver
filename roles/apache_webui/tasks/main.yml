@@ -91,6 +91,16 @@
   shell: '/opt/scripts/apache_webui_fetchPOTD.sh'
   when: not potd_exists.stat.exists
   
+# **** WEB UI ****
+- name: register webui
+  vars:
+    name: "apache_webui"
+    js_file: "templates/webui/apache_webui.js"
+    i18n_files: [ { language: "de", file: "templates/webui/apache_webui.de.json" } ]
+    icons: []
+  include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
+
 # Picture of the day fetcher
 - name: create cron job
   vars:
