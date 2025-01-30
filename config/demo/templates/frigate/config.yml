@@ -14,8 +14,10 @@
 #  width: 320
 #  height: 320
 
-#ffmpeg:
-#  hwaccel_args: preset-nvidia-h264 # TODO NVIDIA
+#detectors:
+#  coral:
+#    type: edgetpu
+#    device: pci
 
 go2rtc:
   streams:
@@ -23,8 +25,6 @@ go2rtc:
       - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_streedside_ip}}:554/11"
     toolshed_main:
       - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_toolshed_ip}}:554/h264Preview_01_main"
-    toolshed_sub:
-      - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_toolshed_ip}}:554/h264Preview_01_sub"
 
 cameras:
   streedside:
@@ -36,16 +36,37 @@ cameras:
             - record
             - detect
     zones:
-      grundstueck:
+      garden_area:
         coordinates: 0.002,0.008,0.303,0.009,0.292,0.133,0.996,0.673,0.998,0.991,0.002,0.991
+      garden_door:
+        coordinates: 0.384,0.07,0.382,0.2,0.49,0.222,0.491,0.097
+        inertia: 3
+        loitering_time: 5
+        objects: car
+      garden_gate:
+        coordinates: 0.589,0.166,0.708,0.233,0.684,0.422,0.569,0.33
+        loitering_time: 5
+        objects:
+          - bicycle
+          - person
+    objects:
+      filters:
+        person:
+          mask: ['0.369,0.093,0.369,0.161,0.383,0.162,0.383,0.09', '0.263,0.089,0.315,0.091,0.316,0.174,0.262,0.175']
+        car:
+          mask: 0.851,0.22,0.85,0.312,0.926,0.332,0.929,0.237
     review:
       alerts:
         required_zones:
-          - grundstueck
+          - garden_area
+          - garden_door
+          - garden_gate
     live:
       stream_name: streedside_main
     detect:
       enabled: true
+      width: 1280
+      height: 720
     webui_url: "http://{{custom_camera_streedside_ip}}"
   toolshed:
     enabled: true
@@ -54,11 +75,11 @@ cameras:
         - path: rtsp://127.0.0.1:8554/toolshed_main
           roles:
             - record
-        - path: rtsp://127.0.0.1:8554/toolshed_sub
-          roles:
             - detect
     live:
       stream_name: toolshed_main
     detect:
       enabled: true
+      width: 1280
+      height: 720
     webui_url: "https://{{custom_camera_toolshed_ip}}"
