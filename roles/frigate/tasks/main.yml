@@ -29,6 +29,13 @@
     - "templates/etc/frigate/nginx.conf"
   notify: "restart frigate"
 
+- name: collect tpu devices
+  shell: "{{ 'ls -1 /dev/apex_*' if tpu_type == 'coral' else ''}}"
+  register: "frigate_tpu_string"
+  changed_when: no
+  failed_when: no
+  when: "tpu_enabled"
+
 # ***** SERVICE CONFIGS *****
 - name: create container service
   vars:
@@ -36,6 +43,7 @@
     container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}" #{{ '-tensorrt' if gpu_enabled and gpu_type == 'nvidia' else '' }}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
+    container_privileged: "{{ true if tpu_enabled else false }}"
     container_shm_size: "{{frigate_shm_size}}"
 #    container_published_ports:
 #      - "8555/tcp" # WebRTC
@@ -53,6 +61,11 @@
       ]
     container_volumes: |
       [
+        {% if tpu_enabled %}
+          {% for device in frigate_tpu_string.stdout_lines %}
+            "{{device}}:{{device}}:rw",
+          {% endfor %}
+        {% endif %}
         "{{global_etc}}frigate:/config:rw",
         "{{global_etc}}frigate/nginx.conf:/usr/local/nginx/conf/nginx.conf:ro",
         "{{global_lib}}frigate:/media/frigate:rw",
@@ -107,6 +120,14 @@
 #  include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
 #  tags: ['fluentd_config']
 #  when: "monitoring_enabled"
+
+- name: register system package dependency
+  vars:
+    tag: "frigate"
+    roles: ["hardware_gpu", "hardware_tpu"]
+  include_tasks: roles/update_service/shared/add_dependency.yml
+  tags: ['update_system_config']
+  when: "update_service_system_check_enabled"
 
 - name: register frigate update notifier
   vars:

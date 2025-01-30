@@ -1,0 +1,6 @@
+- name: "_type_coral : install required packages => is_suse"
+  zypper:
+    name:
+      - gasket-driver
+    state: present
+  when: is_suse

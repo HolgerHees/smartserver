@@ -1,0 +1,3 @@
+- name: "process 'google coral'"
+  include_tasks: "_type_coral.yml"
+  when: "tpu_type=='coral'"

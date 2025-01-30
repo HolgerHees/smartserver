@@ -106,6 +106,7 @@
     - { import_role: { name: hardware_smartd },                                              tags: [ 'hardware_smartd' ],                                    when: "monitoring_enabled" }                       # disk monitoring & checks
     - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ],                                   when: "monitoring_enabled or netdata_enabled" }    # sensors setup
     - { import_role: { name: hardware_gpu },                                                 tags: [ 'hardware_gpu' ],                                       when: "gpu_enabled" }                              # gpu setup
+    - { import_role: { name: hardware_tpu },                                                 tags: [ 'hardware_tpu' ],                                       when: "tpu_enabled" }                              # coral edge tpu setup
     - { import_role: { name: hardware_usv },                                                 tags: [ 'hardware_usv' ],                                       when: "usv_enabled" }                              # usv setup
 
     - { import_role: { name: container },                                                    tags: [ 'container', 'macvlan', 'alpine' ] }                                                                       # container env
