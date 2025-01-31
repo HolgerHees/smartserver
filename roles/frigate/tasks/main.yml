@@ -26,7 +26,6 @@
     mode: 0640
   with_items:
     - "templates/etc/frigate/config.yaml"
-    - "templates/etc/frigate/nginx.conf"
   notify: "restart frigate"
 
 - name: collect tpu devices
@@ -67,7 +66,6 @@
           {% endfor %}
         {% endif %}
         "{{global_etc}}frigate:/config:rw",
-        "{{global_etc}}frigate/nginx.conf:/usr/local/nginx/conf/nginx.conf:ro",
         "{{global_lib}}frigate:/media/frigate:rw",
         {% if gpu_enabled and gpu_type == 'nvidia' %}"/usr/lib/libcuda.so:/usr/lib/libcuda.so:ro"{% endif %}
       ]
