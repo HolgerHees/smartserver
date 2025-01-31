@@ -65,7 +65,8 @@ class DependencyWatcher(watcher.Watcher):
                 if not package_tag_map[package]["regex"].match(update["name"]):
                     continue
 
-                self._touchOutdatedRole(package_tag_map[package]["tags"])
+                for tag in package_tag_map[package]["tags"]:
+                    self._touchOutdatedRole(tag)
 
     def checkSmartserverSmartserverUpdateDependedRoles(self, tags):
         files = glob.glob("{}*.conf".format(config.dependencies_config_dir))
