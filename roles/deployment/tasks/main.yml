@@ -13,6 +13,7 @@
     git_clone_name: "deployment"
     git_clone_path: "{{deployment_path}}"
     git_clone_url: "{{deployment_config_git}}"
+    git_clone_version: "master"
   include_tasks: roles/_shared/git_clone.yml
   when: "ansible_connection != 'local' or not deployment_stat_result.stat.exists"
 

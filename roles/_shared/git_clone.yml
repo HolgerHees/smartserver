@@ -24,7 +24,7 @@
 #    accept_hostkey: yes
     repo: '{{git_clone_url}}'
     dest: '{{git_clone_path}}'
-    version: 'master'
+    version: '{{git_clone_version | default("main")}}'
   vars:
     ansible_remote_tmp: "/tmp"
 #  become_user: "{{ git_owner | default(ansible_user)}}"
