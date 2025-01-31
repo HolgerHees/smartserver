@@ -71,7 +71,7 @@
       - nvidia-compute-G06
       - nvidia-compute-utils-G06
       - nvidia-container-toolkit
-      - nvidia-utils-G06
+#      - nvidia-utils-G06
       - nvtop
     state: present
   when: "is_suse"
