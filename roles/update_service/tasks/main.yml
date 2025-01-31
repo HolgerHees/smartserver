@@ -31,6 +31,7 @@
       - simple-websocket
       - pexpect
       - requests
+      - packaging
     virtualenv: /opt/update_service/env
     virtualenv_command: "python3 -m venv"
   register: installer_state

@@ -134,7 +134,7 @@
     url: "https://github.com/blakeblackshear/frigate/releases"
     config: {
       project: "blakeblackshear/frigate",
-      pattern: "^v([0-9\\.]+)$",
+      pattern: "^v([0-9\\.]+(-(rc|beta)[0-9]+))?$",
       version: "v{{frigate_version}}"
     }
   include_tasks: roles/update_service/shared/add_software.yml

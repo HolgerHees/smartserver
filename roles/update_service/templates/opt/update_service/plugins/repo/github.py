@@ -42,7 +42,8 @@ class Application(App):
             else:
                 self.tag = self.plugin_config['version']
                 version = Version.parseVersionString(self.plugin_config['version'],self.pattern)
-                self.current_version = version.getVersionString()
+                if version:
+                    self.current_version = version.getVersionString()
 
             if self.current_version is None:
                 raise Exception('Can\'t parse version \'{}\' with pattern \'{}\''.format(self.plugin_config['version'],self.pattern))

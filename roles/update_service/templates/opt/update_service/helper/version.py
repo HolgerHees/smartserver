@@ -1,4 +1,6 @@
+from packaging.version import parse as parse_version
 import re
+
 
 class Version:
     @staticmethod
@@ -6,49 +8,37 @@ class Version:
         m = re.search(pattern,version_label)
         if m:
             return Version(m.group(1))
-        
+
         return None
-  
+
     def __init__(self,version_string):
-        self.id_r = re.split('[^0-9]',version_string)
+        # phpmyadmin 5_2_2
+        version_string = version_string.replace("_",".")
 
-        if len(self.id_r) == 1:
-            self.id_r.append("0")
+        self.version = parse_version(version_string)
 
-        self.branch_string = ".".join(self.id_r[0:2])
-        
-        self.version_string = ".".join(self.id_r)
-        
+        self.version_string = version_string
+        self.branch_string = "{}.{}".format(self.version.major, self.version.minor)
+
     def __repr__(self):
-        return ".".join(self.id_r)
-            
+        return str(self.version)
+
     def getBranchString(self):
         return self.branch_string
-    
+
     def getVersionString(self):
         return self.version_string
 
     def compare(self,version):
-        if self.version_string == version.version_string:
-            return 0
-        
-        result = 1
-        for index in range(len(self.id_r)):
-            if index < len(version.id_r):
-                # invalid version number => grafana docker repo 9799770991.1
-                if index == 0 and int(version.id_r[index]) > 10000:
-                    result = -1
-                    break;
+        # invalid version number => grafana docker repo 9799770991.1
+        if version.version.major > 10000:
+            return -1
 
-                if int(self.id_r[index]) > int(version.id_r[index]):
-                    result = -1
-                    break;
-                elif int(self.id_r[index]) < int(version.id_r[index]):
-                    break;
-            else:
-                if int(self.id_r[index]) == 0:
-                    result = 0
-                elif int(self.id_r[index]) > 0:
-                    result = -1
-                break;
-        return result 
+        if self.version == version.version:
+            return 0
+
+        if self.version > version.version:
+            return -1
+
+        if self.version < version.version:
+            return 1
