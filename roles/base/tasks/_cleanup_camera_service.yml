@@ -59,6 +59,7 @@
     - "{{global_etc}}systemd_watcher/services/vsftpd.conf"
     - "/etc/cron.d/ansible_camera_ftp"
     - "/etc/nftables/30_camera_service.nft"
+    - "/etc/nftables/30_vsftpd.nft"
   when: "is_camera_cleanup_needed"
 
 - name: check for podman container

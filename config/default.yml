@@ -742,6 +742,7 @@ podman_ci_service_ip:             "172.16.0.205"
 podman_frigate_ip:                "172.16.0.206"
 
 podman_vcontrold_ip:              "172.16.0.230"
+podman_optolink_splitter_ip:      "172.16.0.231"
 
 netgroup:                         "{{default_server_ip.split('.')[2]}}"
 
