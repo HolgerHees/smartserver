@@ -57,6 +57,8 @@
     - "{{htdocs_path}}main/components/camera_service.js"
     - "{{global_etc}}systemd_watcher/services/camera_service.conf"
     - "{{global_etc}}systemd_watcher/services/vsftpd.conf"
+    - "/etc/cron.d/ansible_camera_ftp"
+    - "/etc/nftables/30_camera_service.nft"
   when: "is_camera_cleanup_needed"
 
 - name: check for podman container
