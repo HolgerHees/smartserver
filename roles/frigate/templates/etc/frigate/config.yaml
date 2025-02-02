@@ -65,7 +65,7 @@ review:
 #      - person
 {% endif %}
 
-{{frigate_config | to_yaml}}
+{{frigate_config | to_nice_yaml}}
 
 # use frigate_version_string if available to allow frigate migration scripts to run
 version: {{frigate_version_string.stdout if frigate_version_string.stdout != '' else frigate_version}}

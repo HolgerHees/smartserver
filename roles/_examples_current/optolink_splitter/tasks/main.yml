@@ -1,0 +1,82 @@
+- name: set optolink-splitter version
+  set_fact:
+    optolink_splitter_version: '7481c3262df73006e1995cce95415079ffb94dd7' # commit from 30.01.2025
+  tags: [ 'update_notifier_config' ]
+
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}optolink-splitter/" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_log}}optolink-splitter/" }
+  include_tasks: roles/_shared/create_directories.yml
+
+- name: get gid from "dialout"
+  shell: "getent group dialout | cut -d: -f3"
+  register: group_dialout_id
+  changed_when: no
+
+- name: clone optolink-splitter git
+  vars:
+    git_clone_name: "optolink-splitter"
+    git_clone_path: "{{global_etc}}optolink-splitter"
+    git_clone_url: "https://github.com/philippoo66/optolink-splitter.git"
+    git_clone_version: "{{optolink_splitter_version}}"
+    git_owner: root
+    git_group: root
+    git_mode:  "u=rwX,g=rX,o="
+  include_tasks: roles/_shared/git_clone.yml
+
+- name: copy udev rules
+  vars:
+    udev_rules_path: "templates/udev/rules.d/"
+    udev_rules_trigger: "restart optolink-splitter"
+  include_tasks: roles/_shared/synchronize_udev_rules.yml
+
+- name: copy config and service
+  template:
+    src: "templates/settings_ini.py"
+    dest: "{{global_etc}}optolink-splitter/settings_ini.py"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart optolink-splitter"
+
+- name: build container image
+  vars:
+    container_name: "optolink-splitter"
+    image_name: "custom_optolink-splitter:{{alpine_version}}-{{optolink_splitter_version}}"
+    image_files:
+      - '{{config_path}}roles/optolink-splitter/templates/container/Dockerfile'
+    entrypoint_startup:
+      - "/usr/bin/python3 /etc/optolink-splitter/optolinkvs2_switch.py &"
+  include_tasks: roles/container/shared/build_podman_image.yml
+
+- name: create container service
+  vars:
+    container_name: "optolink-splitter"
+    container_image: "custom_optolink-splitter:{{alpine_version}}-{{optolink_splitter_version}}"
+    container_network: "isolated"
+    container_ip: "{{podman_optolink_splitter_ip}}"
+#    container_exposed_ports:
+#      - "65234"
+#    container_devices:
+#      - "/dev/ttyOptolink:/dev/ttyOptolink:rwm"
+#      - "/dev/ttyVitoconnect:/dev/ttyOptolink:rwm"
+    container_privileged: yes
+    container_volumes:
+      - '/dev:/dev:rw'
+      - '{{global_etc}}optolink-splitter/:/etc/optolink-splitter:ro'
+      - '{{global_log}}optolink-splitter/:{{global_log}}optolink-splitter:rw'
+    container_after: [ "mosquitto" ]
+    container_readyness: { "type": "state_check" }
+    #container_readyness: { "type": "port_check", "ip": "{{podman_optolink_splitter_ip}}", "port": "65234" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+- name: allow container service
+  vars:
+    service_name: "optolink-splitter"
+    container_to_container_rules:
+      - { saddr: "{{podman_optolink_splitter_ip}}", daddr: "{{podman_mosquitto_ip}}", protocol: "tcp", dport: [ "1883", "9001" ], comment: "optolink-splitter => mosquitto" }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']

@@ -1,0 +1,7 @@
+- name: register webui
+  vars:
+    name: "custom_menuentries"
+    js_file: "templates/webui/custom_menuentries.js"
+    icons: ["templates/webui/icons/custom_cloud.svg", "templates/webui/icons/custom_cloud_airgradient.svg", "templates/webui/icons/custom_energy.svg", "templates/webui/icons/custom_nuki.svg", "templates/webui/icons/custom_pikvm.svg", "templates/webui/icons/custom_cloud_airgradient.svg", "templates/webui/icons/custom_weatherstation.svg"]
+  import_tasks: roles/apache_webui/shared/add_webui.yml
+

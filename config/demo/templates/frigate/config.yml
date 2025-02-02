@@ -14,17 +14,27 @@
 #  width: 320
 #  height: 320
 
+#ffmpeg:
+#  hwaccel_args: preset-nvidia-h264
+
 #detectors:
 #  coral:
 #    type: edgetpu
 #    device: pci
 
 go2rtc:
+#  rtsp:
+#    username: "test"
+#    password: "test"
   streams:
     streedside_main:
-      - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_streedside_ip}}:554/11"
+      - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_streedside_ip}}:554/h264Preview_01_main"
+    streedside_sub:
+      - "ffmpeg:https://{{custom_camera_streedside_ip}}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ custom_camera_device_username }}&password={{ custom_camera_device_password }}"
     toolshed_main:
       - "rtsp://{{ custom_camera_device_username }}:{{ custom_camera_device_password }}@{{custom_camera_toolshed_ip}}:554/h264Preview_01_main"
+    toolshed_sub:
+      - "ffmpeg:https://{{custom_camera_toolshed_ip}}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ custom_camera_device_username }}&password={{ custom_camera_device_password }}"
 
 cameras:
   streedside:
@@ -32,18 +42,22 @@ cameras:
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/streedside_main
+          input_args: preset-rtsp-restream
           roles:
             - record
+        - path: rtsp://127.0.0.1:8554/streedside_sub
+          input_args: preset-rtsp-restream
+          roles:
             - detect
     zones:
-      garden_area:
+      grundstueck:
         coordinates: 0.002,0.008,0.303,0.009,0.292,0.133,0.996,0.673,0.998,0.991,0.002,0.991
-      garden_door:
+      einfahrt:
         coordinates: 0.384,0.07,0.382,0.2,0.49,0.222,0.491,0.097
         inertia: 3
         loitering_time: 5
         objects: car
-      garden_gate:
+      gartentor:
         coordinates: 0.589,0.166,0.708,0.233,0.684,0.422,0.569,0.33
         loitering_time: 5
         objects:
@@ -58,28 +72,36 @@ cameras:
     review:
       alerts:
         required_zones:
-          - garden_area
-          - garden_door
-          - garden_gate
+          - grundstueck
+          - gartentor
+          - einfahrt
     live:
       stream_name: streedside_main
     detect:
       enabled: true
-      width: 1280
-      height: 720
+      width: 1024
+      height: 576
+#      width: 896
+#      height: 512
     webui_url: "http://{{custom_camera_streedside_ip}}"
   toolshed:
     enabled: true
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/toolshed_main
+          input_args: preset-rtsp-restream
           roles:
             - record
+        - path: rtsp://127.0.0.1:8554/toolshed_sub
+          input_args: preset-rtsp-restream
+          roles:
             - detect
     live:
       stream_name: toolshed_main
     detect:
       enabled: true
-      width: 1280
-      height: 720
+      width: 1024
+      height: 576
+#      width: 896
+#      height: 512
     webui_url: "https://{{custom_camera_toolshed_ip}}"

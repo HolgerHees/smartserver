@@ -41,6 +41,9 @@
       {% if container_shm_size is defined %}
         "--shm-size {{container_shm_size}}",
       {% endif %}
+      {% if container_memory is defined %}
+        "--memory {{container_memory}}",
+      {% endif %}
       {% if container_no_healthcheck is defined and container_no_healthcheck %}
         "--no-healthcheck",
       {% endif %}

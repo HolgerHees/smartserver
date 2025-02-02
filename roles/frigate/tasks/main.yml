@@ -1,14 +1,14 @@
+- name: set version
+  set_fact:
+    frigate_version: '0.15.0-rc2'
+    frigate_config: "{{ lookup('template', '{{config_path}}templates/frigate/config.yml') | from_yaml }}"
+  tags: [ 'update_notifier_config' ]
+
 - name: fetch old version
   shell: "cat {{global_etc}}frigate/config.yaml 2> /dev/null | grep -Po 'version:\\s+[0-9\\.-]+' | grep -Po '[0-9\\.-]+'"
   register: "frigate_version_string"
   changed_when: no
   failed_when: no
-
-- name: set version
-  set_fact:
-    frigate_version: '0.15.0-rc1'
-    frigate_config: "{{ lookup('template', '{{config_path}}templates/frigate/config.yml') | from_yaml }}"
-  tags: [ 'update_notifier_config' ]
 
 - name: prepare needed directories
   vars:
@@ -44,7 +44,9 @@
     container_ip: "{{podman_frigate_ip}}"
     container_privileged: "{{ true if tpu_enabled else false }}"
     container_shm_size: "{{frigate_shm_size}}"
+    container_memory: "{{frigate_max_memory_size}}"
 #    container_published_ports:
+#      - "8554" # RTSP feeds
 #      - "8555/tcp" # WebRTC
 #      - "8555/udp" # WebRTC
     container_exposed_ports:
@@ -84,7 +86,7 @@
     container_to_outside_rules:
       - { saddr: "{{podman_frigate_ip}}", comment: "frigate => all outgoing networks" }
 #      - { saddr: "{{podman_frigate_ip}}", oif: "{{default_network_interface}}", comment: "frigate => all outgoing networks" }
-#    nat_rules: { ip: "{{podman_frigate_ip}}", ports: ["8555"] }
+#    nat_rules: { ip: "{{podman_frigate_ip}}", ports: ["8554","8555"] }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

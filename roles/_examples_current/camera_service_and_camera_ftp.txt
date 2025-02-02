@@ -1,0 +1,16 @@
+camera_devices:                           { default: [] },                                                      # used for ftp upload, image gallkery and menu entries
+# camera_devices: [
+#     {
+#         uid: {},                                                                                              # unique identifier for this device. Will be used to generate proxy urls like /camera{uid | capelized}Image
+#         name: {},                                                                                             # menu and gallery name
+#         details: { optional: yes },                                                                           # additional details like brand name
+#         ftp_upload_name: { optional: yes },                                                                   # the folder name where alert images are uploaded int the ftp folder (it is just the subfolder name, not the whole path)
+#         snapshot_url: {},                                                                                     # external url to get a snapshot/preview image
+#         snapshot_username: { optional: yes }                                                                  # username to authenticate external url
+#         snapshot_password: { optional: yes }                                                                  # password to authenticate external url
+#     }
+# ]
+camera_ftp_username:                      { dependency: "{{camera_enabled}}" },                                 # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
+camera_ftp_password:                      { dependency: "{{camera_enabled}}" },
+camera_ftp_max_file_age:                  { default: "{{2 * 24 * 60}}",                                         # images, older then 2 days are discarded
+                                            dependency: "{{camera_enabled}}" },

@@ -1,0 +1,8 @@
+- name: restart powersave
+  systemd:
+    name: powersave
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart powersave"

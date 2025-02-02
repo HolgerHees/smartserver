@@ -1,0 +1,1 @@
+KERNEL=="ttyUSB*", SUBSYSTEMS=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="ttyOptolink", GROUP="dialout", MODE="0660"

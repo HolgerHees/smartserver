@@ -1,0 +1,8 @@
+- name: restart optolink-splitter
+  systemd:
+    name: optolink-splitter
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart optolink-splitter"

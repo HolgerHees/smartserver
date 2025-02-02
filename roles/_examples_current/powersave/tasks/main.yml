@@ -1,0 +1,21 @@
+- name: install required packages => is_suse
+  zypper:
+    name:
+      - powertop
+    state: present
+  when: is_suse
+
+- name: create systemd service for 'powersave'
+  template:
+    src: "templates/powersave.service"
+    dest: "/etc/systemd/system/powersave.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart powersave"
+
+- name: trigger powersave handler
+  vars:
+    notify: "restart powersave"
+    service: "powersave"
+  include_tasks: roles/_shared/service_check.yml

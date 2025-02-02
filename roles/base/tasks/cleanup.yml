@@ -33,7 +33,7 @@
 
 - name: cleanup camera_service
   include_tasks: _cleanup_camera_service.yml
-  when: "not camera_enabled"
+  when: "camera_devices is not defined"
 
 
 

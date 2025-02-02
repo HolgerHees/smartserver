@@ -1,0 +1,203 @@
+<!-- Getestet auf V200KW1 Oel Vitola 200 und VScotHO1 GAS Vitodens 200B2B September 2011 -->
+<!-- Ohne Gewaehr ceteris paribus 2012-->
+<!-- Befehl 'setVentilStatus' sprechend analog Viessmann ergaenzt von ceteris paribus 04.10.2012 -->
+<!-- Befehle 'SetTempRaum...Soll... ergaenzt von ceteris paribus 13.10.2012 -->
+<!-- Devices ergaenzt von ceteris paribus 13.10.2012 -->
+<!-- Befehle K90 Daempfung sprechend und Viessmann ergaenzt von ceteris paribus 27.10.2012 -->
+
+
+<vito>
+  <devices>
+<!--    <device ID="20CB" name="VScotHO1" protocol="300,KW2" /> -->
+    <device ID="20CB" name="VScotHO1" protocol="P300" />
+  </devices>
+  <commands> 
+	<command name='getDevType' protocmd='getaddr'>
+		<addr>00F8</addr>
+		<len>2</len>
+            <unit>DT</unit>
+            <description>Ermittle Device Typ der Anlage</description>
+	</command>
+	<command name='getTempRaumSoll' protocmd='getaddr'>
+	     <addr>2306</addr>
+	     <len>1</len>
+	     <unit>UTI</unit>
+	     <description>Ermittle die Soll Raumtemperatur</description>
+	</command>
+	<command name='getTempAbgas' protocmd='getaddr'>
+	     <addr>0808</addr>
+	     <len>2</len>
+	     <unit>UT</unit>
+	     <description>Ermittle die Abgastemperatur in Grad C</description>
+	</command>
+	<command name='getTempAussen' protocmd='getaddr'>
+	    <addr>5525</addr>
+		<len>2</len>
+		<unit>UT</unit>
+		<description>Ermittle die Aussentemperatur in Grad C (Tiefpass)</description>
+	</command>
+	<command name='getTempAussenGedaempft' protocmd='getaddr'>
+	     <addr>5527</addr>
+	     <len>2</len>
+	     <unit>UT</unit>
+	     <description>Ermittle die Aussentemperatur in Grad C (Gedaempft)</description>
+	</command>	
+	<command name='getTempVorlaufSoll' protocmd='getaddr'>
+             <addr>2544</addr>
+             <len>2</len>
+             <unit>UT</unit>
+             <description>Ermittle die Vorlaufsolltemperatur M1 in Grad C</description>
+        </command>
+	<command name='getTempVorlauf' protocmd='getaddr'>
+             <addr>2900</addr>
+             <len>2</len>
+             <unit>UT</unit>
+             <description>Ermittle die Vorlauftemperatur M1 in Grad C</description>
+        </command>
+	<command name='getTempKesselSoll' protocmd='getaddr'>
+	     <addr>555A</addr>
+	     <len>2</len>
+	     <unit>UT</unit>
+	     <description>Ermittle die Kesselsolltemperatur in Grad C (Tiefpass)</description>
+	</command>	
+	<command name='getTempKessel' protocmd='getaddr'>
+	     <addr>0810</addr>
+	     <len>2</len>
+	     <unit>UT</unit>
+	     <description>Ermittle die Kesseltemperatur in Grad C (Tiefpass)</description>
+	</command>	
+        <command name='getBrennerStarts' protocmd='getaddr'>
+             <addr>088A</addr>
+             <len>4</len>
+             <unit>CO</unit>
+             <description>Ermittle die Brennerstarts</description>
+        </command>
+        <command name='getBrennerStunden' protocmd='getaddr'>
+             <addr>08A7</addr>
+             <len>4</len>
+             <unit>CS</unit>
+             <description>Ermittle die Brennerstunden Stufe 1</description>
+        </command>
+	<command name='getTempWasserSpeicher' protocmd='getaddr'>
+             <addr>0812</addr>
+             <len>2</len>
+             <unit>UT</unit>
+             <description>Ermittle die Speichertemperatur in Grad C (Tiefpass)</description>
+        </command>
+	<command name='getTempSolarKollektor' protocmd='getaddr'>
+             <addr>6564</addr>
+             <len>2</len>
+             <unit>UT</unit>
+             <description>Ermittle die Kollektortemperatur in Grad C</description>
+       </command>
+        <command name='getTempSolarSpeicher' protocmd='getaddr'>
+             <addr>6566</addr>
+             <len>2</len>
+             <unit>UT</unit>
+             <description>Ermittle die Solar Speichertemperatur unten in Grad C</description>
+        </command>
+	<command name='getSolarStunden' protocmd='getaddr'>
+	     <addr>6568</addr>
+	     <len>2</len>
+	     <unit>CO</unit>
+	     <description>Solar Betriebsstunden</description>
+	</command>
+	 <command name='getSolarLeistung' protocmd='getaddr'>
+	     <addr>6560</addr>
+	     <len>4</len>
+	     <unit>CO</unit>
+	     <description>Solar Leistung Gesamt in KW</description>
+	 </command>
+	 <command name='getNachladeunterdrueckungStatus' protocmd='getaddr'>
+	     <addr>6551</addr>
+	     <len>1</len>
+	     <unit>RT</unit>
+	     <description>Ermittle Status der Nachladeunterdrueckung</description>
+	 </command>
+	 <command name='getSolarPumpeStatus' protocmd='getaddr'>
+	     <addr>6552</addr>
+	     <len>1</len>
+	     <unit>RT</unit>
+	     <description>Ermittle Status der Solarpumpe</description>
+	 </command>
+	<command name='getHeizkreisPumpeDrehzahl' protocmd='getaddr'>
+             <addr>7663</addr>
+             <len>2</len>
+             <unit>PR2</unit>
+             <description>Ermittle den Status der Heizkreis Pumpe</description>
+        </command>
+<!--	<command name='getHeizkennlinieNiveau' protocmd='getaddr'>
+             <addr>2304</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Heizkennlinie Niveau</description>
+        </command>
+	<command name='getHeizkennlinieNeigung' protocmd='getaddr'>
+             <addr>2305</addr>
+             <len>1</len>
+             <unit>UN</unit>
+             <description>Heizkennlinie Neigung</description>
+        </command>-->
+	<command name='getRaumtemperaturNormalSoll' protocmd='getaddr'>
+	     <addr>2306</addr>
+	     <len>1</len>
+	     <unit>UTI</unit>
+	     <description>Raumtemperatur Normal Soll</description>
+	</command>	
+	<command name='getRaumtemperaturSparSoll' protocmd='getaddr'>
+	     <addr>2307</addr>
+	     <len>1</len>
+	     <unit>UTI</unit>
+	     <description>Raumtemperatur Normal Soll</description>
+	</command>	
+	<command name='getLeistungIst' protocmd='getaddr'>
+             <addr>A38F</addr>
+             <len>1</len>
+             <unit>PR</unit>
+             <description>Ermittle aktuelle Leistung</description>
+        </command>
+	<command name='getBetriebsart' protocmd='getaddr'>
+             <addr>2323</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Ermittle die Betriebsart</description>
+        </command>
+	<command name='setBetriebsartTo0' protocmd='setaddrTo0'>
+             <addr>2323</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Setze Betriebsart</description>
+        </command>
+	<command name='setBetriebsartTo1' protocmd='setaddrTo1'>
+             <addr>2323</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Setze Betriebsart</description>
+        </command>
+	<command name='setBetriebsartTo2' protocmd='setaddrTo2'>
+             <addr>2323</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Setze Betriebsart</description>
+        </command>
+	<command name='setBetriebsartTo3' protocmd='setaddrTo3'>
+             <addr>2323</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Setze Betriebsart</description>
+        </command>
+	<command name='setBetriebsartTo4' protocmd='setaddrTo4'>
+             <addr>2323</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Setze Betriebsart</description>
+        </command>
+	 <command name='getSammelstoerung' protocmd='getaddr'>
+	     <addr>0A82</addr>
+	     <len>1</len>
+	     <unit>RT</unit>
+	     <description>Sammelstoerung</description>
+	 </command>
+   </commands> 
+</vito>
+

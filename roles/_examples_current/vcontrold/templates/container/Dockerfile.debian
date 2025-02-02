@@ -1,0 +1,19 @@
+FROM debian:{{debian_version}}
+
+RUN groupmod -g {{group_dialout_id.stdout}} dialout && \
+    apt-get update && \
+    apt-get install -y libxml2-dev cmake git && \
+    git clone --single-branch --branch {{vcontrold_version}} https://github.com/openv/vcontrold.git && \
+    mkdir vcontrold/build && cd vcontrold/build && cmake -DMANPAGES=OFF -DCMAKE_INSTALL_PREFIX=/usr/ .. && make && make install && \
+    cd / && \
+    rm -rf /vcontrold && \
+    apt-get purge -y cmake git && \
+    apt-get install -y python3 python3-paho-mqtt && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+#ENTRYPOINT ["/bin/sleep","3000000"]
+#ENTRYPOINT ["/usr/sbin/vcontrold","-n"]
+ENTRYPOINT ["/usr/bin/python3","/etc/vcontrold/mqtt.py"]
+
