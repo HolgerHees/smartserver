@@ -29,11 +29,11 @@
   notify: "restart frigate"
 
 - name: collect tpu devices
-  shell: "{{ 'ls -1 /dev/apex_*' if tpu_type == 'coral' else ''}}"
+  shell: "ls -1 /dev/apex_*"
   register: "frigate_tpu_string"
   changed_when: no
   failed_when: no
-  when: "tpu_enabled"
+  when: "tpu_enabled and tpu_type=='coral_pci'"
 
 # ***** SERVICE CONFIGS *****
 - name: create container service
@@ -42,7 +42,7 @@
     container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}" #{{ '-tensorrt' if gpu_enabled and gpu_type == 'nvidia' else '' }}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
-    container_privileged: "{{ true if tpu_enabled else false }}"
+    container_privileged: "{{ true if tpu_enabled or (gpu_enabled and gpu_type == 'intel') else false }}"
     container_shm_size: "{{frigate_shm_size}}"
     container_memory: "{{frigate_max_memory_size}}"
 #    container_published_ports:
@@ -62,7 +62,9 @@
       ]
     container_volumes: |
       [
-        {% if tpu_enabled %}
+        {% if (gpu_enabled and gpu_type == 'intel') or (tpu_enabled and tpu_type=='coral_usb') %}
+          "/dev:/dev:rw",
+        {% elif tpu_enabled %}
           {% for device in frigate_tpu_string.stdout_lines %}
             "{{device}}:{{device}}:rw",
           {% endfor %}
