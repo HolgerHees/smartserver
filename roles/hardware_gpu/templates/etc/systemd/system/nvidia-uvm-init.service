@@ -1,0 +1,15 @@
+[Unit]
+Description=Initialize nvidia devices
+After=systemd-journald.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# force generation of /dev/nvidia-uvm and other devices
+ExecStart=/usr/bin/nvidia-ctk cdi generate 2>1 > /dev/null
+#ExecStart=/opt/scripts/nvidia-uvm-init.sh
+
+[Install]
+WantedBy=multi-user.target
+

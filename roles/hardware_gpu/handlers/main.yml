@@ -1,0 +1,8 @@
+- name: restart nvidia-uvm-init
+  systemd:
+    name: nvidia-uvm-init
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart nvidia-uvm-init"
