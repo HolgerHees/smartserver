@@ -54,8 +54,12 @@
       - "8971" # WebUI
       - "8554" # RTSP feeds
       - "8555" # WebRTC
-    container_env:
-      FRIGATE_RTSP_PASSWORD: "test"
+    container_env: |
+      {
+        {% if frigate_plus_api_key is defined %}
+          "PLUS_API_KEY": "{{frigate_plus_api_key}}",
+        {% endif %}
+      }
     container_devices: |
       [
           {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}

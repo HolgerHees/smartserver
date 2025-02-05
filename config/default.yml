@@ -382,6 +382,8 @@ default_variables: {
                                                 dependency: "{{frigate_enabled}}" },
     frigate_max_memory_size:                  { default: "{{(ansible_facts['memtotal_mb'] / 4) | round | int}}m",    # safty net if ffmpeg is leaking memotry on broken video streams
                                                 dependency: "{{frigate_enabled}}" },
+    frigate_plus_api_key:                     { default: no,
+                                                dependency: "{{frigate_enabled}}" },
     # **** END FRIGATE                                                                 ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
