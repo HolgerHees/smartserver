@@ -332,6 +332,9 @@ class LibreNMS(_handler.Handler):
                 raise NetworkException("Got wrong data status code: {}".format(data["status"]), self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout)
 
             return data
+        except json.decoder.JSONDecodeError as e:
+            logging.error("{} {}".format(r.status_code, r.text))
+            raise NetworkException("LibreNMS result was unparseable", self.config.remote_suspend_timeout )
         except requests.exceptions.ConnectionError as e:
             #logging.error(str(e))
             raise NetworkException("LibreNMS currently not available", self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout )
