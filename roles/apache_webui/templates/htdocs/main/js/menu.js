@@ -413,18 +413,28 @@ mx.Menu = (function( ret ) {
                         let mainOffset = mx.Core.getOffsets(mainMenuElement);
                         let mainBottomPos = mainRect.height + mainOffset.top + mainMenuElement.scrollTop;
                         
-                        let rect = activeSubmenuElement.getBoundingClientRect();
-                        let offsets = mx.Core.getOffsets(activeSubmenuElement);
-                        let bottomPos = offsets.top + rect.height;
-                        
-                        if( bottomPos > mainBottomPos )
+                        let subRect = activeSubmenuElement.getBoundingClientRect();
+                        let subOffsets = mx.Core.getOffsets(activeSubmenuElement);
+                        let subBottomPos = subOffsets.top + subRect.height;
+
+                        if( subBottomPos > mainBottomPos )
                         {
+                            let scrollTop = 0;
+                            if( subRect.height > mainRect.height )
+                            {
+                                let groupRect = mx.$("#" + activeElementId).getBoundingClientRect();
+                                scrollTop = mainMenuElement.scrollTop + ( groupRect.top - mainRect.top );
+                            }
+                            else
+                            {
+                                scrollTop = mainMenuElement.scrollTop + ( subBottomPos - mainBottomPos ) + 100;
+                            }
+
                             mainMenuElement.scrollTo({
-                                top: mainMenuElement.scrollTop + ( bottomPos - mainBottomPos ) + 100,
+                                top: scrollTop,
                                 behavior: 'smooth'
                             });
                         }
-                        
                     },350);
                 },0);
             }
