@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    frigate_version: '0.15.0-rc2'
+    frigate_version: '0.15.0'
     frigate_config: "{{ lookup('template', '{{config_path}}templates/frigate/config.yml') | from_yaml }}"
   tags: [ 'update_notifier_config' ]
 
@@ -158,7 +158,7 @@
     url: "https://github.com/blakeblackshear/frigate/releases"
     config: {
       project: "blakeblackshear/frigate",
-      pattern: "^v([0-9\\.]+(-(rc|beta)[0-9]+))?$",
+      pattern: "^v([0-9\\.]+(-(rc|beta)[0-9]+)?)$",
       version: "v{{frigate_version}}"
     }
   include_tasks: roles/update_service/shared/add_software.yml
