@@ -55,7 +55,7 @@
 - name: create container service
   vars:
     container_name: "frigate"
-    container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}{% if tpu_type=='hailo' %}-h8l{% endif %}"
+    container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}{% if tpu_enabled and tpu_type=='hailo' %}-h8l{% endif %}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
     container_privileged: "{{ true if tpu_enabled or (gpu_enabled and gpu_type == 'intel') else false }}"
