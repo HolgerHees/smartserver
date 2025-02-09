@@ -61,6 +61,7 @@
     container_privileged: "{{ true if tpu_enabled or (gpu_enabled and gpu_type == 'intel') else false }}"
     container_shm_size: "{{frigate_shm_size}}"
     container_memory: "{{frigate_max_memory_size}}"
+    container_memory_swap: "{{frigate_max_memory_size}}"
 #    container_published_ports:
 #      - "8554" # RTSP feeds
 #      - "8555/tcp" # WebRTC

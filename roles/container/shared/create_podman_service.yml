@@ -44,6 +44,9 @@
       {% if container_memory is defined %}
         "--memory {{container_memory}}",
       {% endif %}
+      {% if container_memory_swap is defined %}
+        "--memory-swap {{container_memory_swap}}",
+      {% endif %}
       {% if container_no_healthcheck is defined and container_no_healthcheck %}
         "--no-healthcheck",
       {% endif %}
