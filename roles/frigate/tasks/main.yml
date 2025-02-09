@@ -12,9 +12,15 @@
 
 - name: prepare needed directories
   vars:
-    directories:
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}frigate/" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_lib }}frigate/" }
+    directories: |
+      [
+        { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{ global_etc }}frigate/" },
+        { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{ global_lib }}frigate/" },
+        {% if tpu_enabled and tpu_type == 'hailo' %}
+          { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{ global_lib }}frigate/model_cache/" },
+          { "mode": "u=rwx,g=rx,o=", "owner": "root", "group": "root", "path": "{{ global_lib }}frigate/model_cache/h8l_cache/" },
+        {% endif %}
+      ]
   include_tasks: roles/_shared/create_directories.yml
 
 - name: copy configs
@@ -28,18 +34,28 @@
     - "templates/etc/frigate/config.yaml"
   notify: "restart frigate"
 
+- name: copy model
+  get_url:
+    url: "https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.14.0/hailo8/yolov8s.hef"
+    dest: "{{global_etc}}frigate/model_cache/h8l_cache/yolov8s.hef"
+    owner: root
+    group: root
+    mode: 0640
+  when: "tpu_enabled and tpu_type == 'hailo'"
+  notify: "restart frigate"
+
 - name: collect tpu devices
-  shell: "ls -1 /dev/apex_*"
+  shell: "ls -1 /dev/{% if tpu_type=='coral_pci' %}apex_*{% elif tpu_type=='hailo' %}hailo*{% endif %}"
   register: "frigate_tpu_string"
   changed_when: no
   failed_when: no
-  when: "tpu_enabled and tpu_type=='coral_pci'"
+  when: "tpu_enabled and tpu_type in ['coral_pci','hailo']"
 
 # ***** SERVICE CONFIGS *****
 - name: create container service
   vars:
     container_name: "frigate"
-    container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}" #{{ '-tensorrt' if gpu_enabled and gpu_type == 'nvidia' else '' }}"
+    container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}{% if tpu_type=='hailo' %}-h8l{% endif %}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
     container_privileged: "{{ true if tpu_enabled or (gpu_enabled and gpu_type == 'intel') else false }}"

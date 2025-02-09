@@ -73,7 +73,7 @@ default_variables: {
     # }
 
     tpu_enabled:                              { default: "{{ true if tpu_type is defined else false}}" },
-    tpu_type:                                 { optional: yes },                                                    # currently only "coral_pci" and "coral_usb" is supported
+    tpu_type:                                 { optional: yes },                                                    # currently only "coral_pci", "coral_usb" and "hailo" is supported
     gpu_enabled:                              { default: "{{ true if gpu_type is defined else false}}" },
     gpu_type:                                 { optional: yes },                                                    # currently only "nvidia" and "intel" are supported
 

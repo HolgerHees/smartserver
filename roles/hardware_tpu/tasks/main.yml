@@ -1,3 +1,8 @@
 - name: "process 'google coral'"
   include_tasks: "_type_coral.yml"
   when: "tpu_type=='coral_pci' or tpu_type=='coral_usb'"
+
+- name: "process 'hailo'"
+  include_tasks: "_type_hailo.yml"
+  when: "tpu_type=='hailo'"
+

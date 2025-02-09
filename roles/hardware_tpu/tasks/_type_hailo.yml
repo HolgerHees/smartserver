@@ -1,0 +1,107 @@
+- name: "_type_hailo : set version"
+  set_fact:
+    # "4.20.1" latest
+    # currently only version 4.19.0 is supported by frigate
+    # after version upgrade, check if patch is still needed
+    hailo_version: "4.19.0"
+  tags: [ 'update_notifier_config' ]
+
+- name: "_type_hailo : prepare needed directories"
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/lib/firmware/hailo" }
+  include_tasks: roles/_shared/create_directories.yml
+
+- name: "_type_hailo : install required packages => is_suse"
+  zypper:
+    name:
+      - dkms
+      - gcc
+      - make
+    state: present
+  when: is_suse
+
+- name: "_type_hailo : clone git"
+  vars:
+    git_clone_name: "hailo"
+    git_clone_path: "{{global_build}}hailo"
+    git_clone_url: "https://github.com/hailo-ai/hailort-drivers.git"
+    git_clone_version: "v{{hailo_version}}"
+    git_owner:  "root"
+    git_group:  "root"
+    git_mode:  "u=rwX,g=rwX,o="
+  include_tasks: roles/_shared/git_clone.yml
+
+- name: "_type_hailo : copy patch"
+  copy:
+    src: "templates/hailo/linux/utils/compact.h"
+    dest: "{{global_build}}hailo/linux/utils/compact.h"
+    owner: "root"
+    group: "root"
+    mode: 0640
+  when: "git_clone_changed"
+
+- name: "_type_hailo : compile driver"
+  shell: "cd {{global_build}}hailo/linux/pcie/ && make all && make install"
+  register: "shell_cmd_result"
+  changed_when: yes
+  failed_when: "shell_cmd_result.rc != 0"
+  when: "git_clone_changed"
+
+- name: "_type_hailo : download firmware"
+  shell: "cd {{global_build}}hailo/ && rm -f hailo8_fw.*.bin && ./download_firmware.sh"
+  register: "shell_cmd_result"
+  changed_when: "'200 OK' in shell_cmd_result.stdout"
+  failed_when: "shell_cmd_result.rc != 0 or ('200 OK' not in shell_cmd_result.stdout and '304 Not Modified' in shell_cmd_result.stdout)"
+  when: "git_clone_changed"
+
+- name: "_type_hailo : copy firmware"
+  copy:
+    src: "{{global_build}}hailo/hailo8_fw.{{hailo_version}}.bin"
+    dest: "/lib/firmware/hailo/hailo8_fw.bin"
+    owner: "root"
+    group: "root"
+    mode: 0640
+  when: "git_clone_changed"
+
+- name: "_type_hailo : install udev rule"
+  copy:
+    src: "{{global_build}}hailo/linux/pcie/51-hailo-udev.rules"
+    dest: "/etc/udev/rules.d/"
+    owner: "root"
+    group: "root"
+    mode: 0640
+  when: "git_clone_changed"
+
+- name: "_type_hailo : copy firmware"
+  shell: "udevadm control --reload-rules && sudo udevadm trigger"
+  changed_when: no
+  when: "git_clone_changed"
+
+- name: "_type_hailo : unload driver"
+  shell: "rmmod hailo_pci"
+  register: "shell_cmd_result"
+  changed_when: "shell_cmd_result.rc == 0"
+  failed_when: no
+  when: "git_clone_changed"
+
+- name: "_type_hailo : load firmware"
+  shell: "modprobe hailo_pci"
+  register: "shell_cmd_result"
+  changed_when: "shell_cmd_result.rc == 0"
+  failed_when: "shell_cmd_result.rc != 0"
+  when: "git_clone_changed"
+
+#- name: "_type_hailo : register hailo update notifier"
+#  vars:
+#    name: "hailo"
+#    type: "github"
+#    url: "https://github.com/hailo-ai/hailort-drivers/releases"
+#    config: {
+#      project: "hailo-ai/hailort-drivers",
+#      pattern: "^v([0-9\\.]+)$",
+#      version: "v{{hailo_version}}"
+#    }
+#  include_tasks: roles/update_service/shared/add_software.yml
+#  tags: ['update_notifier_config']
+#  when: "update_service_software_check_enabled"
