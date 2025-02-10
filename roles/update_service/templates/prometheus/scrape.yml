@@ -1,3 +1,4 @@
+scrape_configs:
 - job_name: 'update_service'
   scheme: https
   metrics_path: /update_service/metrics/

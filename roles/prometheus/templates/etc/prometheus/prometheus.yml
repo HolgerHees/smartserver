@@ -9,7 +9,6 @@ alerting:
         - alertmanager:9093
 
 rule_files:
-{{RULE_FILES}}
-
-scrape_configs:
-{{SCRAPE_CONFIGS}}
+  - "/etc/prometheus/rules/*.yml"
+scrape_config_files:
+  - "/etc/prometheus/scrapes/*.yml"

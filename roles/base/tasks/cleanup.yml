@@ -80,6 +80,8 @@
     - "{{global_etc}}systemd_watcher/services/imaginary.conf"
     - "/etc/modprobe.d/iptables-blacklist.conf"
     - "{{htdocs_path}}nextcloud/apps/news/css/custom.css"
+    - "{{global_etc}}prometheus/prometheus.yml.tpl"
+    - "/opt/scripts/prometheus_generator"
 
 - name: Refresh systemd
   shell:

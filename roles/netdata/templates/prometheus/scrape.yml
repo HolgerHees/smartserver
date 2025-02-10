@@ -1,3 +1,4 @@
+scrape_configs:
 - job_name: 'netdata'
   scheme: https
   metrics_path: /api/v1/allmetrics
