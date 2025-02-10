@@ -19,7 +19,6 @@
   with_items:
     - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", src: "/etc/prometheus/prometheus.yml", dest: "{{ global_etc }}prometheus/prometheus.yml" }
     - { user: "{{system_users['nobody'].name}}", group: "{{system_groups['nobody'].name}}", mode: "u=rw,g=r,o=", src: "/etc/prometheus/rules/prometheus.yml", dest: "{{ global_etc }}prometheus/rules/prometheus.yml" }
-#    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", src: "/opt/scripts/prometheus_generator", dest: "/opt/scripts/prometheus_generator" }
   notify: "restart prometheus"
 
 - name: check custom rules
