@@ -61,36 +61,39 @@
     dest: "/lib/firmware/hailo/hailo8_fw.bin"
     owner: "root"
     group: "root"
-    mode: 0640
-  when: "git_clone_changed"
+    mode: 0644
+  register: "hailo_firmware_result"
 
-- name: "_type_hailo : install udev rule"
+- name: "_type_hailo: copy module configs"
   copy:
-    src: "{{global_build}}hailo/linux/pcie/51-hailo-udev.rules"
-    dest: "/etc/udev/rules.d/"
-    owner: "root"
-    group: "root"
-    mode: 0640
-  when: "git_clone_changed"
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  register: "hailo_config_result"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=", src: "{{global_build}}hailo/linux/pcie/51-hailo-udev.rules", dest: "/etc/udev/rules.d/51-hailo-udev.rules" }
+    - { mode: "u=rwx,g=rx,o=", src: "templates/etc/modules-load.d/10-ansible-hailo.conf", dest: "/etc/modules-load.d/10-ansible-hailo.conf" }
 
 - name: "_type_hailo : copy firmware"
   shell: "udevadm control --reload-rules && sudo udevadm trigger"
   changed_when: no
-  when: "git_clone_changed"
+  when: "git_clone_changed or hailo_firmware_result.changed or hailo_config_result.changed"
 
 - name: "_type_hailo : unload driver"
   shell: "rmmod hailo_pci"
   register: "shell_cmd_result"
   changed_when: "shell_cmd_result.rc == 0"
   failed_when: no
-  when: "git_clone_changed"
+  when: "git_clone_changed or hailo_firmware_result.changed or hailo_config_result.changed"
 
-- name: "_type_hailo : load firmware"
+- name: "_type_hailo : load driver"
   shell: "modprobe hailo_pci"
   register: "shell_cmd_result"
   changed_when: "shell_cmd_result.rc == 0"
   failed_when: "shell_cmd_result.rc != 0"
-  when: "git_clone_changed"
+  when: "git_clone_changed or hailo_firmware_result.changed or hailo_config_result.changed"
 
 #- name: "_type_hailo : register hailo update notifier"
 #  vars:
