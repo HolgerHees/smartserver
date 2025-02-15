@@ -43,21 +43,24 @@ table inet filter {
         meta l4proto udp ip saddr {{cloud_vpn.interface.network}} th dport 54 accept                comment "accept cloud podman dns"
 {% endif %}
 
-        jump SMARTSERVER_INPUT
-
 {% if not ipv6_enabled %}
         ip6 daddr ff02:0000:0000:0000:0000:0000:0000:0001 drop                                      comment "silently ignore neighbor discovery"
         ip6 daddr ff02:0000:0000:0000:0000:0000:0000:00fb drop                                      comment "silently ignore multicasts"
+{% else %}
+        ip6 daddr ff02:0000:0000:0000:0000:0000:0000:0001 accept                                    comment "accept neighbor discovery"
+        ip6 daddr ff02:0000:0000:0000:0000:0000:0000:00fb accept                                    comment "accept multicasts"
 {% endif %}
 
-        ip daddr 224.0.0.251 drop                                                                   comment "silently ignore multicasts"
-        ip daddr 224.0.0.1 drop                                                                     comment "silently ignore multicasts"
-        ip daddr 239.255.255.250 drop                                                               comment "silently ignore service (1900:ssdp, 3702:ws-discovery) broadcast"
+        ip daddr 224.0.0.1 accept                                                                   comment "accept IGMPv1 & IGMPv3 multicasts"
+        ip daddr 224.0.0.2 accept                                                                   comment "accept IGMPv2 multicasts"
+        ip daddr 224.0.0.4 accept                                                                   comment "accept IGMPv3 multicasts"
+        ip daddr 224.0.0.251 accept                                                                 comment "accept mDNS multicasts"
+        ip daddr 239.255.255.250 accept                                                             comment "accept service (1900:ssdp, 3702:ws-discovery) broadcast"
+
         meta l4proto udp ip daddr 255.255.255.255 th sport { 67, 68 } th dport { 67, 68 } drop      comment "silently ignore dhcp broadcasts"
         meta l4proto udp th dport 9 drop                                                            comment "silently ignore wol (wake on lan) events"
 
-        #meta l4proto udp ip saddr 0.0.0.0 th dport 68 drop                                          comment "silently ignore dhcp broadcasts"
-        #meta l4proto udp ip daddr 224.0.0.251 th dport 5353 drop                                    comment "silently ignore multicasts"
+        jump SMARTSERVER_INPUT
 
         log prefix "DROP [INET INPUT]: "
     }

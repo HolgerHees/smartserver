@@ -265,24 +265,32 @@
   changed_when: no
   failed_when: no
   
-- name: prepare device javaopts
+- name: prepare openhab extra args
   set_fact:
-    openhab_device_java_opts: "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
-  when: "device_result.rc == 0"
+    openhab_extra_args: |
+        [
+          "-Duser.timezone={{timezone}}",
+          "-Dorg.jupnp.network.useInterfaces={{openhab_extra_args['upnp']['interface']}}",
+          "-Dorg.jupnp.network.useAddresses={{openhab_extra_args['upnp']['ip']}}",
+          "-Dpython.path=/openhab/python/",
+          {% if device_result.rc == 0 %}
+            "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
+          {% endif %}
+        ]
+
+#- name: check if devices exists
+#  shell: "ls -al /dev/{{item}}"
+#  register: symlink_result
+#  changed_when: no
+#  failed_when: no
+#  with_items: "{{device_result.stdout_lines}}"
+#  when: "device_result.rc == 0"
   
-- name: check if devices exists
-  shell: "ls -al /dev/{{item}}"
-  register: symlink_result
-  changed_when: no
-  failed_when: no
-  with_items: "{{device_result.stdout_lines}}"
-  when: "device_result.rc == 0"
-  
-- name: prepare device mounts
-  set_fact:
-    openhab_device_mounts: "{{openhab_device_mounts | default([]) + ['/dev/' + item.1 + ':/dev/' + item.1 + ':rwm']}}"
-  with_indexed_items: "{{device_result.stdout_lines}}"
-  when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
+#- name: prepare device mounts
+#  set_fact:
+#    openhab_device_mounts: "{{openhab_device_mounts | default([]) + ['/dev/' + item.1 + ':/dev/' + item.1 + ':rwm']}}"
+#  with_indexed_items: "{{device_result.stdout_lines}}"
+#  when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
   
 # conf volumens must be mounted seperatly, because openhab has problems internaly to follow symlinks
 - name: check conf volumens
@@ -305,7 +313,7 @@
     container_env:
       USER_ID: "{{system_users['openhab'].id}}"
       GROUP_ID: "{{system_groups['openhab'].id}}"
-      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
+      EXTRA_JAVA_OPTS: "{{ openhab_extra_args | join(' ') }}"
       EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
       CRYPTO_POLICY: "unlimited"
