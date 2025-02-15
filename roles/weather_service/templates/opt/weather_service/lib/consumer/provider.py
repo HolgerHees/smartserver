@@ -361,6 +361,7 @@ class ProviderConsumer():
     def _applyWeekDay(self, current_value, weekValues):
         current_value.setEnd((current_value.getStart() + timedelta(hours=24)).replace(hour=0, minute=0, second=0))
         icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+        logging.info(">>>> _applyWeekDay: {} - {} - {}".format(icon_name, current_value.start, current_value.end))
         current_value.setSVG(self.getCachedIcon(icon_name))
         weekValues.append(current_value)
 
@@ -388,6 +389,7 @@ class ProviderConsumer():
                         #_datetime = hourlyData['datetime'].replace(minute=0, second=0);
                         current_value.setEnd(hourlyData['datetime'])
                         icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                        logging.info(">>>> DayList: {} - {} - {}".format(icon_name, current_value.start, current_value.end))
                         current_value.setSVG(self.getCachedIcon(icon_name))
                         todayValues.append( current_value )
                         current_value = WeatherBlock( hourlyData['datetime'] )
@@ -396,6 +398,7 @@ class ProviderConsumer():
 
                 current_value.setEnd(current_value.getStart() + timedelta(hours=3))
                 icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                logging.info(">>>> DayList: {} - {} - {}".format(icon_name, current_value.start, current_value.end))
                 current_value.setSVG(self.getCachedIcon(icon_name))
                 todayValues.append(current_value)
 
