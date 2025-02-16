@@ -118,10 +118,10 @@ class WeatherHelper():
     }
 
     @staticmethod
-    def getSunriseAndSunset(latitude, longitude):
+    def getSunriseAndSunset(latitude, longitude, ref_datetime):
         sun = Sun(latitude, longitude)
-        sunrise = sun.get_sunrise_time().astimezone().replace(tzinfo=None)
-        sunset = sun.get_sunset_time().astimezone().replace(tzinfo=None)
+        sunrise = sun.get_sunrise_time(ref_datetime).replace(tzinfo=None)
+        sunset = sun.get_sunset_time(ref_datetime).replace(tzinfo=None)
 
         return [sunrise, sunset]
 
@@ -152,12 +152,15 @@ class WeatherHelper():
         #precipitationType = block.precipitationType
 
         starttime = block.start
-        if block.end is None:
-            timerange = 1
-        else:
-            timerange = int( ( block.end - block.start ).total_seconds() / 60 / 60 )
+        timerange = int( ( block.end - block.start ).total_seconds() / 60 ) if block.end is not None else 60
 
-        sunrise, sunset = WeatherHelper.getSunriseAndSunset(latitude, longitude)
+        ref_datetime = starttime + timedelta(minutes=timerange / 2)
+
+        sunrise, sunset = WeatherHelper.getSunriseAndSunset(latitude, longitude, ref_datetime)
+
+        isNight = ( ref_datetime < sunrise or ref_datetime > sunset )
+
+        #logging.info("     convertOctaToSVG: isNight: {} - ref_datetime: {} - sunrise: {} - sunset: {}".format(isNight, ref_datetime, sunrise, sunset ))
 
         cloudIndex = 0
         if block.effectiveCloudCoverInOcta >= 6:
@@ -168,12 +171,6 @@ class WeatherHelper():
             cloudIndex = 2
         elif block.effectiveCloudCoverInOcta >= 1.5:
             cloudIndex = 1
-
-        minutes_to_add = ( timerange / 2 * 60)
-        now = datetime.now()
-        ref_datetime = starttime + timedelta(minutes=minutes_to_add)
-        ref_datetime = ref_datetime.replace(year=now.year,month=now.month,day=now.day)
-        isNight = ( ref_datetime < sunrise or ref_datetime > sunset )
 
         if block.checkRainProbability( block.precipitationProbabilityInPercent, block.maxPrecipitationAmountInMillimeter ):
             if block.maxPrecipitationAmountInMillimeter >= 1.3:

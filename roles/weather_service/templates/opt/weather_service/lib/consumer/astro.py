@@ -36,7 +36,7 @@ class AstroConsumer():
         activeDay = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
         activeTimestamp = datetime.timestamp(activeDay)
 
-        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude)
+        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, activeDay)
         self.astroSunrise = sunrise.isoformat()
         self.astroSunset = sunset.isoformat()
 
