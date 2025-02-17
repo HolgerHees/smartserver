@@ -40,7 +40,7 @@
     container_name: "vsftpd"
     image_name: "custom_vsftpd:{{alpine_version}}"
     image_files:
-      - roles/camera_ftp/templates/container/Dockerfile
+      - "{{config_path}}roles/camera_ftp/templates/container/Dockerfile"
     entrypoint_pre: |
       if ! id -g "$FTP_USER" >/dev/null 2>&1; then
           addgroup -g $FTP_GID -S $FTP_USER
@@ -115,7 +115,7 @@
 - name: create cron job
   vars:
     name: "Camera Cleanup"
-    cmd: "find {{global_lib}}/camera_service/upload/ -name \"*.jpg\" -mmin +{{camera_ftp_max_file_age}} -exec rm {} +"
+    cmd: "find {{global_lib}}/camera_service/upload/ -name \"*.jpg\" -mmin +2880 -exec rm {} +"
     group: "camera_ftp"
     subgroup: "cleanup"
     hour: "0"
