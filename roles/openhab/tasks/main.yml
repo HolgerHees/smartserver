@@ -70,6 +70,7 @@
 
 - name: collect conf folder links
   set_fact:
+    pythonscripting_enabled: "{{'automation/python' in custom_conf_folder_result.stdout_lines}}"
     collected_conf_folders: |
       [
         {% set ns = namespace(active_line = 'xxx', has_python = 'automation/python' in custom_conf_folder_result.stdout_lines) %}
@@ -254,9 +255,13 @@
     owner: "{{system_users['openhab'].name}}"
     group: "{{system_groups['openhab'].name}}"
     mode: 0640
-  with_items:
-      - "{{global_etc}}openhab/python/configuration.py"
-      - "{{global_etc}}openhab/conf/automation/python/lib"
+  with_items: |
+      [
+          "{{global_etc}}openhab/python/configuration.py"
+          {% if pythonscripting_enabled %}
+            ,"{{global_etc}}openhab/conf/automation/python/lib/configuration.py"
+          {% endif %}
+      ]
   notify: "restart openhab"
   
 - name: collect devices
