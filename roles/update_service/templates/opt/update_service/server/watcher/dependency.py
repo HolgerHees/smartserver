@@ -76,9 +76,9 @@ class DependencyWatcher(watcher.Watcher):
                 if "roles" not in dependency_config:
                     continue
 
-                if len(tags) == 0:
-                    self._touchOutdatedRole(dependency_config["tag"])
-                    continue
+                #if len(tags) == 0:
+                #    self._touchOutdatedRole(dependency_config["tag"])
+                #    continue
 
                 for role in dependency_config["roles"]:
                     if role not in tags:
