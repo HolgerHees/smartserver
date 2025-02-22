@@ -99,6 +99,8 @@
         "FTLCONF_dns_rateLimit_count": "0",
         "FTLCONF_dns_rateLimit_interval": "0",
 
+        "ADDITIONAL_PACKAGES": "sqlite"
+
         {% if dns_enabled and dns_type == 'pihole' %}
             , "FTLCONF_dns_bogusPriv": "true"
         {% endif %}

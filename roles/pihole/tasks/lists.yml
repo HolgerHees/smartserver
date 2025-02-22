@@ -3,12 +3,6 @@
   register: whitelist_result
   changed_when: "'Adding' in whitelist_result.stdout"
   with_items: "{{pihole_whitelist_domains}}"
-
-- name: check sqlite3 binary
-  shell: "podman exec pihole sh -c 'sqlite3 || apk add sqlite'"
-  register: pihole_check_result
-  changed_when: "'OK:' in pihole_check_result.stdout"
-
 - name: select addlists
   shell: "echo 'SELECT address FROM adlist' | podman exec -i pihole sqlite3 /var/lib/pihole/gravity.db && sleep 1"
   register: adlist_result
