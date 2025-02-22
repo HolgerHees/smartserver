@@ -77,12 +77,13 @@
 #        REPLY_ADDR4=0.0.0.0
 #        LOCAL_IPV4=0.0.0.0
 
-#    , "DNS_FQDN_REQUIRED": "true"
-#    , "REV_SERVER": "false"
-#    , "REV_SERVER_DOMAIN": "{{dns_default_domain}}"
-#    , "REV_SERVER_TARGET": "{{default_server_gateway}}"
-#    , "REV_SERVER_CIDR": "{{host_server_network}}"
-#    , "PIHOLE_DOMAIN": "{{dns_default_domain}}"
+#   , "DNS_FQDN_REQUIRED": "true"
+#   , "REV_SERVER": "false"
+#   , "REV_SERVER_DOMAIN": "{{dns_default_domain}}"
+#   , "REV_SERVER_TARGET": "{{default_server_gateway}}"
+#   , "REV_SERVER_CIDR": "{{host_server_network}}"
+#   , "PIHOLE_DOMAIN": "{{dns_default_domain}}"
+#   https://docs.pi-hole.net/docker/upgrading/v5-v6/
 
     container_env: |
       {
@@ -103,6 +104,9 @@
 
         {% if dns_enabled and dns_type == 'pihole' %}
             , "FTLCONF_dns_bogusPriv": "true"
+            , "FTLCONF_dns_domainNeeded": "true"
+            , "FTLCONF_dns_revServers": "true,{{host_server_network}},{{default_server_gateway}},{{dns_default_domain}}"
+            , "FTLCONF_dns_domain": "{{dns_default_domain}}"
         {% endif %}
         {% if dhcp_enabled and dhcp_type == 'pihole' %}
             , "FTLCONF_dhcp_active": "true"
