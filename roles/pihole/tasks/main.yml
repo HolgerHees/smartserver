@@ -52,18 +52,6 @@
   notify: restart pihole
   when: "dns_enabled and dns_type == 'pihole'"
 
-- name: prepare pihole environment variables
-  set_fact:
-    pihole_env:
-
-- name: copy config
-  copy:
-    src: "templates/pihole-FTL.conf"
-    dest: "{{ global_etc }}pihole/pihole-FTL.conf"
-    owner: "{{system_users['pihole'].name}}"
-    group: "{{system_groups['pihole'].name}}"
-    mode: 0640
-
 - name: create container service
   vars:
     container_name: "pihole"
@@ -86,29 +74,40 @@
     #healthcheck_start_period: 30s
     #healthcheck_timeout: 30s
     #healthcheck_interval: 30s
+#        REPLY_ADDR4=0.0.0.0
+#        LOCAL_IPV4=0.0.0.0
+
+#    , "DNS_FQDN_REQUIRED": "true"
+#    , "REV_SERVER": "false"
+#    , "REV_SERVER_DOMAIN": "{{dns_default_domain}}"
+#    , "REV_SERVER_TARGET": "{{default_server_gateway}}"
+#    , "REV_SERVER_CIDR": "{{host_server_network}}"
+#    , "PIHOLE_DOMAIN": "{{dns_default_domain}}"
+
     container_env: |
       {
         "TZ": "{{timezone}}",
         "PIHOLE_UID": "{{system_users['pihole'].id}}",
         "PIHOLE_GID": "{{system_groups['pihole'].id}}",
-        "WEBPASSWORD": "{{pihole_password}}",
-        "DNS1": "{{default_server_ip}}",
-        "DNS2": "no"
+
+        "FTLCONF_webserver_api_password": "{{pihole_password}}",
+        "FTLCONF_dns_upstreams": "{{default_server_ip}}",
+
+        "FTLCONF_files_database": "/var/lib/pihole/pihole-FTL.db",
+        "FTLCONF_files_gravity": "/var/lib/pihole/gravity.db",
+        "FTLCONF_files_macvendor": "/var/lib/pihole/macvendor.db",
+        "FTLCONF_dns_rateLimit_count": "0",
+        "FTLCONF_dns_rateLimit_interval": "0",
+
         {% if dns_enabled and dns_type == 'pihole' %}
-            , "DNS_BOGUS_PRIV": "true"
-            , "DNS_FQDN_REQUIRED": "true"
-            , "REV_SERVER": "false"
-            , "REV_SERVER_DOMAIN": "{{dns_default_domain}}"
-            , "REV_SERVER_TARGET": "{{default_server_gateway}}"
-            , "REV_SERVER_CIDR": "{{host_server_network}}"
-            , "PIHOLE_DOMAIN": "{{dns_default_domain}}"
+            , "FTLCONF_dns_bogusPriv": "true"
         {% endif %}
         {% if dhcp_enabled and dhcp_type == 'pihole' %}
-            , "DHCP_ACTIVE": "true"
-            , "DHCP_START": "{{dhcp_range_start}}"
-            , "DHCP_END": "{{dhcp_range_end}}"
-            , "DHCP_ROUTER": "{{default_server_gateway}}"
-            , "DHCP_LEASETIME": "24"
+            , "FTLCONF_dhcp_active": "true"
+            , "FTLCONF_dhcp_start": "{{dhcp_range_start}}"
+            , "FTLCONF_dhcp_end": "{{dhcp_range_end}}"
+            , "FTLCONF_dhcp_router": "{{default_server_gateway}}"
+            , "FTLCONF_dhcp_leaseTime": "24"
         {% endif %}
       }
     container_volumes:
