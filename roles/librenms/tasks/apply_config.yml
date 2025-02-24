@@ -18,7 +18,7 @@
 - name: "create discovery all cron job"
   vars:
     name: "LibreNMS Discovery All"
-    cmd: "podman exec librenms /opt/librenms/discovery-wrapper.py 8 > /dev/null"
+    cmd: "podman exec --user librenms librenms /opt/librenms/discovery-wrapper.py 8 > /dev/null"
     group: "librenms"
     subgroup: "discovery_all"
     hour: "*/6"
@@ -29,7 +29,7 @@
 - name: "create discovery new cron job"
   vars:
     name: "LibreNMS Discovery New"
-    cmd: "podman exec librenms /opt/librenms/discovery.php  -h new > /dev/null"
+    cmd: "podman exec --user librenms librenms /opt/librenms/discovery.php  -h new > /dev/null"
     group: "librenms"
     subgroup: "discovery_new"
     hour: "*"
@@ -40,7 +40,7 @@
 - name: "create poller cron job"
   vars:
     name: "LibreNMS Poller"
-    cmd: "podman exec librenms /opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 > /dev/null"
+    cmd: "podman exec --user librenms librenms /opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 > /dev/null"
     group: "librenms"
     subgroup: "poller"
     hour: "*"
@@ -62,7 +62,7 @@
 - name: "create alerts cron job"
   vars:
     name: "LibreNMS Alerts"
-    cmd: "podman exec librenms /opt/librenms/alerts.php > /dev/null"
+    cmd: "podman exec --user librenms librenms /opt/librenms/alerts.php > /dev/null"
     group: "librenms"
     subgroup: "alerts"
     hour: "*"
