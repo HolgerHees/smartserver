@@ -84,7 +84,7 @@ mx.UNCore = (function( ret ) {
         let toolbar = mx.$("#networkToolbar .networkSearchWifi");
         let new_buttons = [];
         Object.entries(clients).forEach(([key,value]) => {
-            let id = "ssid_" + key;
+            let id = "ssid_" + key.replace(" ","_");
             let button = mx.$("#" + id);
             if( !button )
             {
@@ -116,7 +116,7 @@ mx.UNCore = (function( ret ) {
         }
 
         Object.entries(clients).forEach(([key,value]) => {
-            let id = "band_" + key;
+            let id = "band_" + key.replace(" ","_");
             let button = mx.$("#" + id);
             if( !button )
             {
