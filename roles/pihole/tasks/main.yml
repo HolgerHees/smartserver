@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    pihole_version: '2025.02.4'
+    pihole_version: '2025.02.6'
   tags: [ 'update_notifier_config' ]
 
 - name: "create user and group => user or group does not exists"
