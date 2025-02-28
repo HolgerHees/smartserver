@@ -3,6 +3,7 @@ import threading
 import traceback
 import json
 import requests
+import re
 
 import logging
 
@@ -45,28 +46,27 @@ class FPing(threading.Thread):
         try:
             logging.info("FPing started")
             while self._isRunning():
-                returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1" ] + self.config.fping_test_hosts, is_running_callback=self._isRunning)
+                returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-A", "-n", "-c1" ] + self.config.fping_test_hosts, is_running_callback=self._isRunning)
 
                 ping_result_map = {}
                 if len(result) > 0:
-                    for ping_result in result.split("\n"):
-                        #8.8.8.8       : xmt/rcv/%loss = 1/1/0%, min/avg/max = 8.81/8.81/8.81
 
-                        [host, s1]          = ping_result.split(" : ")
-                        if ", min/avg/max = " not in s1:
-                            continue
+                    lines = result.split("\n")
+                    index = 0
+                    for host in self.config.fping_test_hosts:
+                        ping_result = lines[index]
 
-                        [stats, ping]       = s1.split(", ")
-                        [_, ping_values]    = ping.split(" = ")
-                        [_, ping_value, _]  = ping_values.split("/")
+                        match = re.search("^([^\\s]+) \\(([^\\)]+)\\)\\s*:.*?( min\\/avg\\/max\\s*=\\s*[0-9\\.]+\\/([0-9\\.]+)\\/[0-9\\.]+)?$", ping_result)
 
-                        ping_result_map[host.strip()] = ping_value.strip()
+                        ping_result_map[host] = { "dns": match[1], "ip": match[2], "time": match[4] }
+
+                        index += 1
 
                 messurements = []
                 for host in self.config.fping_test_hosts:
                     if host not in ping_result_map:
                         continue
-                    messurements.append("fping,hostname={} value={}".format(host, ping_result_map[host]))
+                    messurements.append("fping,hostname={} value={}".format(host, ping_result_map[host]["time"]))
 
                 self.messurements = messurements
 
