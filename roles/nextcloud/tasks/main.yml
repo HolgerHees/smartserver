@@ -172,6 +172,8 @@
 #      - "maintenance:repair --include-expensive"
   when: "nextcloud_installed_version_changed"
 
+# SELECT CONCAT( 'ALTER TABLE ', TABLE_SCHEMA, '.', TABLE_NAME, ' ', 'ROW_FORMAT=DYNAMIC;' ) AS _alter FROM INFORMATION_SCHEMA.TABLES WHERE ENGINE='InnoDB' AND ROW_FORMAT <> 'DYNAMIC';
+
 # ***** UPDATE USERS *****
 - name: check for existing users
   shell: "podman exec php php {{htdocs_path}}nextcloud/occ user:list"

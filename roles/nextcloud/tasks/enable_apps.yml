@@ -273,7 +273,7 @@
 #      - "db:add-missing-primary-keys"
 #      - "db:add-missing-columns"
       - "maintenance:repair --include-expensive"
-  when: "is_production and nextcloud_installed_version_changed | default(false)"
+  when: "is_production and (nextcloud_installed_version_changed | default(false) or app_update_process_result.changed)"
 
 # ******* initialize memories geo locaisation ******
 - name: check memories:places-setup
