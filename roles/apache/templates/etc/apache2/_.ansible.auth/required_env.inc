@@ -9,6 +9,12 @@ RewriteCond %{ENV:OIDC_CLAIM_email} ^$
 {% endif %}
 RewriteRule ^ - [E=REMOTE_USERNAME:%{REMOTE_USER},E=REMOTE_USERGROUP:${lookupGroup:%{REMOTE_USER}},E=REMOTE_USERFULLNAME:${lookupFullname:%{REMOTE_USER}},NS]
 
+RewriteCond %{ENV:REMOTE_USER} ^$
+{% if openid_connect_url is defined %}
+RewriteCond %{ENV:OIDC_CLAIM_email} ^$
+{% endif %}
+RewriteRule ^ - [E=REMOTE_USERNAME:%{REMOTE_ADDR},E=REMOTE_USERGROUP:guest,E=REMOTE_USERFULLNAME:guest,NS]
+
 RequestHeader set X-Forwarded-User %{REMOTE_USERNAME}e env=REMOTE_USERNAME
 RequestHeader unset X-Forwarded-User env=!REMOTE_USERNAME
 
