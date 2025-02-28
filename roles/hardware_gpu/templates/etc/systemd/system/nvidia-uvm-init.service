@@ -7,7 +7,7 @@ Type=oneshot
 RemainAfterExit=yes
 
 # force generation of /dev/nvidia-uvm and other devices
-ExecStart=/usr/bin/nvidia-ctk cdi generate 2>1 > /dev/null
+ExecStart=nvidia-ctk cdi generate 2> /dev/null 1> /etc/cdi/nvidia.yaml
 #ExecStart=/opt/scripts/nvidia-uvm-init.sh
 
 [Install]

@@ -77,15 +77,10 @@
   when: "is_suse"
 
 - name: "nvidia : prepare cdi config"
-  shell: "nvidia-ctk cdi generate"
-  register: cdi_config_result
-  changed_when: no
+  shell: "[ ! -f /etc/cdi/nvidia.yaml ] && nvidia-ctk cdi generate 2> /dev/null 1> /etc/cdi/nvidia.yaml && echo 'created'"
+  register: generated_cdi_config
+  changed_when: "'created' in generated_cdi_config.stdout"
   failed_when: no
-
-- name: "nvidia : generate cdi config"
-  copy:
-    content: "{{ ( cdi_config_result.stdout_lines + [''] ) | join('\n') }}"
-    dest: /etc/cdi/nvidia.yaml
 
 - name: "nvidia : disable nvidia-powerd # temporary"
   systemd:
@@ -121,10 +116,10 @@
     enabled: no
     masked: no
 
-- name: "nvidia : register system package dependency"
-  vars:
-    tag: "hardware_gpu"
-    packages: [ "nvidia.*" ]
-  include_tasks: roles/update_service/shared/add_dependency.yml
-  tags: ['update_system_config']
-  when: "update_service_system_check_enabled"
+#- name: "nvidia : register system package dependency"
+#  vars:
+#    tag: "hardware_gpu"
+#    packages: [ "nvidia.*" ]
+#  include_tasks: roles/update_service/shared/add_dependency.yml
+#  tags: ['update_system_config']
+#  when: "update_service_system_check_enabled"
