@@ -82,7 +82,8 @@ RUN apt-get update && \
   # https://github.com/php/php-src/issues/7817
   #echo "opcache.jit = 1255\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   # interned_strings_buffer was running full
-  echo "opcache.interned_strings_buffer = 16\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
+  echo "opcache.memory_consumption = 256\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
+  echo "opcache.interned_strings_buffer = 32\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   
   sed -i 's/^[;]*memory_limit.*$/memory_limit = 1024M/' /usr/local/etc/php/php.ini && \
   sed -i 's/^[;]*upload_max_filesize.*$/upload_max_filesize = 2048M/' /usr/local/etc/php/php.ini && \
