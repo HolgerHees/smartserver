@@ -90,15 +90,6 @@
     enabled: no
     masked: no
 
-#- name: "nvidia : copy nvidia-uvm-init script"
-#  template:
-#    src: "templates/nvidia-uvm-init.sh"
-#    dest: "/opt/scripts/nvidia-uvm-init.sh"
-#    owner: root
-#    group: root
-#    mode: 0755
-#  notify: "restart nvidia-uvm-init"
-
 - name: "nvidia : create systemd service for 'nvidia-uvm-init"
   template:
     src: "templates/etc/systemd/system/nvidia-uvm-init.service"
@@ -111,9 +102,9 @@
 - name: "nvidia : disable nvidia-persistanced" # temporary => missing libnvidia-cfg.so.1 on suse
   systemd:
     name: nvidia-persistenced
-    state: stopped
+    state: started
     daemon_reload: yes
-    enabled: no
+    enabled: yes
     masked: no
 
 #- name: "nvidia : register system package dependency"
