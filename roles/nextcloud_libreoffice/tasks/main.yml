@@ -19,10 +19,11 @@
     container_image: "collabora/code:{{libreoffice_version}}"
     container_network: "isolated"
     container_ip: "{{podman_libreoffice_ip}}"
+    container_privileged: yes # as suggested by https://sdk.collaboraonline.com/docs/installation/CODE_Docker_image.html
     container_exposed_ports:
       - "9980"
     container_env:
-      extra_params: "--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o=mount_namespaces=false --o:fetch_update_check=99999 --o:allow_update_popup=false" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"
+      extra_params: "{% if not ipv6_enabled %}--o:net.proto=IPv4 {% endif %}--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o=mount_namespaces=false --o:fetch_update_check=99999 --o:allow_update_popup=false" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"
       server_name: "libreoffice.{{server_domain}}"
     container_readyness: { "type": "port_check", "ip": "{{podman_libreoffice_ip}}", "port": "9980" }
   include_tasks: roles/container/shared/create_podman_service.yml
