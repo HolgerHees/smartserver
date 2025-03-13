@@ -57,6 +57,8 @@ class FPing(threading.Thread):
                         ping_result = lines[index]
 
                         match = re.search("^([^\\s]+) \\(([^\\)]+)\\)\\s*:.*?( min\\/avg\\/max\\s*=\\s*[0-9\\.]+\\/([0-9\\.]+)\\/[0-9\\.]+)?$", ping_result)
+                        if match[4] is None:
+                            continue
 
                         ping_result_map[host] = { "dns": match[1], "ip": match[2], "time": match[4] }
 
