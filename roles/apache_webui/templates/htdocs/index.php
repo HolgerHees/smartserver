@@ -284,7 +284,7 @@ require "./shared/libs/auth.php";
                 <div id="background"></div>
                 <div id="submenu"></div>
             </div>
-            <iframe id="embed" src="" frameborder="0" style="display:none" allowfullscreen></iframe>
+            <iframe id="embed" src="" frameborder="0" style="display:none" allow="screen-wake-lock" allowfullscreen></iframe>
             <div id="embedError" style="display:none">
               <div id="notfoundError">
                 <div class="head" data-i18n="The requested page was not found"></div>
