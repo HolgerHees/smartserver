@@ -80,7 +80,7 @@ config access private_access
         option notify all
 
 config system
-        option sysLocation      'haus'
+        option sysLocation      '{{device_config.deployment_snmp_location | default('home')}}'
         option sysName          '{{device_name}}'
         option sysContact       '{{device_email}}'
 
