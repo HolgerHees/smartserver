@@ -118,7 +118,8 @@ class Processlist():
             filename = line[slash:]
 
             #7fa1f04ac000-7fa1f04ad000 rw-s 00000000 00:12 60518                      /[aio] (deleted)
-            if filename[0:2] == "/[":
+            #7f720924e000-7f720924f000 rw-s 00000000 00:01 0                          /SYSV00ae8a5d (deleted)
+            if filename[0:5] in ["/[aio", "/SYSV"]:
                 continue
 
             filename = filename.split(';')[0]
@@ -175,12 +176,9 @@ class Processlist():
         #start = time.time()
         outdated_pids = set()
         for pid in Processlist.getPids():
-            #files = Processlist._getOpenFiles(pid)
-            #if len(files) > 0:
-            #    logging.info(pid)
-            #    logging.info(files)
+            # 7fb863713000-7fb863723000 rw-s 00000000 103:04 12357411                  /root/orcexec.EKoHJM (deleted) => just in time compiler
             for fn in Processlist._getOpenFiles(pid):
-                if re.search('^(?!.*/(tmp|var|run|dev)).*$', fn):
+                if re.search('^(?!.*/(orcexec|tmp|var|run|dev)).*$', fn):
                     outdated_pids.add(pid)
                     break
 
