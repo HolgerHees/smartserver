@@ -119,9 +119,10 @@ class WeatherHelper():
 
     @staticmethod
     def getSunriseAndSunset(latitude, longitude, ref_datetime):
+        #_ref_datetime = ref_datetime.replace(hour=0, minute=0, second=0)
         sun = Sun(latitude, longitude)
-        sunrise = sun.get_sunrise_time(ref_datetime).replace(tzinfo=None)
-        sunset = sun.get_sunset_time(ref_datetime).replace(tzinfo=None)
+        sunrise = sun.get_sunrise_time(ref_datetime).replace(tzinfo=None, year=ref_datetime.year, month=ref_datetime.month, day=ref_datetime.day)
+        sunset = sun.get_sunset_time(ref_datetime).replace(tzinfo=None, year=ref_datetime.year, month=ref_datetime.month, day=ref_datetime.day)
 
         return [sunrise, sunset]
 
@@ -160,6 +161,7 @@ class WeatherHelper():
 
         isNight = ( ref_datetime < sunrise or ref_datetime > sunset )
 
+        sun = Sun(latitude, longitude)
         #logging.info("     convertOctaToSVG: isNight: {} - ref_datetime: {} - sunrise: {} - sunset: {}".format(isNight, ref_datetime, sunrise, sunset ))
 
         cloudIndex = 0
