@@ -1,6 +1,6 @@
 - name: prepare default configs
   set_fact:
-    default_packages: [ "mc", "htop", "strace", "tcpdump", "ntpclient", "openssh-sftp-server" ]
+    default_packages: [ "mc", "htop", "strace", "tcpdump", "openssh-sftp-server" ]
     default_features: [ "rpcd", "snmpd" ]
     device_files: {}
 
@@ -148,7 +148,7 @@
           '{{feature['name']}}',
         {% endif %}{% endfor %}
       ]
-    hostname: "{{item.name | lower}}"
+    hostname: "{{item.name | lower | regex_replace('\\s|\\.', '-') }}"
     is_ap: "{{ item.is_ap }}"
   template:
     src: "templates/deploy.env"

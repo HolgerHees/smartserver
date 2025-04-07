@@ -45,7 +45,7 @@ execute_scp() {
 authenticate() {
 
   echo -n "Check auth type ... "
-  if ssh-keygen -F $HOSTNAME > /dev/null; then
+  if ssh-keygen -F "$HOSTNAME" > /dev/null; then
       export SSHHOST="$HOSTNAME"
   else
       export SSHHOST="$IP"
@@ -62,6 +62,7 @@ authenticate() {
   elif [ "$EXIT_CODE" -eq 0 ]
   then
     echo "publickey"
+    export SSHAUTH="publickey"
   else
     echo "password"
     export SSHHOST="$IP"
