@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    php_version: "8.3.19"
+    php_version: "8.3.20"
   tags: [ 'update_notifier_config' ]
   
 - name: build container image
