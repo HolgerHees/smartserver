@@ -50,19 +50,18 @@ class FPing(threading.Thread):
 
                 ping_result_map = {}
                 if len(result) > 0:
-
                     lines = result.split("\n")
-                    index = 0
                     for host in self.config.fping_test_hosts:
-                        ping_result = lines[index]
+                        for line in lines:
+                            if host not in line:
+                                continue
 
-                        match = re.search("^([^\\s]+) \\(([^\\)]+)\\)\\s*:.*?( min\\/avg\\/max\\s*=\\s*[0-9\\.]+\\/([0-9\\.]+)\\/[0-9\\.]+)?$", ping_result)
-                        if match[4] is None:
-                            continue
+                            match = re.search("^([^\\s]+) \\(([^\\)]+)\\)\\s*:.*?( min\\/avg\\/max\\s*=\\s*[0-9\\.]+\\/([0-9\\.]+)\\/[0-9\\.]+)?$", line)
+                            if match[4] is None:
+                                continue
 
-                        ping_result_map[host] = { "dns": match[1], "ip": match[2], "time": match[4] }
-
-                        index += 1
+                            ping_result_map[host] = { "dns": match[1], "ip": match[2], "time": match[4] }
+                            break
 
                 messurements = []
                 for host in self.config.fping_test_hosts:
