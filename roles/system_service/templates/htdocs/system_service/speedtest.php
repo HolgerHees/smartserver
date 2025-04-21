@@ -6,6 +6,7 @@ require "../shared/libs/ressources.php";
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <?php echo Ressources::getModules(["/shared/mod/websocket/","/system_service/"]); ?>
 <script>
+var topWindow = window.top;
 mx.UNCore = (function( ret ) {
     ret.processData = function(data)
     {
@@ -17,7 +18,7 @@ mx.UNCore = (function( ret ) {
         }
         else
         {
-            if( btn.classList.contains("disabled") ) window.parent.postMessage({ type: 'grafana', content: "reload" }, "*");
+            if( btn.classList.contains("disabled") ) topWindow.postMessage({ type: 'grafana', content: "reload" }, "*");
 
             btn.classList.remove("disabled")
             btn.innerText = mx.I18N.get("Start speedtest");
