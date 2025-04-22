@@ -63,6 +63,7 @@
       - "{{default_server_ip}}"
     container_ip: "{{pihole_ip}}"
     container_ip6: "{{pihole_ipv6 if pihole_ipv6 is defined else ''}}"
+    container_shm_size: "128m"
     container_exposed_ports:
       - "53/tcp"
       - "53/udp"
