@@ -1,5 +1,5 @@
 - name: add whitelist domains
-  shell: "podman exec pihole pihole {{ '--white-wild ' + item[2:] if item.startswith('*.') else '-w ' + item }} && sleep 1"
+  shell: "podman exec pihole pihole {{ '--allow-wild ' + item[2:] if item.startswith('*.') else 'allow ' + item }} && sleep 1"
   register: whitelist_result
   changed_when: "'Adding' in whitelist_result.stdout"
   with_items: "{{pihole_whitelist_domains}}"

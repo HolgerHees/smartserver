@@ -58,7 +58,7 @@
     container_volumes:
       - '{{global_opt}}shared/python:/opt/shared/python:ro,z'
       - '{{global_opt}}nextcloud_service/:{{global_opt}}nextcloud_service:ro,z' # needs to be same path as on host, because inside the container we use 'with nsenter.Host():'
-      - '{{global_lib}}nextcloud_service/:/var/lib/nextcloud_service/nextcloud_service:ro,z'
+      - '{{global_lib}}nextcloud_service/:/var/lib/nextcloud_service:rw,z'
       - '{{htdocs_path}}:{{htdocs_path}}:ro,z'
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:rw,z'
       - '/etc/group:/etc/group:ro'
