@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mariadb_version: "11.4.5"
+    mariadb_version: "11.4.7"
   tags: [ 'update_notifier_config' ]
   
 - name: "create user and group => user or group does not exists"
