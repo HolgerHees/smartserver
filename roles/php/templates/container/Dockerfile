@@ -51,16 +51,16 @@ RUN apt-get update && \
   docker-php-ext-enable apcu && \
 
 # ImageMagick
-# pecl install imagick
+  pecl install imagick && \
+  docker-php-ext-enable imagick && \
 #    https://github.com/Imagick/imagick/issues/640
 #    https://github.com/Imagick/imagick/pull/641
 #    28f27044e435a2b203e32675e942eb8de620ee58 => 10.09.2024
-  cd /tmp && \
-  git clone --single-branch --branch master https://github.com/Imagick/imagick.git && \
-  cd /tmp/imagick && \
-  git checkout 28f27044e435a2b203e32675e942eb8de620ee58 && \
-  pecl install /tmp/imagick/package.xml && \
-  docker-php-ext-enable imagick && \
+#  cd /tmp && \
+#  git clone --single-branch --branch master https://github.com/Imagick/imagick.git && \
+#  cd /tmp/imagick && \
+#  git checkout 28f27044e435a2b203e32675e942eb8de620ee58 && \
+#  pecl install /tmp/imagick/package.xml && \
 
 # GD Image library with freetype support
   docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype && \
