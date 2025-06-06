@@ -28,14 +28,15 @@ mx.Actions = (function( ret ) {
 
     function loadHandler(url,type)
     {
-        /*if( type == 'replaceState' )
+        console.log(">>>> IFRAME " + history.length + " " + url + " " + type + " <<<<");
+
+        if( type == 'replaceState' && !iframeElement.getAttribute('src') )
         {
-            console.log("SKIP: " + type + " " + url );
+            console.log("inactive iframe replace state skipped" );
             return;
-        }*/
-        
-        console.log(">>>> IFRAME " + history.length + " " + url + " <<<<");
-        console.log(history.state);
+        }
+
+        //console.log(history.state);
 
         var entry = mx.History.getEntry(url);
         if( entry )
