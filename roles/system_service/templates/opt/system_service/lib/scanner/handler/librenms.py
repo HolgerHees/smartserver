@@ -273,9 +273,13 @@ class LibreNMS(_handler.Handler):
             
             _active_connected_macs = []
             for _connected_arp in _connected_arps:
-                vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
                 device_id = _connected_arp["device_id"]
+                if device_id not in self.devices:
+                  continue
+
+                vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
                 port_id = _connected_arp["port_id"]
+
                 target_mac = self.devices[device_id]["mac"]
                 target_interface = self.port_id_ifname_map[device_id][port_id]
                 if target_interface == "lo":
