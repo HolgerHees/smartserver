@@ -164,7 +164,7 @@ class LibreNMS(_handler.Handler):
         Helper.logProfiler(self, start, "VLANs fetched")
 
         _vlans = _vlan_json["vlans"]
-        
+
         _active_vlan_ids = []
         for _vlan in _vlans:
             _active_vlan_ids.append(_vlan["vlan_id"])
@@ -257,17 +257,6 @@ class LibreNMS(_handler.Handler):
 
         _connected_arps = _connected_arps_json["ports_fdb"]
         
-        for _connected_arp in _connected_arps:
-            if "vlan_id" not in _connected_arp:
-                _connected_arp["vlan_id"] = LibreNMS.DEFAULT_VLAN_ID
-
-            if _connected_arp["vlan_id"] not in self.vlan_id_map:
-                self._processVLANs()
-                for __connected_arp in _connected_arps:
-                    if __connected_arp["vlan_id"] not in self.vlan_id_map:
-                        raise Exception("Missing vlan {}".format(__connected_arp["vlan_id"]))
-                break
-
         if _connected_arps or self.connected_macs:
             self.cache.lock(self)
             
@@ -277,8 +266,20 @@ class LibreNMS(_handler.Handler):
                 if device_id not in self.devices:
                   continue
 
-                vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
                 port_id = _connected_arp["port_id"]
+                if port_id not in self.port_id_ifname_map[device_id]:
+                    logging.info("Skip unknown/deprecated port {} of device {}".format(port_id, device_id))
+                    continue
+
+                if "vlan_id" not in _connected_arp:
+                    vlan = LibreNMS.DEFAULT_VLAN_VLAN
+                    logging.info("Fallback for missing vlan of device {}".format(device_id))
+                elif _connected_arp["vlan_id"] not in self.vlan_id_map:
+                    vlan = LibreNMS.DEFAULT_VLAN_VLAN
+                    logging.info("Fallback for unknown/deprecated vlan of device {}".format(device_id))
+                    #logging.info("Skip unknown/deprecated vlan {} of device {}".format(_connected_arp["vlan_id"], device_id))
+                else:
+                    vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
 
                 target_mac = self.devices[device_id]["mac"]
                 target_interface = self.port_id_ifname_map[device_id][port_id]

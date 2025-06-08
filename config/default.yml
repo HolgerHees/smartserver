@@ -89,6 +89,7 @@ default_variables: {
     #                 info: "Model Name",                                                                           # optional device info
     #                 order: 250                                                                                    # optional device menu
     #                 icon: "device_printer.svg"                                                                    # optional device icon
+    #                 url_scheme: "http"                                                                            # optional url scheme of admin webui (default https)
     #             }
     #             librenms: {         # OPTIONAL used in librenms
     #                 snmp_method: "v2c",                                                                           # snmp method (v2, v3)
