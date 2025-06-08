@@ -36,6 +36,12 @@ mx.Actions = (function( ret ) {
             return;
         }
 
+        if( type == "popState"  )
+        {
+            console.log("iframe popState skipped" );
+            return;
+        }
+
         //console.log(history.state);
 
         var entry = mx.History.getEntry(url);
