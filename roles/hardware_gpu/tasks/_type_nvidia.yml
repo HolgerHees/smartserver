@@ -69,6 +69,7 @@
   zypper:
     name:
       - nvidia-compute-G06
+#      - nvidia-compute-G06-32bit # used to mount frigate
       - nvidia-compute-utils-G06
       - nvidia-container-toolkit
 #      - nvidia-utils-G06
@@ -89,6 +90,7 @@
     daemon_reload: yes
     enabled: no
     masked: no
+  failed_when: no
 
 - name: "nvidia : create systemd service for 'nvidia-uvm-init"
   template:
@@ -99,7 +101,7 @@
     mode: 0644
   notify: "restart nvidia-uvm-init"
 
-- name: "nvidia : disable nvidia-persistanced" # temporary => missing libnvidia-cfg.so.1 on suse
+- name: "nvidia : enable nvidia-persistanced" # temporary => missing libnvidia-cfg.so.1 on suse
   systemd:
     name: nvidia-persistenced
     state: started

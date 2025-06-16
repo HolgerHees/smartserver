@@ -92,8 +92,8 @@
         {% endif %}
         "{{global_etc}}frigate:/config:rw",
         "{{global_lib}}frigate:/media/frigate:rw",
-        {% if gpu_enabled and gpu_type == 'nvidia' %}"/usr/lib/libcuda.so:/usr/lib/libcuda.so:ro"{% endif %}
       ]
+#        {% if gpu_enabled and gpu_type == 'nvidia' %}"/usr/lib/libcuda.so:/usr/lib/libcuda.so:ro"{% endif %}
     container_mounts:
       - "type=tmpfs,tmpfs-size={{frigate_tmpfs_size}},destination=/tmp/cache"
     container_readyness: { "type": "port_check", "ip": "{{podman_frigate_ip}}", "port": "8971" }

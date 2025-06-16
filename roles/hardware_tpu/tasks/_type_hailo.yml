@@ -42,7 +42,7 @@
   when: "git_clone_changed"
 
 - name: "_type_hailo : compile driver"
-  shell: "cd {{global_build}}hailo/linux/pcie/ && make all && make install"
+  shell: "cd {{global_build}}hailo/linux/pcie/ && make all && make install_dkms"
   register: "shell_cmd_result"
   changed_when: yes
   failed_when: "shell_cmd_result.rc != 0"

@@ -1,3 +1,12 @@
+- name: add zypper repository => is_suse
+  zypper_repository:
+    name: Hardware
+    repo: "https://download.opensuse.org/repositories/hardware/$releasever/"
+    auto_import_keys: yes
+    priority: "100"
+    state: present
+  when: "is_suse"
+
 - name: "_type_coral : install required packages => is_suse"
   zypper:
     name:
