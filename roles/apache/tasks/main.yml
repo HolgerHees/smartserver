@@ -64,13 +64,17 @@
     
 - name: generate openssl certificate => certificate_files not exists
   openssl_certificate:
-    path: "{{global_etc}}letsencrypt/live/{{server_domain}}/fullchain.pem"
+    path: "{{global_etc}}letsencrypt/live/{{server_domain}}/cert.pem"
     privatekey_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/privkey.pem"
     csr_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/cert.csr"
     provider: selfsigned
     mode: 0640
   when: not certificate_files.stat.exists
-  
+
+- name: generate openssl fullchain => certificate_files not exists
+  shell: "cp {{global_etc}}letsencrypt/live/{{server_domain}}/cert.pem {{global_etc}}letsencrypt/live/{{server_domain}}/fullchain.pem"
+  when: not certificate_files.stat.exists
+
 # APACHE
 - name: prepare needed directories
   vars:
