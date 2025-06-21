@@ -276,7 +276,7 @@ class LibreNMS(_handler.Handler):
                     logging.info("Fallback for missing vlan of device {}".format(device_id))
                 elif _connected_arp["vlan_id"] not in self.vlan_id_map:
                     vlan = LibreNMS.DEFAULT_VLAN_VLAN
-                    logging.info("Fallback for unknown/deprecated vlan of device {}".format(device_id))
+                    #logging.info("Fallback for unknown/deprecated vlan of device {}".format(device_id))
                     #logging.info("Skip unknown/deprecated vlan {} of device {}".format(_connected_arp["vlan_id"], device_id))
                 else:
                     vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
