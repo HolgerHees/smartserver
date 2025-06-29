@@ -61,10 +61,15 @@ class StationConsumer():
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
             self.station_values = {k: v for k, v in data["station_values"].items() if k in self.valid_mqtt_topic}
-            for key, data in self.station_values.items():
-                key = "current{}{}".format(key[0].upper(),key[1:])
-                self.provider_consumer.notifyStationValue(False, key, data["value"], data["time"] )
             logging.info("Loaded {} consumer (station) values".format(len(self.station_values)))
+
+        for key in self.valid_mqtt_topic:
+            if key not in self.station_values:
+                self.station_values[key] = { "time": 0, "value": -1 }
+
+        for key, data in self.station_values.items():
+            key = "current{}{}".format(key[0].upper(),key[1:])
+            self.provider_consumer.notifyStationValue(False, key, data["value"], data["time"] )
 
     def _dump(self):
         if self.valid_cache_file:

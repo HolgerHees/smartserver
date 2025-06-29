@@ -79,8 +79,6 @@ class ProviderConsumer():
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
             self.consume_refreshed = data["consume_refreshed"]
-
-
             logging.info("Loaded consumer (provider) values")
 
     def _dump(self):
