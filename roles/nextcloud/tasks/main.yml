@@ -221,7 +221,7 @@
 
 - name: prepare user folder # => needed for initial cloud backup links
   file:
-    path: "{{nextcloud_data_path}}/{{item}}"
+    path: "{{nextcloud_data_path}}/{{item}}/files"
     state: directory
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
