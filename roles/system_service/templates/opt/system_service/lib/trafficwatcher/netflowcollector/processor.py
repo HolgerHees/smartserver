@@ -76,7 +76,7 @@ class Helper():
 
     #@staticmethod
     #def isExpectedTraffic(service_key, config):
-    #    if config.netflow_incoming_traffic and service_key in config.netflow_incoming_traffic:
+    #    if config.allowed_incoming_traffic and service_key in config.allowed_incoming_traffic:
     #        return True
     #    return False
 
@@ -114,11 +114,11 @@ class Helper():
                 #elif connection.dest_port < 49152 and connection.src_port >= 49152: # registered ports
                 #    return False
 
-                if config.netflow_incoming_traffic:
+                if config.allowed_incoming_traffic:
                     if srcIsExternal:
-                        return TrafficHelper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic
+                        return TrafficHelper.getServiceKey(connection.dest, connection.dest_port) not in config.allowed_incoming_traffic
                     else:
-                        return TrafficHelper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic
+                        return TrafficHelper.getServiceKey(connection.src, connection.src_port) in config.allowed_incoming_traffic
 
         return srcIsExternal
 
@@ -223,7 +223,7 @@ class Connection:
             else:
                 self.service = TrafficHelper.getService(self.dest_port, IP_protocolIdentifierS[self.protocol]) if self.protocol in IP_DATA_protocolIdentifierS else None
                 if self.service is None:
-                    self.service = TrafficHelper.getIncommingService(self.dest, self.dest_port, self.config.netflow_incoming_traffic)
+                    self.service = TrafficHelper.getIncommingService(self.dest, self.dest_port, self.config.allowed_incoming_traffic)
                     if self.service is None:
                         if "speedtest" in self.dest_hostname:
                             self.service = "speedtest"

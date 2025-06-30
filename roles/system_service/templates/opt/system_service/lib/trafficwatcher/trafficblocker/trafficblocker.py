@@ -55,7 +55,7 @@ class TrafficBlocker(threading.Thread):
 
             super().start()
         else:
-            logging.info("IP traffic blocker disabled. Either it is completely deactivated by the variable 'traffic blocker' or no 'netflow_incoming_traffic' is configured.")
+            logging.info("IP traffic blocker disabled. Either it is completely deactivated by the variable 'traffic blocker' or no 'allowed_incoming_traffic' is configured.")
 
     def terminate(self):
         if self.config.traffic_blocker_enabled:

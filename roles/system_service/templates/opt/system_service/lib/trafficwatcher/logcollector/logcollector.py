@@ -41,7 +41,7 @@ class Connection:
         self.src_is_external = self.ipcache.isExternal(self.src)
         self.skipped = not self.src_is_external
 
-        self.service = TrafficHelper.getIncommingService(self.dest, self.dest_port, config.netflow_incoming_traffic)
+        self.service = TrafficHelper.getIncommingService(self.dest, self.dest_port, config.allowed_incoming_traffic)
         if self.service is None:
             self.service = "http"
 
