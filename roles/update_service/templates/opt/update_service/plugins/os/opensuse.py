@@ -8,7 +8,8 @@ from smartserver import command
 
 class OperatingSystem(Os):
     def getSystemUpdateCmds(self):
-        return [ "/usr/bin/zypper dup --no-confirm --no-recommends --auto-agree-with-licenses" ]
+        return [ "/usr/bin/zypper up --no-confirm --no-recommends --auto-agree-with-licenses" ]
+        #return [ "/usr/bin/zypper dup --no-confirm --no-recommends --auto-agree-with-licenses" ]
       
     def getRebootRequiredPackages(self):
         return ["wicked","wicked-service"]
