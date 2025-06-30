@@ -206,7 +206,7 @@
 #  tags: [ 'user' ]
 
 - name: check for existing admin users
-  shell: "podman exec php php {{htdocs_path}}nextcloud/occ group:list -l 1"
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ group:list --info --output=json_pretty"
   register: nextcloud_group_result
   changed_when: False
   tags: [ 'user' ]
@@ -215,7 +215,7 @@
   shell: "podman exec php php {{htdocs_path}}nextcloud/occ group:adduser admin {{item}}"
   register: result
   failed_when: "result.rc != 0"
-  when: "'admin' in userdata[item].groups and '- ' + item not in nextcloud_group_result.stdout"
+  when: "'admin' in userdata[item].groups and item not in (nextcloud_group_result.stdout | from_json)['admin']['users']"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
