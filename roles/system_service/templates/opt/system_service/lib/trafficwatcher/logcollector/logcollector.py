@@ -112,8 +112,8 @@ class LogCollector(threading.Thread):
         self.timer = None
 
         server_ports = []
-        for service in self.config.netflow_incoming_traffic:
-            if self.config.netflow_incoming_traffic[service]["logs"] != "apache":
+        for service in self.config.allowed_incoming_traffic:
+            if self.config.allowed_incoming_traffic[service]["logs"] != "apache":
                 continue
             ip, port = service.split(":")
             if ip != self.config.server_ip:
@@ -133,7 +133,7 @@ class LogCollector(threading.Thread):
             self.is_running = True
             super().start()
         else:
-            logging.info("IP log collector disabled. There are is no 'netflow_incoming_traffic' with a 'log' attribute configured.")
+            logging.info("IP log collector disabled. There are is no 'allowed_incoming_traffic' with a 'log' attribute configured.")
 
     def terminate(self):
         if self.query is not None:

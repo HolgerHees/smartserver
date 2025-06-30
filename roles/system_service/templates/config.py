@@ -9,13 +9,24 @@ server_ip = "{{default_server_ip}}"
 
 default_isp = { {% for key in system_service_default_isp %}"{{key}}": "{{system_service_default_isp[key] | join('|')}}",{% endfor %} }
 
-netflow_bind_ip = {{ '"0.0.0.0"' if system_service_netflow_collector else 'None' }}
-netflow_bind_port = {{ '2055' if system_service_netflow_collector else 'None' }}
-netflow_incoming_traffic = {
-{% for data in system_service_netflow_incoming_traffic %}
+allowed_incoming_traffic = {
+{% for data in system_service_allowed_incoming_traffic %}
   "{{data.target}}": { "name": "{{data.name}}", "allowed": { {% for key in data.allowed %} "{{key}}": "{{data.allowed[key] | join('|')}}", {% endfor %} }, "logs": "{{data.logs | default('')}}" },
 {% endfor %}
 }
+
+traffic_blocker_enabled = {{ 'True' if system_service_traffic_blocker_enabled else 'False' }}
+traffic_blocker_treshold = {
+  "netflow_observed": 20,
+  "netflow_scanning": 10,
+  "netflow_intruded": 2,
+  "apache_observed": 10,
+  "apache_scanning": 5
+}
+
+netflow_enabled = {{ 'True' if system_service_netflow_collector_enabled else 'False' }}
+netflow_bind_ip = {{ '"0.0.0.0"' if system_service_netflow_collector_enabled else 'None' }}
+netflow_bind_port = {{ '2055' if system_service_netflow_collector_enabled else 'None' }}
 
 service_ip = "127.0.0.1"
 service_port = "8507"
@@ -44,15 +55,6 @@ influxdb_token = "{{influxdb_admin_token}}"
 loki_websocket = "ws://loki:3100"
 
 mqtt_host = "mosquitto"
-
-traffic_blocker_enabled = {{ 'True' if system_service_traffic_blocker and system_service_netflow_incoming_traffic | length > 0 else 'False' }}
-traffic_blocker_treshold = {
-  "netflow_observed": 20,
-  "netflow_scanning": 10,
-  "netflow_intruded": 2,
-  "apache_observed": 10,
-  "apache_scanning": 5
-}
 
 default_vlan = 1
 

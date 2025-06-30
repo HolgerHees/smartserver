@@ -92,16 +92,16 @@ class TrafficWatcher(threading.Thread):
         self.influxdb = influxdb
         self.ipcache = ipcache
 
+        self.config = config
+        self.handler = handler
+
         self.event = threading.Event()
 
         self.blocklists = Blocklists(config, self.influxdb)
-        self.netflow = NetflowProcessor(config, self, self.ipcache )
+        self.netflow = NetflowProcessor(config, self, self.ipcache ) if self.config.netflow_enabled else None
         self.logcollector = LogCollector(config, self, self.ipcache )
 
-        self.trafficblocker = TrafficBlocker(config, self, handler, self.influxdb, self.debugging_ips)
-
-        self.config = config
-        self.handler = handler
+        self.trafficblocker = TrafficBlocker(config, self, handler, self.influxdb, self.debugging_ips) if self.config.traffic_blocker_enabled else None
 
         self.connections = []
         self.processed_connections = []
@@ -123,7 +123,7 @@ class TrafficWatcher(threading.Thread):
 
         self.wireguard_peers = {}
         self.allowed_isp_pattern = {}
-        for target, data in config.netflow_incoming_traffic.items():
+        for target, data in config.allowed_incoming_traffic.items():
             self.allowed_isp_pattern[target] = {}
             for field, pattern in data["allowed"].items():
                 self.allowed_isp_pattern[target][field] = re.compile(pattern, re.IGNORECASE)
@@ -132,9 +132,12 @@ class TrafficWatcher(threading.Thread):
         self.is_running = True
 
         self.blocklists.start()
-        self.netflow.start()
 
-        self.trafficblocker.start()
+        if self.netflow:
+            self.netflow.start()
+
+        if self.trafficblocker:
+            self.trafficblocker.start()
 
         schedule.every().minute.at(":00").do(self._cleanTrafficState)
         schedule.every().minute.at(":00").do(self._calculateTrafficStateSummery)
@@ -149,9 +152,12 @@ class TrafficWatcher(threading.Thread):
 
         self.logcollector.terminate()
 
-        self.trafficblocker.terminate()
+        if self.trafficblocker:
+            self.trafficblocker.terminate()
 
-        self.netflow.terminate()
+        if self.netflow:
+            self.netflow.terminate()
+
         self.blocklists.terminate()
 
         self.event.set()
@@ -264,7 +270,7 @@ class TrafficWatcher(threading.Thread):
             intern_ip = str((con.dest if src_is_external else con.src).compressed)
             intern_hostname = con.dest_hostname if src_is_external else con.src_hostname
 
-            if not self.trafficblocker.isApprovedIPs(extern_ip):
+            if self.trafficblocker and not self.trafficblocker.isApprovedIPs(extern_ip):
                 blocklist_name = self.blocklists.check(extern_ip)
                 if not blocklist_name and src_is_external and len(self.allowed_isp_pattern) > 0:
                     allowed = False
@@ -300,7 +306,7 @@ class TrafficWatcher(threading.Thread):
                     self._addTrafficEvent(con.connection_type, extern_ip, traffic_group, blocklist_name, con.start_timestamp)
                 suspicious_ips.append(extern_ip)
 
-            if ( is_suspicious_traffic and not is_scanning and not self.trafficblocker.isBlockedIP(extern_ip) ) or extern_ip in self.debugging_ips:
+            if ( is_suspicious_traffic and not is_scanning and self.trafficblocker and not self.trafficblocker.isBlockedIP(extern_ip) ) or extern_ip in self.debugging_ips:
                 debug_data = con.getDebugData()
                 logging.info("Suspicious {} ({}) - {} {} {} - from {} to {}{}".format(con.connection_type, traffic_group, intern_ip, "<-" if direction == "incoming" else "->", extern_ip, str(datetime.fromtimestamp(con.start_timestamp)), str(datetime.fromtimestamp(con.end_timestamp)), debug_data))
 
@@ -342,7 +348,8 @@ class TrafficWatcher(threading.Thread):
 
         if len(suspicious_ips) > 0:
             self.stats["suspicious"] += len(suspicious_ips)
-            self.trafficblocker.triggerCheck(suspicious_ips)
+            if self.trafficblocker:
+                self.trafficblocker.triggerCheck(suspicious_ips)
 
     def _getProcessingStats(self):
         stats = self.stats
@@ -471,10 +478,10 @@ class TrafficWatcher(threading.Thread):
         return 60 * 60 * 24 # => 24h
 
     def getBlockedIPs(self):
-        return self.trafficblocker.getBlockedIPs()
+        return self.trafficblocker.getBlockedIPs() if self.trafficblocker else []
 
     def getObservedIPData(self):
-        return self.trafficblocker.getObservedIPData()
+        return self.trafficblocker.getObservedIPData() if self.trafficblocker else []
 
     def getMessurements(self):
         messurements = []
@@ -493,7 +500,7 @@ class TrafficWatcher(threading.Thread):
             is_suspicious_traffic = pc["is_suspicious_traffic"]
             direction = pc["direction"]
 
-            is_blocked = self.trafficblocker.isBlockedIP(extern_ip)
+            is_blocked = self.trafficblocker.isBlockedIP(extern_ip) if self.trafficblocker else False
 
             service = con.service
 
@@ -726,7 +733,9 @@ class TrafficWatcher(threading.Thread):
         for group, count in count_values.items():
             metrics.append( Metric.buildDataMetric("system_service", "trafficwatcher", group, count))
         metrics += self.logcollector.getStateMetrics()
-        metrics += self.netflow.getStateMetrics()
+        if self.netflow:
+            metrics += self.netflow.getStateMetrics()
         metrics += self.blocklists.getStateMetrics()
-        metrics += self.trafficblocker.getStateMetrics()
+        if self.trafficblocker:
+            metrics += self.trafficblocker.getStateMetrics()
         return metrics

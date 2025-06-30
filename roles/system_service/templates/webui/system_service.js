@@ -12,7 +12,7 @@ mx.SystemService = (function( ret ) {
 
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_scanner', ['admin'], '/system_service/', { 'order': 212, 'title': '{i18n_Networkstructure}', 'info': '{i18n_Devices, Services & Structure}', 'icon': 'system_service_logo.svg' });
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_wan', ['admin'], '//grafana.{host}/d/system-service-wan/system-service-wan', { 'order': 212, 'title': '{i18n_WAN connection}', 'info': '{i18n_Speed & reachability}', 'icon': 'system_service_logo.svg', 'callbacks': { 'url': mx.Grafana.applyTheme, 'ping': mx.SystemService.grafanaListener } });
-{% if system_service_netflow_collector %}
+{% if system_service_netflow_collector_enabled %}
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_netflow', ['admin'], '//grafana.{host}/d/system-service-netflow-overview/system-service-netflow-overview', { 'order': 212, 'title': '{i18n_WAN traffic}', 'info': '{i18n_Netflow}', 'icon': 'system_service_logo.svg', 'callbacks': { 'url': mx.Grafana.applyTheme } });
 mx.Widgets.TrafficAlerts = (function( widget ) {
     widget.processData = function(data)

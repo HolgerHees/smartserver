@@ -124,7 +124,7 @@
       - "templates/grafana/dashboards/System Service Netflow World Map.json"
   include_tasks: roles/grafana/shared/add_datasource.yml
   tags: ['grafana_config']
-  when: "grafana_enabled and system_service_netflow_collector"
+  when: "grafana_enabled and system_service_netflow_collector_enabled"
 
 - name: synchronize webui
   synchronize:
