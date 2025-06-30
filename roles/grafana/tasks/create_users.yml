@@ -13,6 +13,7 @@
           "{{user_result['login']}}": { "id": {{ user_result['id'] }}, "name": "{{ user_result['name'] }}", "email": "{{ user_result['email'] }}", "is_admin": {{ 'true' if user_result['isAdmin'] else 'false' }} },
         {% endfor %}
       }
+  tags: [ 'user' ]
 
 # password is never used, because authentification is done by apache.
 - name: "set user"
