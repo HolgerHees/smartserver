@@ -442,8 +442,8 @@ default_variables: {
     # 'name' is just used as an identifier
     # 'target' is a combination of the target ip and port number
 
-    system_service_traffic_blocker_enabled:   { default: yes,                                                       # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
-                                                dependency: "{{system_service_enabled and system_service_allowed_incoming_traffic | length > 0}}" },
+    system_service_traffic_blocker_enabled:   { default: "{{system_service_allowed_incoming_traffic | length > 0}}", # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
+                                                dependency: "{{system_service_enabled}}" },
     # 1. if suspicious traffic arrives the apache webserver => which traffic, can be configured in the variable 'netflow_incoming_traffic' and the attribute 'log'
     # 2. if unexcpected traffic arrives the network  => which traffic, can be configured  in the variable 'netflow_incoming_traffic' and the attribute 'allowed'
     system_service_netflow_collector_enabled: { default: no,                                                        # enable netflow collector in system_service
