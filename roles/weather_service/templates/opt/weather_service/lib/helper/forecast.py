@@ -121,8 +121,8 @@ class WeatherHelper():
     def getSunriseAndSunset(latitude, longitude, ref_datetime):
         #_ref_datetime = ref_datetime.replace(hour=0, minute=0, second=0)
         sun = Sun(latitude, longitude)
-        sunrise = sun.get_sunrise_time(ref_datetime).replace(tzinfo=None, year=ref_datetime.year, month=ref_datetime.month, day=ref_datetime.day)
-        sunset = sun.get_sunset_time(ref_datetime).replace(tzinfo=None, year=ref_datetime.year, month=ref_datetime.month, day=ref_datetime.day)
+        sunrise = sun.get_sunrise_time(ref_datetime, time_zone=datetime.now().astimezone().tzinfo).replace(tzinfo=None, year=ref_datetime.year, month=ref_datetime.month, day=ref_datetime.day)
+        sunset = sun.get_sunset_time(ref_datetime, time_zone=datetime.now().astimezone().tzinfo).replace(tzinfo=None, year=ref_datetime.year, month=ref_datetime.month, day=ref_datetime.day)
 
         return [sunrise, sunset]
 
