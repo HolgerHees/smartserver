@@ -241,7 +241,7 @@
     i18n_files: []
     icons: "{{nextcloud_additional_icons}}"
   include_tasks: roles/apache_webui/shared/add_webui.yml
-  when: "nextcloud_additional_apps | length > 0"
+#  when: "nextcloud_additional_apps | length > 0"
   tags: ['apache_webui_config']
 
 - name: register update notifier
