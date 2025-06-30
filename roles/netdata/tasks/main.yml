@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "2.5.3"
+    netdata_version: "2.5.4"
   tags: [ 'update_notifier_config' ]
 
 - name: prepare needed directories
