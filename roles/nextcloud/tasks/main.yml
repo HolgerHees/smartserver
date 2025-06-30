@@ -219,15 +219,6 @@
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
-- name: prepare user folder # => needed for initial cloud backup links
-  file:
-    path: "{{nextcloud_data_path}}/{{item}}/files"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-  when: "'user' in userdata[item].groups"
-  with_items: "{{userdata}}"
-
 # ***** FINALIZE *****
 - name: create cron job 'cron.php'
   vars:

@@ -7,6 +7,16 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_build}}nextcloud_service" }
   include_tasks: roles/_shared/create_directories.yml
 
+- name: check for user folder # => needed for inotify watcher
+  file:
+    path: "{{nextcloud_data_path}}/{{item}}/files"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+  when: "'user' in userdata[item].groups"
+  with_items: "{{userdata}}"
+  tags: [ 'user' ]
+
 - name: synchronize service
   synchronize:
     src: "templates/opt/{{item.path}}"

@@ -165,9 +165,6 @@ class INotifyWatcher(threading.Thread):
             detected_last_modified = None
             interrupted = False
             for directory in self.config.watched_directories:
-                if not os.path.exists(directory):
-                    continue
-
                 self._addRecursive(directory)
                 if not self.is_running:
                     break
