@@ -342,9 +342,7 @@ mx.Menu = (function( ret ) {
         
         let lastOrder = Math.max.apply(Math, menuEntries.map(function(o) { return o.getOrder(); }));
 
-        let hasGroups = lastOrder && Math.floor(menuEntries[0].getOrder()/100) != Math.floor(lastOrder/100);
-        
-        if( hasGroups ) entries.push('<div class="group">')
+        entries.push('<div class="group">')
         
         for(let i = 0; i < menuEntries.length; i++)
         {
@@ -367,7 +365,7 @@ mx.Menu = (function( ret ) {
             }
         }
         
-        if( hasGroups ) entries.push('</div>')
+        entries.push('</div>')
 
         return { 'content': entries.join(""), 'callbacks': callbacks };
     };
