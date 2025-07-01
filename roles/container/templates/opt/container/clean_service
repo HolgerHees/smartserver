@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# This script cleans podman containers that are stuck in the "stopping" state and recreates them
+#
+
+SERVICE_NAME="$1"
+
+function show_services() {
+    POSSSIBLE_SERVICES=$(podman ps -a | grep "stopping" | grep -Po "[0-9a-z_]+$")
+    if [ $? -eq 0 ]; then
+        echo "Hint: Possible services are"
+        for _SERVICE in $POSSSIBLE_SERVICES
+        do
+           echo -e "  - $_SERVICE"
+        done
+    else
+        echo "Hint: No services are in \"stopping\" state"
+    fi
+}
+
+if [ -z "$1" ]
+  then
+    echo "Error: No service specified"
+    echo "Usage: clean_service <service_name>"
+    show_services
+    exit 1
+fi
+
+systemctl list-unit-files "$SERVICE_NAME.service" > /dev/null
+if [ $? -ne 0 ]; then
+    echo "Error: Service '$SERVICE_NAME' not found"
+    show_services
+    exit 1
+fi
+
+CONTAINER_STATE=$(podman inspect --format "{{json .State.Status}}" $SERVICE_NAME | grep -Po "[a-z]+")
+if [ $? -ne 0 ]; then
+    echo "Error: Container '$SERVICE_NAME' not found"
+    exit 1
+elif [ $CONTAINER_STATE != "stopping" ]; then
+    echo "Error: Container not in \"stopping\" state. Current state is \"$CONTAINER_STATE\""
+    exit 1
+else
+    SERVICE_STATE=$(systemctl status $SERVICE_NAME | grep -Po "Active: \K[a-z]+")
+    if [ $SERVICE_STATE != "inactive" ]; then
+        echo "System unit not stopped. Current state is \"$SERVICE_STATE\""
+        exit 1
+    fi
+fi
+
+CREATECMD=$(podman inspect --format "{{json .Config.CreateCommand}}" $SERVICE_NAME | jq -r 'join(" ")')
+
+echo -n "Clean podman container ... "
+RESULT=$(podman rm -f $SERVICE_NAME)
+if [ $RESULT = "$SERVICE_NAME" ]; then
+    echo "done"
+else
+    echo "failed"
+    echo $RESULT
+fi
+
+echo -n "Create podman container ... "
+RESULT=$(eval "$CREATECMD")
+if [ $? -eq 0 ]; then
+    echo "done ($RESULT)"
+else
+    echo "failed"
+    echo $RESULT
+    exit 1
+fi
+
+echo -n "Start systemd unit ... "
+RESULT=$(systemctl start $SERVICE_NAME)
+if [ $? -eq 0 ]; then
+    echo "done"
+else
+    echo "failed"
+    echo $RESULT
+    exit 1
+fi
