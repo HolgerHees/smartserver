@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    frigate_version: '0.15.1'
+    frigate_version: '0.15.2'
     frigate_config: "{{ lookup('template', '{{config_path}}templates/frigate/config.yml') | from_yaml }}"
   tags: [ 'update_notifier_config' ]
 
