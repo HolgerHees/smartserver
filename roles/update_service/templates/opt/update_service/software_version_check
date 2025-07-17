@@ -77,20 +77,30 @@ for config_file in files:
                 if not checkParameter(app.getName(), args_values, last_states, current_states):
                     continue
 
-                app.checkForUpdates()
+                last_state = last_states.get(app.getName(), None)
+
+                last_updates = last_state['updates'] if last_state != None else None
+                current_version = last_state['current'] if last_state != None else None
+
+                try:
+                    app.checkForUpdates()
+                except Exception as e:
+                    version = app.getCurrentVersion()
+                    if version is None:
+                        raise e
+
+                    current_state = { 'name': app.getName(), 'type': app.getType(), 'url': app.getUrl(), 'current': app.getCurrentVersion(), 'updates': [None] }
+                    current_states['states'].append(current_state)
+
+                    print("  - '{}'".format(app.getName()), end='')
+                    print( " \033[0;31m " + str(e) + "\033[0m")
+                    continue
+
 
                 print("  - '{}'".format(app.getName()), end='')
 
-                last_state = last_states.get(app.getName(), None)
-
                 try:
-                    last_updates = last_state['updates'] if last_state != None else None
-
-                    current_version = last_state['current'] if last_state != None else None
-                    if current_version == None or current_version == 0 or current_version['version'] != app.getCurrentVersionString():
-                        current_version = app.getCurrentVersion()
-
-                    current_state = { 'name': app.getName(), 'type': app.getType(), 'url': app.getUrl(), 'current': current_version, 'updates': [] }
+                    current_state = { 'name': app.getName(), 'type': app.getType(), 'url': app.getUrl(), 'current': app.getCurrentVersion(), 'updates': [] }
 
                     new_versions = app.getUpdates(last_updates)
                     for branch in new_versions:

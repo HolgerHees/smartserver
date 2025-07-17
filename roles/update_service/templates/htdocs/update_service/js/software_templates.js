@@ -68,13 +68,20 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 let cls = "green";
                 if( state["updates"].length > 0 )
                 {
-                    cls = "yellow";
-                    for( let i = 0; i < state["updates"].length; i++)
+                    if( state["updates"][0] == null )
                     {
-                        if( state["current"]["branch"] == state["updates"][i]["branch"] )
+                        cls = "red";
+                    }
+                    else
+                    {
+                        cls = "yellow";
+                        for( let i = 0; i < state["updates"].length; i++)
                         {
-                            cls = "red";
-                            break;
+                            if( state["current"]["branch"] == state["updates"][i]["branch"] )
+                            {
+                                cls = "red";
+                                break;
+                            }
                         }
                     }
                 }
@@ -106,55 +113,64 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                     for( let i = 0; i < state["updates"].length; i++)
                     {
                         let update = state["updates"][i];
-
-                        let date = new Date( update["date"] );
-                        //let dateFmt = date.toLocaleString();
-                        if( latestDate == null || latestDate.getTime() < date.getTime() ) latestDate = date;
-
-                        let current_branch = state["current"]["branch"] == update["branch"];
-
-                        if( update["url"] )
+                        if( update == null )
                         {
-                            upgradesHTML_r.push("<div class=\"versionLink" + ( current_branch ? " currentBranch" : "" ) + "\" onClick=\"mx.SNCore.openUrl(event,'" + update["url"] + "')\"><span>" + formatVersion( update["version"] ) + "</span><span class=\"icon-export\"></span></div>");
+                            upgradesHTML_r.push("<div><span>unsupported</span></div>");
                         }
                         else
                         {
-                            upgradesHTML_r.push("<div class=\"" + ( current_branch ? " currentBranch" : "" ) + "\"><span>" + formatVersion( update["version"] ) + "</span></div>");
+                            let date = new Date( update["date"] );
+                            //let dateFmt = date.toLocaleString();
+                            if( latestDate == null || latestDate.getTime() < date.getTime() ) latestDate = date;
+
+                            let current_branch = state["current"]["branch"] == update["branch"];
+
+                            if( update["url"] )
+                            {
+                                upgradesHTML_r.push("<div class=\"versionLink" + ( current_branch ? " currentBranch" : "" ) + "\" onClick=\"mx.SNCore.openUrl(event,'" + update["url"] + "')\"><span>" + formatVersion( update["version"] ) + "</span><span class=\"icon-export\"></span></div>");
+                            }
+                            else
+                            {
+                                upgradesHTML_r.push("<div class=\"" + ( current_branch ? " currentBranch" : "" ) + "\"><span>" + formatVersion( update["version"] ) + "</span></div>");
+                            }
                         }
                     }
                     upgradesHTML = upgradesHTML_r.join(", ");
 
-                    let now = new Date();
-
-                    let diff = ( now.getTime() / 1000 ) - (latestDate.getTime() / 1000);
-
-                    let dayDiff = Math.floor(diff / (60 * 60 * 24));
-
-                    let nowMinutes = now.getHours() * 60 + now.getMinutes();
-                    let latestMinutes = latestDate.getHours() * 60 + latestDate.getMinutes();
-
-                    if( nowMinutes < latestMinutes )
+                    if( latestDate != null )
                     {
-                        dayDiff++;
-                    }
+                        let now = new Date();
 
-                    if( dayDiff <= 1)
-                    {
-                        let lastUpdate = ( dayDiff == 0 ? 'Today' : 'Yesterday' ) + " " + formatDatetime(latestDate);
-                    }
-                    else
-                    {
-                        if( dayDiff > 30 )
+                        let diff = ( now.getTime() / 1000 ) - (latestDate.getTime() / 1000);
+
+                        let dayDiff = Math.floor(diff / (60 * 60 * 24));
+
+                        let nowMinutes = now.getHours() * 60 + now.getMinutes();
+                        let latestMinutes = latestDate.getHours() * 60 + latestDate.getMinutes();
+
+                        if( nowMinutes < latestMinutes )
                         {
-                            lastUpdate = latestDate.toLocaleDateString();
+                            dayDiff++;
+                        }
+
+                        if( dayDiff <= 1)
+                        {
+                            let lastUpdate = ( dayDiff == 0 ? 'Today' : 'Yesterday' ) + " " + formatDatetime(latestDate);
                         }
                         else
                         {
-                            lastUpdate = dayDiff + " days ago";
+                            if( dayDiff > 30 )
+                            {
+                                lastUpdate = latestDate.toLocaleDateString();
+                            }
+                            else
+                            {
+                                lastUpdate = dayDiff + " days ago";
+                            }
                         }
-                    }
 
-                    lastUpdateTooltip = formatDatetime(latestDate);
+                        lastUpdateTooltip = formatDatetime(latestDate);
+                    }
                 }
 
                 columns.push({"value": upgradesHTML });

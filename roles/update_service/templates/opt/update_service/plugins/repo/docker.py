@@ -94,15 +94,17 @@ class Application(App):
                     tag = data['tag']
                 tag_r.append(data['tag'])
 
+        url = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:{}:pull".format(self.repository)
+        token_result = self._requestData(url)
+        self.token = token_result['token']
+
         if version:
             self.current_version = version.getVersionString()
             self.current_tag = tag
         else:
+            self.current_version = None
+            self.current_tag = tag_r[0] if len(tag_r) > 0 else None
             raise Exception('Can\'t find current version with pattern \'{}\'. Available versions are {}'.format(self.pattern, tag_r))
-              
-        url = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:{}:pull".format(self.repository)
-        token_result = self._requestData(url)
-        self.token = token_result['token']
 
     def _getUpdateUrl(self,tag = None):
         if tag != None:
@@ -151,10 +153,16 @@ class Application(App):
         #raise Exception('No able to fetch creation date from docker repository {} and tag {}'.format(self.repository,tag))
           
     def getCurrentVersion(self):
-        branch = Version(self.current_version).getBranchString()
-        
-        creationDate = self._getCreationDate(self.current_tag)
-        return self._createUpdate( version = self.current_version, branch = branch, date = creationDate, url = self._getUpdateUrl(self.current_tag) )
+        if self.current_tag is None:
+            return None
+        elif self.current_version is None:
+            creationDate = self._getCreationDate(self.current_tag)
+            return self._createUpdate( version = self.current_tag, branch = "", date = creationDate, url = self._getUpdateUrl(self.current_tag) )
+        else:
+            branch = Version(self.current_version).getBranchString()
+
+            creationDate = self._getCreationDate(self.current_tag)
+            return self._createUpdate( version = self.current_version, branch = branch, date = creationDate, url = self._getUpdateUrl(self.current_tag) )
 
     def getCurrentVersionString(self):
         return self.current_version
