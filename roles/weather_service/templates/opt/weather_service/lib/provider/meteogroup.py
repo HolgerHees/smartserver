@@ -83,7 +83,7 @@ class Fetcher(object):
         headers = {"Authorization": "Bearer {}".format(self.auth)}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
-            raise RequestDataException("Failed getting data. Code: {}, Raeson: {}".format(r.status_code, r.text))
+            raise RequestDataException("Failed getting data. Code: {}, Reason: {}, Url: {}".format(r.status_code, r.text, url))
         else:
             return json.loads(r.text)
       
@@ -112,26 +112,24 @@ class Fetcher(object):
 
         data = self.get(url)
         if "observations" not in data:
-            raise CurrentDataException("Failed getting current data. Content: {}".format(data))
-
-        #logging.info(url)
-        #logging.info(data)
+            raise CurrentDataException("Failed getting current data. Content: {}, Url: {}".format(data, url))
 
         data["observations"].reverse()
-        _data = {"observation": {}, "missing_fields": current_fields.keys()}
+        _data = {"observation": {}, "missing_fields": list(current_fields.keys())}
         for observation in data["observations"]:
             #logging.info(observation)
 
-            missing_fields = []
-            for field in _data["missing_fields"]:
+            for field in list(_data["missing_fields"]):
                 if current_fields[field] in observation:
                     _data["observation"][current_fields[field]] = observation[current_fields[field]]
-                else:
-                    missing_fields.append(field)
-            _data["missing_fields"] = missing_fields
+                    _data["missing_fields"].remove(field)
 
             if len(_data["missing_fields"]) == 0:
                 break
+
+        if len(_data["observation"].keys()) == 0:
+            raise CurrentDataException("Failed getting current data. Data: {}, Url: {}".format(data, url))
+
 
         for missing_field in list(_data["missing_fields"]):
             if currentFallbacks is None:
