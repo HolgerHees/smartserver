@@ -24,7 +24,7 @@ class SoftwareVersionWatcher(watcher.Watcher):
         update_count = 0
         if "states" in software:
             for state in software["states"]:
-                if len(state["updates"]) > 0:
+                if state["updates"] != None and len(state["updates"]) > 0:
                     update_count += 1
         self.software = software
         self.update_count = update_count

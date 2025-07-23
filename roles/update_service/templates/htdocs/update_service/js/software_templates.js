@@ -66,7 +66,11 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 let state = states[index];
 
                 let cls = "green";
-                if( state["updates"].length > 0 )
+                if( state["updates"] == null )
+                {
+                    cls = "red";
+                }
+                else if( state["updates"].length > 0 )
                 {
                     if( state["updates"][0] == null )
                     {
@@ -101,7 +105,11 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 let lastUpdate = "";
                 let lastUpdateTooltip = "";
 
-                if( state["updates"].length > 0)
+                if( state["updates"] == null )
+                {
+                    upgradesHTML = "<div><span>unsupported</span></div>";
+                }
+                else if( state["updates"].length > 0)
                 {
                     let updates = state["updates"];
                     updates.sort(function(first, second) {
@@ -113,26 +121,19 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                     for( let i = 0; i < state["updates"].length; i++)
                     {
                         let update = state["updates"][i];
-                        if( update == null )
+                        let date = new Date( update["date"] );
+                        //let dateFmt = date.toLocaleString();
+                        if( latestDate == null || latestDate.getTime() < date.getTime() ) latestDate = date;
+
+                        let current_branch = state["current"]["branch"] == update["branch"];
+
+                        if( update["url"] )
                         {
-                            upgradesHTML_r.push("<div><span>unsupported</span></div>");
+                            upgradesHTML_r.push("<div class=\"versionLink" + ( current_branch ? " currentBranch" : "" ) + "\" onClick=\"mx.SNCore.openUrl(event,'" + update["url"] + "')\"><span>" + formatVersion( update["version"] ) + "</span><span class=\"icon-export\"></span></div>");
                         }
                         else
                         {
-                            let date = new Date( update["date"] );
-                            //let dateFmt = date.toLocaleString();
-                            if( latestDate == null || latestDate.getTime() < date.getTime() ) latestDate = date;
-
-                            let current_branch = state["current"]["branch"] == update["branch"];
-
-                            if( update["url"] )
-                            {
-                                upgradesHTML_r.push("<div class=\"versionLink" + ( current_branch ? " currentBranch" : "" ) + "\" onClick=\"mx.SNCore.openUrl(event,'" + update["url"] + "')\"><span>" + formatVersion( update["version"] ) + "</span><span class=\"icon-export\"></span></div>");
-                            }
-                            else
-                            {
-                                upgradesHTML_r.push("<div class=\"" + ( current_branch ? " currentBranch" : "" ) + "\"><span>" + formatVersion( update["version"] ) + "</span></div>");
-                            }
+                            upgradesHTML_r.push("<div class=\"" + ( current_branch ? " currentBranch" : "" ) + "\"><span>" + formatVersion( update["version"] ) + "</span></div>");
                         }
                     }
                     upgradesHTML = upgradesHTML_r.join(", ");

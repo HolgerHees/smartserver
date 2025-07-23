@@ -77,11 +77,6 @@ for config_file in files:
                 if not checkParameter(app.getName(), args_values, last_states, current_states):
                     continue
 
-                last_state = last_states.get(app.getName(), None)
-
-                last_updates = last_state['updates'] if last_state != None else None
-                current_version = last_state['current'] if last_state != None else None
-
                 try:
                     app.checkForUpdates()
                 except Exception as e:
@@ -89,7 +84,7 @@ for config_file in files:
                     if version is None:
                         raise e
 
-                    current_state = { 'name': app.getName(), 'type': app.getType(), 'url': app.getUrl(), 'current': app.getCurrentVersion(), 'updates': [None] }
+                    current_state = { 'name': app.getName(), 'type': app.getType(), 'url': app.getUrl(), 'current': app.getCurrentVersion(), 'updates': None }
                     current_states['states'].append(current_state)
 
                     print("  - '{}'".format(app.getName()), end='')
@@ -100,6 +95,11 @@ for config_file in files:
                 print("  - '{}'".format(app.getName()), end='')
 
                 try:
+                    last_state = last_states.get(app.getName(), None)
+
+                    #current_version = last_state['current'] if last_state != None else None
+                    last_updates = last_state['updates'] if last_state != None else None
+
                     current_state = { 'name': app.getName(), 'type': app.getType(), 'url': app.getUrl(), 'current': app.getCurrentVersion(), 'updates': [] }
 
                     new_versions = app.getUpdates(last_updates)
