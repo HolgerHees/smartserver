@@ -91,7 +91,8 @@ class DeploymentUpdate:
             else:
                 smartserver_code = "uncommitted_changes"
                 
-            result = command.exec([ "stat", "-c", "%y", ".git/FETCH_HEAD" ], cwd=self.config.deployment_directory )
+            _name = ".git/FETCH_HEAD" if os.path.exists(self.config.deployment_directory + "/.git/FETCH_HEAD") else ".git/HEAD"
+            result = command.exec([ "stat", "-c", "%y", _name ], cwd=self.config.deployment_directory )
             last_git_pull = result.stdout.decode("utf-8").strip()
             smartserver_pull = "{}T{}{}:{}".format(last_git_pull[0:10],last_git_pull[11:26],last_git_pull[-5:-2],last_git_pull[-2:])
 
