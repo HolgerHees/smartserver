@@ -96,7 +96,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0640
   vars:
-    enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
+    enable_stapeling: no # "{{ssl_certificate != 'selfsigned'}}" => letscencrypt does not support stapeling "ssl_stapling_init_cert: no OCSP URI in certificate and no SSLStaplingForceURL"
     usergroup: "user"
   with_items:
     - _.ansible.conf.d/default_cache_control.conf
@@ -119,7 +119,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0640
   vars:
-    enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
+    enable_stapeling: no # "{{ssl_certificate != 'selfsigned'}}" => letscencrypt does not support stapeling "ssl_stapling_init_cert: no OCSP URI in certificate and no SSLStaplingForceURL"
   with_items:
     - _.ansible.auth/required_env.inc
     - _.ansible.vhost.d/auth/basic.inc
