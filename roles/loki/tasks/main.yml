@@ -75,6 +75,7 @@
     icons: [ 'templates/webui/icons/loki_logs.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
   tags: ['apache_webui_config']
+  when: "grafana_enabled"
 
 - name: copy fluentd config
   vars:
