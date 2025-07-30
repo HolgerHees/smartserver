@@ -8,5 +8,5 @@
   with_items:
     - { "src": "{{include}}", "dest_name": "{{sub_domain}}-config.inc" }
     - { "src": "roles/apache/templates/vhost-ssl.conf", "dest_name": "{{sub_domain}}-ssl.conf" }
-  notify: "refresh apache2"
+  notify: "restart apache2"
   tags: ['apache_config']
