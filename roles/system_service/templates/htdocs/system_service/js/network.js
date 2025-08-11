@@ -815,11 +815,15 @@ mx.NetworkStructure = (function( ret )
 
     ret.tooltipCleanup = function()
     {
+        if( link == null ) return;
+
         link.classed("highlighted", false)
     }
 
     function highlightConnections(d)
     {
+        if( link == null ) return;
+
         _targets = [];
         let _d = d;
         while( _d.parent != null )
@@ -835,6 +839,8 @@ mx.NetworkStructure = (function( ret )
 
     function cleanupConnections()
     {
+        if( link == null ) return;
+
         link.classed("highlighted", false);
     }
         
