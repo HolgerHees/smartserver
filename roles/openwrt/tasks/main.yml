@@ -189,14 +189,3 @@
           {{file | to_json }},
       {% endfor %}{% endfor %}
     ]
-
-# **** WEB UI ****
-- name: register webui
-  vars:
-    name: "openwrt"
-    js_file: "templates/webui/openwrt.js"
-    i18n_files: [ { language: "de", file: "templates/webui/openwrt.de.json" } ]
-    icons: []
-  include_tasks: roles/apache_webui/shared/add_webui.yml
-  tags: ['apache_webui_config']
-  
