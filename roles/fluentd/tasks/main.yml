@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    fluentd_version: '1.18.0-debian-1.0'
+    fluentd_version: '1.19.0-debian-1.0'
   tags: [ 'update_notifier_config' ]    
   
 - name: copy missing journald.conf # => was missing on opensuse leap15.6
