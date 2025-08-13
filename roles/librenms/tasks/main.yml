@@ -15,6 +15,7 @@
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/nginx" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/custom" }
       - { mode: "u=rwx,g=rwx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_log}}librenms" }                     # mode sync with librenms entrypoint
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/alert-templates" }
@@ -24,16 +25,25 @@
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/weathermap" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: copy config
+- name: copy config template
   template:
+    src: "templates/etc/librenms/config.php"
+    dest: "{{global_etc}}librenms/config.php"
+    owner: "{{system_users['librenms'].name}}"
+    group: "{{system_groups['librenms'].name}}"
+    mode: 0640
+  notify: "restart librenms"
+
+- name: copy config files
+  copy:
     src: "templates/etc/librenms/{{item}}"
     dest: "{{global_etc}}librenms/{{item}}"
     owner: "{{system_users['librenms'].name}}"
     group: "{{system_groups['librenms'].name}}"
     mode: 0640
   with_items:
-    - "nginx/nginx.conf"
-    - "config.php"
+    - "nginx/"
+    - "custom/"
   notify: "restart librenms"
 
 - name: create container service
@@ -67,6 +77,7 @@
     container_volumes:
       - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:rw'
       - '{{global_etc}}librenms:/data/config:rw'
+      - '{{global_etc}}librenms/custom/:/opt/librenms/html/custom/:rw'
       - '{{global_log}}librenms:/data/logs:rw'
       - '{{global_lib}}librenms/alert-templates:/data/alert-templates:rw'
       - '{{global_lib}}librenms/monitoring-plugins:/data/monitoring-plugins:rw'

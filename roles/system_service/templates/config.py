@@ -32,7 +32,7 @@ service_ip = "127.0.0.1"
 service_port = "8507"
 
 librenms_token = "{% if librenms_enabled %}{{librenms_api_token}}{% endif %}"
-librenms_rest = "{% if librenms_enabled %}http://librenms:8000/api/v0/{% endif %}"
+librenms_rest = "{% if librenms_enabled %}http://librenms:8000/{% endif %}"
 librenms_poller_interval = {% if librenms_enabled %}{{librenms_poller_interval | int * 60}}{% else %}0{% endif %}
 
 

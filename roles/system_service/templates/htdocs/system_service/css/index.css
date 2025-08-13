@@ -188,6 +188,8 @@ svg g.nodes rect.container.match {
     }
 }
 svg g.nodes rect.container.hub,
+svg g.nodes rect.container.firewall,
+svg g.nodes rect.container.wireless,
 svg g.nodes rect.container.network {
     fill: var(--content-hightlight-bg);
 }

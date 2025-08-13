@@ -92,7 +92,7 @@ class LibreNMS(_handler.Handler):
         self.next_run["device"] = datetime.now() + timedelta(seconds=self.config.librenms_device_interval)
         
         start = datetime.now()
-        _device_json = self._get("devices")
+        _device_json = self._get("api/v0/devices")
         Helper.logProfiler(self, start, "Devices fetched")
         
         _devices = _device_json["devices"]
@@ -160,7 +160,7 @@ class LibreNMS(_handler.Handler):
         self.next_run["vlan"] = datetime.now() + timedelta(seconds=self.config.librenms_vlan_interval)
 
         start = datetime.now()
-        _vlan_json = self._get("resources/vlans", { 404: { 'vlans': [ {'vlan_id': LibreNMS.DEFAULT_VLAN_ID, 'vlan_vlan': LibreNMS.DEFAULT_VLAN_VLAN} ] } })
+        _vlan_json = self._get("api/v0/resources/vlans", { 404: { 'vlans': [ {'vlan_id': LibreNMS.DEFAULT_VLAN_ID, 'vlan_vlan': LibreNMS.DEFAULT_VLAN_VLAN} ] } })
         Helper.logProfiler(self, start, "VLANs fetched")
 
         _vlans = _vlan_json["vlans"]
@@ -178,7 +178,7 @@ class LibreNMS(_handler.Handler):
         self.next_run["port"] = datetime.now() + timedelta(seconds=self.config.librenms_port_interval)
 
         start = datetime.now()
-        _ports_json = self._get("ports?columns=device_id,port_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
+        _ports_json = self._get("api/v0/ports?columns=device_id,port_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
         Helper.logProfiler(self, start, "Ports fetched")
 
         _ports = _ports_json["ports"]
@@ -252,7 +252,15 @@ class LibreNMS(_handler.Handler):
         self.next_run["fdb"] = datetime.now() + timedelta(seconds=self.config.librenms_fdb_interval)
 
         start = datetime.now()
-        _connected_arps_json = self._get("resources/fdb")
+
+        uplinks = {}
+        _uplink_json = self._get("custom/stp")
+        for stp in _uplink_json['stp']:
+            if stp['uplink_mac'] == '00:00:00:00:00:00':
+                stp['uplink_mac'] = self.cache.getGatewayMAC()
+            uplinks[self.devices[stp['device_id']]['mac']] = stp['uplink_mac']
+
+        _connected_arps_json = self._get("api/v0/resources/fdb")
         Helper.logProfiler(self, start, "Clients fetched")
 
         _connected_arps = _connected_arps_json["ports_fdb"]
@@ -288,18 +296,15 @@ class LibreNMS(_handler.Handler):
 
                 _mac = _connected_arp["mac_address"]
                 mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
-                
-                #if mac == self.cache.getGatewayMAC():
-                #    continue
-                
-                device = self.cache.getUnlockedDevice(mac)
-                if device is not None:
-                    device.lock(self)
-                    device.addHopConnection(Connection.ETHERNET, target_mac, target_interface, { "vlan": vlan } );
-                    self.cache.confirmDevice( self, device )
-                
-                _active_connected_macs.append(mac)
-                self.connected_macs[device_id][mac] = { "source_mac": mac, "target_mac": target_mac, "target_interface": target_interface, "details": { "vlan": vlan } }
+                if mac not in uplinks or target_mac == uplinks[mac]:
+                    device = self.cache.getUnlockedDevice(mac)
+                    if device is not None:
+                        device.lock(self)
+                        device.addHopConnection(Connection.ETHERNET, target_mac, target_interface, { "vlan": vlan } );
+                        self.cache.confirmDevice( self, device )
+
+                    _active_connected_macs.append(mac)
+                    self.connected_macs[device_id][mac] = { "source_mac": mac, "target_mac": target_mac, "target_interface": target_interface, "details": { "vlan": vlan } }
 
             for device_id in self.connected_macs:
                 for mac in list(self.connected_macs[device_id].keys()):
