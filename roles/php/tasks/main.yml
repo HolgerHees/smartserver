@@ -1,6 +1,7 @@
 - name: set version
   set_fact:
     php_version: "8.3.24"
+    php_container_os: "trixie"
   tags: [ 'update_notifier_config' ]
   
 - name: build container image
@@ -88,7 +89,7 @@
     url: "https://www.php.net/ChangeLog-8.php"
     config: {
       repository: "php",
-      pattern: "^([0-9\\.]+)-fpm$" 
+      pattern: "^([0-9\\.]+)-fpm-{{php_container_os}}$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
   tags: ['update_notifier_config']
