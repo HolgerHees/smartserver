@@ -1,7 +1,7 @@
-FROM php:{{php_version}}-fpm
+FROM php:{{php_version}}-fpm-trixie
 
 {% if gpu_enabled and gpu_type == 'nvidia' %}# ai computing
-RUN echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
+RUN echo "deb http://deb.debian.org/debian/ trixie main contrib non-free" > /etc/apt/sources.list && \
   apt-get update && \
   apt-get install -y --no-install-recommends \
   nvidia-cuda-toolkit \
@@ -39,7 +39,7 @@ RUN apt-get update && \
 
 # GMP => needed by nextcloud bookmarks
   docker-php-ext-install -j$(nproc) gmp && \
-  
+
 # INTL
   docker-php-ext-install -j$(nproc) intl && \
 
@@ -49,10 +49,12 @@ RUN apt-get update && \
 # APC Cache
   pecl install apcu && \
   docker-php-ext-enable apcu && \
+#  docker-php-ext-install -j$(nproc) apcu && \
 
 # ImageMagick
-  pecl install imagick && \
-  docker-php-ext-enable imagick && \
+  docker-php-ext-install -j$(nproc) imagick && \
+#  pecl install imagick && \
+#  docker-php-ext-enable imagick && \
 #    https://github.com/Imagick/imagick/issues/640
 #    https://github.com/Imagick/imagick/pull/641
 #    28f27044e435a2b203e32675e942eb8de620ee58 => 10.09.2024
@@ -69,14 +71,16 @@ RUN apt-get update && \
 # Redis
   pecl install redis && \
   docker-php-ext-enable redis && \
-  
+#  docker-php-ext-configure redis --enable-redis-igbinary
+#  docker-php-ext-install -j$(nproc) redis && \
+
 # CLEANUPS
 #  apt-get autoremove -y && \
 #  apt-get clean && \
-  
+
   mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini" && \
   echo "apc.enable_cli=1\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-apcu.ini" && \
-  
+
   echo "opcache.jit_buffer_size = 100M\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   echo "opcache.jit = 1255\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   # https://github.com/php/php-src/issues/7817
@@ -84,7 +88,7 @@ RUN apt-get update && \
   # interned_strings_buffer was running full
   echo "opcache.memory_consumption = 256\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   echo "opcache.interned_strings_buffer = 32\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
-  
+
   sed -i 's/^[;]*memory_limit.*$/memory_limit = 1024M/' /usr/local/etc/php/php.ini && \
   sed -i 's/^[;]*upload_max_filesize.*$/upload_max_filesize = 2048M/' /usr/local/etc/php/php.ini && \
   sed -i 's/^[;]*post_max_size.*$/post_max_size = 2048M/' /usr/local/etc/php/php.ini && \
@@ -100,40 +104,9 @@ RUN apt-get update && \
   sed -i 's/^[;]*pm.max_requests.*$/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf && \
 
   sed -i 's/access.log.*/access.log = \/dev\/null/' /usr/local/etc/php-fpm.d/docker.conf && \
-  sed -i 's/domain="coder" rights="none"/domain="coder" rights="read"/' /etc/ImageMagick-6/policy.xml
+  sed -i 's/domain="coder" rights="none"/domain="coder" rights="read"/' /etc/ImageMagick-7/policy.xml
 
 #  sed -i 's/error_log.*/error_log = \/dev\/null/' /usr/local/etc/php-fpm.d/docker.conf
 #  sed -i '1 a /bin/ln -sf /proc/$$/fd/2 /tmp/stderr' /usr/local/bin/docker-php-entrypoint
 
 # https://stitcher.io/blog/php-8-jit-setup
-
-#TODO
-#      , systemd-devel         # php-systemd => nextcloud
-
-#MAYBE
-#      , php7-devel 
-#      , php7-mysql 
-
-#ALREADY ENABLED
-#      , php7-mbstring 
-#      , php7-posix            # nextcloud
-#      , php7-xmlwriter        # nextcloud
-#      , php7-xmlreader        # nextcloud
-#      , php7-iconv            # nextcloud
-#      , php7-dom              # nextcloud
-#      , php7-ctype            # nextcloud
-#      , php7-json             # phpmyadmin
-#      , php7-fileinfo
-#      , php7-openssl 
-#      , php7-curl 
-
-#DONE
-#      , php7-imagick
-#      , php7-redis 
-#      , php7-gd 
-#      , php7-opcache          # nextcloud
-#      , php7-APCu             # nextcloud & resize.php
-#      , php7-intl             # nextcloud
-#      , php7-zip 
-
-      
