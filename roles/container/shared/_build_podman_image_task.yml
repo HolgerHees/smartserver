@@ -21,18 +21,18 @@
 - name: "container : build_podman_image_task : compose podman image => image does not exists"
 #  shell: "podman build --network host --no-cache -t {{image_name}} {{global_build}}{{container_name}}/"
   shell: "podman build --network host -t {{image_name}} {{global_build}}{{container_name}}/ > {{global_build}}{{container_name}}/build.log"
-  async: 1800
-  poll: 0
-  register: podman_build
-  changed_when: yes
+#  async: 1800
+#  poll: 0
+#  register: podman_build
+#  changed_when: yes
 
-- name: "container : build_podman_image_task : wait for podman image => image does not exists"
-  async_status: jid={{ podman_build.ansible_job_id }}
-  register: job_result
-  until: job_result.finished
-  retries: 30
-  delay: 60
-  when: "podman_build.changed"
+#- name: "container : build_podman_image_task : wait for podman image => image does not exists"
+#  async_status: jid={{ podman_build.ansible_job_id }}
+#  register: job_result
+#  until: job_result.finished
+#  retries: 30
+#  delay: 60
+#  when: "podman_build.changed"
 
 #- name: "container : push image to podman registry"
 #  shell: "podman push {{dockerhub_username}}/{{image_name}}"

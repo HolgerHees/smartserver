@@ -52,9 +52,9 @@ RUN apt-get update && \
 #  docker-php-ext-install -j$(nproc) apcu && \
 
 # ImageMagick
-  docker-php-ext-install -j$(nproc) imagick && \
-#  pecl install imagick && \
-#  docker-php-ext-enable imagick && \
+  pecl install imagick && \
+  docker-php-ext-enable imagick && \
+#  docker-php-ext-install -j$(nproc) imagick && \
 #    https://github.com/Imagick/imagick/issues/640
 #    https://github.com/Imagick/imagick/pull/641
 #    28f27044e435a2b203e32675e942eb8de620ee58 => 10.09.2024
