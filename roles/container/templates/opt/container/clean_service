@@ -48,7 +48,25 @@ else
     fi
 fi
 
-CREATECMD=$(podman inspect --format "{{json .Config.CreateCommand}}" $SERVICE_NAME | jq -r 'join(" ")')
+#CREATECMD=$(podman inspect --format "{{json .Config.CreateCommand}}" $SERVICE_NAME | jq -r 'join(" ")')
+OLD_CREATECMD=$(podman inspect --format "{{json .Config.CreateCommand}}" $SERVICE_NAME | jq -r -c | tail -c +2 | head -c -2)
+
+NEW_CREATECMD=""
+IFS=$','
+for item in $OLD_CREATECMD; do
+    item=$(echo $item | xargs echo)
+
+    if [[ $item = *[[:space:]]* ]]; then
+        NEW_CREATECMD="$NEW_CREATECMD \"$item\""
+    else
+        NEW_CREATECMD="$NEW_CREATECMD $item"
+    fi
+    #echo $item
+    # do stuff with $i
+done
+unset IFS
+
+#echo $NEW_CREATECMD
 
 echo -n "Clean podman container ... "
 RESULT=$(podman rm -f $SERVICE_NAME)
@@ -60,7 +78,7 @@ else
 fi
 
 echo -n "Create podman container ... "
-RESULT=$(eval "$CREATECMD")
+RESULT=$(eval "$NEW_CREATECMD")
 if [ $? -eq 0 ]; then
     echo "done ($RESULT)"
 else
