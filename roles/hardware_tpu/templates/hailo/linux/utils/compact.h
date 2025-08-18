@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /**
- * Copyright (c) 2019-2024 Hailo Technologies Ltd. All rights reserved.
+ * Copyright (c) 2019-2025 Hailo Technologies Ltd. All rights reserved.
  **/
 
 #ifndef _HAILO_PCI_COMPACT_H_
@@ -45,6 +45,14 @@ static inline long get_user_pages_compact(unsigned long start, unsigned long nr_
     int force = !!((gup_flags & FOLL_FORCE) == FOLL_FORCE);
     return get_user_pages(current, current->mm, start, nr_pages, write, force,
         pages, NULL);
+}
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0)
+static inline void dma_sync_sgtable_for_device(struct device *dev,
+    struct sg_table *sgt, enum dma_data_direction dir)
+{
+	dma_sync_sg_for_device(dev, sgt->sgl, sgt->orig_nents, dir);
 }
 #endif
 

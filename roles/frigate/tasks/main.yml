@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    frigate_version: '0.15.2'
+    frigate_version: '0.16.0'
     frigate_config: "{{ lookup('template', '{{config_path}}templates/frigate/config.yml') | from_yaml }}"
   tags: [ 'update_notifier_config' ]
 
@@ -36,8 +36,8 @@
 
 - name: copy model
   get_url:
-    url: "https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.14.0/hailo8/yolov8s.hef"
-    dest: "{{global_etc}}frigate/model_cache/h8l_cache/yolov8s.hef"
+    url: "https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.16.0/hailo8/yolov11s.hef"
+    dest: "{{global_etc}}frigate/model_cache/h8l_cache/yolov11s.hef"
     owner: root
     group: root
     mode: 0640
@@ -55,7 +55,7 @@
 - name: create container service
   vars:
     container_name: "frigate"
-    container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}{% if tpu_enabled and tpu_type=='hailo' %}-h8l{% endif %}"
+    container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
     container_privileged: "{{ true if tpu_enabled or (gpu_enabled and gpu_type == 'intel') else false }}"

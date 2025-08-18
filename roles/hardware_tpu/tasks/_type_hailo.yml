@@ -3,7 +3,7 @@
     # "4.20.1" latest
     # currently only version 4.19.0 is supported by frigate
     # after version upgrade, check if patch is still needed
-    hailo_version: "4.19.0"
+    hailo_version: "4.21.0"
   tags: [ 'update_notifier_config' ]
 
 - name: "_type_hailo : prepare needed directories"
@@ -94,6 +94,15 @@
   changed_when: "shell_cmd_result.rc == 0"
   failed_when: "shell_cmd_result.rc != 0"
   when: "git_clone_changed or hailo_firmware_result.changed or hailo_config_result.changed"
+
+- name: "_type_hailo : create systemd service for 'hailo-init"
+  template:
+    src: "templates/etc/systemd/system/hailo-init.service"
+    dest: "/etc/systemd/system/hailo-init.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart hailo-init"
 
 #- name: "_type_hailo : register hailo update notifier"
 #  vars:

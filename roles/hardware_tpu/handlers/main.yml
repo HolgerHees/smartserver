@@ -1,0 +1,8 @@
+- name: restart hailo-init
+  systemd:
+    name: hailo-init
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart hailo-init"

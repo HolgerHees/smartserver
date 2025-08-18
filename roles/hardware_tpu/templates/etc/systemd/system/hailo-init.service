@@ -1,0 +1,14 @@
+[Unit]
+Description=Initialize hailo devices
+After=syslog.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# force module compile if not loaded
+ExecStart=/bin/sh -c "lsmod | grep hailo > /dev/null || (cd /smartserver/build/hailo/linux/pcie/ && make all && make install && modprobe hailo_pci)"
+
+[Install]
+WantedBy=multi-user.target
+
