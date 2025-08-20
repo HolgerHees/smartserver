@@ -32,39 +32,48 @@ class Container:
         self.state = state
 
 class Image:
-    def __init__(self, id, repository, tag, created):
+    def __init__(self, id, created):
         self.id = id
-        self.repository = repository
-        self.tag = tag
         self.created = created
 
-        self.setRepositiory(repository, tag)
+        self.tags = []
+        self.references = []
 
-    def setRepositiory(self, repository, tag):
+    def hasTags(self):
+        return len(self.tags) > 0
+
+    def setRepository(self, repository, tag):
+        if tag is None:
+            return
+        if tag not in self.tags:
+            self.tags.append(tag)
+
         if repository is not None:
             repository = repository.split("/", 1)[-1]
             if repository.startswith("library/"):
                 repository = repository[8:]
         self.repository = repository
-        self.tag = tag
 
-        if self.repository is not None and self.tag is not None:
-            self.pull_reference = u"{}:{}".format(self.repository,self.tag)
+        if self.repository is not None:
+            reference = u"{}:{}".format(self.repository,tag)
+            if reference not in self.references:
+                self.references.append(reference)
         else:
-            self.pull_reference = self.id
+           if self.id not in self.references:
+               self.references.append(self.id)
 
-    def isMatch(self, pull_reference):
-        return pull_reference == self.pull_reference
+    def isMatch(self, reference):
+        return reference in self.references
 
     def __eq__(self, other):
         return self.id == other.id
 
     def __lt__(self, other):
-        return self.pull_reference < other.pull_reference or ( self.pull_reference == other.pull_reference and self.created < other.created )
+        return self.references[0] < other.references[0] or ( self.references[0] == other.references[0] and self.created < other.created )
 
 def sortImages(item1, item2):
-    item1_is_custom = item1 is not None and item1.pull_reference.startswith("custom")
-    item2_is_custom = item2 is not None and item2.pull_reference.startswith("custom")
+    item1_is_custom = item1 is not None and len([r for r in item1.references if r.startswith("custom")]) > 0
+    item2_is_custom = item2 is not None and len([r for r in item2.references if r.startswith("custom")]) > 0
 
     if item1_is_custom and not item2_is_custom:
         return -1
@@ -99,7 +108,10 @@ def collectImages():
         else:
             repository = None
 
-        images[obj["Id"]] = Image(obj["Id"], repository, obj["tag"] if obj["tag"] != "<none>" else None, created)
+        if obj["Id"] not in images:
+            images[obj["Id"]] = Image(obj["Id"], created)
+
+        images[obj["Id"]].setRepository(repository, obj["tag"] if obj["tag"] != "<none>" else None)
 
     return images
 
@@ -128,12 +140,11 @@ def collectContainers():
 
 def collectUsedImages(images, containers):
     used_images = {}
-
     for container in containers.values():
         if container.image_id in images:
             used_images[container.image_id] = "used"
             image = images[container.image_id]
-            if image.tag is None:
+            if not image.hasTags():
                 command.exec(["podman", "tag", container.image_id, "{}:{}".format(container.image_repository, container.image_tag)])
 
                 image.setRepositiory(container.image_repository, container.image_tag)
@@ -179,12 +190,12 @@ for image in sorted(images.values(),key=cmp_to_key(sortImages)):
     if image.id in used_images:
         if not is_quite:
             if used_images[image.id] == "referenced":
-                print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image.id,image.pull_reference))
+                print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image.id, "', '".join(image.references)))
             else:
-                print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image.id,image.pull_reference))
+                print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image.id, "', '".join(image.references)))
         continue
 
-    print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image.id,image.pull_reference))
+    print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image.id, "', '".join(image.references)))
 
     cleaned = True
 
