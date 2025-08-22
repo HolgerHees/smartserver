@@ -7,6 +7,8 @@ $config['http_auth_header'] = "HTTP_X_REMOTE_USER";
 
 $config['mac_oui.enabled'] = false; # 'true' will fail, because internet connections are not allowed
 
+$config['prometheus']['enable'] = true;
+
 #$config['discovery_by_ip'] = true;
 
 /*$config['discovery_modules']['os']                   = false;

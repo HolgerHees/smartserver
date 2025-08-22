@@ -15,7 +15,8 @@
     directories:
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/nginx" }
-      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/custom" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/html" }
+      - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_etc}}librenms/patches" }
       - { mode: "u=rwx,g=rwx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_log}}librenms" }                     # mode sync with librenms entrypoint
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms" }
       - { mode: "u=rwx,g=rx,o=", owner: "{{system_users['librenms'].name}}", group: "{{system_groups['librenms'].name}}", path: "{{global_lib}}librenms/alert-templates" }
@@ -43,7 +44,8 @@
     mode: 0640
   with_items:
     - "nginx/"
-    - "custom/"
+    - "html/"
+    - "patches/"
   notify: "restart librenms"
 
 - name: create container service
@@ -77,7 +79,9 @@
     container_volumes:
       - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:rw'
       - '{{global_etc}}librenms:/data/config:rw'
-      - '{{global_etc}}librenms/custom/:/opt/librenms/html/custom/:rw'
+      - '{{global_etc}}librenms/html/custom:/opt/librenms/html/custom:rw'
+      - '{{global_etc}}librenms/html/metrics:/opt/librenms/html/metrics:rw'
+      - '{{global_etc}}librenms/patches/LibreNMS/Data/Store/Prometheus.php:/opt/librenms/LibreNMS/Data/Store/Prometheus.php:rw'
       - '{{global_log}}librenms:/data/logs:rw'
       - '{{global_lib}}librenms/alert-templates:/data/alert-templates:rw'
       - '{{global_lib}}librenms/monitoring-plugins:/data/monitoring-plugins:rw'
@@ -142,6 +146,14 @@
   tags: ['fluentd_config']
   when: "monitoring_enabled"
     
+- name: register prometheus metrics
+  vars:
+    name: "librenms"
+    scrape_file: "templates/prometheus/scrape.yml"
+  include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
+  when: "monitoring_enabled"
+
 - name: register update notifier
   vars:
     name: "librenms"
