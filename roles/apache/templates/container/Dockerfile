@@ -14,7 +14,7 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
     ./configure CFLAGS="-g -O0" LDFLAGS="-lrt" && \
     make clean && make test && \
     make -j$(nproc) && \
-    cp .libs/mod_auth_openidc.so /usr/local/apache2/modules/mod_auth_openidc.so
+    cp ./src/.libs/mod_auth_openidc.so /usr/local/apache2/modules/mod_auth_openidc.so
 #    && cd / \
 #    && rm -rf /mod_auth_openidc \
 #    && apt-get purge -y git pkg-config \
