@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    php_version: "8.3.24"
+    php_version: "8.3.25"
     php_container_os: "trixie"
   tags: [ 'update_notifier_config' ]
   
