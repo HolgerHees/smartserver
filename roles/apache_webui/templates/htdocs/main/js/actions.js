@@ -112,7 +112,7 @@ mx.Actions = (function( ret ) {
             if( event.data['type'] != "title" )
             {
                 var url = event.data['url'];
-                url = url.split(':',2)[1];
+                url = url.substring(url.indexOf(":") + 1);
                 if( url.indexOf("//" + window.location.host ) == 0 ) url = url.substr(window.location.host.length+2);
                 loadHandler(url,event.data['type']);
             }
