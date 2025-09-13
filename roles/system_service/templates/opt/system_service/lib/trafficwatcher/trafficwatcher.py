@@ -246,7 +246,8 @@ class TrafficWatcher(threading.Thread):
                 location_city = _location["city"] if _location["city"] else "Unknown"
                 #location_district = _location["district"] if _location["district"] else None
                 location_geohash = Helper.encodeGeohash(_location["lat"], _location["lon"], 5) if _location["lat"] and _location["lon"] else None
-                location_org = _location["org"] if _location["org"] else ( _location["isp"] if _location["isp"] else "Unknown" )
+                location_org = _location["org"] if _location["org"] and _location["org"].lower() not in ["external","private customer"] else None
+                location_isp = _location["isp"] if _location["isp"] else None
             elif _location["type"] == IPCache.TYPE_UNKNOWN:
                 location_country_name = "Unknown"
                 location_country_code = "xx"
@@ -254,7 +255,8 @@ class TrafficWatcher(threading.Thread):
                 location_city = "Unknown"
                 #location_district = None
                 location_geohash = None
-                location_org = "Unknown"
+                location_isp = None
+                location_org = None
             elif _location["type"] == IPCache.TYPE_PRIVATE:
                 location_country_name = "Private"
                 location_country_code = "xx"
@@ -262,7 +264,8 @@ class TrafficWatcher(threading.Thread):
                 location_city = "Private"
                 #location_district = None
                 location_geohash = None
-                location_org = "Unknown"
+                location_isp = None
+                location_org = None
 
             src_is_external = con.src_is_external
             extern_ip = str((con.src if src_is_external else con.dest).compressed)
@@ -270,28 +273,29 @@ class TrafficWatcher(threading.Thread):
             intern_ip = str((con.dest if src_is_external else con.src).compressed)
             intern_hostname = con.dest_hostname if src_is_external else con.src_hostname
 
+            # *** Detect if an ip is blocked ***
+            blocklist_name = None
             if self.trafficblocker and not self.trafficblocker.isApprovedIPs(extern_ip):
-                blocklist_name = self.blocklists.check(extern_ip)
-                if not blocklist_name and src_is_external and len(self.allowed_isp_pattern) > 0:
+                if src_is_external and len(self.allowed_isp_pattern) > 0:
                     allowed = False
-                    service_key = TrafficHelper.getServiceKey(con.dest, con.dest_port) if src_is_external else None
+                    service_key = TrafficHelper.getServiceKey(con.dest, con.dest_port)
                     if service_key in self.allowed_isp_pattern:
-                        if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
+                        pattern = self.allowed_isp_pattern[service_key]
+                        if "org" in pattern and ( ( location_org and pattern["org"].match(location_org) ) or ( location_isp and pattern["org"].match(location_isp) ) ):
                             allowed = True
-                        elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
+                        elif "hostname" in pattern and extern_hostname and pattern["hostname"].match(extern_hostname):
                             allowed = True
                         elif extern_ip:
-                            if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
+                            if "ip" in pattern and pattern["ip"].match(extern_ip):
                                 allowed = True
-                            elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self._getWireguardPeers() ) ) and extern_ip in wireguard_peers:
+                            elif "wireguard_peers" in pattern and ( wireguard_peers is not None or ( wireguard_peers := self._getWireguardPeers() ) ) and extern_ip in wireguard_peers:
                                 allowed = True
-                                #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
                     if not allowed:
                         blocklist_name = "unknown"
-                traffic_group = con.getTrafficGroup(blocklist_name)
-            else:
-                blocklist_name = None
-                traffic_group = TrafficGroup.NORMAL
+                else:
+                    blocklist_name = self.blocklists.check(extern_ip)
+            traffic_group = con.getTrafficGroup(blocklist_name)
+            # **********************************
 
             if con.isFilteredTrafficGroup(traffic_group) and extern_ip not in self.debugging_ips:
                 #logging.info("{} {}".format(extern_ip, "filtered"))
@@ -316,7 +320,7 @@ class TrafficWatcher(threading.Thread):
                 "location_zip": location_zip,
                 "location_city": location_city,
                 "location_geohash": location_geohash,
-                "location_org": location_org,
+                "location_org": location_org if location_org else ( location_isp if location_isp else "Unknown"),
                 "extern_ip": extern_ip,
                 "extern_hostname": extern_hostname,
                 "intern_ip": intern_ip,
