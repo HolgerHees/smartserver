@@ -136,7 +136,9 @@ class Handler(Server):
         elif room == "details":
             week_data = self.provider_consumer.getWeekValues(data)
             astro_data = self.astro_consumer.getValues()
-            self.emitSocketData('details:data', current_data | week_data | astro_data, room)
+            latitude, longitude = config.location.split(",")
+            location_data = {"locationLatitude": = latitude, "locationLongitude": longitude}
+            self.emitSocketData('details:data', current_data | week_data | astro_data | location_data, room)
 
     def getWidgetData(self):
         mode = self.getRequestValue("mode")

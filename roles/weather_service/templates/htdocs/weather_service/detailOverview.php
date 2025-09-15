@@ -85,7 +85,9 @@ mx.WeatherCore = (function( ret ) {
         var rainFrame = document.querySelector("#rainFrame iframe");
         rainFrame.src="about:blank";
         rainButton.addEventListener("click",function(){
-            var url = "https://embed.windy.com/embed2.html?lat=52.344&lon=13.618&detailLat=52.316&detailLon=13.392&zoom=10&level=surface&overlay=radar&product=radar&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
+            locationLatitude = data["locationLatitude"];
+            locationLongitude = data["locationLongitude"];
+            var url = "https://embed.windy.com/embed2.html?lat=" + locationLatitude + "&lon=" + locationLongitude + "&detailLat=" + locationLatitude + "&detailLon=" + locationLongitude + "&zoom=10&level=surface&overlay=radar&product=radar&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
             //window.open(url);
             if( rainFrame.parentNode.classList.contains("open") )
             {
