@@ -44,12 +44,21 @@
   when: "tpu_enabled and tpu_type == 'hailo'"
   notify: "restart frigate"
 
-- name: collect tpu devices
-  shell: "ls -1 /dev/{% if tpu_type=='coral_pci' %}apex_*{% elif tpu_type=='hailo' %}hailo*{% endif %}"
-  register: "frigate_tpu_string"
+- name: collect devices
+  shell: |
+      {% if tpu_type=='coral_usb' %}
+          echo '/dev/'
+      {% elif tpu_type=='coral_pci' %}
+          ls -1 /dev/apex_*
+      {% elif tpu_type=='hailo' %}
+          ls -1 /dev/hailo*
+      {% elif tpu_type=='intel' %}
+          ls -1 /dev/dri/* | grep -P '/(render|card)'
+      {% endif %}
+  register: "frigate_devices"
   changed_when: no
   failed_when: no
-  when: "tpu_enabled and tpu_type in ['coral_pci','hailo']"
+  when: "tpu_type in ['coral_usb','coral_pci','hailo','intel'] or gpu_type in ['intel']"
 
 # ***** SERVICE CONFIGS *****
 - name: create container service
@@ -58,7 +67,7 @@
     container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
-    container_privileged: "{{ true if tpu_enabled or (gpu_enabled and gpu_type == 'intel') else false }}"
+    container_privileged: "{{ true if frigate_devices is defined and frigate_devices | length > 0 else false }}"
     container_shm_size: "{{frigate_shm_size}}"
     container_memory: "{{frigate_max_memory_size}}"
     container_memory_swap: "{{frigate_max_memory_size}}"
@@ -79,21 +88,18 @@
       }
     container_devices: |
       [
-          {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
+          {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all",{% endif %}
+          {% if frigate_devices is defined %}
+              {% for device in frigate_devices.stdout_lines %}
+                "{{device}}",
+              {% endfor %}
+          {% endif %}
       ]
     container_volumes: |
       [
-        {% if (gpu_enabled and gpu_type == 'intel') or (tpu_enabled and tpu_type=='coral_usb') %}
-          "/dev:/dev:rw",
-        {% elif tpu_enabled %}
-          {% for device in frigate_tpu_string.stdout_lines %}
-            "{{device}}:{{device}}:rw",
-          {% endfor %}
-        {% endif %}
         "{{global_etc}}frigate:/config:rw",
         "{{global_lib}}frigate:/media/frigate:rw",
       ]
-#        {% if gpu_enabled and gpu_type == 'nvidia' %}"/usr/lib/libcuda.so:/usr/lib/libcuda.so:ro"{% endif %}
     container_mounts:
       - "type=tmpfs,tmpfs-size={{frigate_tmpfs_size}},destination=/tmp/cache"
     container_readyness: { "type": "port_check", "ip": "{{podman_frigate_ip}}", "port": "8971" }
