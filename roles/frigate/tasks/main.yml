@@ -67,7 +67,7 @@
     container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
-    container_privileged: "{{ true if frigate_devices is defined and frigate_devices | length > 0 else false }}"
+    container_privileged: "{{ true if frigate_devices.stdout_lines is defined and frigate_devices.stdout_lines | length > 0 else false }}"
     container_shm_size: "{{frigate_shm_size}}"
     container_memory: "{{frigate_max_memory_size}}"
     container_memory_swap: "{{frigate_max_memory_size}}"
@@ -89,7 +89,7 @@
     container_devices: |
       [
           {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all",{% endif %}
-          {% if frigate_devices is defined %}
+          {% if frigate_devices.stdout_lines is defined %}
               {% for device in frigate_devices.stdout_lines %}
                 "{{device}}",
               {% endfor %}
