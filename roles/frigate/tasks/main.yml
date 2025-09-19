@@ -58,7 +58,7 @@
   register: "frigate_devices"
   changed_when: no
   failed_when: no
-  when: "tpu_type in ['coral_usb','coral_pci','hailo','intel'] or gpu_type in ['intel']"
+  when: "(tpu_enabled and tpu_type in ['coral_usb','coral_pci','hailo','intel']) or (gpu_enabled and gpu_type in ['intel'])"
 
 # ***** SERVICE CONFIGS *****
 - name: create container service
