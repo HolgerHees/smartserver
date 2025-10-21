@@ -116,7 +116,7 @@ class JobRunner:
                     # force VBox folder
                     command.exec( [ "VBoxManage", "setproperty", "machinefolder", "{}VirtualMachines".format(self.lib_dir) ], namespace_pid=command.NAMESPACE_PID_HOST)
 
-                    env = { "VAGRANT_HOME": self.lib_dir, "HOME": os.path.expanduser('~') }
+                    env = { "VAGRANT_HOME": self.lib_dir, "HOME": os.path.expanduser('~'), "PATH": "/sbin:/usr/sbin:/usr/local/sbin:/root/bin:/usr/local/bin:/usr/bin:/bin" }
 
                     # DEPLOYMENT BOX UPDATE
                     # Always test with the latest version
