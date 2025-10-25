@@ -44,7 +44,7 @@
   when: "tpu_enabled and tpu_type == 'hailo'"
   notify: "restart frigate"
 
-- name: collect devices
+- name: collect tpu devices
   shell: |
       {% if tpu_type=='coral_usb' %}
           echo '/dev/'
@@ -55,19 +55,31 @@
       {% elif tpu_type=='intel' %}
           ls -1 /dev/dri/* | grep -P '/(render|card)'
       {% endif %}
-  register: "frigate_devices"
+  register: "frigate_tpu_devices"
   changed_when: no
   failed_when: no
-  when: "(tpu_enabled and tpu_type in ['coral_usb','coral_pci','hailo','intel']) or (gpu_enabled and gpu_type in ['intel'])"
+  when: "tpu_enabled and tpu_type in ['coral_usb','coral_pci','hailo']"
 
-# ***** SERVICE CONFIGS *****
+- name: collect gpu devices
+  shell: |
+      {% if gpu_type=='nvidia' %}
+          echo 'nvidia.com/gpu=all'
+      {% elif gpu_type=='intel' %}
+          ls -1 /dev/dri/* | grep -P '/(render|card)'
+      {% endif %}
+  register: "frigate_gpu_devices"
+  changed_when: no
+  failed_when: no
+  when: "gpu_enabled and gpu_type in ['nvidia','intel']"
+
+  # ***** SERVICE CONFIGS *****
 - name: create container service
   vars:
     container_name: "frigate"
     container_image: "ghcr.io/blakeblackshear/frigate:{{frigate_version}}"
     container_network: "isolated"
     container_ip: "{{podman_frigate_ip}}"
-    container_privileged: "{{ true if frigate_devices.stdout_lines is defined and frigate_devices.stdout_lines | length > 0 else false }}"
+    container_privileged: "{{ true if frigate_tpu_devices.stdout_lines is defined and frigate_tpu_devices.stdout_lines | length > 0 or frigate_gpu_devices.stdout_lines is defined and frigate_gpu_devices.stdout_lines | length > 0 else false }}"
     container_shm_size: "{{frigate_shm_size}}"
     container_memory: "{{frigate_max_memory_size}}"
     container_memory_swap: "{{frigate_max_memory_size}}"
@@ -88,9 +100,13 @@
       }
     container_devices: |
       [
-          {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all",{% endif %}
-          {% if frigate_devices.stdout_lines is defined %}
-              {% for device in frigate_devices.stdout_lines %}
+          {% if frigate_gpu_devices.stdout_lines is defined %}
+              {% for device in frigate_gpu_devices.stdout_lines %}
+                "{{device}}",
+              {% endfor %}
+          {% endif %}
+          {% if frigate_tpu_devices.stdout_lines is defined %}
+              {% for device in frigate_tpu_devices.stdout_lines %}
                 "{{device}}",
               {% endfor %}
           {% endif %}
