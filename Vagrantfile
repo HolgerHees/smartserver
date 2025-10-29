@@ -11,6 +11,7 @@ opts = GetoptLong.new(
 
 setup_os = ""
 setup_image = ""
+setup_version = ""
 setup_config = ""
 setup_ansible = ""
 
