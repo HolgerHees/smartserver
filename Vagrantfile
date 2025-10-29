@@ -46,15 +46,27 @@ Example: vagrant --config=demo --os=suse up
       when '--config'
         setup_config=arg
       when '--os'
-        if arg == "suse" then
+        if arg == "testsuse" then
+            setup_os = "suse"
+            setup_image = "bento/opensuse-leap-16.0"
+            setup_version = "202510.26.0"
+        elsif arg == "testalma" then
+            setup_os = "alma"
+            setup_image = "almalinux/9"
+            setup_version = "9.6.20250522"
+        elsif arg == "suse" then
             setup_os = "suse"
             setup_image = "opensuse/Leap-15.6.x86_64"
+            setup_version = "15.6.13.356"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
             setup_image = "bento/ubuntu-24.04"
+            setup_version = "202510.26.0"
         elsif arg == "alma" then
             setup_os = "alma"
             setup_image = "almalinux/9"
+            setup_version = "9.1.20221117"
+            #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
         end
       when '--ansible'
         setup_ansible=arg
@@ -91,6 +103,8 @@ Vagrant.configure(2) do |config|
 
   config.vm.define $image_name, autostart: true do |setup|
     setup.vm.box = setup_image
+    setup.vm.box_version = setup_version
+
     setup.ssh.username = 'vagrant'
     #setup.ssh.password = 'vagrant'
     setup.ssh.insert_key = 'true'
@@ -176,8 +190,6 @@ Vagrant.configure(2) do |config|
         sudo pip install ansible==9.8.0 --break-system-packages
         SHELL
     elsif setup_os == 'alma' then
-        #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
-        setup.vm.box_version = "9.1.20221117"
         setup.vm.provision "shell", inline: <<-SHELL
         sudo yum --assumeyes install python python3-netaddr python3-pip
         sudo pip install --prefix=/usr/ ansible==8.7.0
