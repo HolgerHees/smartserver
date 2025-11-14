@@ -168,10 +168,11 @@ Vagrant.configure(2) do |config|
     #end
     
     require 'time'
-    offset = ((Time.zone_offset(Time.now.zone) / 60) / 60)
     # offset needs to be inverted => https://stackoverflow.com/questions/49916815/strange-timezone-etc-gmt-1-in-firefox
-    timezone_suffix = offset >= 0 ? "-#{offset.to_s}" : "+#{offset.to_s}"
+    offset = ((Time.zone_offset(Time.now.zone) / 60) / 60) * -1
+    timezone_suffix = offset < 0 ? "#{offset.to_s}" : "+#{offset.to_s}"
     timezone = 'Etc/GMT' + timezone_suffix
+
     setup.vm.provision :shell, :inline => "sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/" + timezone + " /etc/localtime", run: "always"
 
     setup.vm.network "private_network", ip: $env_ip
