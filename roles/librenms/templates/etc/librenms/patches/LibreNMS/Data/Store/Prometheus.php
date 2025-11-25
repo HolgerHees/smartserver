@@ -39,6 +39,7 @@ class Prometheus extends BaseDatastore
 {
     private $job;
     private $prune_threshold_seconds;
+    private $device_group_devices;
 
     public function __construct()
     {
