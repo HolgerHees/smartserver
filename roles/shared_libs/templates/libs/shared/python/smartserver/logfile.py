@@ -171,7 +171,8 @@ class LogFormatter:
       '1;31': "<span style='color:red'>",     # lightred
       '1;32': "<span style='color:#00cc00'>", # lightgreen
       '1;33': "<span style='color:yellow'>",
-      '1;35': "<span style='color:plum'>"
+      '1;35': "<span style='color:plum'>",
+      '1;4': "<span style='text-decoration: underline'>"
     }
 
     def __init__(self, path):
