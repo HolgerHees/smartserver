@@ -2,7 +2,7 @@ require 'getoptlong'
 
 opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT ],
-    ['--config', GetoptLong::REQUIRED_ARGUMENT], 
+    ['--config', GetoptLong::REQUIRED_ARGUMENT],
     ['--os', GetoptLong::REQUIRED_ARGUMENT ],
     ['--ansible', GetoptLong::OPTIONAL_ARGUMENT ],
     ['--color', GetoptLong::OPTIONAL_ARGUMENT ],
@@ -29,18 +29,18 @@ vagrant [OPTION] ... CMD
   Used configuration. All configurations are located inside ./config/ folder
 
 --os <suse|alma|ubuntu>:
-  Used linux distribution. 
-  
+  Used linux distribution.
+
   <suse>      : openSUSE Leap 15.6 (opensuse/Leap-15.6.x86_64)
-  <alma>      : AlmaLinux 9.1 (almalinux/9)
+  <alma>      : AlmaLinux 9.6 (almalinux/9)
   <ubuntu>    : Ubuntu 24.04 (bento/ubuntu-24.04)
 
 --ansible [-vvv]:
-  Optional argument to provide additional parameters for ansible. 
+  Optional argument to provide additional parameters for ansible.
 
 CMD: 'up', 'destroy' or any other vagrant command
 
-Example: vagrant --config=demo --os=suse up 
+Example: vagrant --config=demo --os=suse up
 
         EOF
         exit(0)
@@ -51,10 +51,6 @@ Example: vagrant --config=demo --os=suse up
             setup_os = "suse"
             setup_image = "bento/opensuse-leap-16.0"
             setup_version = "202510.26.0"
-        elsif arg == "testalma" then
-            setup_os = "alma"
-            setup_image = "almalinux/9"
-            setup_version = "9.6.20250522"
         elsif arg == "suse" then
             setup_os = "suse"
             setup_image = "opensuse/Leap-15.6.x86_64"
@@ -66,7 +62,7 @@ Example: vagrant --config=demo --os=suse up
         elsif arg == "alma" then
             setup_os = "alma"
             setup_image = "almalinux/9"
-            setup_version = "9.1.20221117"
+            setup_version = "9.6.20250522" #"9.1.20221117"
             #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
         end
       when '--ansible'
@@ -99,7 +95,7 @@ Vagrant.configure(2) do |config|
   else
     raise "no 'staging_ip' found in file 'config/#{setup_config}/env.yml'"
   end
-  
+
   print "Used ip address: #{$env_ip}\n"
 
   config.vm.define $image_name, autostart: true do |setup|
@@ -109,7 +105,7 @@ Vagrant.configure(2) do |config|
     setup.ssh.username = 'vagrant'
     #setup.ssh.password = 'vagrant'
     setup.ssh.insert_key = 'true'
-    
+
     if File.exist?("#{Dir.home}/.ssh/id_rsa.pub") then
         setup.vm.provision "shell" do |s|
             ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
@@ -166,7 +162,7 @@ Vagrant.configure(2) do |config|
     #  vw.vmx["memsize"] = "6144"
     #  vw.vmx["numvcpus"] = cpus
     #end
-    
+
     require 'time'
     # offset needs to be inverted => https://stackoverflow.com/questions/49916815/strange-timezone-etc-gmt-1-in-firefox
     offset = ((Time.zone_offset(Time.now.zone) / 60) / 60) * -1
@@ -179,7 +175,7 @@ Vagrant.configure(2) do |config|
 
     # Ask for vault password
     password = Environment.getPassword()
-   
+
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo zypper --non-interactive install python3-netaddr python3-pip system-user-nobody
@@ -201,7 +197,7 @@ Vagrant.configure(2) do |config|
     else
         print "*** not supported ***"
         return
-    end  
+    end
 
     #if $is_reboot_possible and (setup_os != 'fedora' or !setup_image.end_with?('cloud-base')) then
     #    setup.vm.provision "shell", inline: <<-SHELL
@@ -212,7 +208,7 @@ Vagrant.configure(2) do |config|
     setup.vm.provision "shell", env: {"VAULT_PASS" => password }, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
-    
+
     setup.vm.provision "ansible_local" do |ansible|
       ansible.limit = "all"
       ansible.playbook = "server.yml"
@@ -230,8 +226,8 @@ Vagrant.configure(2) do |config|
       #  ansible.become = true
       #  ansible.become_user = "root"
       #end
-    end  
-    
+    end
+
     # Delete temp vault password file
     setup.vm.provision "shell", inline: <<-SHELL
         rm /tmp/vault_pass
@@ -243,15 +239,15 @@ module Environment
 #  require 'socket'
 #  require 'timeout'
 #  require 'net/ssh'
-  
+
 #  # Reachability check
 #  def self.checkReachability
-#      
-#      def to_s       
+#
+#      def to_s
 #          sleep(0.5) # give server time to initiate reboot#
 
 #          print "check server reachability "
-          
+
 #          begin
 #              #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
 #              #session.close
@@ -278,7 +274,7 @@ module Environment
               system 'stty echo'
           end
           print "\n"
-          
+
           if not pass.empty?
               break
           end

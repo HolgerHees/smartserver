@@ -18,6 +18,14 @@
 
 
 # **** NFTABLES ****
+- name: install required packages => is_rhel or is_fedora
+  yum:
+    name: [
+        nftables
+    ]
+    state: present
+  when: is_rhel or is_fedora
+
 - name: install required packages => is_suse
   zypper:
     name: [
