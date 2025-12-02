@@ -50,6 +50,7 @@
     has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
 
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
+    is_suse_16: "{{ansible_distribution == 'openSUSE Leap' and ansible_distribution_version == '16.0'}}"
     is_fedora: "{{ansible_distribution == 'Fedora'}}"
     is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
     is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"

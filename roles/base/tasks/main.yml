@@ -175,11 +175,17 @@
       , python3-passlib    # used by ansible htpasswd module (user role), must be added here as the add web user task is a shared task
 
       , python3-requests   # used by various system scripts like 'systemd_watcher_service_check'
-      
-      , insserv-compat     # used by ansible systemd module
     ]
     state: present
   when: is_suse
+
+- name: install required packages => is_suse
+  zypper:
+    name: [
+      insserv-compat     # used by ansible systemd module
+    ]
+    state: present
+  when: "is_suse and not is_suse_16"
 
 # to avoid service restarts on "apt-get install"
 # DPkg::Post-Invoke {"test -x /usr/lib/needrestart/apt-pinvoke && /usr/lib/needrestart/apt-pinvoke -m u || true"; };
@@ -190,22 +196,6 @@
     line: '#DPkg::Post-Invoke \1'
     backrefs: yes
   when: is_ubuntu
-
-- name: set sysctl inotify related values
-  lineinfile:
-    path: /etc/sysctl.conf
-    regexp: '^{{item.regex}}\s*='
-    line: '{{item.line}}'
-  with_items:
-    #Each inotify watch uses 540 bytes of kernel memory on 32-bit architectures, and 1080 bytes on 64-bit architectures. Kernel memory is unswappable. So there is a memory cost, certainly.
-    #- { regex: "fs\\.inotify\\.max_user_instances", line: "fs.inotify.max_user_instances = 256" }
-    #- { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 65536" }
-    - { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 262144" } # => max 270MB
-  register: sysctlchanged
-   
-- name: refresh sysctl to activate sysctl changes => sysctl changed
-  shell: sysctl -p
-  when: sysctlchanged.changed
 
 - name: copy missing logind.conf # => was missing on opensuse leap15.6
   copy:
@@ -248,12 +238,18 @@
 #https://cromwell-intl.com/open-source/performance-tuning/ethernet.html
 #ethtool -K eth0 tx-checksum-ipv4 off tx-checksum-ipv6 off
 
-- name: set sysctl network related values
+- name: set sysctl network and inotify related values
   lineinfile:
     path: /etc/sysctl.conf
     regexp: '^{{item.regex}}\s*='
     line: '{{item.line}}'
+    create: '{{is_suse_16}}'
   with_items:
+    #Each inotify watch uses 540 bytes of kernel memory on 32-bit architectures, and 1080 bytes on 64-bit architectures. Kernel memory is unswappable. So there is a memory cost, certainly.
+    #- { regex: "fs\\.inotify\\.max_user_instances", line: "fs.inotify.max_user_instances = 256" }
+    #- { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 65536" }
+    - { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 262144" } # => max 270MB
+
     # enable IPV6
     - { regex: "net\\.ipv6\\.conf\\.all\\.disable_ipv6", line: "net.ipv6.conf.all.disable_ipv6 = 0" }
 

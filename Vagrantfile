@@ -14,6 +14,7 @@ setup_image = ""
 setup_version = ""
 setup_config = ""
 setup_ansible = ""
+ansible_version = ""
 
 begin
   opts.each do |opt, arg|
@@ -51,19 +52,23 @@ Example: vagrant --config=demo --os=suse up
             setup_os = "suse"
             setup_image = "bento/opensuse-leap-16.0"
             setup_version = "202510.26.0"
+            ansible_version = "11.12.0"
         elsif arg == "suse" then
             setup_os = "suse"
             setup_image = "opensuse/Leap-15.6.x86_64"
             setup_version = "15.6.13.356"
+            ansible_version = "4.10.0"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
             setup_image = "bento/ubuntu-24.04"
             setup_version = "202510.26.0"
+            ansible_version = "9.8.0"
         elsif arg == "alma" then
             setup_os = "alma"
             setup_image = "almalinux/9"
             setup_version = "9.6.20250522" #"9.1.20221117"
             #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
+            ansible_version = "8.7.0"
         end
       when '--ansible'
         setup_ansible=arg
@@ -169,9 +174,20 @@ Vagrant.configure(2) do |config|
     timezone_suffix = offset < 0 ? "#{offset.to_s}" : "+#{offset.to_s}"
     timezone = 'Etc/GMT' + timezone_suffix
 
-    setup.vm.provision :shell, :inline => "sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/" + timezone + " /etc/localtime", run: "always"
+    if setup_image == 'bento/opensuse-leap-16.0' then
+        setup.vm.network "private_network", ip: $env_ip, auto_config: false
+        setup.vm.provision "shell", inline: <<-SHELL
+        CONN_UUID=$(nmcli -t -f uuid con show | sed -n '2 p')
+        nmcli con mod $CONN_UUID ipv4.addresses #{$env_ip}/24
+        nmcli con down $CONN_UUID
+        nmcli con up $CONN_UUID
+        echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers
+        SHELL
+    else
+        setup.vm.network "private_network", ip: $env_ip
+    end
 
-    setup.vm.network "private_network", ip: $env_ip
+    setup.vm.provision :shell, :inline => "sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/" + timezone + " /etc/localtime", run: "always"
 
     # Ask for vault password
     password = Environment.getPassword()
@@ -179,18 +195,18 @@ Vagrant.configure(2) do |config|
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo zypper --non-interactive install python3-netaddr python3-pip system-user-nobody
-        sudo pip install ansible==4.10.0
+        sudo pip install ansible==#{ansible_version}
         SHELL
     elsif setup_os == 'ubuntu' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update
         sudo apt-get -y install python3-netaddr python3-pip
-        sudo pip install ansible==9.8.0 --break-system-packages
+        sudo pip install ansible==#{ansible_version} --break-system-packages
         SHELL
     elsif setup_os == 'alma' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo yum --assumeyes install python python3-netaddr python3-pip
-        sudo pip install --prefix=/usr/ ansible==8.7.0
+        sudo pip install --prefix=/usr/ ansible==#{ansible_version}
         # is needed to avoid that 'dnf-makecache.timer' is running during deployemnt. Could result in failed 'dnf-makecache.service' because of restarted named container
         sudo systemctl stop dnf-makecache.timer
         SHELL
