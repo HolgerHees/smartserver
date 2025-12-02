@@ -243,7 +243,7 @@
     path: /etc/sysctl.conf
     regexp: '^{{item.regex}}\s*='
     line: '{{item.line}}'
-    create: '{{is_suse_16}}'
+    create: yes
   with_items:
     #Each inotify watch uses 540 bytes of kernel memory on 32-bit architectures, and 1080 bytes on 64-bit architectures. Kernel memory is unswappable. So there is a memory cost, certainly.
     #- { regex: "fs\\.inotify\\.max_user_instances", line: "fs.inotify.max_user_instances = 256" }
