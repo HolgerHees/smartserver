@@ -179,13 +179,13 @@
     state: present
   when: is_suse
 
-- name: install required packages => is_suse
-  zypper:
-    name: [
-      insserv-compat     # used by ansible systemd module
-    ]
-    state: present
-  when: "is_suse and not is_suse_16"
+#- name: install required packages => is_suse
+#  zypper:
+#    name: [
+#      insserv-compat     # used by ansible systemd module
+#    ]
+#    state: present
+#  when: "is_suse and not is_suse_16"
 
 # to avoid service restarts on "apt-get install"
 # DPkg::Post-Invoke {"test -x /usr/lib/needrestart/apt-pinvoke && /usr/lib/needrestart/apt-pinvoke -m u || true"; };
