@@ -60,7 +60,7 @@
       - SYS_ADMIN
       - SYS_RAWIO # smartmontools
     container_security_opt:
-      - "apparmor:unconfined"
+      - "apparmor=unconfined"
     container_network: "host"
     container_exposed_ports:
      - "8125"

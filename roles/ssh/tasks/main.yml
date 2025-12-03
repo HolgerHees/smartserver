@@ -3,6 +3,7 @@
     path: /etc/ssh/sshd_config
     regexp: '^{{item.field}} '
     line: '{{item.field}} {{item.value}}'
+    create: '{{is_suse_16}}'
   with_items:
     - { field: 'AllowUsers', value: "*@{{intern_networks | join(' *@')}} *@{{vpn_mobile_network}}/24" }
   notify: "restart sshd"

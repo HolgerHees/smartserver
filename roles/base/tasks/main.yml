@@ -179,14 +179,6 @@
     state: present
   when: is_suse
 
-#- name: install required packages => is_suse
-#  zypper:
-#    name: [
-#      insserv-compat     # used by ansible systemd module
-#    ]
-#    state: present
-#  when: "is_suse and not is_suse_16"
-
 # to avoid service restarts on "apt-get install"
 # DPkg::Post-Invoke {"test -x /usr/lib/needrestart/apt-pinvoke && /usr/lib/needrestart/apt-pinvoke -m u || true"; };
 - name: disable auto service restart after apg-get (needsrestart) => is_ubuntu
@@ -243,7 +235,7 @@
     path: /etc/sysctl.conf
     regexp: '^{{item.regex}}\s*='
     line: '{{item.line}}'
-    create: yes
+    create: '{{is_suse_16}}'
   with_items:
     #Each inotify watch uses 540 bytes of kernel memory on 32-bit architectures, and 1080 bytes on 64-bit architectures. Kernel memory is unswappable. So there is a memory cost, certainly.
     #- { regex: "fs\\.inotify\\.max_user_instances", line: "fs.inotify.max_user_instances = 256" }

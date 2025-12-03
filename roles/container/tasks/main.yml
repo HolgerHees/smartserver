@@ -27,6 +27,15 @@
   shell: "wget -O - https://github.com/containers/netavark/releases/download/v1.11.0/netavark.gz | gzip -d > /usr/lib/podman/netavark && chown root:root /usr/lib/podman/netavark && chmod 755 /usr/lib/podman/netavark"
   when: "is_ubuntu and netavark_version.stdout != '1.11.0'"
 
+- name: add zypper repository => is_suse_16
+  zypper_repository:
+    name: Virtualization (crun)
+    repo: "https://download.opensuse.org/repositories/Virtualization:/containers/$releasever/"
+    auto_import_keys: yes
+    priority: "100"
+    state: present
+  when: is_suse_16
+
 - name: install required packages => is_suse
   zypper:
     name: [
@@ -36,6 +45,19 @@
     ]
     state: present
   when: is_suse
+
+##### PODMAN #####
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/container" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/container/config" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}libpod/storage/" }          # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}containers/storage/" }      # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}libpod/" }                  # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/storage/" }      # podman
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/pids/" }         # podman
+  include_tasks: roles/_shared/create_directories.yml
 
 #https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2040483
 - name: teardown apparmor for containers on ubuntu temporary
@@ -53,20 +75,13 @@
 # https://www.findbugzero.com/operational-defect-database/vendors/rh/defects/RHEL-25605
 - name: fix systemd-notify "permission denied" problem
   shell: "semanage permissive -a systemd_notify_t"
-  when: is_rhel or is_fedora
+  when: is_rhel or is_fedora # or is_suse_16
 
-##### PODMAN #####
-- name: prepare needed directories
-  vars:
-    directories:
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/container" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/opt/container/config" }
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}libpod/storage/" }          # podman
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}containers/storage/" }      # podman
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}libpod/" }                  # podman
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/storage/" }      # podman
-      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_tmp}}containers/pids/" }         # podman
-  include_tasks: roles/_shared/create_directories.yml
+# e.g. frigate
+# Error importing detector runtime: /usr/local/lib/python3.11/dist-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-311-x86_64-linux-gnu.so: cannot enable executable stack as shared object requires: Permission denied
+- name: fix executable "permission denied" problem
+  shell: "semanage boolean --modify --on selinuxuser_execstack"
+  when: is_suse_16
 
 - name: set container selinux configuration => is_rhel or is_fedora
   sefcontext:
@@ -79,14 +94,14 @@
  #   - "{{global_lib}}libpod/storage(/.*)?"
     - "{{global_lib}}containers/storage(/.*)?"
   register: sefcontext_result
-  when: is_rhel or is_fedora
+  when: is_rhel or is_fedora or is_suse_16
 
-- name: reload selinux configuration => (is_rhel or is_fedora) and sefcontext changed
+- name: reload selinux configuration => (is_rhel or is_fedora or is_suse_1) and sefcontext changed
   shell: "restorecon -irv {{item}}"
   with_items:
 #    - "{{global_lib}}libpod/storage/"
     - "{{global_lib}}containers/storage/"
-  when: (is_rhel or is_fedora) and sefcontext_result.changed
+  when: (is_rhel or is_fedora or is_suse_16) and sefcontext_result.changed
 
 # ***** NESSECARRY UNTIL PODMAN 5 ********
 # because "firewall_driver" setting in containers.conf is ignored
@@ -97,6 +112,7 @@
     path: /etc/environment
     regexp: '^NETAVARK_FW\s*='
     line: 'NETAVARK_FW=none'
+    create: '{{is_suse_16}}'
 
 - name: copy podman config
   template:
