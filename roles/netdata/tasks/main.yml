@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "2.8.1"
+    netdata_version: "2.8.2"
   tags: [ 'update_notifier_config' ]
 
 - name: prepare needed directories
@@ -40,15 +40,6 @@
     - "go.d.conf"
   notify: "restart netdata"
 
-- name: copy config
-  template:
-    src: "templates/rc.local"
-    dest: "{{ global_etc }}netdata/rc.local"
-    owner: root
-    group: root
-    mode: 0770
-  when: "gpu_enabled and gpu_type == 'nvidia'"
-
 - name: create container service
   vars:
     container_name: "netdata"
@@ -71,8 +62,8 @@
 #      NETDATA_PORT: "19999"
     #  DOCKER_USR: "root"
     #  VIRTUALIZATION: "kvm"
-      DOCKER_USR: "root"
-      DOCKER_GRP: "root"
+#      DOCKER_USR: "root"
+#      DOCKER_GRP: "root"
       NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools{{ ' nvidia-smi' if gpu_enabled and gpu_type == 'nvidia' else '' }}"
       DISABLE_TELEMETRY: "1"
       DO_NOT_TRACK: "1"
@@ -97,8 +88,6 @@
 
         '{{ global_lib }}netdata:/var/lib/netdata:rw',
         '{{ global_lib }}netdata/cache:/var/cache/netdata:rw',
-
-        {% if gpu_enabled and gpu_type == 'nvidia' %}"{{ global_etc }}netdata/rc.local:/etc/rc.local:ro",{% endif %}
 
         "{{ global_etc }}netdata/sources.list:/etc/apt/sources.list:ro", # nvidia-smi
 

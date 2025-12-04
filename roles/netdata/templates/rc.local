@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-GID=$(stat -c "%g" /dev/nvidia* | head -1)
-
-getent group video2 > /dev/null || addgroup --gid $GID video2
-
-usermod -a -G video2 netdata
