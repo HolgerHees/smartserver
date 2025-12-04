@@ -33,6 +33,7 @@ vagrant [OPTION] ... CMD
   Used linux distribution.
 
   <suse>      : openSUSE Leap 15.6 (opensuse/Leap-15.6.x86_64)
+  <suse16>    : openSUSE Leap 16.0 (bento/opensuse-leap-16.0)
   <alma>      : AlmaLinux 9.6 (almalinux/9)
   <ubuntu>    : Ubuntu 24.04 (bento/ubuntu-24.04)
 
@@ -48,7 +49,7 @@ Example: vagrant --config=demo --os=suse up
       when '--config'
         setup_config=arg
       when '--os'
-        if arg == "testsuse" then
+        if arg == "suse16" then
             setup_os = "suse"
             setup_image = "bento/opensuse-leap-16.0"
             setup_version = "202510.26.0"

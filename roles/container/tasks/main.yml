@@ -96,7 +96,7 @@
   register: sefcontext_result
   when: is_rhel or is_fedora or is_suse_16
 
-- name: reload selinux configuration => (is_rhel or is_fedora or is_suse_1) and sefcontext changed
+- name: reload selinux configuration => (is_rhel or is_fedora or is_suse_16) and sefcontext changed
   shell: "restorecon -irv {{item}}"
   with_items:
 #    - "{{global_lib}}libpod/storage/"
