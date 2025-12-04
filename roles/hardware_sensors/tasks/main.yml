@@ -1,10 +1,10 @@
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: [
         lm_sensors
     ]
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
 
 - name: install required packages => is_ubuntu
   apt:

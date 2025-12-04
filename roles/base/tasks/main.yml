@@ -30,7 +30,7 @@
     state: latest
   when: is_rhel
 
-- name: cleanup => is_rhel or is_fedora
+- name: cleanup => is_rhel
   yum:
     name: [
         python3-werkzeug
@@ -38,16 +38,16 @@
       , python3-inotify
     ]
     state: absent
-  when: is_rhel or is_fedora
+  when: is_rhel
 
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: [
         mc
       , htop
       , sysstat
       , iotop
-      , smem 
+#      , smem               # not found in alma 10
       
       , wireguard-tools
       
@@ -74,12 +74,12 @@
       
       , python3-requests   # used by various system scripts like 'systemd_watcher_service_check'
 
-      , python3-libselinux # used by ansible on fedora
+#      , python3-libselinux # used by ansible on fedora
       , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
 #      , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
 
 - name: cleanup packages => is_ubuntu
   apt:
@@ -98,7 +98,7 @@
       , htop
       , sysstat
       , iotop
-      , smem 
+#      , smem
 
       , wireguard-tools
       
@@ -145,7 +145,7 @@
       , htop
       , sysstat
       , iotop
-      , smem               # useful tool to debug memory usage (including swap usage)
+#      , smem               # useful tool to debug memory usage (including swap usage)
       , arp-scan           # useful for network exploring
 
       , wireguard-tools

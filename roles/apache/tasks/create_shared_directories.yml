@@ -1,8 +1,6 @@
 # suse user: wwwrun:x:474:474:WWW daemon apache:/var/lib/wwwrun:/sbin/nologin
 # suse group: www:x:475:wwwrun
 # suse group: wwwrun:!:474:
-# fedora user: apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin
-# fedora group: apache:x:48:
 - name: "create user and group => user or group does not exists"
   vars:
     user: { key: "www", name: "{{'wwwrun' if is_suse else 'apache'}}", system: true, home: "{{htdocs_path}}" }

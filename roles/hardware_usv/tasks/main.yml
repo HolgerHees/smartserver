@@ -1,17 +1,17 @@
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name:
        apcupsd
     state: present
     disable_gpg_check: true
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel
 
 - name: install required packages => is_ubuntu
   apt:
     name:
        apcupsd
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: add zypper repository => is_suse
   zypper_repository:
@@ -20,7 +20,7 @@
     auto_import_keys: yes
     priority: "100"
     state: present
-  when: is_suse|bool
+  when: is_suse
 
 - name: install required packages => is_suse
   zypper:
@@ -28,7 +28,7 @@
        apcupsd
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
 
 - name: copy config
   copy:

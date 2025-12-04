@@ -1,12 +1,12 @@
 # ***** ENABLE USAGE OF LOCAL DNS *****
-- name: "enable : disable systemd-resolved => is_rhel or is_fedora or is_ubuntu"
+- name: "enable : disable systemd-resolved => is_rhel or is_ubuntu"
   systemd:
     state: stopped
     enabled: no
     name: systemd-resolved
-  when: "is_rhel or is_fedora or is_ubuntu"
+  when: "is_rhel or is_ubuntu"
 
-- name: "enable : disable NetworkManager dns handling => is_rhel or is_fedora"
+- name: "enable : disable NetworkManager dns handling => is_rhel"
   lineinfile:
     path: /etc/NetworkManager/NetworkManager.conf
     insertafter: '^\[main\]'
@@ -15,7 +15,7 @@
   register: netconfig_status
   with_items:
     - { field: "dns", value: "none" }
-  when: is_rhel or is_fedora
+  when: is_rhel
 
 - name: "enable : disable netconfig dns handling => is_suse"
   lineinfile:

@@ -51,10 +51,10 @@
 
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
     is_suse_16: "{{ansible_distribution == 'openSUSE Leap' and ansible_distribution_version is match('16.*')}}"
-    is_fedora: "{{ansible_distribution == 'Fedora'}}"
     is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
+    is_rhel_10: "{{ansible_distribution == 'AlmaLinux' and ansible_distribution_version is match('10.*')}}"
     is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
-    os_type: "{{ 'rhel' if ansible_distribution == 'AlmaLinux' else 'fedora' if ansible_distribution == 'Fedora' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
+    os_type: "{{ 'rhel' if ansible_distribution == 'AlmaLinux' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
 
     is_production: "{{host_ip == production_ip}}"
 

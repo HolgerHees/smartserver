@@ -40,21 +40,21 @@
   tags: ['apache_config']
 
 # POTD FETCHER
-- name: install required packages for fetchPOTD => is_rhel or is_fedora
+- name: install required packages for fetchPOTD => is_rhel
   yum:
     name: 
       - https://rpms.remirepo.net/enterprise/9/remi/{{ansible_architecture}}/LibRaw20-0.20.2-1.el9.remi.{{ansible_architecture}}.rpm # fixes missing dependency for ImageMagick
     disable_gpg_check: yes
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel and not is_rhel_10
 
-- name: install required packages for fetchPOTD => is_rhel or is_fedora
+- name: install required packages for fetchPOTD => is_rhel
   yum:
     name:
       - ImageMagick
       - perl-Image-ExifTool
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
 
 - name: install required packages for fetchPOTD => is_ubuntu
   apt:

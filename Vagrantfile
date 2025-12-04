@@ -10,10 +10,10 @@ opts = GetoptLong.new(
 )
 
 setup_os = ""
-setup_image = ""
-setup_version = ""
 setup_config = ""
 setup_ansible = ""
+image_box = ""
+image_version = ""
 ansible_version = ""
 
 begin
@@ -34,7 +34,7 @@ vagrant [OPTION] ... CMD
 
   <suse>      : openSUSE Leap 15.6 (opensuse/Leap-15.6.x86_64)
   <suse16>    : openSUSE Leap 16.0 (bento/opensuse-leap-16.0)
-  <alma>      : AlmaLinux 9.6 (almalinux/9)
+  <alma>      : AlmaLinux 10.0 (almalinux/10)
   <ubuntu>    : Ubuntu 24.04 (bento/ubuntu-24.04)
 
 --ansible [-vvv]:
@@ -51,25 +51,25 @@ Example: vagrant --config=demo --os=suse up
       when '--os'
         if arg == "suse16" then
             setup_os = "suse"
-            setup_image = "bento/opensuse-leap-16.0"
-            setup_version = "202510.26.0"
+            image_box = "bento/opensuse-leap-16.0"
+            image_version = "202510.26.0"
             ansible_version = "11.12.0"
         elsif arg == "suse" then
             setup_os = "suse"
-            setup_image = "opensuse/Leap-15.6.x86_64"
-            setup_version = "15.6.13.356"
+            image_box = "opensuse/Leap-15.6.x86_64"
+            image_version = "15.6.13.356"
             ansible_version = "4.10.0"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
-            setup_image = "bento/ubuntu-24.04"
-            setup_version = "202510.26.0"
-            ansible_version = "9.8.0"
+            image_box = "bento/ubuntu-24.04"
+            image_version = "202510.26.0"
+            ansible_version = "11.12.0"
         elsif arg == "alma" then
             setup_os = "alma"
-            setup_image = "almalinux/9"
-            setup_version = "9.6.20250522" #"9.1.20221117"
+            image_box = "almalinux/10"
+            image_version = "10.1.20251125" #"9.1.20221117"
             #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
-            ansible_version = "8.7.0"
+            ansible_version = "11.12.0" #8.7.0"
         end
       when '--ansible'
         setup_ansible=arg
@@ -105,8 +105,8 @@ Vagrant.configure(2) do |config|
   print "Used ip address: #{$env_ip}\n"
 
   config.vm.define $image_name, autostart: true do |setup|
-    setup.vm.box = setup_image
-    setup.vm.box_version = setup_version
+    setup.vm.box = image_box
+    setup.vm.box_version = image_version
 
     setup.ssh.username = 'vagrant'
     #setup.ssh.password = 'vagrant'
@@ -175,7 +175,7 @@ Vagrant.configure(2) do |config|
     timezone_suffix = offset < 0 ? "#{offset.to_s}" : "+#{offset.to_s}"
     timezone = 'Etc/GMT' + timezone_suffix
 
-    if setup_image == 'bento/opensuse-leap-16.0' then
+    if image_box == 'bento/opensuse-leap-16.0' then
         setup.vm.network "private_network", ip: $env_ip, auto_config: false
         setup.vm.provision "shell", inline: <<-SHELL
         CONN_UUID=$(nmcli -t -f uuid con show | sed -n '2 p')
@@ -216,12 +216,6 @@ Vagrant.configure(2) do |config|
         return
     end
 
-    #if $is_reboot_possible and (setup_os != 'fedora' or !setup_image.end_with?('cloud-base')) then
-    #    setup.vm.provision "shell", inline: <<-SHELL
-    #    sudo mount -t vboxsf -o uid=$UID,gid=$(id -g) vagrant /vagrant
-    #    SHELL
-    #end
-
     setup.vm.provision "shell", env: {"VAULT_PASS" => password }, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
@@ -238,11 +232,6 @@ Vagrant.configure(2) do |config|
       if setup_config != 'demo' then
         ansible.vault_password_file = "/tmp/vault_pass"
       end
-
-      #if setup_os == 'fedora' and setup_image.end_with?('cloud-base') then
-      #  ansible.become = true
-      #  ansible.become_user = "root"
-      #end
     end
 
     # Delete temp vault password file

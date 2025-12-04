@@ -9,11 +9,11 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_log}}ci_service" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: virtualbox
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
   notify: "restart virtualbox" 
 
 - name: install required packages => is_ubuntu

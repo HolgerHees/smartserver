@@ -28,7 +28,7 @@
     - name: loaded values from config files
       debug:
         msg: 
-          - "flags:      is_suse: {{is_suse}}, is_rhel: {{is_rhel}}, is_fedora: {{is_fedora}}, is_ubuntu: {{is_ubuntu}}"
+          - "flags:      is_suse: {{is_suse}}, is_rhel: {{is_rhel}}, is_ubuntu: {{is_ubuntu}}"
           - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}} ({{ansible_distribution_release}}) - {{ansible_architecture}}"
           - "-------------------------------------------------------------"
           - "mode:       {{inventory_hostname}}"

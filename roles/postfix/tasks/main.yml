@@ -63,17 +63,17 @@
   include_tasks: roles/_shared/add_to_hosts.yml
 
 # SET LOCAL SMTP CLIENT
-- name: install postfix packages => is_rhel or is_fedora
+- name: install postfix packages => is_rhel
   yum:
     name: postfix
     state: absent
-  when: is_rhel or is_fedora
+  when: is_rhel
 
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: msmtp
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
 
 - name: install postfix packages => is_ubuntu
   apt:

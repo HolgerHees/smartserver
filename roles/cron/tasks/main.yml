@@ -1,11 +1,11 @@
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: [
         jq
       , cronie
     ]
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
   
 - name: install required packages => is_suse
   zypper:

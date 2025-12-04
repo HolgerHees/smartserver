@@ -9,13 +9,13 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_log}}update_service/" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: install required packages => (is_rhel or is_fedora) and update_service_system_check_enabled
+- name: install required packages => is_rhel and update_service_system_check_enabled
   yum:
     name: [
       yum-utils # used by needs-restart
     ]
     state: present
-  when: "(is_rhel or is_fedora) and update_service_system_check_enabled"
+  when: "is_rhel and update_service_system_check_enabled"
   
 - name: install required packages => is_ubuntu
   apt:

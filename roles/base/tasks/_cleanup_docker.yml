@@ -39,7 +39,7 @@
     - "{{global_etc}}prometheus/generator"
     - "{{global_etc}}cloud_check"
 
-- name: uninstall docker => is_rhel or is_fedora
+- name: uninstall docker => is_rhel
   yum:
     name: [
         docker-ce
@@ -48,7 +48,7 @@
         , python3-docker
     ]
     state: absent
-  when: is_rhel or is_fedora
+  when: is_rhel
 
 - name: uninstall docker => is_ubuntu
   apt:

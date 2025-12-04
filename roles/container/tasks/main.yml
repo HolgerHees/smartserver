@@ -1,11 +1,11 @@
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: [
         podman,
         crun
     ]
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
 
 - name: install required packages => is_ubuntu
   apt:
@@ -75,7 +75,7 @@
 # https://www.findbugzero.com/operational-defect-database/vendors/rh/defects/RHEL-25605
 - name: fix systemd-notify "permission denied" problem
   shell: "semanage permissive -a systemd_notify_t"
-  when: is_rhel or is_fedora # or is_suse_16
+  when: is_rhel # or is_suse_16
 
 # e.g. frigate
 # Error importing detector runtime: /usr/local/lib/python3.11/dist-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-311-x86_64-linux-gnu.so: cannot enable executable stack as shared object requires: Permission denied
@@ -83,7 +83,7 @@
   shell: "semanage boolean --modify --on selinuxuser_execstack"
   when: is_suse_16
 
-- name: set container selinux configuration => is_rhel or is_fedora
+- name: set container selinux configuration => is_rhel
   sefcontext:
     target: "{{item}}"
     ftype: "a"
@@ -94,14 +94,14 @@
  #   - "{{global_lib}}libpod/storage(/.*)?"
     - "{{global_lib}}containers/storage(/.*)?"
   register: sefcontext_result
-  when: is_rhel or is_fedora or is_suse_16
+  when: is_rhel or is_suse_16
 
-- name: reload selinux configuration => (is_rhel or is_fedora or is_suse_16) and sefcontext changed
+- name: reload selinux configuration => (is_rhel or is_suse_16) and sefcontext changed
   shell: "restorecon -irv {{item}}"
   with_items:
 #    - "{{global_lib}}libpod/storage/"
     - "{{global_lib}}containers/storage/"
-  when: (is_rhel or is_fedora or is_suse_16) and sefcontext_result.changed
+  when: (is_rhel or is_suse_16) and sefcontext_result.changed
 
 # ***** NESSECARRY UNTIL PODMAN 5 ********
 # because "firewall_driver" setting in containers.conf is ignored

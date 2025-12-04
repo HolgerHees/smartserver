@@ -655,10 +655,9 @@ default_variables: {
 # has_encrypted_vault                       yes/no
 
 # is_suse                                   yes/no
-# is_fedora                                 yes/no
 # is_rhel                                   yes/no
 # is_ubuntu                                 yes/no
-# os_type                                   rhel/fedora/ubuntu/opensuse
+# os_type                                   rhel/ubuntu/opensuse
 
 # is_production                             yes/no
 

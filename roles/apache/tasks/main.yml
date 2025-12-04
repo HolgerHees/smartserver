@@ -5,13 +5,13 @@
   tags: [ 'update_notifier_config' ]
   
 # SELFSIGNED CERTIFICATE
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: [
       python3-cryptography
     ]
     state: present
-  when: is_rhel or is_fedora
+  when: is_rhel
   
 - name: install required packages => is_ubuntu
   apt:

@@ -1,9 +1,9 @@
-- name: install required packages => is_rhel or is_fedora
+- name: install required packages => is_rhel
   yum:
     name: "smartmontools"
     state: present
   notify: "restart smartd"
-  when: is_rhel or is_fedora
+  when: is_rhel
   
 - name: install required packages => is_ubuntu
   apt:
