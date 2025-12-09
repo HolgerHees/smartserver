@@ -12,9 +12,7 @@ from smartserver.metric import Metric
 
 from lib.db import DBException
 
-
-summeryOffsets = [0,4,8]
-summeryFields = ["airTemperatureInCelsius","effectiveCloudCoverInOcta"]
+import urllib.parse
 
 class AuthException(Exception):
     pass
@@ -75,44 +73,6 @@ class Provider:
     def _createFetcher(self, config):
         raise NotImplementedError()
 
-    def triggerSummerizedItems(self, db, mqtt):
-        with db.open() as db:
-            result = db.getFullDay()
-
-            if len(result) > 0:
-                tmp = {}
-                for field in summeryFields:
-                    tmp[field] = [ None, None, 0.0 ]
-                for row in result:
-                    for field in tmp:
-                        value = row[field]
-                        if tmp[field][0] == None:
-                            tmp[field][0] = value
-                            tmp[field][1] = value
-                        else:
-                            if tmp[field][0] > value:
-                                tmp[field][0] = value
-                            if tmp[field][1] < value:
-                                tmp[field][1] = value
-                        tmp[field][2] = tmp[field][2] + value
-
-                for field in summeryFields:
-                    tmp[field][2] = tmp[field][2] / len(result)
-
-                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,"min"), payload=str(tmp[field][0]).encode("utf-8"), qos=0, retain=False)
-                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,"max"), payload=str(tmp[field][1]).encode("utf-8"), qos=0, retain=False)
-                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,"avg"), payload=str(tmp[field][2]).encode("utf-8"), qos=0, retain=False)
-
-                for offset in summeryOffsets:
-                    data = db.getOffset(offset)
-                    for field, value in data.items():
-                        mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_provider_topic,field,offset), payload=str(value).encode("utf-8"), qos=0, retain=False)
-                mqtt.publish("{}/weather/provider/items/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
-
-                logging.info("Summery data published")
-            else:
-                logging.info("Summery data skipped. Not enough data.")
-
     def fetchOneTime(self):
         self.is_fetching = True
         self.fetch()
@@ -145,19 +105,26 @@ class Provider:
             if not self.is_running:
                 return False
 
-            fetcher.fetchForecast(self.mqtt)
+            result = fetcher.fetchForecast(self.mqtt)
+            for data in result:
+                self.mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic,data["field"],data["timestamp"]), payload=data["value"], qos=0, retain=False)
+            self.mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
+            logging.info("Forecast data published • Total: {}".format(len(result)))
             self.service_metrics["data_forecast"] = 1
 
             if not self.is_running:
                 return False
 
-            fetcher.fetchCurrent(self.db, self.mqtt)
+            result = fetcher.fetchCurrent(self.db, self.mqtt)
+            for data in result:
+                self.mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_provider_topic,data["field"]), payload=data["value"], qos=0, retain=False)
+            observedFrom = datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).strftime("%Y-%m-%dT%H:%M:%S%z")
+            self.mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_provider_topic), payload=observedFrom, qos=0, retain=False)
+            logging.info("Current data published")
             self.service_metrics["data_current"] = 1
 
             if not self.is_running:
                 return False
-
-            self.triggerSummerizedItems(self.db, self.mqtt)
 
             date = datetime.now()
             target = date.replace(minute=5,second=0)

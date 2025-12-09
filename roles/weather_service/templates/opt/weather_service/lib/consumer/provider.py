@@ -6,6 +6,7 @@ import threading
 import schedule
 
 import time
+import urllib.parse
 
 from smartserver.confighelper import ConfigHelper
 from smartserver.metric import Metric
@@ -143,12 +144,11 @@ class ProviderConsumer():
                         updateCount = 0
                         insertCount = 0
                         with self.db.open() as db:
-                            for datetime_str in self.processed_forecast_values:
-                                validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
-
+                            for timestamp in self.processed_forecast_values:
+                                validFrom = datetime.fromtimestamp(int(timestamp))
                                 update_values = []
-                                for field in self.processed_forecast_values[datetime_str]:
-                                    update_values.append(u"`{}`='{}'".format(field,self.processed_forecast_values[datetime_str][field]))
+                                for field in self.processed_forecast_values[timestamp]:
+                                    update_values.append(u"`{}`='{}'".format(field,self.processed_forecast_values[timestamp][field]))
 
                                 isUpdate = db.hasEntry(validFrom.timestamp())
                                 try:
@@ -174,14 +174,12 @@ class ProviderConsumer():
                         self.processed_forecast_values = {}
                         
                     field = topic[4]
-                    datetime_str = topic[5].replace("plus","+")
-                    #datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
-                    #logging.info("{} {}".format(topic[5], datetime_str))
+                    timestamp = topic[5]
 
-                    if datetime_str not in self.processed_forecast_values:
-                        self.processed_forecast_values[datetime_str] = {}
+                    if timestamp not in self.processed_forecast_values:
+                        self.processed_forecast_values[timestamp] = {}
                         
-                    self.processed_forecast_values[datetime_str][field] = msg.payload.decode("utf-8")
+                    self.processed_forecast_values[timestamp][field] = msg.payload.decode("utf-8")
             elif state_name == u"summary":
                 if is_refreshed:
                     logging.info("Summery data processed")

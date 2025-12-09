@@ -154,22 +154,11 @@ class Fetcher(object):
 
         if len(_data["missing_fields"]) > 0:
             raise CurrentDataException("Failed processing current data. Missing fields: {}, Content: {}".format(_data["missing_fields"], _data["observation"]))
-        else:
-            for field, _field in current_fields.items():
-                mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_provider_topic,field), payload=_data["observation"][_field], qos=0, retain=False)
 
-            #if "observedFrom" in _data["observation"]:
-            #    observedFrom = _data["observation"]["observedFrom"]
-            #    observedFrom = u"{0}{1}".format(observedFrom[:-3],observedFrom[-2:])
-            #else:
-            observedFrom = datetime.now().astimezone()
-            observedFrom = observedFrom.replace(minute=0, second=0,microsecond=0)
-            observedFrom = observedFrom.strftime("%Y-%m-%dT%H:%M:%S%z")
-
-            #logging.info(observedFrom)
-            mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_provider_topic), payload=observedFrom, qos=0, retain=False)
-
-        logging.info("Current data published")
+        result = []
+        for field, _field in current_fields.items():
+            result.append({"field": field, "value": _data["observation"][_field] })
+        return result
 
     def fetchForecast(self, mqtt ):
         date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
@@ -262,17 +251,14 @@ class Fetcher(object):
         else:
             self.missing_data_count = 0
 
+        result = []
         for forecast in forecast_values:
-            date = forecast["validFromAsString"]
-            date = date.replace("+","plus")
+            timestamp = int(forecast["validFromAsDatetime"].timestamp())
             for field in forecast:
                 if field.startswith("valid"):
                     continue
-                mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic,field,date), payload=forecast[field], qos=0, retain=False)
-            #mqtt.publish("{}/weather/forecast/refreshed/{}".format(self.config.publish_provider_topic,date), payload="1", qos=0, retain=False)
-        mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
-
-        logging.info("Forecast data published • Total: {}".format(len(forecast_values)))
+                result.append({"field": field, "timestamp": timestamp, "value": forecast[field] })
+        return result
 
 class MeteoGroup(Provider):
     '''Handler client'''

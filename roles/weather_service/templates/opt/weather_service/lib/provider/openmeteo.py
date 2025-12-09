@@ -134,18 +134,10 @@ class Fetcher(object):
                     fetched_values[field] = data["current"][field]
                 current_fields[messurementName] = mapping[1](self,fetched_values)
 
+        result = []
         for field, value in current_fields.items():
-            msg = "{}/weather/provider/current/{}".format(self.config.publish_provider_topic,field)
-            #logging.info("Publish: {} = {}".format(msg, value))
-            mqtt.publish(msg, payload=value, qos=0, retain=False)
-
-        observedFrom = datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).strftime("%Y-%m-%dT%H:%M:%S%z")
-        msg = "{}/weather/provider/current/refreshed".format(self.config.publish_provider_topic)
-
-        #logging.info("Publish: {} = {}".format(msg, observedFrom))
-        mqtt.publish(msg, payload=observedFrom, qos=0, retain=False)
-
-        logging.info("Current data published")
+            result.append({"field": field, "value": value })
+        return result
 
     def fetchForecast(self, mqtt ):
         latitude, longitude = self.config.location.split(",")
@@ -181,20 +173,14 @@ class Fetcher(object):
 
                     last_values = fetched_values
 
+        result = []
         for period, forcastSlot in forecasts.items():
-            date = period
-            date = date.replace("+","plus")
+            date = datetime.strptime(period, '%Y-%m-%dT%H:%M:%S%z')
             for field, value in forcastSlot.items():
                 if field.startswith("index"):
                     continue
-                msg = "{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic,field,date)
-                #logging.info("Publish: {} = {}".format(msg, value))
-                mqtt.publish(msg, payload=value, qos=0, retain=False)
-        msg = "{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic)
-        #logging.info("Publish: {} = {}".format(msg, value))
-        mqtt.publish(msg, payload="1", qos=0, retain=False)
-
-        logging.info("Forecast data published • Total: {}".format(len(forecasts)))
+                result.append({"field": field, "timestamp": int(date.timestamp()), "value": value })
+        return result
 
 class OpenMeteo(Provider):
     '''Handler client'''
