@@ -1,0 +1,33 @@
+[SERVICE]
+    flush        5
+    daemon       Off # => is "daemonized" by systemd
+
+    log_level    debug
+
+    #storage.path              /tmp/log/flb-storage/
+    #storage.sync              normal
+    #storage.checksum          off
+    #storage.max_chunks_up     128
+    #storage.backlog.mem_limit 5M
+
+    #Parsers_File              /etc/config/fluent-bit-parser
+
+[INPUT]
+    Name          exec
+    Command       logread -f
+    Threaded      true
+    #Buf_Size      5mb
+    #Parser        logread
+
+[OUTPUT]
+    name            loki
+    match           *
+
+    host            loki.{{server_domain}}
+    port            443
+    tls             on
+
+    #labels          job=fluent-bit,hostname={{openwrt_name}}
+    #label_keys      $group,$level
+
+    #storage.total_limit_size  5M

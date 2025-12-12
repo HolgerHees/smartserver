@@ -1,0 +1,7 @@
+[PARSER]
+    Name logread
+    Format regex
+    Regex ^(?<time>[a-zA-Z]{3} [a-zA-Z]{3} [0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}) (?<type>[a-z]+)\.(?<level>[a-z]+) (?<group>[a-z]+)(\[[0-9]+\])*: (?<message>.*)$
+    Time_Key    time
+    Time_Format %a %b %d %H:%M:%S %Y
+    Time_Keep   On

@@ -77,6 +77,20 @@
   tags: ['apache_webui_config']
   when: "grafana_enabled"
 
+- name: copy apache vhost
+  vars:
+    sub_domain: "loki"
+    additional_ips: |
+      [
+      {% for device in openwrt_devices %}{% if 'fluent-bit' in device.config.openwrt.deployment_features %}
+          "{{device.host}}",
+      {% endif %}{% endfor %}
+      ]
+    include: "templates/etc/apache2/_.ansible.vhost.d/loki.inc"
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
+  when: "openwrt_devices | length > 0"
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/loki.conf"

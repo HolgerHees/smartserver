@@ -1,0 +1,3 @@
+exec: [ "/etc/init.d/fluent-bit" ]
+install_packages: [ "fluent-bit" ]
+initd: yes
