@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    apache_version: '2.4.65'
+    apache_version: '2.4.66'
     openidc_version: '2.4.19'
   tags: [ 'update_notifier_config' ]
   
