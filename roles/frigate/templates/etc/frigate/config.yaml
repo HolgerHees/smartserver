@@ -11,8 +11,8 @@ birdseye:
 {% if "proxy" not in frigate_config %}
 proxy:
   header_map:
-    user: X-Forwarded-User
-    role: X-Forwarded-Userrole
+    user: x-forwarded-user
+    role: x-forwarded-usergroup
   default_role: viewer
 
 auth:
