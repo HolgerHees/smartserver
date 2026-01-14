@@ -5,12 +5,9 @@ require "../shared/libs/ressources.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php echo Ressources::getModules(["/system_service/"]); ?>
+<?php echo Ressources::getModules(["/shared/mod/websocket/","/system_service/"]); ?>
 <script>
 mx.UNCore = (function( ret ) {
-    var daemonApiUrl = "/system_service/api/observed_ips/";
-    var refreshDaemonStateTimer = 0;
-
     let type = null
     let reverse = null;
     let observed_ips = null;
@@ -91,6 +88,12 @@ mx.UNCore = (function( ret ) {
 
             //console.log(data);
 
+            actions = [];
+            if( data["state"] != 'approved' ) actions.push('<div style="padding: 5px 12px;" class="form button" onclick="mx.UNCore.trigger(\'approveObservedIP\',\'' + data["ip"] + '\')" data-tooltip=\'Approve\'>A</div>');
+            if( data["state"] != 'unblocked' ) actions.push('<div style="padding: 5px 12px;" class="form button" onclick="mx.UNCore.trigger(\'unblockObservedIP\',\'' + data["ip"] + '\')" data-tooltip=\'Unblock\'>U</div>');
+            if( data["state"] != 'blocked' ) actions.push('<div style="padding: 5px 12px;" class="form button" onclick="mx.UNCore.trigger(\'blockObservedIP\',\'' + data["ip"] + '\')" data-tooltip=\'Block\'>B</div>');
+            actions.push('<div class="form button" onclick="mx.UNCore.trigger(\'removeObservedIP\',\'' + data["ip"] + '\')" data-tooltip=\'Remove\'>R</div>');
+
             rows.push({
                 "events": {
                     "click": function(event){
@@ -102,11 +105,12 @@ mx.UNCore = (function( ret ) {
                     { "value": data["ip"] },
                     { "value": data["count"] },
                     { "value": data["group"] },
-                    { "value": data["state"] },
+                    { "value": data["state"], 'class': "state " + data["state"] },
                     { "value": data["reason"] },
                     { "value": data["blocklist"] },
                     { "value": formatTimestamp(data["created"]) },
-                    { "value": formatTimestamp(data["updated"]) }
+                    { "value": formatTimestamp(data["updated"]) },
+                    { "value": actions.join('') }
                 ]
             });
         });
@@ -123,77 +127,62 @@ mx.UNCore = (function( ret ) {
                 { "value": "Reason", "sort": { "value": "reason", "reverse": true } },
                 { "value": "Blocklist", "sort": { "value": "blocklist", "reverse": true } },
                 { "value": "Created", "sort": { "value": "created", "reverse": true } },
-                { "value": "Updated", "sort": { "value": "updated", "reverse": true } }
+                { "value": "Updated", "sort": { "value": "updated", "reverse": true } },
+                { "value": "Actions" }
             ],
             "rows": rows
         });
 
         table.build(mx.$("#ipList"));
+
+        mx.Tooltip.init();
     }
 
-    function handleIPList(result)
-    {
-        window.clearTimeout(refreshDaemonStateTimer);
-
-        buildTable("", 'last', true, result["changed_data"]["observed_ips"]);
-
-        refreshDaemonStateTimer = window.setTimeout(function(){ refreshIPListe() }, 60000);
+    ret.trigger = function(action, ip){
+        socket.emit(action, {'ip': ip});
     }
 
-    function refreshIPListe()
-    {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", daemonApiUrl );
+    ret.processData = function(data){
 
-        //application/x-www-form-urlencoded
-
-        xhr.withCredentials = true;
-        xhr.onreadystatechange = function() {
-            if (this.readyState != 4) return;
-
-            if( this.status == 200 )
-            {
-                var response = JSON.parse(this.response);
-                if( response["status"] == "0" )
-                {
-                    mx.Error.confirmSuccess();
-
-                    handleIPList(response);
-                }
-                else
-                {
-                    mx.Error.handleServerError(response["message"])
-                }
-            }
-            else
-            {
-                if( this.status == 0 || this.status == 503 )
-                {
-                    mx.Error.handleError( mx.I18N.get( mx.UpdateServiceHelper.isRestarting() ? "Service is restarting" : "Service is currently not available")  );
-                }
-                else
-                {
-                    if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
-                }
-
-                refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState() }, 60000);
-            }
-        };
-
-        xhr.send();
+        buildTable("", 'last', true, data);
     }
 
     ret.init = function()
     { 
         mx.I18N.process(document);
-        
-        refreshIPListe()
     }
     return ret;
 })( mx.UNCore || {} );
 
 mx.OnDocReady.push( mx.UNCore.init );
+
+var processData = mx.OnDocReadyWrapper( mx.UNCore.processData );
+
+mx.OnSharedModWebsocketReady.push(function(){
+    socket = mx.ServiceSocket.init('system_service', 'observed_ips');
+    socket.on("data", (data) => processData(data));
+});
 </script>
+<style>
+.form .button {
+    margin-right: 5px;
+    padding: 5px 12px;
+    display: inline-block;
+}
+.form .button:last-child {
+    margin-right: 0px;
+}
+
+#ipList .state.approved {
+    color: var(--dark-color-blue);
+}
+#ipList .state.blocked {
+    color: var(--dark-color-red);
+}
+#ipList .state.unblocked {
+    color: var(--dark-color-green);
+}
+</style>
 </head>
 <body class="inline">
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Observed IP's")); } );</script>

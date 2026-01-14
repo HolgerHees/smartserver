@@ -15,6 +15,11 @@ from lib.trafficwatcher.helper.helper import TrafficGroup
 
 
 class TrafficBlocker(threading.Thread):
+    ACTION_REMOVED  = "removed"
+    STATE_BLOCKED   = "blocked"
+    STATE_UNBLOCKED = "unblocked"
+    STATE_APPROVED  = "approved"
+
     def __init__(self, config, watcher, handler, influxdb, debugging_ips):
         threading.Thread.__init__(self)
 
@@ -89,9 +94,9 @@ class TrafficBlocker(threading.Thread):
                         for ip in suspicious_ips:
                             if ip in self.config_map["observed_ips"]:
                                 data = self.config_map["observed_ips"][ip]
-                                if data["state"] == "approved":
+                                if data["state"] == TrafficBlocker.STATE_APPROVED:
                                     continue
-                                observed_ip_states[ip] = data["last"] if data["state"] == "blocked" else data["updated"]
+                                observed_ip_states[ip] = data["last"] if data["state"] == TrafficBlocker.STATE_BLOCKED else data["updated"]
                             else:
                                 observed_ip_states[ip] = 0
 
@@ -125,7 +130,7 @@ class TrafficBlocker(threading.Thread):
                                     if group_data["last"] > data["last"]:
                                         data["last"] = group_data["last"]
 
-                                if data["state"] == "blocked":
+                                if data["state"] == TrafficBlocker.STATE_BLOCKED:
                                     continue
 
                             for group_key, group_data in groups.items():
@@ -137,42 +142,27 @@ class TrafficBlocker(threading.Thread):
                                     treshold = math.ceil( treshold / ( data["count"] + 1 ) ) # calculate treshhold based on number of blocked periods
 
                                 if group_data["count"] > treshold:
+                                    changed = True
+
                                     if blocked_ips is None:
                                         blocked_ips = Helper.getBlockedIps(self.config)
+
                                     if ip in self.config_map["observed_ips"]:
                                         data = self.config_map["observed_ips"][ip]
-                                        data["updated"] = now
-                                        data["state"] = "blocked"
-                                        data["reason"] = group_data["connection_type"]
-                                        data["blocklist"] = group_data["blocklist_name"]
-                                        data["group"] = group_data["traffic_group"]
-                                        if ip not in blocked_ips:
-                                            data["count"] += 1
+                                        self._updateObservedData(data, TrafficBlocker.STATE_BLOCKED, now, group_data["connection_type"], group_data["blocklist_name"], group_data["traffic_group"], ip not in blocked_ips)
                                     else:
-                                        self.config_map["observed_ips"][ip] = {
-                                            "created": now,
-                                            "updated": now,
-                                            "last": group_data["last"],
-                                            "count": 1,
-                                            "state": "blocked",
-                                            "reason": group_data["connection_type"],
-                                            "blocklist": group_data["blocklist_name"],
-                                            "group": group_data["traffic_group"]
-                                        }
+                                        self.config_map["observed_ips"][ip] = self._buildObservedData(TrafficBlocker.STATE_BLOCKED, now, group_data["connection_type"], group_data["blocklist_name"], group_data["traffic_group"], group_data["last"])
 
                                     if ip not in blocked_ips:
-                                        changed = True
                                         Helper.blockIp(self.config, ip)
                                         blocked_ips.append(ip)
                                         logging.info("BLOCK IP {} after {} samples ({} - {} - {})".format(ip, group_data["count"], group_data["connection_type"], group_data["blocklist_name"], group_data["traffic_group"]))
 
                                     break
 
-                        if blocked_ips is not None:
+                        if changed:
                             self.blocked_ips = blocked_ips
-
-                    if changed:
-                        self.handler.notifyChangedBlockTrafficData("blocked_ips", len(self.blocked_ips) )
+                            self._refresh()
 
                     end_processing = time.time()
                     logging.info("Processing of {} in {} seconds".format(suspicious_ips, round(end_processing - start_processing,3)))
@@ -186,14 +176,13 @@ class TrafficBlocker(threading.Thread):
             logging.info("IP traffic blocker stopped")
 
     def _unblock_and_restore(self):
-        changed = False
-
         with self.config_lock:
+            changed = False
             now = time.time()
             blocked_ips = Helper.getBlockedIps(self.config)
 
             # restore state
-            for ip in [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "blocked" and ip not in blocked_ips]:
+            for ip in [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == TrafficBlocker.STATE_BLOCKED and ip not in blocked_ips]:
                 changed = True
                 Helper.blockIp(self.config, ip)
                 blocked_ips.append(ip)
@@ -203,7 +192,7 @@ class TrafficBlocker(threading.Thread):
             for ip in list(blocked_ips):
                 if ip in self.config_map["observed_ips"]:
                     data = self.config_map["observed_ips"][ip]
-                    if data["state"] == "blocked":
+                    if data["state"] == TrafficBlocker.STATE_BLOCKED:
                         factor = pow(3,data["count"] - 1)
                         if factor > 168: # => 24h * 7d
                             factor = 168
@@ -212,8 +201,9 @@ class TrafficBlocker(threading.Thread):
                         if now <= time_offset:
                             #logging.info("CONTINUE {}".format(ip))
                             continue
-                        data["updated"] = now
-                        data["state"] = "unblocked"
+
+                        self._updateObservedData(data, "unblocked", now, None, None, None, False)
+
                         logging.info("UNBLOCK IP {} after {}".format(ip, timedelta(seconds=(now - data["last"]))))
                     else:
                         logging.info("UNBLOCK IP {} restored for state: {}".format(ip, data["state"]))
@@ -224,11 +214,37 @@ class TrafficBlocker(threading.Thread):
                 Helper.unblockIp(self.config, ip)
                 blocked_ips.remove(ip)
 
-            self.blocked_ips = blocked_ips
-            self.approved_ips = [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
-
             if changed:
-                self.handler.notifyChangedBlockTrafficData("blocked_ips", len(self.blocked_ips))
+                self.blocked_ips = blocked_ips
+                self._refresh()
+
+    def _refresh(self):
+        self.approved_ips = [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
+        self.handler.notifyChangedObservedTrafficData(self._getObservedIPData())
+
+    def _updateObservedData(self, data, state, now, reason, blocklist, group, increase_count):
+        data["updated"] = now
+        data["state"] = state
+        if reason is not None:
+            data["reason"] = reason
+        if blocklist is not None:
+            data["blocklist"] = blocklist
+        if group is not None:
+            data["group"] = group
+        if increase_count:
+            data["count"] += 1
+
+    def _buildObservedData(self, state, now, reason, blocklist, group, last):
+        return {
+            "created": now,
+            "updated": now,
+            "last": last,
+            "count": 1,
+            "state": state,
+            "reason": reason,
+            "blocklist": blocklist,
+            "group": group
+        }
 
     def _restore(self):
         self.valid_list_file, data = ConfigHelper.loadConfig(self.dump_config_path, self.config_version )
@@ -276,21 +292,70 @@ class TrafficBlocker(threading.Thread):
     def getBlockedIPs(self):
         return list(self.blocked_ips)
 
-    def getObservedIPData(self):
-        observed_ips = []
+    def approveIP(self, ip):
+        self._setIPState(ip, TrafficBlocker.STATE_APPROVED)
+
+    def blockIP(self, ip):
+        self._setIPState(ip, TrafficBlocker.STATE_BLOCKED)
+
+    def unblockIP(self, ip):
+        self._setIPState(ip, TrafficBlocker.STATE_UNBLOCKED)
+
+    def removeIP(self, ip):
+        self._setIPState(ip, TrafficBlocker.ACTION_REMOVED)
+
+    def _setIPState(self, ip, state):
         with self.config_lock:
-            for ip, data in self.config_map["observed_ips"].items():
-                data = data.copy()
-                data["ip"] = ip
-                observed_ips.append(data)
+            changed = False
+            now = time.time()
+            if ip in self.config_map["observed_ips"]:
+                logging.info("MANUAL {} IP {}".format(state.upper(), ip))
+
+                changed = True
+                if state == TrafficBlocker.ACTION_REMOVED:
+                    del self.config_map["observed_ips"][ip]
+                else:
+                    data = self.config_map["observed_ips"][ip]
+                    self._updateObservedData(data, state, now, "manual", None, None, False)
+
+            elif state == TrafficBlocker.STATE_BLOCKED:
+                logging.info("MANUAL {} IP {}".format(state.upper(), ip))
+
+                changed = True
+                self.config_map["observed_ips"][ip] = self._buildObservedData(state, now, "manual", "manual", "manual", now)
+
+            if state == TrafficBlocker.STATE_BLOCKED:
+                if ip not in self.blocked_ips:
+                    changed = True
+                    Helper.blockIp(self.config, ip)
+                    self.blocked_ips.append(ip)
+            else:
+                if ip in self.blocked_ips:
+                    changed = True
+                    Helper.unblockIp(self.config, ip)
+                    self.blocked_ips.remove(ip)
+
+            if changed:
+                self._refresh()
+
+    def _getObservedIPData(self):
+        observed_ips = []
+        for ip, data in self.config_map["observed_ips"].items():
+            data = data.copy()
+            data["ip"] = ip
+            observed_ips.append(data)
         return observed_ips
+
+    def getObservedIPData(self):
+        with self.config_lock:
+            return self._getObservedIPData()
 
     def getMessurements(self):
         messurements = []
         if self.config_map is not None:
             with self.config_lock:
                 for ip, data in self.config_map["observed_ips"].items():
-                    if data["state"] != "blocked":
+                    if data["state"] != TrafficBlocker.STATE_BLOCKED:
                         continue
                     messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_list={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["blocklist"], data["count"], data["last"]))
         return messurements

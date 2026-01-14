@@ -82,6 +82,7 @@ class OpenWRT(_handler.Handler):
                     while True:
                         try:
                             self._processDevice(openwrt_ip, openwrt_device)
+                            break
                         except UbusCallException as e:
                             if session_retries > 0 and self.sessions[openwrt_ip][0] is not None and e.getCode() == -32002:
                                 logging.info("OpenWRT '{}' has invalid session. Will refresh.".format(openwrt_ip))
@@ -90,9 +91,9 @@ class OpenWRT(_handler.Handler):
                                 self.cache.cleanLocks(self)
 
                                 session_retries -= 1
-                            else:
-                                raise e
-                        break
+                                continue
+
+                            raise e
 
                     self._setDeviceMetricState(openwrt_ip, 1)
                 except UbusCallException as e:

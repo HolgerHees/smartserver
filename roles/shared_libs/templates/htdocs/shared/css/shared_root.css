@@ -41,11 +41,13 @@
   --light-color-red: #ff7479;
   --light-color-yellow: #ffc936;
   --light-color-green: #b5ce69;
+  --light-color-blue: #0055ff;
 
   --dark-color-red: #c13d48;
   --dark-color-yellow: #e0ae0e;
   --dark-color-green: #99b24f;
-  
+  --dark-color-blue: #003db8;
+
   --link-color: #1976d2;
 }
 :root body {
@@ -68,6 +70,7 @@
   --color-red: var(--light-color-red);
   --color-yellow: var(--light-color-yellow);
   --color-green: var(--light-color-green);
+  --color-blue: var(--light-color-blue);
 }
 :root body.dark {
   --bg: var(--dark-bg);
@@ -89,6 +92,7 @@
   --color-red: var(--dark-color-red);
   --color-yellow: var(--dark-color-yellow);
   --color-green: var(--dark-color-green);
+  --color-blue: var(--dark-color-blue);
 }
 /* https://www.fontsquirrel.com/fonts/open-sans */
 /* 300, normal (400), 600 and bold(700) are used */

@@ -487,6 +487,22 @@ class TrafficWatcher(threading.Thread):
     def getObservedIPData(self):
         return self.trafficblocker.getObservedIPData() if self.trafficblocker else []
 
+    def approveIP(self, ip):
+        if self.trafficblocker:
+            self.trafficblocker.approveIP(ip)
+
+    def blockIP(self, ip):
+        if self.trafficblocker:
+            self.trafficblocker.blockIP(ip)
+
+    def unblockIP(self, ip):
+        if self.trafficblocker:
+            self.trafficblocker.unblockIP(ip)
+
+    def removeIP(self, ip):
+        if self.trafficblocker:
+            self.trafficblocker.removeIP(ip)
+
     def getMessurements(self):
         messurements = []
 

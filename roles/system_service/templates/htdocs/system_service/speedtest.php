@@ -7,6 +7,7 @@ require "../shared/libs/ressources.php";
 <?php echo Ressources::getModules(["/shared/mod/websocket/","/system_service/"]); ?>
 <script>
 var parentWindow = window.parent;
+var socket = null;
 mx.UNCore = (function( ret ) {
     ret.processData = function(data)
     {
@@ -34,9 +35,7 @@ mx.UNCore = (function( ret ) {
     {
         if( mx.$(".speedtest.button").classList.contains("disabled") ) return;
 
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open( "GET", "/system_service/api/triggerSpeedtest/", false );
-        xmlHttp.send( null );
+        socket.emit("triggerSpeedtest");
     }
     return ret;
 })( mx.UNCore || {} );
@@ -46,7 +45,7 @@ mx.OnDocReady.push( mx.UNCore.init );
 var processData = mx.OnDocReadyWrapper( mx.UNCore.processData );
 
 mx.OnSharedModWebsocketReady.push(function(){
-    let socket = mx.ServiceSocket.init('system_service', "speedtest");
+    socket = mx.ServiceSocket.init('system_service', "speedtest");
     socket.on("data", (data) => processData(data));
 });
 </script>

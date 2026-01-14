@@ -92,9 +92,13 @@ class Handler(Server):
 
             self.emitSocketData("widget:data", result, "widget");
 
-    def notifyChangedBlockTrafficData(self, type, data):
-        if self.isSocketRoomActive("widget"):
-            self.emitSocketData("widget:data", {"blocked_traffic": data}, "widget");
+    #def notifyChangedBlockTrafficData(self, type, data):
+    #    if self.isSocketRoomActive("widget"):
+    #        self.emitSocketData("widget:data", {"blocked_traffic": data}, "widget");
+
+    def notifyChangedObservedTrafficData(self, data):
+        if self.isSocketRoomActive("observed_ips"):
+            self.emitSocketData('observed_ips:data', data, "observed_ips")
 
     def notifyChangedBlockTrafficStatesData(self, type, data):
         if self.isSocketRoomActive("widget"):
@@ -122,6 +126,9 @@ class Handler(Server):
         elif room == "speedtest":
             self.emitSocketData('speedtest:data', { "is_running": self.speedtest.isTesting() }, room)
 
+        elif room == "observed_ips":
+            self.emitSocketData('observed_ips:data', self.trafficwatcher.getObservedIPData(), room)
+
         elif room == "network":
             [ data, msg ] = self.scanner.getNetworkData();
             logging.info("Emit initial network {}".format(msg))
@@ -140,21 +147,17 @@ class Handler(Server):
         else:
             return "unknown"
 
-    def getObservedIPData(self):
-        result = {
-            "status": 0,
-        }
+    def approveObservedIP(self, ip):
+        self.trafficwatcher.approveIP(ip)
 
-        last_data_modified = {}
-        last_data_modified["startup"] = self.startup_timestamp
+    def blockObservedIP(self, ip):
+        self.trafficwatcher.blockIP(ip)
 
-        changed_data = {}
-        changed_data["observed_ips"] = self.trafficwatcher.getObservedIPData()
+    def unblockObservedIP(self, ip):
+        self.trafficwatcher.unblockIP(ip)
 
-        result["last_data_modified"] = last_data_modified
-        result["changed_data"] = changed_data
-
-        return json.dumps(result)
+    def removeObservedIP(self, ip):
+        self.trafficwatcher.removeIP(ip)
 
     def getStateMetrics(self):
         metrics = []
@@ -175,16 +178,34 @@ class Handler(Server):
 
         return Metric.buildMetricsResult(metrics)
 
-@serverWeb.route('/triggerSpeedtest/', methods = ['GET'])
+@serverSocket.on('triggerSpeedtest')
 def speedtest():
     #logging.info(request.headers.get('User-Agent'))
     handler.triggerSpeedtest()
-    return "ok"
 
 # needed for grafana wan dashboard
-@serverWeb.route('/observed_ips/', methods = ['GET'])
-def observed_ips():
-    return handler.getObservedIPData()
+@serverSocket.on('approveObservedIP')
+def approveObservedIP(params):
+    if "ip" in params:
+        return handler.approveObservedIP(params['ip'])
+
+# needed for grafana wan dashboard
+@serverSocket.on('blockObservedIP')
+def blockObservedIP(params):
+    if "ip" in params:
+        return handler.blockObservedIP(params['ip'])
+
+# needed for grafana wan dashboard
+@serverSocket.on('unblockObservedIP')
+def unblockObservedIP(params):
+    if "ip" in params:
+        return handler.unblockObservedIP(params['ip'])
+
+# needed for grafana wan dashboard
+@serverSocket.on('removeObservedIP')
+def removeObservedIP(params):
+    if "ip" in params:
+        return handler.removeObservedIP(params['ip'])
 
 # need by ci service to get online status
 @serverWeb.route('/wan_state/', methods = ['GET'])
