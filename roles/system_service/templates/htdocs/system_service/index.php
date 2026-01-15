@@ -534,7 +534,7 @@ mx.UNCore = (function( ret ) {
             
             if( searchInputBox.classList.contains("active") ) searchInputField.focus();
         });
-        
+
         searchInputField.addEventListener("keyup",function(event)
         {
             if(event.keyCode == 27 ) // esc
@@ -546,17 +546,20 @@ mx.UNCore = (function( ret ) {
 
                 processSearch("", "input");
             }
-            else
-            {
-                var _term = searchInputField.value.toLowerCase();
-                if( _term == activeTerm ) return;
-
-                searchInputClear.style.visibility = _term == "" ? "hidden" : "visible";
-
-                processSearch(_term.toLowerCase(), "input");
-            }
         });
         
+        searchInputField.addEventListener("input",function(event)
+        {
+            var _term = searchInputField.value.toLowerCase();
+            if( _term == activeTerm ) return;
+
+            activeTerm = _term;
+
+            searchInputClear.style.visibility = _term == "" ? "hidden" : "visible";
+
+            processSearch(_term.toLowerCase(), "input");
+        });
+
         searchInputField.addEventListener("focus",function(event)
         {
             searchInputField.select();
