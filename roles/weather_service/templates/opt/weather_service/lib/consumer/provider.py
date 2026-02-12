@@ -275,7 +275,7 @@ class ProviderConsumer():
         cloudCoverInOcta = self.station_values["currentCloudCoverInOcta"] if not self.stationValuesOutdated() else None
         if cloudCoverInOcta is None:
             cloudCoverInOcta = self.current_values["effectiveCloudCoverInOcta"]
-        block.effectiveCloudCoverInOcta = cloudCoverInOcta
+        block.setEffectiveCloudCover(cloudCoverInOcta)
         #logging.info("{}".format(block.effectiveCloudCoverInOcta))
 
         icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)

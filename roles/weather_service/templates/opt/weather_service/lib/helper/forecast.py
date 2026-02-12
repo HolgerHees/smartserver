@@ -23,7 +23,9 @@ class WeatherBlock():
 
         self.minAirTemperatureInCelsius = None
         self.maxAirTemperatureInCelsius = None
-        self.maxPrecipitationAmountInMillimeter = 0
+        self.minEffectiveCloudCoverInOcta = None
+        self.maxEffectiveCloudCoverInOcta = None
+        self.maxPrecipitationAmountInMillimeter = None
         self.maxIsSnowing = False
 
         self.svg = None
@@ -49,8 +51,8 @@ class WeatherBlock():
     def setSVG(self, svg):
         self.svg = svg
 
-    def getPrecipitationAmountInMillimeter(self):
-        return self.precipitationAmountInMillimeter
+    def setEffectiveCloudCover(self, value):
+        self.effectiveCloudCoverInOcta = value
 
     def setPrecipitationAmountInMillimeter(self, value):
         self.precipitationAmountInMillimeter = value
@@ -61,8 +63,30 @@ class WeatherBlock():
         self.sunshineDurationInMinutes += hourlyData['sunshineDurationInMinutes']
         self.precipitationAmountInMillimeter += hourlyData['precipitationAmountInMillimeter']
 
+        if self.airTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
+            self.airTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+
+        if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
+            self.minAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+
+        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
+            self.maxAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+
+        if self.feelsLikeTemperatureInCelsius < hourlyData['feelsLikeTemperatureInCelsius']:
+            self.feelsLikeTemperatureInCelsius = hourlyData['feelsLikeTemperatureInCelsius']
+
         if self.effectiveCloudCoverInOcta < hourlyData['effectiveCloudCoverInOcta']:
             self.effectiveCloudCoverInOcta = hourlyData['effectiveCloudCoverInOcta']
+
+        if self.minEffectiveCloudCoverInOcta is None or self.minEffectiveCloudCoverInOcta > hourlyData['effectiveCloudCoverInOcta']:
+            self.minEffectiveCloudCoverInOcta = hourlyData['effectiveCloudCoverInOcta']
+
+        if self.maxEffectiveCloudCoverInOcta is None or self.maxEffectiveCloudCoverInOcta < hourlyData['effectiveCloudCoverInOcta']:
+            self.maxEffectiveCloudCoverInOcta = hourlyData['effectiveCloudCoverInOcta']
+
+        if self.windSpeedInKilometerPerHour < hourlyData['windSpeedInKilometerPerHour']:
+            self.windSpeedInKilometerPerHour = hourlyData['windSpeedInKilometerPerHour']
+            self.windDirectionInDegree = hourlyData['windDirectionInDegree']
 
         if self.precipitationType < hourlyData['precipitationType']:
             self.precipitationType = hourlyData['precipitationType']
@@ -91,22 +115,6 @@ class WeatherBlock():
                 if not self.maxIsSnowing or _isSnowing:
                     if _isSnowing:
                         self.maxIsSnowing = True
-
-        if self.airTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
-            self.airTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
-
-        if self.feelsLikeTemperatureInCelsius < hourlyData['feelsLikeTemperatureInCelsius']:
-            self.feelsLikeTemperatureInCelsius = hourlyData['feelsLikeTemperatureInCelsius']
-
-        if self.windSpeedInKilometerPerHour < hourlyData['windSpeedInKilometerPerHour']:
-            self.windSpeedInKilometerPerHour = hourlyData['windSpeedInKilometerPerHour']
-            self.windDirectionInDegree = hourlyData['windDirectionInDegree']
-
-        if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
-            self.minAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
-
-        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
-            self.maxAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
 
     def checkRainProbability( self, precipitationProbabilityInPercent, precipitationAmountInMillimeter ):
         return ( precipitationProbabilityInPercent >= 30 and precipitationAmountInMillimeter > 0 ) or ( precipitationProbabilityInPercent >= 25 and precipitationAmountInMillimeter > 0.5 )
@@ -149,9 +157,10 @@ class WeatherHelper():
 
     @staticmethod
     def convertOctaToSVG(latitude, longitude, block):
-        octa = block.effectiveCloudCoverInOcta
-        #precipitationType = block.precipitationType
+        return WeatherHelper._convertOctaToSVG(latitude, longitude, block, block.effectiveCloudCoverInOcta)
 
+    @staticmethod
+    def _convertOctaToSVG(latitude, longitude, block, cloud_cover):
         starttime = block.start
         timerange = int( ( block.end - block.start ).total_seconds() / 60 ) if block.end is not None else 60
 
@@ -165,13 +174,13 @@ class WeatherHelper():
         #logging.info("     convertOctaToSVG: isNight: {} - ref_datetime: {} - sunrise: {} - sunset: {}".format(isNight, ref_datetime, sunrise, sunset ))
 
         cloudIndex = 0
-        if block.effectiveCloudCoverInOcta >= 6:
+        if cloud_cover >= 6:
             cloudIndex = 4
-        elif block.effectiveCloudCoverInOcta >= 4.5:
+        elif cloud_cover >= 4.5:
             cloudIndex = 3
-        elif block.effectiveCloudCoverInOcta >= 3.0:
+        elif cloud_cover >= 3.0:
             cloudIndex = 2
-        elif block.effectiveCloudCoverInOcta >= 1.5:
+        elif cloud_cover >= 1.5:
             cloudIndex = 1
 
         if block.checkRainProbability( block.precipitationProbabilityInPercent, block.maxPrecipitationAmountInMillimeter ):
