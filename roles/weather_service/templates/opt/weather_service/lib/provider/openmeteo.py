@@ -31,7 +31,7 @@ current_config = {
     "uvIndexWithClouds": "uv_index"
 }
 
-forecast_url = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&forecast_days=7&past_days=0&hourly={fields}&minutely_15=direct_radiation,terrestrial_radiation";
+forecast_url = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&forecast_days=7&past_days=0&hourly={fields}";
 forecast_config = {
     "airTemperatureInCelsius": "temperature_2m",
     "feelsLikeTemperatureInCelsius": "apparent_temperature",
@@ -156,26 +156,21 @@ class Fetcher(object):
             forecasts[validFrom.strftime("%Y-%m-%dT%H:%M:00%z")] = {"index": x}
 
         for messurementName, mapping in forecast_config.items():
-            last_values = None
-            for period, forcastSlot in forecasts.items():
+            for validFrom, forcastSlot in forecasts.items():
                 if isinstance(mapping, str):
-                    value = data["hourly"][mapping][forecasts[period]["index"]]
+                    value = data["hourly"][mapping][forecasts[validFrom]["index"]]
                     if value is None:
-                        logging.info("{} {} is empty".format(messurementName, period))
-                    forecasts[period][messurementName] = value
-                    last_values = value
+                        logging.info("{} {} is empty".format(messurementName, validFrom))
+                    forecasts[validFrom][messurementName] = value
                 else:
                     fetched_values = {}
                     for field in mapping[0]:
-                        fetched_values[field] = data["hourly"][field][forecasts[period]["index"]]
-
-                    forecasts[period][messurementName] = mapping[1](self,fetched_values)
-
-                    last_values = fetched_values
+                        fetched_values[field] = data["hourly"][field][forecasts[validFrom]["index"]]
+                    forecasts[validFrom][messurementName] = mapping[1](self,fetched_values)
 
         result = []
-        for period, forcastSlot in forecasts.items():
-            date = datetime.strptime(period, '%Y-%m-%dT%H:%M:%S%z')
+        for validFrom, forcastSlot in forecasts.items():
+            date = datetime.strptime(validFrom, '%Y-%m-%dT%H:%M:%S%z')
             for field, value in forcastSlot.items():
                 if field.startswith("index"):
                     continue
