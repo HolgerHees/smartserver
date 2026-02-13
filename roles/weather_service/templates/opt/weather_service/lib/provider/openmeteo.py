@@ -91,7 +91,7 @@ class Fetcher(object):
         url = current_url.format(latitude=latitude,longitude=longitude,timezone=self.config.timezone,fields=",".join(fields))
         data = self.get(url)
         if data == None or "current" not in data:
-            raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
+            raise ForecastDataException("Failed getting current data. Content: {}".format(data))
 
         current_fields = {}
         for messurementName, mapping in current_config.items():
@@ -116,7 +116,7 @@ class Fetcher(object):
         #https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly={fields}&forecast_days=14
         url = forecast_url.format(latitude=latitude,longitude=longitude,timezone=self.config.timezone,fields=",".join(fields))
         data = self.get(url)
-        if data == None or "hourly" not in data or "minutely_15" not in data:
+        if data == None or "hourly" not in data:
             raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
 
         forecasts = {}
@@ -140,7 +140,7 @@ class Fetcher(object):
         result = []
         for validFrom, forcastSlot in forecasts.items():
             for field, value in forcastSlot.items():
-                if field.startswith("index", "validFrom"):
+                if field in ["index", "validFrom"]:
                     continue
                 result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": value })
         return result

@@ -16,9 +16,10 @@ CREATE TABLE `weather_forecast` (
   `snowfallProbabilityInPercent` tinyint(4) NOT NULL,
   `precipitationProbabilityInPercent` tinyint(4) NOT NULL,
   `precipitationAmountInMillimeter` double(10,1) NOT NULL,
-  `precipitationType` tinyint(4) NOT NULL,
+  `weatherCode` tinyint(4) NOT NULL,
+  `uvIndexWithClouds` tinyint(4) NOT NULL,
   `sunshineDurationInMinutes` smallint(6) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 ALTER TABLE `weather_forecast`
  ADD PRIMARY KEY (`datetime`);
