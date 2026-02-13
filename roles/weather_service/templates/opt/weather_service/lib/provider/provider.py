@@ -118,7 +118,7 @@ class Provider:
             timestamp = int(datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).timestamp())
             for data in result:
                 self.mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic, data["field"], timestamp), payload=data["value"], qos=0, retain=False)
-            logging.info("Current data published")
+            logging.info("Current data published • Total: {}".format(len(result)))
 
             self.mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
             self.service_metrics["data_current"] = 1

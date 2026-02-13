@@ -22,16 +22,17 @@ current_fields = {
     "relativeHumidityInPercent": "relativeHumidityInPercent",
 
     "windDirectionInDegree": "windDirectionInDegree",
-    "windSpeedInKilometerPerHour": [ ["windSpeedInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["windSpeedInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
-    "maxWindSpeedInKilometerPerHour": [ ["maxWindGustInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["maxWindGustInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
+    #"windSpeedInKilometerPerHour": [ ["windSpeedInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["windSpeedInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
+    "windSpeedInKilometerPerHour": "windSpeedInKilometerPerHour",
+    "maxWindSpeedInKilometerPerHour": "maxWindGustInKilometerPerHour",
 
     "effectiveCloudCoverInOcta": "effectiveCloudCoverInOcta",
 
-	# https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
+    # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     "weatherCode": "weatherCodeTraditional",
 
     "precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
-	"sunshineDurationInMinutes": "sunshineDurationInMinutes"
+    "sunshineDurationInMinutes": "sunshineDurationInMinutes"
 }
 
 forecast_url = 'https://point-forecast.weather.mg/forecast/hourly?locatedAt={location}&validPeriod={period}&fields={fields}&validFrom={start}&validUntil={end}';
@@ -41,8 +42,8 @@ forecast_config = {
     "relativeHumidityInPercent": "relativeHumidityInPercent",
 
     "windDirectionInDegree": "windDirectionInDegree",
-    "windSpeedInKilometerPerHour": [ ["windSpeedInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["windSpeedInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
-	"maxWindSpeedInKilometerPerHour": [ ["maxWindGustInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["maxWindGustInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
+    "windSpeedInKilometerPerHour": "windSpeedInKilometerPerHour",
+    "maxWindSpeedInKilometerPerHour": "maxWindGustInKilometerPerHour",
 
     "effectiveCloudCoverInOcta": "effectiveCloudCoverInOcta",
 
@@ -52,7 +53,7 @@ forecast_config = {
     "snowfallProbabilityInPercent": "snowfallProbabilityInPercent",
 
     "precipitationProbabilityInPercent": "precipitationProbabilityInPercent",
-	"precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
+    "precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     "weatherCode": "weatherCodeTraditional",
