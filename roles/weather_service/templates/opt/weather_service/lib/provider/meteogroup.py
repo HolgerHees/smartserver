@@ -209,29 +209,36 @@ class Fetcher(object):
         if len(forecast_pt0s[-1]) != len(fields) + 2:
             del forecast_pt0s[-1]
 
-        forecasts = {}
-        for x, forecast_data in enumerate(forecast_pt0s):
-            forecasts[forecast_data["validFrom"].strftime("%Y-%m-%dT%H:%M:00%z")] = {"index": x, "validFrom": forecast_data["validFrom"]}
-
-        for messurementName, mapping in forecast_config.items():
-            for validFrom, forcastSlot in forecasts.items():
-                if isinstance(mapping, str):
-                    value = forecast_pt0s[forecasts[validFrom]["index"]][mapping]
-                    if value is None:
-                        logging.info("{} {} is empty".format(messurementName, validFrom))
-                    forecasts[validFrom][messurementName] = value
-                else:
-                    fetched_values = {}
-                    for field in mapping[0]:
-                        fetched_values[field] = forecast_pt0s[forecasts[validFrom]["index"]][field]
-                    forecasts[validFrom][messurementName] = mapping[1](self,fetched_values)
-
         result = []
-        for validFrom, forcastSlot in forecasts.items():
-            for field in forcastSlot:
-                if field in ["index","validFrom"]:
-                    continue
-                result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": forcastSlot[field] })
+
+        _forecast_pt0s = forecast_pt0s.copy()
+        forecast_pt0s = list(filter(lambda d: len(d) == len(fields) + 2, forecast_pt0s))
+        if len(_forecast_pt0s) != len(forecast_pt0s):
+            logging.warn("Not enough forecast data. Unvalidated: {}, Validated: {}".format(len(_forecast_pt0s), len(forecast_pt0s)))
+            logging.warn(_forecast_pt0s)
+        else:
+            forecasts = {}
+            for x, forecast_data in enumerate(forecast_pt0s):
+                forecasts[forecast_data["validFrom"].strftime("%Y-%m-%dT%H:%M:00%z")] = {"index": x, "validFrom": forecast_data["validFrom"]}
+
+            for messurementName, mapping in forecast_config.items():
+                for validFrom, forcastSlot in forecasts.items():
+                    if isinstance(mapping, str):
+                        value = forecast_pt0s[forecasts[validFrom]["index"]][mapping]
+                        if value is None:
+                            logging.info("{} {} is empty".format(messurementName, validFrom))
+                        forecasts[validFrom][messurementName] = value
+                    else:
+                        fetched_values = {}
+                        for field in mapping[0]:
+                            fetched_values[field] = forecast_pt0s[forecasts[validFrom]["index"]][field]
+                        forecasts[validFrom][messurementName] = mapping[1](self,fetched_values)
+
+            for validFrom, forcastSlot in forecasts.items():
+                for field in forcastSlot:
+                    if field in ["index","validFrom"]:
+                        continue
+                    result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": forcastSlot[field] })
 
         return result
 

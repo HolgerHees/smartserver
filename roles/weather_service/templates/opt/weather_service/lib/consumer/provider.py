@@ -30,13 +30,13 @@ class ProviderConsumer():
         self.db = db
 
         self.dump_path = "{}consumer_provider.json".format(config.lib_path)
-        self.version = 1
+        self.version = 2
         self.valid_cache_file = True
 
-        self.processed_values = None
+        self.processed_values = {}
 
-        self.consume_errors = { "forecast": 0, "current": 0, "summery": 0 }
-        self.consume_refreshed = { "forecast": 0, "current": 0, "summery": 0 }
+        self.last_error = 0
+        self.last_refreshed = 0
 
         self.icon_path = config.icon_path
 
@@ -65,7 +65,7 @@ class ProviderConsumer():
         if not os.path.exists(self.dump_path):
             self._dump()
 
-        self.mqtt.subscribe('+/weather/provider/#', self.on_message)
+        self.mqtt.subscribe('+/weather/provider/forecast/#', self.on_message)
 
         self.checkSunriseSunset()
         self.is_running = True
@@ -78,110 +78,86 @@ class ProviderConsumer():
     def _restore(self):
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
-            self.consume_refreshed = data["consume_refreshed"]
+            self.last_refreshed = data["last_refreshed"]
             logging.info("Loaded consumer (provider) values")
 
     def _dump(self):
         if self.valid_cache_file:
-            ConfigHelper.saveConfig(self.dump_path, self.version, { "consume_refreshed": self.consume_refreshed } )
+            ConfigHelper.saveConfig(self.dump_path, self.version, { "last_refreshed": self.last_refreshed } )
             logging.info("Saved consumer (provider) values")
 
     def on_message(self,client,userdata,msg):
         topic = msg.topic.split("/")
-        if topic[3] == u"current":
-            state_name = "current"
-        elif topic[3] == u"forecast":
-            state_name = "forecast"
-        if topic[3] == u"items":
-            state_name = "summary"
-
-        is_refreshed = topic[4] == u"refreshed"
 
         try:
-            if state_name == u"forecast":
-                if is_refreshed:
-                    if self.processed_values is not None:
-                        now = datetime.now().astimezone()
-                        currentIsModified = False
-                        forecastsIsModified = False
-                        updateCount = 0
-                        insertCount = 0
-                        with self.db.open() as db:
-                            for timestamp in self.processed_values:
-                                validFrom = datetime.fromtimestamp(int(timestamp))
-                                isCurrent = validFrom.day == now.day and validFrom.hour == now.hour
-                                update_values = []
-                                for field in self.processed_values[timestamp]:
-                                    update_values.append(u"`{}`='{}'".format(field,self.processed_values[timestamp][field]))
+            if topic[4] == u"refreshed":
+                if len(self.processed_values) > 0:
+                    now = datetime.now().astimezone()
+                    currentIsModified = forecastsIsModified = False
+                    updateCount = insertCount = 0
+                    with self.db.open() as db:
+                        for timestamp in self.processed_values:
+                            validFrom = datetime.fromtimestamp(int(timestamp))
+                            isCurrent = validFrom.day == now.day and validFrom.hour == now.hour
+                            update_values = []
+                            for field in self.processed_values[timestamp]:
+                                update_values.append(u"`{}`='{}'".format(field,self.processed_values[timestamp][field]))
 
-                                isUpdate = db.hasEntry(validFrom.timestamp())
-                                try:
+                            isUpdate = db.hasEntry(validFrom.timestamp())
+                            try:
+                                if isCurrent:
+                                    isModified = db.update(validFrom.timestamp(),update_values)
+                                else:
+                                    isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
+
+                                if isModified:
                                     if isCurrent:
-                                        isModified = db.update(validFrom.timestamp(),update_values)
+                                        currentIsModified = True
+                                    forecastsIsModified = True
+                                    if isUpdate:
+                                        updateCount += 1
                                     else:
-                                        isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
+                                        insertCount += 1
+                            except Exception as e:
+                                logging.info(update_values)
+                                raise e
 
-                                    if isModified:
-                                        if isCurrent:
-                                            currentIsModified = True
-                                        forecastsIsModified = True
-                                        if isUpdate:
-                                            updateCount += 1
-                                        else:
-                                            insertCount += 1
-                                except Exception as e:
-                                    logging.info(update_values)
-                                    raise e
+                    logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_values),updateCount,insertCount))
+                    self.processed_values = {}
 
-                        logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_values),updateCount,insertCount))
-                        self.processed_values = None
+                    if forecastsIsModified:
+                        self.handler.notifyChangedWeekData()
 
-                        if forecastsIsModified:
-                            self.handler.notifyChangedWeekData()
+                    if currentIsModified:
+                        with self.db.open() as db:
+                            self.current_values = db.getOffset(0)
 
-                        if currentIsModified:
-                            with self.db.open() as db:
-                                self.current_values = db.getOffset(0)
+                        with self.station_fallback_lock:
+                            if self.station_fallback_data is not None:
+                                for field, value in self._buildFallbackStationValues().items():
+                                    if field in self.station_fallback_data and self.station_fallback_data[field] == value:
+                                        continue
+                                    self.station_fallback_data[field] = value
+                                    self.notifyCurrentValue(field, value)
 
-                            with self.station_fallback_lock:
-                                if self.station_fallback_data is not None:
-                                    for field, value in self._buildFallbackStationValues().items():
-                                        if field in self.station_fallback_data and self.station_fallback_data[field] == value:
-                                            continue
-                                        self.station_fallback_data[field] = value
-                                        self.notifyCurrentValue(field, value)
-                    else:
-                        logging.info("Forcecasts not processed")
+                    self.last_refreshed = now.timestamp()
                 else:
-                    if self.processed_values is None:
-                        self.processed_values = {}
-                        
-                    field = topic[4]
-                    timestamp = topic[5]
-
-                    if timestamp not in self.processed_values:
-                        self.processed_values[timestamp] = {}
-                        
-                    self.processed_values[timestamp][field] = msg.payload.decode("utf-8")
-            elif state_name == u"summary":
-                if is_refreshed:
-                    logging.info("Summery data processed")
+                    logging.info("Forcecasts not processed")
             else:
-                logging.info("Unknown topic " + msg.topic + ", message:" + str(msg.payload))
+                field = topic[4]
+                timestamp = topic[5]
 
-            if is_refreshed:
-                self.consume_refreshed[state_name] = time.time()
+                if timestamp not in self.processed_values:
+                    self.processed_values[timestamp] = {}
 
+                self.processed_values[timestamp][field] = msg.payload.decode("utf-8")
         except DBException:
-            self.consume_errors[state_name] = time.time()
-        #except MySQLdb._exceptions.OperationalError as e:
-        #    logging.info("{}: {}".format(str(e.__class__),str(e)))
-        #    self.service_metrics["mariadb"] = 0
-        #    self.consume_errors[state_name] = time.time()
+            self.last_error = datetime.now().astimezone().timestamp()
         except Exception as e:
-            logging.info("{}: {}".format(str(e.__class__),str(e)))
+            logging.error("Topic: {}".format(topic))
+            logging.error("{}: {}".format(str(e.__class__),str(e)))
             traceback.print_exc()
-            self.consume_errors[state_name] = time.time()
+            self.last_error = datetime.now().astimezone().timestamp()
 
     def resetIconCache(self):
         self.icon_cache = {}
@@ -193,7 +169,7 @@ class ProviderConsumer():
         return self.icon_cache[icon_name]
 
     def stationValuesOutdated(self):
-        return time.time() - self.station_values_last_modified > 60 * 60 * 1
+        return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
 
     def _buildFallbackStationValues(self):
         result = {}
@@ -472,16 +448,8 @@ class ProviderConsumer():
             return values
 
     def getStateMetrics(self):
-        now = time.time()
-        has_any_update = False
-        has_errors = False
-        for state_name in self.consume_errors:
-            if now - self.consume_refreshed[state_name] < 60 * 60 * 2:
-                has_any_update = True
-
-            if self.consume_errors[state_name] != 0 and self.consume_refreshed[state_name] != 0:
-                if self.consume_refreshed[state_name] - self.consume_errors[state_name] < 300:
-                    has_errors = True
+        has_any_update = True if datetime.now().astimezone().timestamp() - self.last_refreshed < 60 * 60 * 2 else False
+        has_errors = True if self.last_error != 0 and self.last_refreshed != 0 and self.last_refreshed - self.last_error < 300 else False
 
         return [
             Metric.buildProcessMetric("weather_service", "consumer_provider", "1" if self.is_running and not has_errors else "0"),
