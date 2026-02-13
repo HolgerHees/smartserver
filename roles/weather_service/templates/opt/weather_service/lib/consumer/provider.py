@@ -106,7 +106,7 @@ class ProviderConsumer():
 
                             isUpdate = db.hasEntry(validFrom.timestamp())
                             try:
-                                if isCurrent:
+                                if isCurrent or isUpdate:
                                     isModified = db.update(validFrom.timestamp(),update_values)
                                 else:
                                     isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
@@ -214,12 +214,12 @@ class ProviderConsumer():
         block = WeatherBlock(datetime.now())
         block.apply(self.current_values)
 
-        currentRain = 0
-        currentRainLevel = self.station_values["currentRainLevel"] if not self.stationValuesOutdated() else None
-        if currentRainLevel is None:
+        if self.stationValuesOutdated():
             currentRain = self.current_values["precipitationAmountInMillimeter"]
-        elif currentRainLevel > 0:
-            if self.current_is_raining or currentRainLevel > 2:
+        else:
+            currentRain = 0
+            currentRainLevel = self.station_values["currentRainLevel"]
+            if (currentRainLevel > 0 and self.current_is_raining or currentRainLevel > 2):
                 currentRain = 0.1
                 currentRainRatePerHour = self.station_values["currentRainRateInMillimeterPerHour"]
                 if currentRainRatePerHour > currentRain:
@@ -229,14 +229,10 @@ class ProviderConsumer():
                 if currentRain1Hour > currentRain:
                     currentRain = currentRain1Hour
         self.current_is_raining = currentRain > 0
-
         block.setPrecipitationAmountInMillimeter(currentRain)
 
-        cloudCoverInOcta = self.station_values["currentCloudCoverInOcta"] if not self.stationValuesOutdated() else None
-        if cloudCoverInOcta is None:
-            cloudCoverInOcta = self.current_values["effectiveCloudCoverInOcta"]
+        cloudCoverInOcta = self.station_values["currentCloudCoverInOcta"] if not self.stationValuesOutdated() else self.current_values["effectiveCloudCoverInOcta"]
         block.setEffectiveCloudCover(cloudCoverInOcta)
-        #logging.info("{}".format(block.effectiveCloudCoverInOcta))
 
         icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
 
