@@ -94,13 +94,14 @@ class ProviderConsumer():
                 if len(self.processed_values) > 0:
                     now = datetime.now().astimezone()
                     currentIsModified = forecastsIsModified = False
-                    updateCount = insertCount = 0
+                    totalCount = updateCount = insertCount = 0
                     with self.db.open() as db:
                         for timestamp in self.processed_values:
                             validFrom = datetime.fromtimestamp(int(timestamp))
                             isCurrent = validFrom.day == now.day and validFrom.hour == now.hour
                             update_values = []
                             for field in self.processed_values[timestamp]:
+                                totalCount += 1
                                 update_values.append(u"`{}`='{}'".format(field,self.processed_values[timestamp][field]))
 
                             isUpdate = db.hasEntry(validFrom.timestamp())
@@ -122,7 +123,7 @@ class ProviderConsumer():
                                 logging.info(update_values)
                                 raise e
 
-                    logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_values),updateCount,insertCount))
+                    logging.info("Forecasts processed • Total {} • Queries: {} • Updated: {} • Inserted: {}".format(totalCount, len(self.processed_values),updateCount,insertCount))
                     self.processed_values = {}
 
                     if forecastsIsModified:
