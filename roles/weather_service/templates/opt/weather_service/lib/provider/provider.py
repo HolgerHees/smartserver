@@ -107,20 +107,20 @@ class Provider:
 
             result = fetcher.fetchForecast(self.mqtt)
             for data in result:
-                self.mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic,data["field"],data["timestamp"]), payload=data["value"], qos=0, retain=False)
-            self.mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
+                self.mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic, data["field"], data["timestamp"]), payload=data["value"], qos=0, retain=False)
             logging.info("Forecast data published • Total: {}".format(len(result)))
             self.service_metrics["data_forecast"] = 1
 
-            if not self.is_running:
-                return False
+            #if not self.is_running:
+            #    return False
 
-            result = fetcher.fetchCurrent(self.db, self.mqtt)
+            result = fetcher.fetchCurrent(self.mqtt)
+            timestamp = int(datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).timestamp())
             for data in result:
-                self.mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_provider_topic,data["field"]), payload=data["value"], qos=0, retain=False)
-            observedFrom = datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).strftime("%Y-%m-%dT%H:%M:%S%z")
-            self.mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_provider_topic), payload=observedFrom, qos=0, retain=False)
+                self.mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_provider_topic, data["field"], timestamp), payload=data["value"], qos=0, retain=False)
             logging.info("Current data published")
+
+            self.mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_provider_topic), payload="1", qos=0, retain=False)
             self.service_metrics["data_current"] = 1
 
             if not self.is_running:

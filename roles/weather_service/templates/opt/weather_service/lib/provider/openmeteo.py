@@ -11,6 +11,7 @@ import decimal
 from lib.provider.provider import Provider, RequestDataException, CurrentDataException, ForecastDataException
 
 # possible alternative => https://open-meteo.com/
+# weather codes https://github.com/open-meteo/open-meteo/issues/287
 
 is_test = True
 
@@ -24,11 +25,12 @@ current_config = {
     "windSpeedInKilometerPerHour": "windspeed_10m",
     "maxWindSpeedInKilometerPerHour": "windgusts_10m",
 
-    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: self.buildEffectiveCloudCoverInOcta(fetched_values) ],
+    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
 
-    "precipitationAmountInMillimeter": "precipitation",
+    "weatherCode": "weathercode",
 
-    "uvIndexWithClouds": "uv_index"
+    "precipitationAmountInMillimeter": "precipitation"
+    #"sunshineDurationInMinutes": [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
 
 forecast_url = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&forecast_days=7&past_days=0&hourly={fields}";
@@ -41,21 +43,21 @@ forecast_config = {
     "windSpeedInKilometerPerHour": "windspeed_10m",
     "maxWindSpeedInKilometerPerHour": "windgusts_10m",
 
-    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: self.buildEffectiveCloudCoverInOcta(fetched_values) ],
+    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
 
-    "thunderstormProbabilityInPercent": [ [ "cape" ], lambda self, fetched_values: self.buildThunderstormInPersent(fetched_values) ],
-
-    "freezingRainProbabilityInPercent": [ [ "soil_temperature_0cm", "weathercode", "precipitation_probability" ], lambda self, fetched_values: self.buildFreezingRainInPercent(fetched_values) ],
-    "hailProbabilityInPercent": [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: self.buildHailInPercent(fetched_values) ],
-    "snowfallProbabilityInPercent": [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: self.buildSnowfallInPercent(fetched_values) ],
+    "thunderstormProbabilityInPercent": [ [ "cape" ], lambda self, fetched_values: int(round(fetched_values["cape"] * 100.0 / 3500.0, 0)) ], # < 1000 Slight, 1000 – 2500 Moderate, 2500-3500 Very, > 3500 Extremely
+    "freezingRainProbabilityInPercent": [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [48,56,57,66,67] else fetched_values["precipitation_probability"] ],
+    "hailProbabilityInPercent": [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [96,99] else fetched_values["precipitation_probability"] ],
+    "snowfallProbabilityInPercent": [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["snowfall"] == 0 else fetched_values["precipitation_probability"] ],
 
     "precipitationAmountInMillimeter": "precipitation",
-    "precipitationProbabilityInPercent": [ [ "precipitation_probability" ], lambda self, fetched_values: self.buildPrecipitationInPersent(fetched_values) ],
+    "precipitationProbabilityInPercent": "precipitation_probability",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
-    "precipitationType": "weathercode",
+    "weatherCode": "weathercode",
+    "uvIndexWithClouds": "uv_index",
 
-    "sunshineDurationInMinutes": [ [ "sunshine_duration" ], lambda self, fetched_values: self.buildSunshineDurationInMinutes(fetched_values) ]
+    "sunshineDurationInMinutes": [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
     
 class Fetcher(object):
@@ -63,46 +65,13 @@ class Fetcher(object):
         self.config = config
 
     def get(self, url):
-      
+
         headers = {}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
             raise RequestDataException("Failed getting data. Code: {}, Raeson: {}".format(r.status_code, r.reason))
         else:
             return json.loads(r.text)
-
-    def buildEffectiveCloudCoverInOcta(self, fetched_values):
-        #logging.info(fetched_values["cloudcover"])
-        return fetched_values["cloudcover"] * 8 / 100
-
-    def buildThunderstormInPersent(self, fetched_values):
-        # < 1000 Slight
-        # 1000 – 2500 Moderate
-        # 2500-3500 Very
-        # > 3500 Extremely
-        return int(round(fetched_values["cape"] * 100.0 / 3500.0, 0))
-      
-    def buildPrecipitationInPersent(self, fetched_values):
-        return fetched_values["precipitation_probability"]
-
-    # weather codes https://github.com/open-meteo/open-meteo/issues/287
-    def buildFreezingRainInPercent(self, fetched_values):
-        if fetched_values["weathercode"] not in [48,56,57,66,67]:
-            return 0
-        return self.buildPrecipitationInPersent(fetched_values)
-
-    def buildHailInPercent(self, fetched_values):
-        if fetched_values["weathercode"] not in [96,99]:
-            return 0
-        return self.buildPrecipitationInPersent(fetched_values)
-
-    def buildSnowfallInPercent(self, fetched_values):
-        if fetched_values["snowfall"] == 0:
-            return 0
-        return self.buildPrecipitationInPersent(fetched_values)
-
-    def buildSunshineDurationInMinutes(self, fetched_values):
-        return int(round(fetched_values["sunshine_duration"] / 60,0))
 
     def collectFetchedFields(self, config):
         fields = []
@@ -113,7 +82,7 @@ class Fetcher(object):
                 fields += mapping[0]
         return set(fields)
 
-    def fetchCurrent(self, db, mqtt ):
+    def fetchCurrent(self, mqtt):
         latitude, longitude = self.config.location.split(",")
 
         fields = self.collectFetchedFields(current_config)
@@ -139,7 +108,7 @@ class Fetcher(object):
             result.append({"field": field, "value": value })
         return result
 
-    def fetchForecast(self, mqtt ):
+    def fetchForecast(self, mqtt):
         latitude, longitude = self.config.location.split(",")
 
         fields = self.collectFetchedFields(forecast_config)
@@ -153,7 +122,7 @@ class Fetcher(object):
         forecasts = {}
         for x, date_str in enumerate(data["hourly"]["time"]):
             validFrom = datetime.strptime(u"{0}".format(date_str),"%Y-%m-%dT%H:%M").astimezone()
-            forecasts[validFrom.strftime("%Y-%m-%dT%H:%M:00%z")] = {"index": x}
+            forecasts[validFrom.strftime("%Y-%m-%dT%H:%M:00%z")] = {"index": x, "validFrom": validFrom}
 
         for messurementName, mapping in forecast_config.items():
             for validFrom, forcastSlot in forecasts.items():
@@ -170,11 +139,10 @@ class Fetcher(object):
 
         result = []
         for validFrom, forcastSlot in forecasts.items():
-            date = datetime.strptime(validFrom, '%Y-%m-%dT%H:%M:%S%z')
             for field, value in forcastSlot.items():
-                if field.startswith("index"):
+                if field.startswith("index", "validFrom"):
                     continue
-                result.append({"field": field, "timestamp": int(date.timestamp()), "value": value })
+                result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": value })
         return result
 
 class OpenMeteo(Provider):

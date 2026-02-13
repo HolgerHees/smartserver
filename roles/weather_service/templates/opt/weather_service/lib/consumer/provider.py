@@ -33,8 +33,7 @@ class ProviderConsumer():
         self.version = 1
         self.valid_cache_file = True
 
-        self.processed_current_values = None
-        self.processed_forecast_values = None
+        self.processed_values = None
 
         self.consume_errors = { "forecast": 0, "current": 0, "summery": 0 }
         self.consume_refreshed = { "forecast": 0, "current": 0, "summery": 0 }
@@ -99,61 +98,32 @@ class ProviderConsumer():
         is_refreshed = topic[4] == u"refreshed"
 
         try:
-            #logging.info("Topic " + msg.topic + ", message:" + str(msg.payload))
-            if state_name == u"current":
+            if state_name == u"forecast":
                 if is_refreshed:
-                    if self.processed_current_values is not None:
+                    if self.processed_values is not None:
+                        now = datetime.now().astimezone()
                         currentIsModified = False
-                        with self.db.open() as db:
-                            datetime_str = msg.payload.decode("utf-8")
-                            #logging.info(datetime_str)
-                            #datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
-                            validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
-                            update_values = []
-                            for field in self.processed_current_values:
-                                self.processed_current_values[field] = float(self.processed_current_values[field]) if "." in self.processed_current_values[field] else int(self.processed_current_values[field])
-                                if field in self.field_names:
-                                    update_values.append("`{}`='{}'".format(field,self.processed_current_values[field]))
-
-                            if db.hasEntry(validFrom.timestamp()):
-                                currentIsModified = db.update(validFrom.timestamp(),update_values)
-                                self.current_values = db.getOffset(0)
-                                logging.info(u"Current data processed • Updated {}".format( "yes" if currentIsModified else "no" ))
-                            else:
-                                logging.info(u"Current data not updated: Topic: " + msg.topic + ", message:" + str(msg.payload))
-
-                        self.processed_current_values = None
-                        if currentIsModified:
-                            with self.station_fallback_lock:
-                                if self.station_fallback_data is not None:
-                                    for field, value in self._buildFallbackStationValues().items():
-                                        if field in self.station_fallback_data and self.station_fallback_data[field] == value:
-                                            continue
-                                        self.station_fallback_data[field] = value
-                                        self.notifyCurrentValue(field, value)
-                    else:
-                        logging.info("Current not processed")
-                else:
-                    if self.processed_current_values is None:
-                        self.processed_current_values = {}
-                    self.processed_current_values[topic[4]] = msg.payload.decode("utf-8")
-            elif state_name == u"forecast":
-                if is_refreshed:
-                    if self.processed_forecast_values is not None:
                         forecastsIsModified = False
                         updateCount = 0
                         insertCount = 0
                         with self.db.open() as db:
-                            for timestamp in self.processed_forecast_values:
+                            for timestamp in self.processed_values:
                                 validFrom = datetime.fromtimestamp(int(timestamp))
+                                isCurrent = validFrom.day == now.day and validFrom.hour == now.hour
                                 update_values = []
-                                for field in self.processed_forecast_values[timestamp]:
-                                    update_values.append(u"`{}`='{}'".format(field,self.processed_forecast_values[timestamp][field]))
+                                for field in self.processed_values[timestamp]:
+                                    update_values.append(u"`{}`='{}'".format(field,self.processed_values[timestamp][field]))
 
                                 isUpdate = db.hasEntry(validFrom.timestamp())
                                 try:
-                                    isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
+                                    if isCurrent:
+                                        isModified = db.update(validFrom.timestamp(),update_values)
+                                    else:
+                                        isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
+
                                     if isModified:
+                                        if isCurrent:
+                                            currentIsModified = True
                                         forecastsIsModified = True
                                         if isUpdate:
                                             updateCount += 1
@@ -163,23 +133,36 @@ class ProviderConsumer():
                                     logging.info(update_values)
                                     raise e
 
-                        logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_forecast_values),updateCount,insertCount))
-                        self.processed_forecast_values = None
+                        logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_values),updateCount,insertCount))
+                        self.processed_values = None
+
                         if forecastsIsModified:
                             self.handler.notifyChangedWeekData()
+
+                        if currentIsModified:
+                            with self.db.open() as db:
+                                self.current_values = db.getOffset(0)
+
+                            with self.station_fallback_lock:
+                                if self.station_fallback_data is not None:
+                                    for field, value in self._buildFallbackStationValues().items():
+                                        if field in self.station_fallback_data and self.station_fallback_data[field] == value:
+                                            continue
+                                        self.station_fallback_data[field] = value
+                                        self.notifyCurrentValue(field, value)
                     else:
                         logging.info("Forcecasts not processed")
                 else:
-                    if self.processed_forecast_values is None:
-                        self.processed_forecast_values = {}
+                    if self.processed_values is None:
+                        self.processed_values = {}
                         
                     field = topic[4]
                     timestamp = topic[5]
 
-                    if timestamp not in self.processed_forecast_values:
-                        self.processed_forecast_values[timestamp] = {}
+                    if timestamp not in self.processed_values:
+                        self.processed_values[timestamp] = {}
                         
-                    self.processed_forecast_values[timestamp][field] = msg.payload.decode("utf-8")
+                    self.processed_values[timestamp][field] = msg.payload.decode("utf-8")
             elif state_name == u"summary":
                 if is_refreshed:
                     logging.info("Summery data processed")

@@ -7,19 +7,24 @@ class WeatherBlock():
         self.start = start
         self.end = None
 
-        self.sunshineDurationInMinutes= 0
+        self.airTemperatureInCelsius = -100
+        self.feelsLikeTemperatureInCelsius = -100
+
+        self.windDirectionInDegree= 0
+        self.windSpeedInKilometerPerHour= 0
+
         self.effectiveCloudCoverInOcta= 0
-        self.precipitationType = -100
+
         self.thunderstormProbabilityInPercent= 0
         self.freezingRainProbabilityInPercent= 0
         self.hailProbabilityInPercent= 0
         self.snowfallProbabilityInPercent= 0
+
         self.precipitationProbabilityInPercent= 0
         self.precipitationAmountInMillimeter= 0
-        self.airTemperatureInCelsius = -100
-        self.feelsLikeTemperatureInCelsius = -100
-        self.windSpeedInKilometerPerHour= 0
-        self.windDirectionInDegree= 0
+
+        self.weatherCode = -100
+        self.sunshineDurationInMinutes= 0
 
         self.minAirTemperatureInCelsius = None
         self.maxAirTemperatureInCelsius = None
@@ -88,8 +93,8 @@ class WeatherBlock():
             self.windSpeedInKilometerPerHour = hourlyData['windSpeedInKilometerPerHour']
             self.windDirectionInDegree = hourlyData['windDirectionInDegree']
 
-        if self.precipitationType < hourlyData['precipitationType']:
-            self.precipitationType = hourlyData['precipitationType']
+        if self.weatherCode < hourlyData['weatherCode']:
+            self.weatherCode = hourlyData['weatherCode']
 
         if self.thunderstormProbabilityInPercent < hourlyData['thunderstormProbabilityInPercent']:
             self.thunderstormProbabilityInPercent = hourlyData['thunderstormProbabilityInPercent']

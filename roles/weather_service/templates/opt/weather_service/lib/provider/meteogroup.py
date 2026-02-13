@@ -27,37 +27,38 @@ current_fields = {
 
     "effectiveCloudCoverInOcta": "effectiveCloudCoverInOcta",
 
-    "precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
+	# https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
+    "weatherCode": "weatherCodeTraditional",
 
-#    "uvIndexWithClouds": "uvIndexWithClouds"
+    "precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
+	"sunshineDurationInMinutes": "sunshineDurationInMinutes"
 }
 
 forecast_url = 'https://point-forecast.weather.mg/forecast/hourly?locatedAt={location}&validPeriod={period}&fields={fields}&validFrom={start}&validUntil={end}';
 forecast_config = {
-	'PT0S': {
-		"airTemperatureInCelsius": "airTemperatureInCelsius",
-		"feelsLikeTemperatureInCelsius": "feelsLikeTemperatureInCelsius",
-        "relativeHumidityInPercent": "relativeHumidityInPercent",
+    "airTemperatureInCelsius": "airTemperatureInCelsius",
+    "feelsLikeTemperatureInCelsius": "feelsLikeTemperatureInCelsius",
+    "relativeHumidityInPercent": "relativeHumidityInPercent",
 
-		"windDirectionInDegree": "windDirectionInDegree",
-		"windSpeedInKilometerPerHour": [ ["windSpeedInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["windSpeedInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
+    "windDirectionInDegree": "windDirectionInDegree",
+    "windSpeedInKilometerPerHour": [ ["windSpeedInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["windSpeedInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
+	"maxWindSpeedInKilometerPerHour": [ ["maxWindGustInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["maxWindGustInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
 
-		"effectiveCloudCoverInOcta": "effectiveCloudCoverInOcta",
-		"thunderstormProbabilityInPercent": "thunderstormProbabilityInPercent",
-		"freezingRainProbabilityInPercent": "freezingRainProbabilityInPercent",
-		"hailProbabilityInPercent": "hailProbabilityInPercent",
-		"snowfallProbabilityInPercent": "snowfallProbabilityInPercent",
-		"precipitationProbabilityInPercent": "precipitationProbabilityInPercent",
-		# https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
-		"precipitationType": "precipitationType"
-	},
-	'PT1H': {
-		"precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
-		"sunshineDurationInMinutes": "sunshineDurationInMinutes"
-	},
-	'PT3H': {
-		"maxWindSpeedInKilometerPerHour": [ ["maxWindGustInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["maxWindGustInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ]
-	}
+    "effectiveCloudCoverInOcta": "effectiveCloudCoverInOcta",
+
+    "thunderstormProbabilityInPercent": "thunderstormProbabilityInPercent",
+    "freezingRainProbabilityInPercent": "freezingRainProbabilityInPercent",
+    "hailProbabilityInPercent": "hailProbabilityInPercent",
+    "snowfallProbabilityInPercent": "snowfallProbabilityInPercent",
+
+    "precipitationProbabilityInPercent": "precipitationProbabilityInPercent",
+	"precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
+
+    # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
+    "weatherCode": "weatherCodeTraditional",
+    "uvIndexWithClouds": "uvIndexWithClouds",
+
+	"sunshineDurationInMinutes": "sunshineDurationInMinutes"
 }
     
 class Fetcher(object):
@@ -103,15 +104,7 @@ class Fetcher(object):
                 fields += mapping[0]
         return set(fields)
 
-    def fetchCurrent(self, db, mqtt ):
-        
-        #date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
-        #date = date.replace(minute=0, second=0,microsecond=0) + timedelta(hours=1)
-        #end_date = self._prepareDate(date)
-        
-        #date = date - timedelta(hours=2)
-        #start_date = self._prepareDate(date)
-        
+    def fetchCurrent(self, mqtt):
         latitude, longitude = self.config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
 
@@ -162,7 +155,7 @@ class Fetcher(object):
 
         return result
 
-    def fetchForecast(self, mqtt ):
+    def fetchForecast(self, mqtt):
         date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
         date = date.replace(minute=0, second=0,microsecond=0)
 
@@ -174,69 +167,71 @@ class Fetcher(object):
         
         latitude, longitude = self.config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
-        
-        total_field_count = 0
-        forecasts = {}
-        for period in forecast_config:
-            fields = self.collectFetchedFields(forecast_config[period])
-            total_field_count += len(fields)
 
-            if period in ["PT0S", "PT1H"]:
-                end_date = start_date + timedelta(hours=167)  # 7 days => 168 hours - 1 hour (because last one is excluded)
-            elif period in ["PT3H"]:
-                end_date = start_date + timedelta(hours=170) # 7 days => 167 hours + 3 hours, because of 3 hours timerange
+        fields = self.collectFetchedFields(forecast_config)
+
+        end_date = start_date + timedelta(hours=170)
+        end_date_str = self._prepareDate(end_date)
+        fetch_end_date_str = self._prepareDate(end_date + timedelta(hours=1)) # fetch on more hour
+
+        url = forecast_url.format(location=location, period="PT0S,PT1H,PT3H", fields=",".join(fields), start=urllib.parse.quote(fetch_start_date_str), end=urllib.parse.quote(fetch_end_date_str))
+        data = self.get(url)
+
+        if data == None or "forecasts" not in data:
+            raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
+
+        forecast_ptxx = []
+        forecast_pt0s = []
+        for slot in data["forecasts"]:
+            if "validFrom" not in slot:
+                raise ForecastDataException("Missing forecast data. Content: {}".format(data))
+
+            validFrom = datetime.strptime(u"{0}{1}".format(slot["validFrom"][:-3],slot["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+            validUntil = datetime.strptime(u"{0}{1}".format(slot["validUntil"][:-3],slot["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+            slot["validFrom"] = validFrom
+
+            if slot["validPeriod"] == "PT0S":
+                slot["validUntil"] = validUntil + timedelta(hours=1)
+                forecast_pt0s.append(slot)
             else:
-                raise RequestDataException("Unhandled period")
+                slot["validUntil"] = validUntil
+                forecast_ptxx.append(slot)
 
-            end_date_str = self._prepareDate(end_date)
-            fetch_end_date_str = self._prepareDate(end_date + timedelta(hours=1)) # fetch on more hour
+            del slot["locatedAt"]
+            del slot["validPeriod"]
 
-            url = forecast_url.format(location=location, period=period, fields=",".join(fields), start=urllib.parse.quote(fetch_start_date_str), end=urllib.parse.quote(fetch_end_date_str))
-            #logging.info(url)
+        for slot_ptxx in forecast_ptxx:
+             for slot_pt0s in forecast_pt0s:
+                if slot_pt0s["validFrom"] < slot_ptxx["validUntil"] and slot_pt0s["validUntil"] > slot_ptxx["validFrom"]:
+                    for k, v in slot_ptxx.items():
+                        slot_pt0s[k] = v
 
-            data = self.get(url)
-            if data == None or "forecasts" not in data:
-                raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
+        if len(forecast_pt0s[-1]) != len(fields) + 2:
+            del forecast_pt0s[-1]
 
-            forecasts[period] = {}
-            for x, forecast_data in enumerate(data["forecasts"]):
-                if "validFrom" not in forecast_data:
-                    raise ForecastDataException("Missing forecast data. Content: {}".format(data))
-                validFrom = datetime.strptime(u"{0}{1}".format(forecast_data["validFrom"][:-3],forecast_data["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
-                validUntil = datetime.strptime(u"{0}{1}".format(forecast_data["validUntil"][:-3],forecast_data["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
-                forecasts[period][validFrom.strftime("%Y-%m-%dT%H:%M:00%z")] = {"index": x, "validFrom": validFrom, "validUntil": validUntil }
+        forecasts = {}
+        for x, forecast_data in enumerate(forecast_pt0s):
+            forecasts[forecast_data["validFrom"].strftime("%Y-%m-%dT%H:%M:00%z")] = {"index": x, "validFrom": forecast_data["validFrom"]}
 
-            for messurementName, mapping in forecast_config[period].items():
-                for validFrom, forecast in forecasts[period].items():
-                    forcast_data = data["forecasts"][forecast["index"]]
-
-                    if isinstance(mapping, str):
-                        value = forcast_data[mapping]
-                        if value is None:
-                            logging.info("{} {} is empty".format(messurementName, period))
-                    else:
-                        fetched_values = {}
-                        for field in mapping[0]:
-                            fetched_values[field] = forcast_data[field]
-                        value = mapping[1](self,fetched_values)
-
-                    if period == "PT0S":
-                        forecast[messurementName] = value
-                    else:
-                        for entry in forecasts["PT0S"].values():
-                            if entry["validFrom"] >= forecast["validFrom"] and entry["validUntil"] < forecast["validUntil"]:
-                                entry[messurementName] = value
-
-        _forecast_values = list(forecasts["PT0S"].values())
-        forecast_values = list(filter(lambda d: len(d) == total_field_count + 3, _forecast_values)) # 15 values + 4 datetime related fields
+        for messurementName, mapping in forecast_config.items():
+            for validFrom, forcastSlot in forecasts.items():
+                if isinstance(mapping, str):
+                    value = forecast_pt0s[forecasts[validFrom]["index"]][mapping]
+                    if value is None:
+                        logging.info("{} {} is empty".format(messurementName, validFrom))
+                    forecasts[validFrom][messurementName] = value
+                else:
+                    fetched_values = {}
+                    for field in mapping[0]:
+                        fetched_values[field] = forecast_pt0s[forecasts[validFrom]["index"]][field]
+                    forecasts[validFrom][messurementName] = mapping[1](self,fetched_values)
 
         result = []
-        for forecast in forecast_values:
-            timestamp = int(forecast["validFrom"].timestamp())
-            for field in forecast:
-                if field in ["index", "validFrom", "validUntil"]:
+        for validFrom, forcastSlot in forecasts.items():
+            for field in forcastSlot:
+                if field in ["index","validFrom"]:
                     continue
-                result.append({"field": field, "timestamp": timestamp, "value": forecast[field] })
+                result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": forcastSlot[field] })
 
         return result
 
