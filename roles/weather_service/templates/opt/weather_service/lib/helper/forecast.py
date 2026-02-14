@@ -2,6 +2,19 @@ from suntime import Sun, SunTimeException
 from datetime import datetime, timedelta
 import logging
 
+class WeatherBlockList():
+    def __init__(self):
+        self.block_list = []
+
+    def append(self, block):
+        self.block_list.append(block)
+
+    def toDictList(self):
+        result = []
+        for block in self.block_list:
+            result.append(block.toDict())
+        return result
+
 class WeatherBlock():
     def __init__(self, start):
         self.start = start
@@ -35,7 +48,7 @@ class WeatherBlock():
 
         self.svg = None
 
-    def to_dict(self):
+    def toDict(self):
         result = {}
         for key, value in self.__dict__.items():
             if key in ["start", "end"]:

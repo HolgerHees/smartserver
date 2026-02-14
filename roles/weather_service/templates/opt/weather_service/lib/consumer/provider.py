@@ -12,7 +12,7 @@ from smartserver.confighelper import ConfigHelper
 from smartserver.metric import Metric
 
 from lib.db import DBException
-from lib.helper.forecast import WeatherBlock, WeatherHelper
+from lib.helper.forecast import WeatherBlock, WeatherBlockList, WeatherHelper
 
 from lib.consumer.station import StationConsumer
 
@@ -82,12 +82,12 @@ class CurrentValues():
         return False
 
     def _stationValuesOutdated(self):
-        return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
+        return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1 or len(self.station_values) != len(StationConsumer.STATION_FIELDS)
 
     def _buildCurrentValues(self):
         current_values = {}
         if not self._stationValuesOutdated():
-            current_values = self.station_values
+            current_values = self.station_values.copy()
 
         for field in StationConsumer.STATION_FIELDS:
             if field in current_values:
@@ -250,9 +250,8 @@ class ProviderConsumer():
 
                     if currentIsModified:
                         with self.db.open() as db:
-                            changed_values = self.current_values.setServiceValues(db.getOffset(0))
-                            for field, value in changed_values.items():
-                                self._notifyCurrentValue(field, value)
+                            _changed_values = self.current_values.setServiceValues(db.getOffset(0))
+                            self._notifyCurrentValues(_changed_values)
 
                     self.last_refreshed = now.timestamp()
                 else:
@@ -273,6 +272,11 @@ class ProviderConsumer():
             traceback.print_exc()
             self.last_error = datetime.now().astimezone().timestamp()
 
+    def _triggerCloudSVGRebuild(self):
+        self.station_cloud_timer = None
+        if self.current_values.rebuildCloudSVGIfNeeded():
+            self.handler.notifyChangedCurrentData("currentCloudsAsSVG", self.current_values.getCurrentValue("currentCloudsAsSVG"))
+
     def _checkSunriseSunset(self):
         now = datetime.now()
         sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, now)
@@ -281,7 +285,7 @@ class ProviderConsumer():
             self.is_night = is_night
             if self.station_cloud_timer is not None:
                 self.station_cloud_timer.cancel()
-            self._notifyCloudValue()
+            self._triggerCloudSVGRebuild()
 
         logging.info("Trigger: checkSunriseSunset => " + str(self.is_night))
 
@@ -294,37 +298,26 @@ class ProviderConsumer():
 
         return schedule.CancelJob
 
-    def _notifyCurrentValue(self, field, value):
-        self.handler.notifyChangedCurrentData(field, value)
+    def _notifyCurrentValues(self, values):
+        for field, value in values.items():
+            self.handler.notifyChangedCurrentData(field, value)
 
-        if field in ["currentRainLevel", "currentRainRateInMillimeterPerHour", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
+        if values.keys() & ["currentRainLevel", "currentRainRateInMillimeterPerHour", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
             if self.station_cloud_timer is not None:
                 self.station_cloud_timer.cancel()
-            self.station_cloud_timer = threading.Timer(15, self._notifyCloudValue)
+            self.station_cloud_timer = threading.Timer(15, self._triggerCloudSVGRebuild)
             self.station_cloud_timer.start()
-
-    def _notifyCloudValue(self):
-        self.station_cloud_timer = None
-        if self.current_values.rebuildCloudSVGIfNeeded():
-            self.handler.notifyChangedCurrentData("currentCloudsAsSVG", self.current_values.getCurrentValue("currentCloudsAsSVG"))
 
     def notifyStationValue(self, is_update, field, value, time):
         changed_values = self.current_values.setStationValue(field, value)
         if is_update:
-            for field, value in changed_values.items():
-                self._notifyCurrentValue(field, value)
+            self._notifyCurrentValues(changed_values)
 
     def resetIconCache(self):
         self.current_values.resetIconCache()
 
     def getCurrentValues(self):
         return self.current_values.getCurrentValues()
-
-    def _convertToDictList(self, blockList):
-        result = []
-        for block in blockList:
-            result.append(block.to_dict())
-        return result
 
     def _applyWeekDay(self, current_value, weekValues):
         current_value.setEnd((current_value.getStart() + timedelta(hours=24)).replace(hour=0, minute=0, second=0))
@@ -344,7 +337,7 @@ class ProviderConsumer():
             end = activeDay.replace(hour=23, minute=59, second=59, microsecond=0)
 
             # DAY VALUES
-            todayValues = [];
+            todayValues = WeatherBlockList()
             dayList = db.getRangeList(start, end)
             if len(dayList) > 0:
                 minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
@@ -373,7 +366,7 @@ class ProviderConsumer():
             else:
                 minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = activeDay = None
 
-            values["dayList"] = self._convertToDictList(todayValues)
+            values["dayList"] = todayValues.toDictList()
             values["dayActive"] = activeDay.isoformat()
             values["dayMinTemperature"] = minTemperature
             values["dayMaxTemperature"] = maxTemperature
@@ -382,7 +375,7 @@ class ProviderConsumer():
             values["daySumRain"] = sumRain
 
             # WEEK VALUES
-            weekValues = []
+            weekValues = WeatherBlockList()
 
             weekFrom = datetime.now().replace(hour=0, minute=0, second=0)
             weekList = db.getWeekList(weekFrom)
@@ -404,7 +397,7 @@ class ProviderConsumer():
             else:
                 minTemperatureWeekly = maxTemperatureWeekly = maxWindSpeedWeekly = sumSunshineWeekly = sumRainWeekly = None
 
-            values["weekList"] = self._convertToDictList(weekValues)
+            values["weekList"] = weekValues.toDictList()
             values["weekMinTemperature"] = minTemperatureWeekly
             values["weekMaxTemperature"] = maxTemperatureWeekly
             values["weekMaxWindSpeed"] = maxWindSpeedWeekly
