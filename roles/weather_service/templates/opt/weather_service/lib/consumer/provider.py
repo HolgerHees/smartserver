@@ -53,7 +53,7 @@ class CurrentValues():
         if field not in self.current_values or field not in self.station_values or self.station_values[field] != value:
             self.station_values[field] = value
             self.station_values_last_modified = datetime.now().astimezone().timestamp()
-            return self._triggerCurrentValues()
+            return self._buildCurrentValues()
         else:
             return {}
 
@@ -61,7 +61,7 @@ class CurrentValues():
         change_count = sum(1 for k in values if k not in self.service_values or values[k] != self.service_values[k])
         if change_count > 0:
             self.service_values = values
-            return self._triggerCurrentValues()
+            return self._buildCurrentValues()
         else:
             return {}
 
@@ -84,43 +84,39 @@ class CurrentValues():
     def _stationValuesOutdated(self):
         return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
 
-    def _triggerCurrentValues(self):
-        current_values = self._buildCurrentValues()
-        changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
-        self.current_values = current_values
-        return changed_values
-
     def _buildCurrentValues(self):
-        result = {}
+        current_values = {}
         if not self._stationValuesOutdated():
-            result = self.station_values
+            current_values = self.station_values
 
         for field in StationConsumer.STATION_FIELDS:
-            if field in result:
+            if field in current_values:
                 continue
 
             mapped_current_field = self.FIELD_MAPPINGS[field] if field in self.FIELD_MAPPINGS else None
             if mapped_current_field is None or mapped_current_field not in self.service_values:
                 if field in ["currentRainRateInMillimeterPerHour", "currentRainLastHourInMillimeter", "currentRainLevel"]:
-                    result[field] = 0
+                    current_values[field] = 0
                 elif field in ["currentRainDailyInMillimeter"]:
                     end = datetime.now()
                     start = end.replace(hour=0, minute=0, second=0, microsecond=0)
                     with self.db.open() as db:
                         values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
-                    result["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
+                    current_values["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
                 else:
-                    result[field] = -1
+                    current_values[field] = -1
             else:
-                result[field] = self.service_values[mapped_current_field]
+                current_values[field] = self.service_values[mapped_current_field]
 
-        result["currentCloudsAsSVG"] = self._buildCloudSVG()
+        current_values["currentCloudsAsSVG"] = self._buildCloudSVG()
 
-        is_raining = result["currentRainLevel"] > 0 or result["currentRainLastHourInMillimeter"] > 0
-        result["currentRainProbabilityInPercent"] = 0 if not self.service_values or not is_raining else self.service_values["precipitationProbabilityInPercent"]
-        result["currentSunshineDurationInMinutes"] = 0 if not self.service_values else self.service_values["sunshineDurationInMinutes"]
+        is_raining = current_values["currentRainLevel"] > 0 or current_values["currentRainLastHourInMillimeter"] > 0
+        current_values["currentRainProbabilityInPercent"] = 0 if not self.service_values or not is_raining else self.service_values["precipitationProbabilityInPercent"]
+        current_values["currentSunshineDurationInMinutes"] = 0 if not self.service_values else self.service_values["sunshineDurationInMinutes"]
 
-        return result
+        changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
+        self.current_values = current_values
+        return changed_values
 
     def _buildCloudSVG(self):
         if self.service_values is None:
