@@ -3,28 +3,29 @@ import logging
 import traceback
 import time
 
+from lib.consumer.provider import CURRENT_FIELDS
+
 from smartserver.confighelper import ConfigHelper
 from smartserver.metric import Metric
 
-
 class StationConsumer():
     TOPIC_MAPPINGS = {
-        "cloudCoverInOcta": "currentCloudCoverInOcta",
-        "rainLevel": "currentRainLevel",
-        "rainDailyInMillimeter": "currentRainDailyInMillimeter",
-        "rainLastHourInMillimeter": "currentRainLastHourInMillimeter",
-        "rainRateInMillimeterPerHour": "currentRainRateInMillimeterPerHour",
-        "windDirectionInDegree": "currentWindDirectionInDegree",
-        "windSpeedInKilometerPerHour": "currentWindSpeedInKilometerPerHour",
-        "windGustInKilometerPerHour": "currentWindGustInKilometerPerHour",
-        "dewpointInCelsius": "currentDewpointInCelsius",
-        "airTemperatureInCelsius": "currentAirTemperatureInCelsius",
-        "airHumidityInPercent": "currentAirHumidityInPercent",
-        "perceivedTemperatureInCelsius": "currentPerceivedTemperatureInCelsius",
-        "pressureInHectopascals": "currentPressureInHectopascals",
-        "solarRadiationInWatt": "currentSolarRadiationInWatt",
-        "lightLevelInLux": "currentLightLevelInLux",
-        "uvIndex": "currentUvIndex"
+        "cloudCoverInOcta": CURRENT_FIELDS["CLOUD_COVER_IN_OCTA"],
+        "rainLevel": CURRENT_FIELDS["RAIN_LEVEL"],
+        "rainDailyInMillimeter": CURRENT_FIELDS["RAIN_DAILY_IN_MILLIMETER"],
+        "rainLastHourInMillimeter": CURRENT_FIELDS["RAIN_LAST_HOUR_IN_MILLIMETER"],
+        "rainRateInMillimeterPerHour": CURRENT_FIELDS["RAIN_RATE_IN_MILLIMETER_PER_HOUR"],
+        "windDirectionInDegree": CURRENT_FIELDS["WIND_DIRECTION_IN_DEGREE"],
+        "windSpeedInKilometerPerHour": CURRENT_FIELDS["WIND_SPEED_IN_KILOMETER_PER_HOUR"],
+        "windGustInKilometerPerHour": CURRENT_FIELDS["WIND_GUST_IN_KILOMETER_PER_HOUR"],
+        "dewpointInCelsius": CURRENT_FIELDS["DEW_POINT_IN_CELSIUS"],
+        "airTemperatureInCelsius": CURRENT_FIELDS["AIR_TEPERATURE_IN_CELSIUS"],
+        "airHumidityInPercent": CURRENT_FIELDS["AIR_HUMIDITY_IN_PERCENT"],
+        "perceivedTemperatureInCelsius": CURRENT_FIELDS["PERCEIVED_TEMPERATURE_IN_CELSIUS"],
+        "pressureInHectopascals": CURRENT_FIELDS["PRESSURE_IN_HECTOPASCAL"],
+        "solarRadiationInWatt": CURRENT_FIELDS["SOLAR_RADIATION_IN_WATT"],
+        "lightLevelInLux": CURRENT_FIELDS["LIGHT_LEVEL_IN_LUX"],
+        "uvIndex": CURRENT_FIELDS["UV_INDEX"]
     }
 
     STATION_FIELDS = TOPIC_MAPPINGS.values()

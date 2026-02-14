@@ -14,16 +14,33 @@ from smartserver.metric import Metric
 from lib.db import DBException
 from lib.helper.forecast import WeatherBlock, WeatherBlockList, WeatherHelper
 
-from lib.consumer.station import StationConsumer
+CURRENT_FIELDS = {
+    "CLOUD_COVER_IN_OCTA": "currentCloudCoverInOcta",
+    "RAIN_LEVEL": "currentRainLevel",
+    "RAIN_DAILY_IN_MILLIMETER": "currentRainDailyInMillimeter",
+    "RAIN_LAST_HOUR_IN_MILLIMETER": "currentRainLastHourInMillimeter",
+    "RAIN_RATE_IN_MILLIMETER_PER_HOUR": "currentRainRateInMillimeterPerHour",
+    "WIND_DIRECTION_IN_DEGREE": "currentWindDirectionInDegree",
+    "WIND_SPEED_IN_KILOMETER_PER_HOUR": "currentWindSpeedInKilometerPerHour",
+    "WIND_GUST_IN_KILOMETER_PER_HOUR": "currentWindGustInKilometerPerHour",
+    "DEW_POINT_IN_CELSIUS": "currentDewpointInCelsius",
+    "AIR_TEPERATURE_IN_CELSIUS": "currentAirTemperatureInCelsius",
+    "AIR_HUMIDITY_IN_PERCENT": "currentAirHumidityInPercent",
+    "PERCEIVED_TEMPERATURE_IN_CELSIUS": "currentPerceivedTemperatureInCelsius",
+    "PRESSURE_IN_HECTOPASCAL": "currentPressureInHectopascals",
+    "SOLAR_RADIATION_IN_WATT": "currentSolarRadiationInWatt",
+    "LIGHT_LEVEL_IN_LUX": "currentLightLevelInLux",
+    "UV_INDEX": "currentUvIndex"
+}
 
 class CurrentValues():
     FIELD_MAPPINGS = {
-        'currentAirTemperatureInCelsius': "airTemperatureInCelsius",
-        'currentPerceivedTemperatureInCelsius': "feelsLikeTemperatureInCelsius",
-        'currentWindGustInKilometerPerHour': "maxWindSpeedInKilometerPerHour",
-        'currentWindSpeedInKilometerPerHour': "windSpeedInKilometerPerHour",
-        'currentRainLastHourInMillimeter': "precipitationAmountInMillimeter",
-        'currentUvIndex': "uvIndexWithClouds"
+        CURRENT_FIELDS["AIR_TEPERATURE_IN_CELSIUS"]: "airTemperatureInCelsius",
+        CURRENT_FIELDS["PERCEIVED_TEMPERATURE_IN_CELSIUS"]: "feelsLikeTemperatureInCelsius",
+        CURRENT_FIELDS["WIND_GUST_IN_KILOMETER_PER_HOUR"]: "maxWindSpeedInKilometerPerHour",
+        CURRENT_FIELDS["WIND_SPEED_IN_KILOMETER_PER_HOUR"]: "windSpeedInKilometerPerHour",
+        CURRENT_FIELDS["RAIN_LAST_HOUR_IN_MILLIMETER"]: "precipitationAmountInMillimeter",
+        CURRENT_FIELDS["UV_INDEX"]: "uvIndexWithClouds"
     }
 
     def __init__(self, db, latitude, longitude, icon_path):
@@ -58,12 +75,12 @@ class CurrentValues():
             return {}
 
     def setServiceValues(self, values):
-        change_count = sum(1 for k in values if k not in self.service_values or values[k] != self.service_values[k])
-        if change_count > 0:
-            self.service_values = values
-            return self._buildCurrentValues()
-        else:
-            return {}
+        if values is not None:
+            change_count = sum(1 for k in values if k not in self.service_values or values[k] != self.service_values[k])
+            if change_count > 0:
+                self.service_values = values
+                return self._buildCurrentValues()
+        return {}
 
     def resetIconCache(self):
         self.icon_cache = {}
@@ -89,7 +106,7 @@ class CurrentValues():
         if not self._stationValuesOutdated():
             current_values = self.station_values.copy()
 
-        for field in StationConsumer.STATION_FIELDS:
+        for field in CURRENT_FIELDS.values():
             if field in current_values:
                 continue
 
@@ -125,8 +142,8 @@ class CurrentValues():
         block = WeatherBlock(datetime.now())
         block.apply(self.service_values)
 
-        skip_station_values = self._stationValuesOutdated() or len(self.station_values) != len(StationConsumer.STATION_FIELDS)
-        if skip_station_values:
+        skip_station_values = self._stationValuesOutdated()
+        if skip_station_values or "currentRainLevel" not in self.station_values or "currentRainRateInMillimeterPerHour" not in self.station_values or "currentRainLastHourInMillimeter" not in self.station_values:
             currentRain = self.service_values["precipitationAmountInMillimeter"]
         else:
             currentRain = 0
@@ -143,7 +160,7 @@ class CurrentValues():
         self.current_is_raining = currentRain > 0
         block.setPrecipitationAmountInMillimeter(currentRain)
 
-        cloudCoverInOcta = self.service_values["effectiveCloudCoverInOcta"] if skip_station_values else self.station_values["currentCloudCoverInOcta"]
+        cloudCoverInOcta = self.service_values["effectiveCloudCoverInOcta"] if not skip_station_values or "currentCloudCoverInOcta" not in self.station_values else self.station_values["currentCloudCoverInOcta"]
         block.setEffectiveCloudCover(cloudCoverInOcta)
 
         return self.getCachedIcon(WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block))
