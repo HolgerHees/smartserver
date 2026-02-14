@@ -13,34 +13,16 @@ from smartserver.metric import Metric
 
 from lib.db import DBException
 from lib.helper.forecast import WeatherBlock, WeatherBlockList, WeatherHelper
-
-CURRENT_FIELDS = {
-    "CLOUD_COVER_IN_OCTA": "currentCloudCoverInOcta",
-    "RAIN_LEVEL": "currentRainLevel",
-    "RAIN_DAILY_IN_MILLIMETER": "currentRainDailyInMillimeter",
-    "RAIN_LAST_HOUR_IN_MILLIMETER": "currentRainLastHourInMillimeter",
-    "RAIN_RATE_IN_MILLIMETER_PER_HOUR": "currentRainRateInMillimeterPerHour",
-    "WIND_DIRECTION_IN_DEGREE": "currentWindDirectionInDegree",
-    "WIND_SPEED_IN_KILOMETER_PER_HOUR": "currentWindSpeedInKilometerPerHour",
-    "WIND_GUST_IN_KILOMETER_PER_HOUR": "currentWindGustInKilometerPerHour",
-    "DEW_POINT_IN_CELSIUS": "currentDewpointInCelsius",
-    "AIR_TEPERATURE_IN_CELSIUS": "currentAirTemperatureInCelsius",
-    "AIR_HUMIDITY_IN_PERCENT": "currentAirHumidityInPercent",
-    "PERCEIVED_TEMPERATURE_IN_CELSIUS": "currentPerceivedTemperatureInCelsius",
-    "PRESSURE_IN_HECTOPASCAL": "currentPressureInHectopascals",
-    "SOLAR_RADIATION_IN_WATT": "currentSolarRadiationInWatt",
-    "LIGHT_LEVEL_IN_LUX": "currentLightLevelInLux",
-    "UV_INDEX": "currentUvIndex"
-}
+from lib.helper.constants import CurrentFields, CurrentFieldsList
 
 class CurrentValues():
     FIELD_MAPPINGS = {
-        CURRENT_FIELDS["AIR_TEPERATURE_IN_CELSIUS"]: "airTemperatureInCelsius",
-        CURRENT_FIELDS["PERCEIVED_TEMPERATURE_IN_CELSIUS"]: "feelsLikeTemperatureInCelsius",
-        CURRENT_FIELDS["WIND_GUST_IN_KILOMETER_PER_HOUR"]: "maxWindSpeedInKilometerPerHour",
-        CURRENT_FIELDS["WIND_SPEED_IN_KILOMETER_PER_HOUR"]: "windSpeedInKilometerPerHour",
-        CURRENT_FIELDS["RAIN_LAST_HOUR_IN_MILLIMETER"]: "precipitationAmountInMillimeter",
-        CURRENT_FIELDS["UV_INDEX"]: "uvIndexWithClouds"
+        CurrentFields.AIR_TEMPERATURE_IN_CELSIUS: "airTemperatureInCelsius",
+        CurrentFields.PERCEIVED_TEMPERATURE_IN_CELSIUS: "feelsLikeTemperatureInCelsius",
+        CurrentFields.WIND_GUST_IN_KILOMETER_PER_HOUR: "maxWindSpeedInKilometerPerHour",
+        CurrentFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windSpeedInKilometerPerHour",
+        CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER: "precipitationAmountInMillimeter",
+        CurrentFields.UV_INDEX: "uvIndexWithClouds"
     }
 
     def __init__(self, db, latitude, longitude, icon_path):
@@ -107,7 +89,7 @@ class CurrentValues():
         if not self._stationValuesOutdated():
             current_values = self.station_values.copy()
 
-        for field in CURRENT_FIELDS.values():
+        for field in CurrentFieldsList.values():
             if field in current_values:
                 continue
 

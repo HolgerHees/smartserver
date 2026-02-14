@@ -3,29 +3,29 @@ import logging
 import traceback
 import time
 
-from lib.consumer.provider import CURRENT_FIELDS
+from lib.helper.constants import CurrentFields
 
 from smartserver.confighelper import ConfigHelper
 from smartserver.metric import Metric
 
 class StationConsumer():
     TOPIC_MAPPINGS = {
-        "cloudCoverInOcta": CURRENT_FIELDS["CLOUD_COVER_IN_OCTA"],
-        "rainLevel": CURRENT_FIELDS["RAIN_LEVEL"],
-        "rainDailyInMillimeter": CURRENT_FIELDS["RAIN_DAILY_IN_MILLIMETER"],
-        "rainLastHourInMillimeter": CURRENT_FIELDS["RAIN_LAST_HOUR_IN_MILLIMETER"],
-        "rainRateInMillimeterPerHour": CURRENT_FIELDS["RAIN_RATE_IN_MILLIMETER_PER_HOUR"],
-        "windDirectionInDegree": CURRENT_FIELDS["WIND_DIRECTION_IN_DEGREE"],
-        "windSpeedInKilometerPerHour": CURRENT_FIELDS["WIND_SPEED_IN_KILOMETER_PER_HOUR"],
-        "windGustInKilometerPerHour": CURRENT_FIELDS["WIND_GUST_IN_KILOMETER_PER_HOUR"],
-        "dewpointInCelsius": CURRENT_FIELDS["DEW_POINT_IN_CELSIUS"],
-        "airTemperatureInCelsius": CURRENT_FIELDS["AIR_TEPERATURE_IN_CELSIUS"],
-        "airHumidityInPercent": CURRENT_FIELDS["AIR_HUMIDITY_IN_PERCENT"],
-        "perceivedTemperatureInCelsius": CURRENT_FIELDS["PERCEIVED_TEMPERATURE_IN_CELSIUS"],
-        "pressureInHectopascals": CURRENT_FIELDS["PRESSURE_IN_HECTOPASCAL"],
-        "solarRadiationInWatt": CURRENT_FIELDS["SOLAR_RADIATION_IN_WATT"],
-        "lightLevelInLux": CURRENT_FIELDS["LIGHT_LEVEL_IN_LUX"],
-        "uvIndex": CURRENT_FIELDS["UV_INDEX"]
+        "cloudCoverInOcta": CurrentFields.CLOUD_COVER_IN_OCTA,
+        "rainLevel": CurrentFields.RAIN_LEVEL,
+        "rainDailyInMillimeter": CurrentFields.RAIN_DAILY_IN_MILLIMETER,
+        "rainLastHourInMillimeter": CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER,
+        "rainRateInMillimeterPerHour": CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR,
+        "windDirectionInDegree": CurrentFields.WIND_DIRECTION_IN_DEGREE,
+        "windSpeedInKilometerPerHour": CurrentFields.WIND_SPEED_IN_KILOMETER_PER_HOUR,
+        "windGustInKilometerPerHour": CurrentFields.WIND_GUST_IN_KILOMETER_PER_HOUR,
+        "dewpointInCelsius": CurrentFields.DEW_POINT_IN_CELSIUS,
+        "airTemperatureInCelsius": CurrentFields.AIR_TEMPERATURE_IN_CELSIUS,
+        "airHumidityInPercent": CurrentFields.AIR_HUMIDITY_IN_PERCENT,
+        "perceivedTemperatureInCelsius": CurrentFields.PERCEIVED_TEMPERATURE_IN_CELSIUS,
+        "pressureInHectopascals": CurrentFields.PRESSURE_IN_HECTOPASCAL,
+        "solarRadiationInWatt": CurrentFields.SOLAR_RADIATION_IN_WATT,
+        "lightLevelInLux": CurrentFields.LIGHT_LEVEL_IN_LUX,
+        "uvIndex": CurrentFields.UV_INDEX
     }
 
     STATION_FIELDS = TOPIC_MAPPINGS.values()
@@ -71,8 +71,7 @@ class StationConsumer():
                 self.station_values[key] = { "time": 0, "value": -1 }
 
         for key, data in self.station_values.items():
-            key = "current{}{}".format(key[0].upper(),key[1:])
-            self.provider_consumer.notifyStationValue(False, key, data["value"], data["time"] )
+            self.provider_consumer.notifyStationValue(False, self.TOPIC_MAPPINGS[key], data["value"], data["time"] )
 
     def _dump(self):
         if self.valid_cache_file:
