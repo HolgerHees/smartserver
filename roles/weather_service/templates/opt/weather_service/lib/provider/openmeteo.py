@@ -9,6 +9,7 @@ import json
 import decimal
 
 from lib.provider.provider import Provider, RequestDataException, CurrentDataException, ForecastDataException
+from lib.helper.constants import ForecastFields
 
 # possible alternative => https://open-meteo.com/
 # weather codes https://github.com/open-meteo/open-meteo/issues/287
@@ -17,47 +18,47 @@ is_test = True
 
 current_url  = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&current={fields}"
 current_config = {
-    "airTemperatureInCelsius": "temperature_2m",
-    "feelsLikeTemperatureInCelsius": "apparent_temperature",
-    "relativeHumidityInPercent": "relativehumidity_2m",
+    ForecastFields.AIR_TEMPERATURE_IN_CELSIUS: "temperature_2m",
+    ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS: "apparent_temperature",
+    ForecastFields.RELATIVE_HUMIDITY_IN_PERCENT: "relativehumidity_2m",
 
-    "windDirectionInDegree": "winddirection_10m",
-    "windSpeedInKilometerPerHour": "windspeed_10m",
-    "maxWindSpeedInKilometerPerHour": "windgusts_10m",
+    ForecastFields.WIND_DIRECTION_IN_DEGREE: "winddirection_10m",
+    ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windspeed_10m",
+    ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR: "windgusts_10m",
 
-    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
+    ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA: [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
 
-    "weatherCode": "weathercode",
+    ForecastFields.WEATHER_CODE: "weathercode",
 
-    "precipitationAmountInMillimeter": "precipitation"
-    #"sunshineDurationInMinutes": [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
+    ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER: "precipitation"
+    #ForecastFields.SUNSHINE_DURATION_IN_MINUTES: [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
 
 forecast_url = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&forecast_days=7&past_days=0&hourly={fields}";
 forecast_config = {
-    "airTemperatureInCelsius": "temperature_2m",
-    "feelsLikeTemperatureInCelsius": "apparent_temperature",
-    "relativeHumidityInPercent": "relativehumidity_2m",
+    ForecastFields.AIR_TEMPERATURE_IN_CELSIUS: "temperature_2m",
+    ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS: "apparent_temperature",
+    ForecastFields.RELATIVE_HUMIDITY_IN_PERCENT: "relativehumidity_2m",
 
-    "windDirectionInDegree": "winddirection_10m",
-    "windSpeedInKilometerPerHour": "windspeed_10m",
-    "maxWindSpeedInKilometerPerHour": "windgusts_10m",
+    ForecastFields.WIND_DIRECTION_IN_DEGREE: "winddirection_10m",
+    ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windspeed_10m",
+    ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR: "windgusts_10m",
 
-    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
+    ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA: [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
 
-    "thunderstormProbabilityInPercent": [ [ "cape" ], lambda self, fetched_values: int(round(fetched_values["cape"] * 100.0 / 3500.0, 0)) ], # < 1000 Slight, 1000 – 2500 Moderate, 2500-3500 Very, > 3500 Extremely
-    "freezingRainProbabilityInPercent": [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [48,56,57,66,67] else fetched_values["precipitation_probability"] ],
-    "hailProbabilityInPercent": [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [96,99] else fetched_values["precipitation_probability"] ],
-    "snowfallProbabilityInPercent": [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["snowfall"] == 0 else fetched_values["precipitation_probability"] ],
+    ForecastFields.THUNDERSTORM_PROBAILITY_IN_PERCENT: [ [ "cape" ], lambda self, fetched_values: int(round(fetched_values["cape"] * 100.0 / 3500.0, 0)) ], # < 1000 Slight, 1000 – 2500 Moderate, 2500-3500 Very, > 3500 Extremely
+    ForecastFields.FREEZING_RAIN_PROBAILITY_IN_PERCENT: [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [48,56,57,66,67] else fetched_values["precipitation_probability"] ],
+    ForecastFields.HAIL_PROBAILITY_IN_PERCENT: [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [96,99] else fetched_values["precipitation_probability"] ],
+    ForecastFields.SNOWFALL_PROBAILITY_IN_PERCENT: [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["snowfall"] == 0 else fetched_values["precipitation_probability"] ],
 
-    "precipitationAmountInMillimeter": "precipitation",
-    "precipitationProbabilityInPercent": "precipitation_probability",
+    ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER: "precipitation",
+    ForecastFields.PERCIPITATION_PROBAILITY_IN_PERCENT: "precipitation_probability",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
-    "weatherCode": "weathercode",
-    "uvIndexWithClouds": "uv_index",
+    ForecastFields.WEATHER_CODE: "weathercode",
+    ForecastFields.UV_INDEX_WITH_CLOUDS: "uv_index",
 
-    "sunshineDurationInMinutes": [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
+    ForecastFields.SUNSHINE_DURATION_IN_MINUTES: [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
     
 class Fetcher(object):
@@ -91,7 +92,7 @@ class Fetcher(object):
         url = current_url.format(latitude=latitude,longitude=longitude,timezone=self.config.timezone,fields=",".join(fields))
         data = self.get(url)
         if data == None or "current" not in data:
-            raise ForecastDataException("Failed getting current data. Content: {}".format(data))
+            raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
 
         current_fields = {}
         for messurementName, mapping in current_config.items():
@@ -116,7 +117,7 @@ class Fetcher(object):
         #https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly={fields}&forecast_days=14
         url = forecast_url.format(latitude=latitude,longitude=longitude,timezone=self.config.timezone,fields=",".join(fields))
         data = self.get(url)
-        if data == None or "hourly" not in data:
+        if data == None or "hourly" not in data or "minutely_15" not in data:
             raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
 
         forecasts = {}
@@ -140,7 +141,7 @@ class Fetcher(object):
         result = []
         for validFrom, forcastSlot in forecasts.items():
             for field, value in forcastSlot.items():
-                if field in ["index", "validFrom"]:
+                if field.startswith("index", "validFrom"):
                     continue
                 result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": value })
         return result

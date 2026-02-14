@@ -10,7 +10,7 @@ class ForecastFields():
     EFFECTVE_CLOUD_COVER_IN_OCTA = "effectiveCloudCoverInOcta"
 
     THUNDERSTORM_PROBAILITY_IN_PERCENT = "thunderstormProbabilityInPercent"
-    FREEZING_RAIN_IN_PERCENT = "freezingRainProbabilityInPercent"
+    FREEZING_RAIN_PROBAILITY_IN_PERCENT = "freezingRainProbabilityInPercent"
     HAIL_PROBAILITY_IN_PERCENT = "hailProbabilityInPercent"
     SNOWFALL_PROBAILITY_IN_PERCENT = "snowfallProbabilityInPercent"
 
