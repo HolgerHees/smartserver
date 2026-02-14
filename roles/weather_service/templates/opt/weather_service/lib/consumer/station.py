@@ -8,6 +8,27 @@ from smartserver.metric import Metric
 
 
 class StationConsumer():
+    TOPIC_MAPPINGS = {
+        "cloudCoverInOcta": "currentCloudCoverInOcta",
+        "rainLevel": "currentRainLevel",
+        "rainDailyInMillimeter": "currentRainDailyInMillimeter",
+        "rainLastHourInMillimeter": "currentRainLastHourInMillimeter",
+        "rainRateInMillimeterPerHour": "currentRainRateInMillimeterPerHour",
+        "windDirectionInDegree": "currentWindDirectionInDegree",
+        "windSpeedInKilometerPerHour": "currentWindSpeedInKilometerPerHour",
+        "windGustInKilometerPerHour": "currentWindGustInKilometerPerHour",
+        "dewpointInCelsius": "currentDewpointInCelsius",
+        "airTemperatureInCelsius": "currentAirTemperatureInCelsius",
+        "airHumidityInPercent": "currentAirHumidityInPercent",
+        "perceivedTemperatureInCelsius": "currentPerceivedTemperatureInCelsius",
+        "pressureInHectopascals": "currentPressureInHectopascals",
+        "solarRadiationInWatt": "currentSolarRadiationInWatt",
+        "lightLevelInLux": "currentLightLevelInLux",
+        "uvIndex": "currentUvIndex"
+    }
+
+    STATION_FIELDS = TOPIC_MAPPINGS.values()
+
     '''Handler client'''
     def __init__(self, config, mqtt, provider_consumer):
         self.mqtt = mqtt
@@ -26,25 +47,6 @@ class StationConsumer():
 
         self.provider_consumer = provider_consumer
 
-        self.valid_mqtt_topic = [
-            "cloudCoverInOcta",
-            "rainLevel",
-            "rainDailyInMillimeter",
-            "rainLastHourInMillimeter",
-            "rainRateInMillimeterPerHour",
-            "windDirectionInDegree",
-            "windSpeedInKilometerPerHour",
-            "windGustInKilometerPerHour",
-            "dewpointInCelsius",
-            "airTemperatureInCelsius",
-            "airHumidityInPercent",
-            "perceivedTemperatureInCelsius",
-            "pressureInHectopascals",
-            "solarRadiationInWatt",
-            "lightLevelInLux",
-            "uvIndex"
-        ]
-
     def start(self):
         self._restore()
         if not os.path.exists(self.dump_path):
@@ -60,10 +62,10 @@ class StationConsumer():
     def _restore(self):
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
-            self.station_values = {k: v for k, v in data["station_values"].items() if k in self.valid_mqtt_topic}
+            self.station_values = {k: v for k, v in data["station_values"].items() if k in self.TOPIC_MAPPINGS}
             logging.info("Loaded {} consumer (station) values".format(len(self.station_values)))
 
-        for key in self.valid_mqtt_topic:
+        for key in self.TOPIC_MAPPINGS:
             if key not in self.station_values:
                 self.station_values[key] = { "time": 0, "value": -1 }
 
@@ -87,7 +89,7 @@ class StationConsumer():
         value = float(value) if "." in value else int(value)
         field = topic[3]
 
-        if field not in self.valid_mqtt_topic:
+        if field not in self.TOPIC_MAPPINGS:
             return
 
         if field not in self.station_values or self.station_values[field]["value"] != value:
