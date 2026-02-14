@@ -60,6 +60,8 @@ class CurrentValues():
 
         self.current_values = {}
 
+        self._buildCurrentValues()
+
     def getCurrentValues(self):
         return self.current_values
 
@@ -75,11 +77,10 @@ class CurrentValues():
             return {}
 
     def setServiceValues(self, values):
-        if values is not None:
-            change_count = sum(1 for k in values if k not in self.service_values or values[k] != self.service_values[k])
-            if change_count > 0:
-                self.service_values = values
-                return self._buildCurrentValues()
+        change_count = sum(1 for k in values if k not in self.service_values or values[k] != self.service_values[k])
+        if change_count > 0:
+            self.service_values = values
+            return self._buildCurrentValues()
         return {}
 
     def resetIconCache(self):
@@ -136,7 +137,7 @@ class CurrentValues():
         return changed_values
 
     def _buildCloudSVG(self):
-        if self.service_values is None:
+        if not self.service_values:
             return None
 
         block = WeatherBlock(datetime.now())
@@ -195,7 +196,8 @@ class ProviderConsumer():
         self.station_cloud_timer = None
 
         with self.db.open() as db:
-            self.current_values.setServiceValues(db.getOffset(0))
+            db_values = db.getOffset(0)
+            self.current_values.setServiceValues(db_values if db_values else {})
 
     def start(self):
         self._restore()
@@ -268,7 +270,8 @@ class ProviderConsumer():
 
                     if currentIsModified:
                         with self.db.open() as db:
-                            _changed_values = self.current_values.setServiceValues(db.getOffset(0))
+                            db_values = db.getOffset(0)
+                            _changed_values = self.current_values.setServiceValues(db_values if db_values else {})
                             self._notifyCurrentValues(_changed_values)
 
                     self.last_refreshed = now.timestamp()
