@@ -40,7 +40,7 @@ class CustomHandler(logging.Handler):
             else:
                 journal_level = "crit"
 
-            os.system('echo "{}"  | systemd-cat -t nvidia_exporter -p "{}"'.format("[{}] - {}".format(level, msg), journal_level))
+            os.system('echo "{}"  | systemd-cat -t {} -p "{}"'.format("[{}] - {}".format(level, record.module, msg), journal_level))
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
