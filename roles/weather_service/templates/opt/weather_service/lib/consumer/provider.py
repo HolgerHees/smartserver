@@ -82,7 +82,7 @@ class CurrentValues():
         return False
 
     def _stationValuesOutdated(self):
-        return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1 or len(self.station_values) != len(StationConsumer.STATION_FIELDS)
+        return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
 
     def _buildCurrentValues(self):
         current_values = {}
@@ -125,7 +125,8 @@ class CurrentValues():
         block = WeatherBlock(datetime.now())
         block.apply(self.service_values)
 
-        if self._stationValuesOutdated():
+        skip_station_values = self._stationValuesOutdated() or len(self.station_values) != len(StationConsumer.STATION_FIELDS)
+        if skip_station_values:
             currentRain = self.service_values["precipitationAmountInMillimeter"]
         else:
             currentRain = 0
@@ -142,7 +143,7 @@ class CurrentValues():
         self.current_is_raining = currentRain > 0
         block.setPrecipitationAmountInMillimeter(currentRain)
 
-        cloudCoverInOcta = self.station_values["currentCloudCoverInOcta"] if not self._stationValuesOutdated() else self.service_values["effectiveCloudCoverInOcta"]
+        cloudCoverInOcta = self.service_values["effectiveCloudCoverInOcta"] if skip_station_values else self.station_values["currentCloudCoverInOcta"]
         block.setEffectiveCloudCover(cloudCoverInOcta)
 
         return self.getCachedIcon(WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block))
@@ -310,6 +311,7 @@ class ProviderConsumer():
 
     def notifyStationValue(self, is_update, field, value, time):
         changed_values = self.current_values.setStationValue(field, value)
+        #logging.info("notifyStationValue " + field + " " + str(value) + " " + str(changed_values))
         if is_update:
             self._notifyCurrentValues(changed_values)
 
@@ -414,9 +416,8 @@ class ProviderConsumer():
 
             dayList = db.getRangeList(start, end)
             values = {}
+            todayValues = WeatherBlockList()
             if len(dayList) > 0:
-                todayValues = [];
-
                 blockConfigs = []
 
                 current_value = None;
@@ -435,7 +436,7 @@ class ProviderConsumer():
                         current_value = WeatherBlock( hourlyData['datetime'] )
 
                     current_value.apply(hourlyData)
-                    if len(todayValues) == 4:
+                    if todayValues.getSize() == 4:
                         break
 
                     hour_count += 1
@@ -444,7 +445,7 @@ class ProviderConsumer():
             else:
                 minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = None
 
-            values["dayList"] = self._convertToDictList(todayValues)
+            values["dayList"] = todayValues.toDictList()
             values["dayMinTemperature"] = minTemperature
             values["dayMaxTemperature"] = maxTemperature
             values["dayMaxWindSpeed"] = maxWindSpeed

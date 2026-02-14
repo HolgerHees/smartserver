@@ -15,6 +15,9 @@ class WeatherBlockList():
             result.append(block.toDict())
         return result
 
+    def getSize(self):
+        return len(self.block_list)
+
 class WeatherBlock():
     def __init__(self, start):
         self.start = start
