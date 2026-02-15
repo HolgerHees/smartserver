@@ -129,12 +129,12 @@ mx.WeatherCore = (function( ret ) {
         if( "currentAirTemperatureInCelsius" in changed_data) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentAirTemperatureInCelsius"]) + ' °C';
         if( "currentPerceivedTemperatureInCelsius" in changed_data) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentPerceivedTemperatureInCelsius"]) + ' °C';
 
-        if( "currentWindSpeedInKilometerPerHour" in changed_data || "currentWindSpeedInKilometerPerHour" in changed_data )
+        if( "currentWindSpeedInKilometerPerHour" in changed_data || "currentWindGustInKilometerPerHour" in changed_data )
         {
             let windSpeed = mx.WeatherHelper.formatNumber(data["currentWindSpeedInKilometerPerHour"]);
             let windGust = mx.WeatherHelper.formatNumber(data["currentWindGustInKilometerPerHour"]);
             let wind = windSpeed;
-            if( windSpeed != windGust && data["currentWindGustInKilometerPerHour"] > 0 )
+            if( windGust > 0 && windSpeed != windGust )
             {
                 wind += ' (' + windGust + ')';
             }
