@@ -182,19 +182,18 @@ class CurrentValues():
         return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
 
 class ProviderConsumer():
-    '''Handler client'''
     def __init__(self, config, mqtt, db, handler ):
-        self.config = config
-        location = config.location.split(",")
-        self.latitude = float(location[0])
-        self.longitude = float(location[1])
+        latitude, longitude = config.location.split(",")
+        self.latitude = float(latitude)
+        self.longitude = float(longitude)
 
+        self.mqtt = mqtt
+        self.mqtt_forecast_topic = "{}/#".format(config.mqtt_forecast_topic)
+
+        self.db = db
         self.handler = handler
 
         self.is_running = False
-
-        self.mqtt = mqtt
-        self.db = db
 
         self.dump_path = "{}consumer_provider.json".format(config.lib_path)
         self.version = 2
@@ -216,8 +215,7 @@ class ProviderConsumer():
         if not os.path.exists(self.dump_path):
             self._dump()
 
-        logging.info("{}/#".format(self.config.mqtt_forecast_topic))
-        self.mqtt.subscribe("{}/#".format(self.config.mqtt_forecast_topic), self.on_message)
+        self.mqtt.subscribe(self.mqtt_forecast_topic, self.on_message)
 
         self.current_values.checkSunriseSunset()
         self.is_running = True

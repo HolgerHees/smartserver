@@ -33,8 +33,7 @@ class StationConsumer():
     '''Handler client'''
     def __init__(self, config, mqtt, provider_consumer):
         self.mqtt = mqtt
-
-        self.config = config
+        self.mqtt_station_topic = "{}/#".format(config.mqtt_station_topic)
 
         self.is_running = False
 
@@ -52,7 +51,7 @@ class StationConsumer():
         self._restore()
         if not os.path.exists(self.dump_path):
             self._dump()
-        self.mqtt.subscribe( '{}/#'.format(self.config.mqtt_station_topic), self.on_message)
+        self.mqtt.subscribe(self.mqtt_station_topic, self.on_message)
         self.is_running = True
 
     def terminate(self):
