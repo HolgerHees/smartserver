@@ -24,19 +24,28 @@ class ForecastFields():
     SUNSHINE_DURATION_IN_MINUTES = "sunshineDurationInMinutes"
 
 class CurrentFields():
+    SUNSHINE_DURATION_IN_MINUTES = "currentSunshineDurationInMinutes"
+    RAIN_PROBABILITY_IN_PERCENT = "currentRainProbabilityInPercent"
+    CLOUDS_AS_SVG = "currentCloudsAsSVG"
+
+    AIR_TEMPERATURE_IN_CELSIUS = "currentAirTemperatureInCelsius"
+    PERCEIVED_TEMPERATURE_IN_CELSIUS = "currentPerceivedTemperatureInCelsius"
+    DEW_POINT_IN_CELSIUS = "currentDewpointInCelsius"
+
+    AIR_HUMIDITY_IN_PERCENT = "currentAirHumidityInPercent"
+    PRESSURE_IN_HECTOPASCAL = "currentPressureInHectopascals"
+
+    WIND_DIRECTION_IN_DEGREE = "currentWindDirectionInDegree"
+    WIND_SPEED_IN_KILOMETER_PER_HOUR = "currentWindSpeedInKilometerPerHour"
+    WIND_GUST_IN_KILOMETER_PER_HOUR = "currentWindGustInKilometerPerHour"
+
     CLOUD_COVER_IN_OCTA = "currentCloudCoverInOcta"
+
     RAIN_LEVEL = "currentRainLevel"
     RAIN_DAILY_IN_MILLIMETER = "currentRainDailyInMillimeter"
     RAIN_LAST_HOUR_IN_MILLIMETER = "currentRainLastHourInMillimeter"
     RAIN_RATE_IN_MILLIMETER_PER_HOUR = "currentRainRateInMillimeterPerHour"
-    WIND_DIRECTION_IN_DEGREE = "currentWindDirectionInDegree"
-    WIND_SPEED_IN_KILOMETER_PER_HOUR = "currentWindSpeedInKilometerPerHour"
-    WIND_GUST_IN_KILOMETER_PER_HOUR = "currentWindGustInKilometerPerHour"
-    DEW_POINT_IN_CELSIUS = "currentDewpointInCelsius"
-    AIR_TEMPERATURE_IN_CELSIUS = "currentAirTemperatureInCelsius"
-    AIR_HUMIDITY_IN_PERCENT = "currentAirHumidityInPercent"
-    PERCEIVED_TEMPERATURE_IN_CELSIUS = "currentPerceivedTemperatureInCelsius"
-    PRESSURE_IN_HECTOPASCAL = "currentPressureInHectopascals"
+
     SOLAR_RADIATION_IN_WATT = "currentSolarRadiationInWatt"
     LIGHT_LEVEL_IN_LUX = "currentLightLevelInLux"
     UV_INDEX = "currentUvIndex"

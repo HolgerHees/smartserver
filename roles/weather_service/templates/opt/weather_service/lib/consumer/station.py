@@ -52,7 +52,7 @@ class StationConsumer():
         self._restore()
         if not os.path.exists(self.dump_path):
             self._dump()
-        self.mqtt.subscribe( '{}/weather/station/#'.format(self.config.station_consumer_topic), self.on_message)
+        self.mqtt.subscribe( '{}/#'.format(self.config.mqtt_station_topic), self.on_message)
         self.is_running = True
 
     def terminate(self):

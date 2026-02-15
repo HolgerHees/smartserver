@@ -13,19 +13,26 @@ from smartserver.metric import Metric
 
 from lib.db import DBException
 from lib.helper.forecast import WeatherBlock, WeatherBlockList, WeatherHelper
-from lib.helper.constants import CurrentFields, CurrentFieldsList
+from lib.helper.constants import CurrentFields, CurrentFieldsList, ForecastFields
 
 class CurrentValues():
-    FIELD_MAPPINGS = {
-        CurrentFields.AIR_TEMPERATURE_IN_CELSIUS: "airTemperatureInCelsius",
-        CurrentFields.PERCEIVED_TEMPERATURE_IN_CELSIUS: "feelsLikeTemperatureInCelsius",
-        CurrentFields.WIND_GUST_IN_KILOMETER_PER_HOUR: "maxWindSpeedInKilometerPerHour",
-        CurrentFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windSpeedInKilometerPerHour",
-        CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER: "precipitationAmountInMillimeter",
-        CurrentFields.UV_INDEX: "uvIndexWithClouds"
+    CURRENT_FALLBACK_MAPPING = {
+        CurrentFields.AIR_TEMPERATURE_IN_CELSIUS:       ForecastFields.AIR_TEMPERATURE_IN_CELSIUS,
+        CurrentFields.PERCEIVED_TEMPERATURE_IN_CELSIUS: ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS,
+
+        CurrentFields.AIR_HUMIDITY_IN_PERCENT:          ForecastFields.RELATIVE_HUMIDITY_IN_PERCENT,
+
+        CurrentFields.WIND_DIRECTION_IN_DEGREE:         ForecastFields.WIND_DIRECTION_IN_DEGREE,
+        CurrentFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR,
+        CurrentFields.WIND_GUST_IN_KILOMETER_PER_HOUR:  ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR,
+
+        CurrentFields.CLOUD_COVER_IN_OCTA:              ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA,
+
+        CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER:     ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER,
+        CurrentFields.UV_INDEX:                         ForecastFields.UV_INDEX_WITH_CLOUDS
     }
 
-    def __init__(self, db, latitude, longitude, icon_path):
+    def __init__(self, db, latitude, longitude, icon_path, notify_callback):
         self.db = db
         self.latitude = latitude
         self.longitude = longitude
@@ -33,7 +40,11 @@ class CurrentValues():
         self.icon_path = icon_path
         self.icon_cache = {}
 
+        self.notify_callback = notify_callback
+
+        self.station_cloud_timer = None
         self.current_is_raining = False
+        self.current_is_night = False
 
         self.station_values = {}
         self.station_values_last_modified = 0
@@ -43,6 +54,36 @@ class CurrentValues():
         self.current_values = {}
 
         self._buildCurrentValues()
+
+    def resetIconCache(self):
+        self.icon_cache = {}
+
+    def getCachedIcon(self, icon_name):
+        if icon_name not in self.icon_cache:
+            with open("{}{}".format(self.icon_path, icon_name)) as f:
+                self.icon_cache[icon_name] = f.read()
+        return self.icon_cache[icon_name]
+
+    def checkSunriseSunset(self):
+        now = datetime.now()
+        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, now)
+        current_is_night = ( now <= sunrise or now >= sunset )
+        if current_is_night != self.current_is_night:
+            self.current_is_night = current_is_night
+            if self.station_cloud_timer is not None:
+                self.station_cloud_timer.cancel()
+            self._rebuildCloudSVGIfNeeded()
+
+        logging.info("Trigger: checkSunriseSunset => " + str(self.current_is_night))
+
+        if now < sunrise or now > sunset:
+            logging.info("Schedule sunrise: " + sunrise.strftime("%H:%M:%S"))
+            schedule.every().day.at(sunrise.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
+        else:
+            logging.info("Schedule sunset: " + sunset.strftime("%H:%M:%S"))
+            schedule.every().day.at(sunset.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
+
+        return schedule.CancelJob
 
     def getCurrentValues(self):
         return self.current_values
@@ -54,69 +95,58 @@ class CurrentValues():
         if field not in self.current_values or field not in self.station_values or self.station_values[field] != value:
             self.station_values[field] = value
             self.station_values_last_modified = datetime.now().astimezone().timestamp()
-            return self._buildCurrentValues()
-        else:
-            return {}
+            self._buildCurrentValues()
 
     def setServiceValues(self, values):
         change_count = sum(1 for k in values if k not in self.service_values or values[k] != self.service_values[k])
         if change_count > 0:
             self.service_values = values
-            return self._buildCurrentValues()
-        return {}
+            self._buildCurrentValues()
 
-    def resetIconCache(self):
-        self.icon_cache = {}
+    def _rebuildCloudSVGIfNeeded(self):
+        if self.station_cloud_timer is not None:
+            self.station_cloud_timer.cancel()
+            self.station_cloud_timer = None
 
-    def getCachedIcon(self, icon_name):
-        if icon_name not in self.icon_cache:
-            with open("{}{}".format(self.icon_path, icon_name)) as f:
-                self.icon_cache[icon_name] = f.read()
-        return self.icon_cache[icon_name]
-
-    def rebuildCloudSVGIfNeeded(self):
         cloud_svg = self._buildCloudSVG()
-        if "currentCloudsAsSVG" not in self.current_values or self.current_values["currentCloudsAsSVG"] != cloud_svg:
-            self.current_values["currentCloudsAsSVG"] = cloud_svg
-            return True
-        return False
-
-    def _stationValuesOutdated(self):
-        return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
+        if CurrentFields.CLOUDS_AS_SVG not in self.current_values or self.current_values[CurrentFields.CLOUDS_AS_SVG] != cloud_svg:
+            self.current_values[CurrentFields.CLOUDS_AS_SVG] = cloud_svg
+            self.notify_callback({CurrentFields.CLOUDS_AS_SVG: cloud_svg})
 
     def _buildCurrentValues(self):
         current_values = {}
-        if not self._stationValuesOutdated():
+        if not self._isStationOutdated():
             current_values = self.station_values.copy()
 
         for field in CurrentFieldsList.values():
             if field in current_values:
                 continue
 
-            mapped_current_field = self.FIELD_MAPPINGS[field] if field in self.FIELD_MAPPINGS else None
+            mapped_current_field = self.CURRENT_FALLBACK_MAPPING[field] if field in self.CURRENT_FALLBACK_MAPPING else None
             if mapped_current_field is None or mapped_current_field not in self.service_values:
-                if field in ["currentRainRateInMillimeterPerHour", "currentRainLastHourInMillimeter", "currentRainLevel"]:
+                if field in [CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR, CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER, CurrentFields.RAIN_LEVEL]:
                     current_values[field] = 0
-                elif field in ["currentRainDailyInMillimeter"]:
+                elif field in [CurrentFields.RAIN_DAILY_IN_MILLIMETER]:
                     end = datetime.now()
                     start = end.replace(hour=0, minute=0, second=0, microsecond=0)
                     with self.db.open() as db:
-                        values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
-                    current_values["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
+                        values = db.getRangeSum(start, end, [ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER])
+                    current_values[CurrentFields.RAIN_DAILY_IN_MILLIMETER] = values[ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER]
                 else:
                     current_values[field] = -1
             else:
                 current_values[field] = self.service_values[mapped_current_field]
 
-        current_values["currentCloudsAsSVG"] = self._buildCloudSVG()
+        current_values[CurrentFields.CLOUDS_AS_SVG] = self._buildCloudSVG()
 
-        is_raining = current_values["currentRainLevel"] > 0 or current_values["currentRainLastHourInMillimeter"] > 0
-        current_values["currentRainProbabilityInPercent"] = 0 if not self.service_values or not is_raining else self.service_values["precipitationProbabilityInPercent"]
-        current_values["currentSunshineDurationInMinutes"] = 0 if not self.service_values else self.service_values["sunshineDurationInMinutes"]
+        is_raining = current_values[CurrentFields.RAIN_LEVEL] > 0 or current_values[CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER] > 0
+        current_values[CurrentFields.RAIN_PROBABILITY_IN_PERCENT] = 0 if not self.service_values or not is_raining else self.service_values[ForecastFields.PERCIPITATION_PROBAILITY_IN_PERCENT]
+        current_values[CurrentFields.SUNSHINE_DURATION_IN_MINUTES] = 0 if not self.service_values else self.service_values[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
 
         changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
         self.current_values = current_values
-        return changed_values
+
+        self.notify_callback(changed_values)
 
     def _buildCloudSVG(self):
         if not self.service_values:
@@ -125,32 +155,36 @@ class CurrentValues():
         block = WeatherBlock(datetime.now())
         block.apply(self.service_values)
 
-        skip_station_values = self._stationValuesOutdated()
-        if skip_station_values or "currentRainLevel" not in self.station_values or "currentRainRateInMillimeterPerHour" not in self.station_values or "currentRainLastHourInMillimeter" not in self.station_values:
-            currentRain = self.service_values["precipitationAmountInMillimeter"]
+        skip_station_values = self._isStationOutdated()
+        if skip_station_values or CurrentFields.RAIN_LEVEL not in self.station_values or CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR not in self.station_values or CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER not in self.station_values:
+            currentRain = self.service_values[ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER]
         else:
             currentRain = 0
-            currentRainLevel = self.station_values["currentRainLevel"]
+            currentRainLevel = self.station_values[CurrentFields.RAIN_LEVEL]
             if (currentRainLevel > 0 and self.current_is_raining or currentRainLevel > 2):
                 currentRain = 0.1
-                currentRainRatePerHour = self.station_values["currentRainRateInMillimeterPerHour"]
+                currentRainRatePerHour = self.station_values[CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR]
                 if currentRainRatePerHour > currentRain:
                     currentRain = currentRainRatePerHour
 
-                currentRain1Hour = self.station_values["currentRainLastHourInMillimeter"]
+                currentRain1Hour = self.station_values[CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER]
                 if currentRain1Hour > currentRain:
                     currentRain = currentRain1Hour
         self.current_is_raining = currentRain > 0
         block.setPrecipitationAmountInMillimeter(currentRain)
 
-        cloudCoverInOcta = self.service_values["effectiveCloudCoverInOcta"] if not skip_station_values or "currentCloudCoverInOcta" not in self.station_values else self.station_values["currentCloudCoverInOcta"]
+        cloudCoverInOcta = self.service_values[ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA] if not skip_station_values or CurrentFields.CLOUD_COVER_IN_OCTA not in self.station_values else self.station_values[CurrentFields.CLOUD_COVER_IN_OCTA]
         block.setEffectiveCloudCover(cloudCoverInOcta)
 
         return self.getCachedIcon(WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block))
 
+    def _isStationOutdated(self):
+        return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
+
 class ProviderConsumer():
     '''Handler client'''
     def __init__(self, config, mqtt, db, handler ):
+        self.config = config
         location = config.location.split(",")
         self.latitude = float(location[0])
         self.longitude = float(location[1])
@@ -171,11 +205,7 @@ class ProviderConsumer():
         self.last_error = 0
         self.last_refreshed = 0
 
-        self.current_values = CurrentValues(self.db, self.latitude, self.longitude, config.icon_path)
-
-        self.is_night = False;
-
-        self.station_cloud_timer = None
+        self.current_values = CurrentValues(self.db, self.latitude, self.longitude, config.icon_path, self._notifyCurrentValues)
 
         with self.db.open() as db:
             db_values = db.getOffset(0)
@@ -186,9 +216,10 @@ class ProviderConsumer():
         if not os.path.exists(self.dump_path):
             self._dump()
 
-        self.mqtt.subscribe('+/weather/provider/forecast/#', self.on_message)
+        logging.info("{}/#".format(self.config.mqtt_forecast_topic))
+        self.mqtt.subscribe("{}/#".format(self.config.mqtt_forecast_topic), self.on_message)
 
-        self._checkSunriseSunset()
+        self.current_values.checkSunriseSunset()
         self.is_running = True
 
     def terminate(self):
@@ -253,8 +284,7 @@ class ProviderConsumer():
                     if currentIsModified:
                         with self.db.open() as db:
                             db_values = db.getOffset(0)
-                            _changed_values = self.current_values.setServiceValues(db_values if db_values else {})
-                            self._notifyCurrentValues(_changed_values)
+                            self.current_values.setServiceValues(db_values if db_values else {})
 
                     self.last_refreshed = now.timestamp()
                 else:
@@ -275,47 +305,12 @@ class ProviderConsumer():
             traceback.print_exc()
             self.last_error = datetime.now().astimezone().timestamp()
 
-    def _triggerCloudSVGRebuild(self):
-        self.station_cloud_timer = None
-        if self.current_values.rebuildCloudSVGIfNeeded():
-            self.handler.notifyChangedCurrentData("currentCloudsAsSVG", self.current_values.getCurrentValue("currentCloudsAsSVG"))
-
-    def _checkSunriseSunset(self):
-        now = datetime.now()
-        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, now)
-        is_night = ( now <= sunrise or now >= sunset )
-        if is_night != self.is_night:
-            self.is_night = is_night
-            if self.station_cloud_timer is not None:
-                self.station_cloud_timer.cancel()
-            self._triggerCloudSVGRebuild()
-
-        logging.info("Trigger: checkSunriseSunset => " + str(self.is_night))
-
-        if now < sunrise or now > sunset:
-            logging.info("Schedule sunrise: " + sunrise.strftime("%H:%M:%S"))
-            schedule.every().day.at(sunrise.strftime("%H:%M:%S")).do(self._checkSunriseSunset)
-        else:
-            logging.info("Schedule sunset: " + sunset.strftime("%H:%M:%S"))
-            schedule.every().day.at(sunset.strftime("%H:%M:%S")).do(self._checkSunriseSunset)
-
-        return schedule.CancelJob
-
     def _notifyCurrentValues(self, values):
         for field, value in values.items():
             self.handler.notifyChangedCurrentData(field, value)
 
-        if values.keys() & ["currentRainLevel", "currentRainRateInMillimeterPerHour", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
-            if self.station_cloud_timer is not None:
-                self.station_cloud_timer.cancel()
-            self.station_cloud_timer = threading.Timer(15, self._triggerCloudSVGRebuild)
-            self.station_cloud_timer.start()
-
     def notifyStationValue(self, is_update, field, value, time):
-        changed_values = self.current_values.setStationValue(field, value)
-        #logging.info("notifyStationValue " + field + " " + str(value) + " " + str(changed_values))
-        if is_update:
-            self._notifyCurrentValues(changed_values)
+        self.current_values.setStationValue(field, value)
 
     def resetIconCache(self):
         self.current_values.resetIconCache()
