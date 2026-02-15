@@ -21,7 +21,7 @@ class WeatherBlockList():
 class WeatherBlock():
     def __init__(self, start):
         self.start = start
-        self.end = None
+        self.end = start
 
         self.airTemperatureInCelsius = -100
         self.feelsLikeTemperatureInCelsius = -100
@@ -183,7 +183,7 @@ class WeatherHelper():
     @staticmethod
     def _convertOctaToSVG(latitude, longitude, block, cloud_cover):
         starttime = block.start
-        timerange = int( ( block.end - block.start ).total_seconds() / 60 ) if block.end is not None else 60
+        timerange = int( ( block.end - block.start ).total_seconds() / 60 )
 
         ref_datetime = starttime + timedelta(minutes=timerange / 2)
 
