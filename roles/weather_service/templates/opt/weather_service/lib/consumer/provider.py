@@ -42,7 +42,6 @@ class CurrentValues():
 
         self.notify_callback = notify_callback
 
-        self.station_cloud_timer = None
         self.current_is_raining = False
         self.current_is_night = False
 
@@ -52,6 +51,8 @@ class CurrentValues():
         self.service_values = {}
 
         self.current_values = {}
+
+        self.build_lock = threading.Lock()
 
         self._buildCurrentValues()
 
@@ -63,27 +64,6 @@ class CurrentValues():
             with open("{}{}".format(self.icon_path, icon_name)) as f:
                 self.icon_cache[icon_name] = f.read()
         return self.icon_cache[icon_name]
-
-    def checkSunriseSunset(self):
-        now = datetime.now()
-        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, now)
-        current_is_night = ( now <= sunrise or now >= sunset )
-        if current_is_night != self.current_is_night:
-            self.current_is_night = current_is_night
-            if self.station_cloud_timer is not None:
-                self.station_cloud_timer.cancel()
-            self._rebuildCloudSVGIfNeeded()
-
-        logging.info("Trigger: checkSunriseSunset => " + str(self.current_is_night))
-
-        if now < sunrise or now > sunset:
-            logging.info("Schedule sunrise: " + sunrise.strftime("%H:%M:%S"))
-            schedule.every().day.at(sunrise.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
-        else:
-            logging.info("Schedule sunset: " + sunset.strftime("%H:%M:%S"))
-            schedule.every().day.at(sunset.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
-
-        return schedule.CancelJob
 
     def getCurrentValues(self):
         return self.current_values
@@ -103,49 +83,64 @@ class CurrentValues():
             self.service_values = values
             self._buildCurrentValues()
 
-    def _rebuildCloudSVGIfNeeded(self):
-        if self.station_cloud_timer is not None:
-            self.station_cloud_timer.cancel()
-            self.station_cloud_timer = None
+    def checkSunriseSunset(self):
+        now = datetime.now()
+        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, now)
+        current_is_night = ( now <= sunrise or now >= sunset )
+        if current_is_night != self.current_is_night:
+            self.current_is_night = current_is_night
 
-        cloud_svg = self._buildCloudSVG()
-        if CurrentFields.CLOUDS_AS_SVG not in self.current_values or self.current_values[CurrentFields.CLOUDS_AS_SVG] != cloud_svg:
-            self.current_values[CurrentFields.CLOUDS_AS_SVG] = cloud_svg
-            self.notify_callback({CurrentFields.CLOUDS_AS_SVG: cloud_svg})
+            changed_values = None
+            with self.build_lock:
+                cloud_svg = self._buildCloudSVG()
+                if CurrentFields.CLOUDS_AS_SVG not in self.current_values or self.current_values[CurrentFields.CLOUDS_AS_SVG] != cloud_svg:
+                        self.current_values[CurrentFields.CLOUDS_AS_SVG] = cloud_svg
+                        changed_values = {CurrentFields.CLOUDS_AS_SVG: cloud_svg}
+            if changed_values is not None:
+                self.notify_callback(changed_values)
+
+        if now < sunrise or now > sunset:
+            logging.info("Sunrise/Sunset check: is night {}, Schedule next check at sunrise: {}".format(str(self.current_is_night), sunrise.strftime("%H:%M:%S")))
+            schedule.every().day.at(sunrise.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
+        else:
+            logging.info("Sunrise/Sunset check: is night {}, Schedule next check at sunset: {}".format(str(self.current_is_night), sunset.strftime("%H:%M:%S")))
+            schedule.every().day.at(sunset.strftime("%H:%M:%S")).do(self.checkSunriseSunset)
+
+        return schedule.CancelJob
 
     def _buildCurrentValues(self):
-        current_values = {}
-        if not self._isStationOutdated():
-            current_values = self.station_values.copy()
+        with self.build_lock:
+            current_values = {}
+            if not self._isStationOutdated():
+                current_values = self.station_values.copy()
 
-        for field in CurrentFieldsList.values():
-            if field in current_values:
-                continue
+            for field in CurrentFieldsList.values():
+                if field in current_values:
+                    continue
 
-            mapped_current_field = self.CURRENT_FALLBACK_MAPPING[field] if field in self.CURRENT_FALLBACK_MAPPING else None
-            if mapped_current_field is None or mapped_current_field not in self.service_values:
-                if field in [CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR, CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER, CurrentFields.RAIN_LEVEL]:
-                    current_values[field] = 0
-                elif field in [CurrentFields.RAIN_DAILY_IN_MILLIMETER]:
-                    end = datetime.now()
-                    start = end.replace(hour=0, minute=0, second=0, microsecond=0)
-                    with self.db.open() as db:
-                        values = db.getRangeSum(start, end, [ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER])
-                    current_values[CurrentFields.RAIN_DAILY_IN_MILLIMETER] = values[ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER]
+                mapped_current_field = self.CURRENT_FALLBACK_MAPPING[field] if field in self.CURRENT_FALLBACK_MAPPING else None
+                if mapped_current_field is None or mapped_current_field not in self.service_values:
+                    if field in [CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR, CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER, CurrentFields.RAIN_LEVEL]:
+                        current_values[field] = 0
+                    elif field in [CurrentFields.RAIN_DAILY_IN_MILLIMETER]:
+                        end = datetime.now()
+                        start = end.replace(hour=0, minute=0, second=0, microsecond=0)
+                        with self.db.open() as db:
+                            values = db.getRangeSum(start, end, [ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER])
+                        current_values[CurrentFields.RAIN_DAILY_IN_MILLIMETER] = values[ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER]
+                    else:
+                        current_values[field] = -1
                 else:
-                    current_values[field] = -1
-            else:
-                current_values[field] = self.service_values[mapped_current_field]
+                    current_values[field] = self.service_values[mapped_current_field]
 
-        current_values[CurrentFields.CLOUDS_AS_SVG] = self._buildCloudSVG()
+            current_values[CurrentFields.CLOUDS_AS_SVG] = self._buildCloudSVG()
 
-        is_raining = current_values[CurrentFields.RAIN_LEVEL] > 0 or current_values[CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER] > 0
-        current_values[CurrentFields.RAIN_PROBABILITY_IN_PERCENT] = 0 if not self.service_values or not is_raining else self.service_values[ForecastFields.PERCIPITATION_PROBAILITY_IN_PERCENT]
-        current_values[CurrentFields.SUNSHINE_DURATION_IN_MINUTES] = 0 if not self.service_values else self.service_values[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
+            is_raining = current_values[CurrentFields.RAIN_LEVEL] > 0 or current_values[CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER] > 0
+            current_values[CurrentFields.RAIN_PROBABILITY_IN_PERCENT] = 0 if not self.service_values or not is_raining else self.service_values[ForecastFields.PERCIPITATION_PROBAILITY_IN_PERCENT]
+            current_values[CurrentFields.SUNSHINE_DURATION_IN_MINUTES] = 0 if not self.service_values else self.service_values[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
 
-        changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
-        self.current_values = current_values
-
+            changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
+            self.current_values = current_values
         self.notify_callback(changed_values)
 
     def _buildCloudSVG(self):
