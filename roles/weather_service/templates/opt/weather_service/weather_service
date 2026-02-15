@@ -120,7 +120,7 @@ class Handler(Server):
         self.emitSocketData('details:data', { field: value }, "details")
 
     def notifyChangedCurrentData(self, field, value):
-        if self.isSocketRoomActive("widget") and field in [CurrentFields.AIR_TEMPERATURE_IN_CELSIUS, CurrentFields.CLOUD_COVER_IN_OCTA]:
+        if self.isSocketRoomActive("widget") and field in [CurrentFields.AIR_TEMPERATURE_IN_CELSIUS, CurrentFields.CLOUD_COVER_IN_OCTA, CurrentFields.CLOUDS_AS_SVG]:
            self.emitSocketData('widget:data', { field: value }, "widget")
 
         if self.isSocketRoomActive("details"):
@@ -132,7 +132,7 @@ class Handler(Server):
         current_data = self.provider_consumer.getCurrentValues()
 
         if room == "widget":
-            self.emitSocketData('widget:data', {CurrentFields.AIR_TEMPERATURE_IN_CELSIUS: current_data[CurrentFields.AIR_TEMPERATURE_IN_CELSIUS], CurrentFields.CLOUD_COVER_IN_OCTA: current_data[CurrentFields.CLOUD_COVER_IN_OCTA] }, room)
+            self.emitSocketData('widget:data', {k: v for k, v in current_data.items() if k in [CurrentFields.AIR_TEMPERATURE_IN_CELSIUS, CurrentFields.CLOUD_COVER_IN_OCTA, CurrentFields.CLOUDS_AS_SVG]}, room)
 
         elif room == "details":
             week_data = self.provider_consumer.getWeekValues(data)
