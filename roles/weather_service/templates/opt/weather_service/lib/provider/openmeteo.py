@@ -9,7 +9,7 @@ import json
 import decimal
 
 from lib.provider.provider import Provider, RequestDataException, CurrentDataException, ForecastDataException
-from lib.helper.constants import ForecastFields
+from lib.helper.fields import ForecastFields
 
 # possible alternative => https://open-meteo.com/
 # weather codes https://github.com/open-meteo/open-meteo/issues/287
@@ -24,13 +24,13 @@ current_config = {
 
     ForecastFields.WIND_DIRECTION_IN_DEGREE: "winddirection_10m",
     ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windspeed_10m",
-    ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR: "windgusts_10m",
+    ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR: "windgusts_10m",
 
-    ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA: [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
+    ForecastFields.CLOUD_COVER_IN_OCTA: [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
 
     ForecastFields.WEATHER_CODE: "weathercode",
 
-    ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER: "precipitation"
+    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitation"
     #ForecastFields.SUNSHINE_DURATION_IN_MINUTES: [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
 
@@ -42,21 +42,21 @@ forecast_config = {
 
     ForecastFields.WIND_DIRECTION_IN_DEGREE: "winddirection_10m",
     ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windspeed_10m",
-    ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR: "windgusts_10m",
+    ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR: "windgusts_10m",
 
-    ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA: [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
+    ForecastFields.CLOUD_COVER_IN_OCTA: [ [ "cloudcover" ], lambda self, fetched_values: fetched_values["cloudcover"] * 8 / 100 ],
 
-    ForecastFields.THUNDERSTORM_PROBAILITY_IN_PERCENT: [ [ "cape" ], lambda self, fetched_values: int(round(fetched_values["cape"] * 100.0 / 3500.0, 0)) ], # < 1000 Slight, 1000 – 2500 Moderate, 2500-3500 Very, > 3500 Extremely
-    ForecastFields.FREEZING_RAIN_PROBAILITY_IN_PERCENT: [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [48,56,57,66,67] else fetched_values["precipitation_probability"] ],
-    ForecastFields.HAIL_PROBAILITY_IN_PERCENT: [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [96,99] else fetched_values["precipitation_probability"] ],
-    ForecastFields.SNOWFALL_PROBAILITY_IN_PERCENT: [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["snowfall"] == 0 else fetched_values["precipitation_probability"] ],
+    ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT: [ [ "cape" ], lambda self, fetched_values: int(round(fetched_values["cape"] * 100.0 / 3500.0, 0)) ], # < 1000 Slight, 1000 – 2500 Moderate, 2500-3500 Very, > 3500 Extremely
+    ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT: [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [48,56,57,66,67] else fetched_values["precipitation_probability"] ],
+    ForecastFields.HAIL_PROBABILITY_IN_PERCENT: [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [96,99] else fetched_values["precipitation_probability"] ],
+    ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT: [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["snowfall"] == 0 else fetched_values["precipitation_probability"] ],
 
-    ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER: "precipitation",
-    ForecastFields.PERCIPITATION_PROBAILITY_IN_PERCENT: "precipitation_probability",
+    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitation",
+    ForecastFields.RAIN_PROBABILITY_IN_PERCENT: "precipitation_probability",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     ForecastFields.WEATHER_CODE: "weathercode",
-    ForecastFields.UV_INDEX_WITH_CLOUDS: "uv_index",
+    ForecastFields.UV_INDEX: "uv_index",
 
     ForecastFields.SUNSHINE_DURATION_IN_MINUTES: [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }

@@ -82,10 +82,10 @@ function formatNumber($number, $precission = 1)
                     <div class="sun"><?php echo $blockData["svg"]; ?>
                     </div>
                     <div class="value precipitationProbability">
-                        <?php echo getSVG('rain', 'rain_grayscaled') . "<div class=\"main\">" . formatNumber($blockData["precipitationProbabilityInPercent"], 0); ?></div><div class="sub">&nbsp;%</div>
+                        <?php echo getSVG('rain', 'rain_grayscaled') . "<div class=\"main\">" . formatNumber($blockData["rainProbabilityInPercent"], 0); ?></div><div class="sub">&nbsp;%</div>
                     </div>
                     <div class="value precipitationAmount">
-                        <div class="main"><?php echo formatNumber($blockData["precipitationAmountInMillimeter"]); ?></div><div class="sub">&nbsp;mm</div>
+                        <div class="main"><?php echo formatNumber($blockData["rainAmountInMillimeter"]); ?></div><div class="sub">&nbsp;mm</div>
                     </div>
                 </div>
             </div>

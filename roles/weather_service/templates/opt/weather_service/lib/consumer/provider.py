@@ -13,25 +13,10 @@ from smartserver.metric import Metric
 
 from lib.db import DBException
 from lib.helper.forecast import WeatherBlock, WeatherBlockList, WeatherHelper
-from lib.helper.constants import CurrentFields, CurrentFieldsList, ForecastFields
+from lib.helper.fields import CurrentFields, ForecastFields, CurrentFieldFallbackMappings
+
 
 class CurrentValues():
-    CURRENT_FALLBACK_MAPPING = {
-        CurrentFields.AIR_TEMPERATURE_IN_CELSIUS:       ForecastFields.AIR_TEMPERATURE_IN_CELSIUS,
-        CurrentFields.PERCEIVED_TEMPERATURE_IN_CELSIUS: ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS,
-
-        CurrentFields.AIR_HUMIDITY_IN_PERCENT:          ForecastFields.RELATIVE_HUMIDITY_IN_PERCENT,
-
-        CurrentFields.WIND_DIRECTION_IN_DEGREE:         ForecastFields.WIND_DIRECTION_IN_DEGREE,
-        CurrentFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR,
-        CurrentFields.WIND_GUST_IN_KILOMETER_PER_HOUR:  ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR,
-
-        CurrentFields.CLOUD_COVER_IN_OCTA:              ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA,
-
-        CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER:     ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER,
-        CurrentFields.UV_INDEX:                         ForecastFields.UV_INDEX_WITH_CLOUDS
-    }
-
     def __init__(self, db, latitude, longitude, icon_path, notify_callback):
         self.db = db
         self.latitude = latitude
@@ -114,20 +99,20 @@ class CurrentValues():
             if not self._isStationOutdated():
                 current_values = self.station_values.copy()
 
-            for field in CurrentFieldsList.values():
+            for field in CurrentFields:
                 if field in current_values:
                     continue
 
-                mapped_current_field = self.CURRENT_FALLBACK_MAPPING[field] if field in self.CURRENT_FALLBACK_MAPPING else None
+                mapped_current_field = CurrentFieldFallbackMappings[field] if field in CurrentFieldFallbackMappings else None
                 if mapped_current_field is None or mapped_current_field not in self.service_values:
-                    if field in [CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR, CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER, CurrentFields.RAIN_LEVEL]:
+                    if field in [CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR, CurrentFields.RAIN_AMOUNT_IN_MILLIMETER, CurrentFields.RAIN_LEVEL]:
                         current_values[field] = 0
                     elif field in [CurrentFields.RAIN_DAILY_IN_MILLIMETER]:
                         end = datetime.now()
                         start = end.replace(hour=0, minute=0, second=0, microsecond=0)
                         with self.db.open() as db:
-                            values = db.getRangeSum(start, end, [ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER])
-                        current_values[CurrentFields.RAIN_DAILY_IN_MILLIMETER] = values[ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER]
+                            values = db.getRangeSum(start, end, [ForecastFields.RAIN_AMOUNT_IN_MILLIMETER])
+                        current_values[CurrentFields.RAIN_DAILY_IN_MILLIMETER] = values[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
                     else:
                         current_values[field] = -1
                 else:
@@ -135,8 +120,8 @@ class CurrentValues():
 
             current_values[CurrentFields.CLOUDS_AS_SVG] = self._buildCloudSVG()
 
-            is_raining = current_values[CurrentFields.RAIN_LEVEL] > 0 or current_values[CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER] > 0
-            current_values[CurrentFields.RAIN_PROBABILITY_IN_PERCENT] = 0 if not self.service_values or not is_raining else self.service_values[ForecastFields.PERCIPITATION_PROBAILITY_IN_PERCENT]
+            is_raining = current_values[CurrentFields.RAIN_LEVEL] > 0 or current_values[CurrentFields.RAIN_AMOUNT_IN_MILLIMETER] > 0
+            current_values[CurrentFields.RAIN_PROBABILITY_IN_PERCENT] = 0 if not self.service_values or not is_raining else self.service_values[ForecastFields.RAIN_PROBABILITY_IN_PERCENT]
             current_values[CurrentFields.SUNSHINE_DURATION_IN_MINUTES] = 0 if not self.service_values else self.service_values[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
 
             changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
@@ -151,8 +136,8 @@ class CurrentValues():
         block.apply(self.service_values)
 
         skip_station_values = self._isStationOutdated()
-        if skip_station_values or CurrentFields.RAIN_LEVEL not in self.station_values or CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR not in self.station_values or CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER not in self.station_values:
-            currentRain = self.service_values[ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER]
+        if skip_station_values or CurrentFields.RAIN_LEVEL not in self.station_values or CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR not in self.station_values or CurrentFields.RAIN_AMOUNT_IN_MILLIMETER not in self.station_values:
+            currentRain = self.service_values[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
         else:
             currentRain = 0
             currentRainLevel = self.station_values[CurrentFields.RAIN_LEVEL]
@@ -162,13 +147,13 @@ class CurrentValues():
                 if currentRainRatePerHour > currentRain:
                     currentRain = currentRainRatePerHour
 
-                currentRain1Hour = self.station_values[CurrentFields.RAIN_LAST_HOUR_IN_MILLIMETER]
+                currentRain1Hour = self.station_values[CurrentFields.RAIN_AMOUNT_IN_MILLIMETER]
                 if currentRain1Hour > currentRain:
                     currentRain = currentRain1Hour
         self.current_is_raining = currentRain > 0
         block.setPrecipitationAmountInMillimeter(currentRain)
 
-        cloudCoverInOcta = self.service_values[ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA] if not skip_station_values or CurrentFields.CLOUD_COVER_IN_OCTA not in self.station_values else self.station_values[CurrentFields.CLOUD_COVER_IN_OCTA]
+        cloudCoverInOcta = self.service_values[ForecastFields.CLOUD_COVER_IN_OCTA] if not skip_station_values or CurrentFields.CLOUD_COVER_IN_OCTA not in self.station_values else self.station_values[CurrentFields.CLOUD_COVER_IN_OCTA]
         block.setEffectiveCloudCover(cloudCoverInOcta)
 
         return self.getCachedIcon(WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block))
@@ -242,15 +227,18 @@ class ProviderConsumer():
                     totalCount = updateCount = insertCount = 0
                     with self.db.open() as db:
                         for timestamp in self.processed_values:
-                            validFrom = datetime.fromtimestamp(int(timestamp))
-                            isCurrent = validFrom.day == now.day and validFrom.hour == now.hour
-                            update_values = []
-                            for field in self.processed_values[timestamp]:
-                                totalCount += 1
-                                update_values.append(u"`{}`='{}'".format(field,self.processed_values[timestamp][field]))
-
-                            isUpdate = db.hasEntry(validFrom.timestamp())
                             try:
+                                validFrom = datetime.fromtimestamp(int(timestamp))
+                                isCurrent = validFrom.day == now.day and validFrom.hour == now.hour
+                                update_values = []
+                                for field in self.processed_values[timestamp]:
+                                    if field not in ForecastFields:
+                                        raise Exception("Unknown forecast field '{}'. Only follwoing values are allowed {}".format(field, list(ForecastFields)))
+                                    totalCount += 1
+                                    update_values.append(u"`{}`='{}'".format(field,self.processed_values[timestamp][field]))
+
+                                isUpdate = db.hasEntry(validFrom.timestamp())
+
                                 if isCurrent or isUpdate:
                                     isModified = db.update(validFrom.timestamp(),update_values)
                                 else:
@@ -265,7 +253,7 @@ class ProviderConsumer():
                                     else:
                                         insertCount += 1
                             except Exception as e:
-                                logging.info(update_values)
+                                logging.error(update_values)
                                 raise e
 
                     logging.info("Forecasts processed • Total {} • Queries: {} • Updated: {} • Inserted: {}".format(totalCount, len(self.processed_values),updateCount,insertCount))

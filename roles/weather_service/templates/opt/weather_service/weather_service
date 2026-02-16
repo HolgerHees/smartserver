@@ -16,7 +16,7 @@ from lib.broker.mqtt import MQTT as MQTTBroker
 from lib.broker.dummy import Dummy as DummyBroker
 from lib.db import DB
 from lib.helper.forecast import WeatherBlock
-from lib.helper.constants import CurrentFields
+from lib.helper.fields import CurrentFields
 
 from smartserver.scheduler import Scheduler
 from smartserver.server import Server, serverWeb, serverSocket
@@ -124,7 +124,7 @@ class Handler(Server):
            self.emitSocketData('widget:data', { field: value }, "widget")
 
         if self.isSocketRoomActive("details"):
-           self.emitSocketData('details:data', { field: value }, "details")
+           self.emitSocketData('details:data', {"current": { field: value }}, "details")
 
     def onSocketRoomJoin(self, sid, room, data = None):
         super().onSocketRoomJoin(sid, room, data)
@@ -139,7 +139,7 @@ class Handler(Server):
             astro_data = self.astro_consumer.getValues()
             latitude, longitude = config.location.split(",")
             location_data = {"locationLatitude": latitude, "locationLongitude": longitude}
-            self.emitSocketData('details:data', current_data | week_data | astro_data | location_data, room)
+            self.emitSocketData('details:data', {"current": current_data} | week_data | astro_data | location_data, room)
 
     def getWidgetData(self):
         mode = self.getRequestValue("mode")

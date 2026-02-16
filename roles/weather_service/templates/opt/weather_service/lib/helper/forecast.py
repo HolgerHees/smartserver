@@ -2,6 +2,9 @@ from suntime import Sun, SunTimeException
 from datetime import datetime, timedelta
 import logging
 
+from lib.helper.fields import ForecastFields
+
+
 class WeatherBlockList():
     def __init__(self):
         self.block_list = []
@@ -81,58 +84,58 @@ class WeatherBlock():
         self.precipitationProbabilityInPercent = 100 if value > 0 else 0
 
     def apply( self, hourlyData ):
-        self.sunshineDurationInMinutes += hourlyData['sunshineDurationInMinutes']
-        self.precipitationAmountInMillimeter += hourlyData['precipitationAmountInMillimeter']
+        self.sunshineDurationInMinutes += hourlyData[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
+        self.precipitationAmountInMillimeter += hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
 
-        if self.airTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
-            self.airTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+        if self.airTemperatureInCelsius < hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
+            self.airTemperatureInCelsius = hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
 
-        if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
-            self.minAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+        if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
+            self.minAirTemperatureInCelsius = hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
 
-        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
-            self.maxAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
+            self.maxAirTemperatureInCelsius = hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
 
-        if self.feelsLikeTemperatureInCelsius < hourlyData['feelsLikeTemperatureInCelsius']:
-            self.feelsLikeTemperatureInCelsius = hourlyData['feelsLikeTemperatureInCelsius']
+        if self.feelsLikeTemperatureInCelsius < hourlyData[ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS]:
+            self.feelsLikeTemperatureInCelsius = hourlyData[ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS]
 
-        if self.effectiveCloudCoverInOcta < hourlyData['effectiveCloudCoverInOcta']:
-            self.effectiveCloudCoverInOcta = hourlyData['effectiveCloudCoverInOcta']
+        if self.effectiveCloudCoverInOcta < hourlyData[ForecastFields.CLOUD_COVER_IN_OCTA]:
+            self.effectiveCloudCoverInOcta = hourlyData[ForecastFields.CLOUD_COVER_IN_OCTA]
 
-        if self.minEffectiveCloudCoverInOcta is None or self.minEffectiveCloudCoverInOcta > hourlyData['effectiveCloudCoverInOcta']:
-            self.minEffectiveCloudCoverInOcta = hourlyData['effectiveCloudCoverInOcta']
+        if self.minEffectiveCloudCoverInOcta is None or self.minEffectiveCloudCoverInOcta > hourlyData[ForecastFields.CLOUD_COVER_IN_OCTA]:
+            self.minEffectiveCloudCoverInOcta = hourlyData[ForecastFields.CLOUD_COVER_IN_OCTA]
 
-        if self.maxEffectiveCloudCoverInOcta is None or self.maxEffectiveCloudCoverInOcta < hourlyData['effectiveCloudCoverInOcta']:
-            self.maxEffectiveCloudCoverInOcta = hourlyData['effectiveCloudCoverInOcta']
+        if self.maxEffectiveCloudCoverInOcta is None or self.maxEffectiveCloudCoverInOcta < hourlyData[ForecastFields.CLOUD_COVER_IN_OCTA]:
+            self.maxEffectiveCloudCoverInOcta = hourlyData[ForecastFields.CLOUD_COVER_IN_OCTA]
 
-        if self.windSpeedInKilometerPerHour < hourlyData['windSpeedInKilometerPerHour']:
-            self.windSpeedInKilometerPerHour = hourlyData['windSpeedInKilometerPerHour']
-            self.windDirectionInDegree = hourlyData['windDirectionInDegree']
+        if self.windSpeedInKilometerPerHour < hourlyData[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]:
+            self.windSpeedInKilometerPerHour = hourlyData[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]
+            self.windDirectionInDegree = hourlyData[ForecastFields.WIND_DIRECTION_IN_DEGREE]
 
-        if self.weatherCode < hourlyData['weatherCode']:
-            self.weatherCode = hourlyData['weatherCode']
+        if self.weatherCode < hourlyData[ForecastFields.WEATHER_CODE]:
+            self.weatherCode = hourlyData[ForecastFields.WEATHER_CODE]
 
-        if self.thunderstormProbabilityInPercent < hourlyData['thunderstormProbabilityInPercent']:
-            self.thunderstormProbabilityInPercent = hourlyData['thunderstormProbabilityInPercent']
+        if self.thunderstormProbabilityInPercent < hourlyData[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]:
+            self.thunderstormProbabilityInPercent = hourlyData[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
 
-        if hourlyData['precipitationAmountInMillimeter'] > 0:
-            if self.freezingRainProbabilityInPercent < hourlyData['freezingRainProbabilityInPercent']:
-                self.freezingRainProbabilityInPercent = hourlyData['freezingRainProbabilityInPercent']
+        if hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER] > 0:
+            if self.freezingRainProbabilityInPercent < hourlyData[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]:
+                self.freezingRainProbabilityInPercent = hourlyData[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]
 
-            if self.hailProbabilityInPercent < hourlyData['hailProbabilityInPercent']:
-                self.hailProbabilityInPercent = hourlyData['hailProbabilityInPercent']
+            if self.hailProbabilityInPercent < hourlyData[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]:
+                self.hailProbabilityInPercent = hourlyData[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]
 
-            if self.snowfallProbabilityInPercent < hourlyData['snowfallProbabilityInPercent']:
-                self.snowfallProbabilityInPercent = hourlyData['snowfallProbabilityInPercent']
+            if self.snowfallProbabilityInPercent < hourlyData[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]:
+                self.snowfallProbabilityInPercent = hourlyData[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]
 
-            if self.precipitationProbabilityInPercent < hourlyData['precipitationProbabilityInPercent']:
-                self.precipitationProbabilityInPercent = hourlyData['precipitationProbabilityInPercent']
+            if self.precipitationProbabilityInPercent < hourlyData[ForecastFields.RAIN_PROBABILITY_IN_PERCENT]:
+                self.precipitationProbabilityInPercent = hourlyData[ForecastFields.RAIN_PROBABILITY_IN_PERCENT]
 
-            if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter <= hourlyData['precipitationAmountInMillimeter']:
-                self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
+            if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter <= hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]:
+                self.maxPrecipitationAmountInMillimeter = hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
 
-            if self.checkRainProbability( hourlyData['precipitationProbabilityInPercent'], hourlyData['precipitationAmountInMillimeter'] ):
-                _isSnowing = hourlyData['freezingRainProbabilityInPercent'] > 10 or hourlyData['hailProbabilityInPercent'] > 10 or hourlyData['snowfallProbabilityInPercent'] > 10
+            if self.checkRainProbability( hourlyData[ForecastFields.RAIN_PROBABILITY_IN_PERCENT], hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER] ):
+                _isSnowing = hourlyData[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT] > 10 or hourlyData[ForecastFields.HAIL_PROBABILITY_IN_PERCENT] > 10 or hourlyData[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT] > 10
                 if not self.maxIsSnowing or _isSnowing:
                     if _isSnowing:
                         self.maxIsSnowing = True
@@ -157,22 +160,22 @@ class WeatherHelper():
 
     @staticmethod
     def calculateSummary( dataList ):
-        minTemperature = dataList[0]['airTemperatureInCelsius'];
-        maxTemperature = dataList[0]['airTemperatureInCelsius'];
-        maxWindSpeed = dataList[0]['windSpeedInKilometerPerHour'];
+        minTemperature = dataList[0][ForecastFields.AIR_TEMPERATURE_IN_CELSIUS];
+        maxTemperature = dataList[0][ForecastFields.AIR_TEMPERATURE_IN_CELSIUS];
+        maxWindSpeed = dataList[0][ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR];
         sumSunshine = 0;
         sumRain = 0;
 
         for entry in dataList:
-            if minTemperature > entry['airTemperatureInCelsius']:
-                minTemperature = entry['airTemperatureInCelsius']
-            if maxTemperature < entry['airTemperatureInCelsius']:
-                maxTemperature = entry['airTemperatureInCelsius']
-            if maxWindSpeed < entry['maxWindSpeedInKilometerPerHour']:
-                maxWindSpeed = entry['maxWindSpeedInKilometerPerHour']
+            if minTemperature > entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
+                minTemperature = entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
+            if maxTemperature < entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
+                maxTemperature = entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
+            if maxWindSpeed < entry[ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR]:
+                maxWindSpeed = entry[ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR]
 
-            sumSunshine += entry['sunshineDurationInMinutes']
-            sumRain += entry['precipitationAmountInMillimeter']
+            sumSunshine += entry[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
+            sumRain += entry[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
 
         return [ minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain ]
 

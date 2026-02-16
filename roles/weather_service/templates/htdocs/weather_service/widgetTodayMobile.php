@@ -127,18 +127,18 @@ body {
 <body style="background-color:transparent">
 <div class="content">
     <div class="summary">
-        <div class="block cloud"><?php echo $data["current"]["currentCloudsAsSVG"]; ?></div>
+        <div class="block cloud"><?php echo $data["current"]["cloudsAsSVG"]; ?></div>
         <div class="block">
-            <div class="temperature"><div class="value"><?php echo round($data["current"]["currentAirTemperatureInCelsius"], 1); ?>°</div></div>
-            <div class="perceived"><div class="value"><?php echo Ressources::getI18NString("Perceived", $i18n) . " " . round($data["current"]["currentPerceivedTemperatureInCelsius"], 1); ?>°</div></div>
+            <div class="temperature"><div class="value"><?php echo round($data["current"]["airTemperatureInCelsius"], 1); ?>°</div></div>
+            <div class="perceived"><div class="value"><?php echo Ressources::getI18NString("Perceived", $i18n) . " " . round($data["current"]["feelsLikeTemperatureInCelsius"], 1); ?>°</div></div>
         </div>
         <div class="block">
-            <div class="rain_probability"><div class="icon"><?php echo getSVG('wind', 'rain_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentRainProbabilityInPercent"], 0); ?> %</div></div>
-            <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentSunshineDurationInMinutes"], 1); ?> min</div></div>
+            <div class="rain_probability"><div class="icon"><?php echo getSVG('wind', 'rain_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["rainProbabilityInPercent"], 0); ?> %</div></div>
+            <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["sunshineDurationInMinutes"], 1); ?> min</div></div>
         </div>
         <div class="block">
-            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentRainLastHourInMillimeter"], 0); ?> mm</div></div>
-            <div class="wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["currentWindSpeedInKilometerPerHour"], 1); ?> km/h</div></div>
+            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["rainAmountInMillimeter"], 0); ?> mm</div></div>
+            <div class="wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["windSpeedInKilometerPerHour"], 1); ?> km/h</div></div>
         </div>
     </div>
     <div class="details">
@@ -147,7 +147,7 @@ body {
             <div class="name"><div><?php echo date_create($day["start"])->format("H:i"); ?></div></div>
             <div class="cloud"><?php echo $day["svg"]; ?></div>
             <div class="temperature"><div class="real"><?php echo round($day["minAirTemperatureInCelsius"], 0); ?>°</div><?php if( round($day["minAirTemperatureInCelsius"], 0) != round($day["maxAirTemperatureInCelsius"], 0) ) { ?><div class="perceived"><?php echo round($day["maxAirTemperatureInCelsius"], 0); ?>°</div><?php } ?></div>
-            <div class="rain"><div class="perceived"><?php echo round($day["precipitationProbabilityInPercent"], 0); ?>%</div><div class="amount">, <?php echo round($day["precipitationAmountInMillimeter"], 1); ?>mm</div></div>
+            <div class="rain"><div class="perceived"><?php echo round($day["rainProbabilityInPercent"], 0); ?>%</div><div class="amount">, <?php echo round($day["rainAmountInMillimeter"], 1); ?>mm</div></div>
         </div>
 <?php } ?>
     </div>

@@ -124,15 +124,16 @@ mx.WeatherCore = (function( ret ) {
 
     ret.processData = function(changed_data)
     {
+        if( "current" in data && "current" in changed_data) changed_data["current"] = {...data["current"], ...changed_data["current"]};
         data = {...data, ...changed_data};
 
-        if( "currentAirTemperatureInCelsius" in changed_data) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentAirTemperatureInCelsius"]) + ' °C';
-        if( "currentPerceivedTemperatureInCelsius" in changed_data) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentPerceivedTemperatureInCelsius"]) + ' °C';
+        if( "current" in changed_data && "airTemperatureInCelsius" in changed_data["current"]) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["airTemperatureInCelsius"]) + ' °C';
+        if( "current" in changed_data && "feelsLikeTemperatureInCelsius" in changed_data["current"]) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["feelsLikeTemperatureInCelsius"]) + ' °C';
 
-        if( "currentWindSpeedInKilometerPerHour" in changed_data || "currentWindGustInKilometerPerHour" in changed_data )
+        if( "current" in changed_data && ("windSpeedInKilometerPerHour" in changed_data["current"] || "windGustInKilometerPerHour" in changed_data["current"]))
         {
-            let windSpeed = mx.WeatherHelper.formatNumber(data["currentWindSpeedInKilometerPerHour"]);
-            let windGust = mx.WeatherHelper.formatNumber(data["currentWindGustInKilometerPerHour"]);
+            let windSpeed = mx.WeatherHelper.formatNumber(data["current"]["windSpeedInKilometerPerHour"]);
+            let windGust = mx.WeatherHelper.formatNumber(data["current"]["windGustInKilometerPerHour"]);
             let wind = windSpeed;
             if( windGust > 0 && windSpeed != windGust )
             {
@@ -141,21 +142,21 @@ mx.WeatherCore = (function( ret ) {
             mx.$(".current .summary .wind .value").innerHTML = wind + ' km/h';
         }
 
-        if( "currentRainRateInMillimeterPerHour" in changed_data || "currentRainDailyInMillimeter" in changed_data )
+        if( "current" in changed_data && ("rainRateInMillimeterPerHour" in changed_data["current"] || "rainDailyInMillimeter" in changed_data["current"]))
         {
-            let rainValue = mx.WeatherHelper.formatNumber(data["currentRainRateInMillimeterPerHour"]);
-            let rainDaily = mx.WeatherHelper.formatNumber(data["currentRainDailyInMillimeter"]);
+            let rainValue = mx.WeatherHelper.formatNumber(data["current"]["rainRateInMillimeterPerHour"]);
+            let rainDaily = mx.WeatherHelper.formatNumber(data["current"]["rainDailyInMillimeter"]);
             let rain = rainValue
-            if( rainValue != rainDaily && data["currentRainDailyInMillimeter"] > 0 )
+            if( rainValue != rainDaily && data["current"]["rainDailyInMillimeter"] > 0 )
             {
                 rain += ' (' + rainDaily + ')';
             }
             mx.$(".current .summary .rain .value").innerHTML = rain + ' mm';
         }
 
-        if( "currentCloudsAsSVG" in changed_data) mx.$(".current .cloud").innerHTML = mx.WeatherHelper.formatNumber(data["currentCloudsAsSVG"]);
+        if( "current" in changed_data && "cloudsAsSVG" in changed_data["current"]) mx.$(".current .cloud").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["cloudsAsSVG"]);
 
-        if( "currentUvIndex" in changed_data) mx.$(".current .uv .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentUvIndex"]);
+        if( "current" in changed_data && "uvIndex" in changed_data["current"]) mx.$(".current .uv .value").innerHTML = mx.WeatherHelper.formatNumber(data["current"]["uvIndex"]);
 
         if( "astroSunrise" in changed_data)
         {

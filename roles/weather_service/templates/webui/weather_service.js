@@ -58,8 +58,8 @@ mx.Widgets.CustomWeather = (function( widget ) {
         if( data == null ) return widget.alert(0, "Weather N/A");
 
         let content = "";
-        content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + data["currentCloudsAsSVG"] + "</span>";
-        content += "<span>" + data["currentAirTemperatureInCelsius"].toFixed(1) + "°C</span>";
+        content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + data["cloudsAsSVG"] + "</span>";
+        content += "<span>" + data["airTemperatureInCelsius"].toFixed(1) + "°C</span>";
 
         widget.show(0, content );
     }

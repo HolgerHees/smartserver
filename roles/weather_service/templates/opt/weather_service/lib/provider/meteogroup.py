@@ -9,7 +9,7 @@ import json
 import decimal
 
 from lib.provider.provider import Provider, AuthException, RequestDataException, CurrentDataException, ForecastDataException
-from lib.helper.constants import ForecastFields
+from lib.helper.fields import ForecastFields
 
 # https://api.weather.mg/
 
@@ -25,14 +25,14 @@ current_fields = {
     ForecastFields.WIND_DIRECTION_IN_DEGREE: "windDirectionInDegree",
     #ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: [ ["windSpeedInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["windSpeedInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
     ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windSpeedInKilometerPerHour",
-    ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR: "maxWindGustInKilometerPerHour",
+    ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR: "maxWindGustInKilometerPerHour",
 
-    ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA: "effectiveCloudCoverInOcta",
+    ForecastFields.CLOUD_COVER_IN_OCTA: "effectiveCloudCoverInOcta",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     ForecastFields.WEATHER_CODE: "weatherCodeTraditional",
 
-    ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
+    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
     ForecastFields.SUNSHINE_DURATION_IN_MINUTES: "sunshineDurationInMinutes"
 }
 
@@ -44,21 +44,21 @@ forecast_config = {
 
     ForecastFields.WIND_DIRECTION_IN_DEGREE: "windDirectionInDegree",
     ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windSpeedInKilometerPerHour",
-    ForecastFields.MAX_WIND_SPEED_IN_KILOMETER_PER_HOUR: "maxWindGustInKilometerPerHour",
+    ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR: "maxWindGustInKilometerPerHour",
 
-    ForecastFields.EFFECTVE_CLOUD_COVER_IN_OCTA: "effectiveCloudCoverInOcta",
+    ForecastFields.CLOUD_COVER_IN_OCTA: "effectiveCloudCoverInOcta",
 
-    ForecastFields.THUNDERSTORM_PROBAILITY_IN_PERCENT: "thunderstormProbabilityInPercent",
-    ForecastFields.FREEZING_RAIN_PROBAILITY_IN_PERCENT: "freezingRainProbabilityInPercent",
-    ForecastFields.HAIL_PROBAILITY_IN_PERCENT: "hailProbabilityInPercent",
-    ForecastFields.SNOWFALL_PROBAILITY_IN_PERCENT: "snowfallProbabilityInPercent",
+    ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT: "thunderstormProbabilityInPercent",
+    ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT: "freezingRainProbabilityInPercent",
+    ForecastFields.HAIL_PROBABILITY_IN_PERCENT: "hailProbabilityInPercent",
+    ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT: "snowfallProbabilityInPercent",
 
-    ForecastFields.PERCIPITATION_PROBAILITY_IN_PERCENT: "precipitationProbabilityInPercent",
-    ForecastFields.PERCIPITATION_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
+    ForecastFields.RAIN_PROBABILITY_IN_PERCENT: "precipitationProbabilityInPercent",
+    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     ForecastFields.WEATHER_CODE: "weatherCodeTraditional",
-    ForecastFields.UV_INDEX_WITH_CLOUDS: "uvIndexWithClouds",
+    ForecastFields.UV_INDEX: "uvIndexWithClouds",
 
 	ForecastFields.SUNSHINE_DURATION_IN_MINUTES: "sunshineDurationInMinutes"
 }
