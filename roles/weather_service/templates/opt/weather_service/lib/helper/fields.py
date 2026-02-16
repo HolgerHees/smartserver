@@ -90,15 +90,15 @@ StationFieldToCurrentFieldMappings = {
 
     "cloudCoverInOcta": CurrentFields.CLOUD_COVER_IN_OCTA,
 
-    "rainAmountInMillimeter": CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER,
+    "precipitationAmountInMillimeter": CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER,
 
     "uvIndex": CurrentFields.UV_INDEX,
 
     "dewpointInCelsius": CurrentFields.DEW_POINT_IN_CELSIUS,
     "pressureInHectopascals": CurrentFields.PRESSURE_IN_HECTOPASCAL,
-    "rainDailyInMillimeter": CurrentFields.PRECIPITATION_DAILY_IN_MILLIMETER,
-    "rainRateInMillimeterPerHour": CurrentFields.PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR,
-    "rainLevel": CurrentFields.PRECIPITATION_LEVEL,
+    "precipitationDailyInMillimeter": CurrentFields.PRECIPITATION_DAILY_IN_MILLIMETER,
+    "precipitationRateInMillimeterPerHour": CurrentFields.PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR,
+    "precipitationLevel": CurrentFields.PRECIPITATION_LEVEL,
     "solarRadiationInWatt": CurrentFields.SOLAR_RADIATION_IN_WATT,
     "lightLevelInLux": CurrentFields.LIGHT_LEVEL_IN_LUX
 }
