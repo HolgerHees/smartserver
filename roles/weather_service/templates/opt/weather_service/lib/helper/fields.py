@@ -14,8 +14,8 @@ class ForecastFields(metaclass=__EnumBaseType__):
 
     CLOUD_COVER_IN_OCTA = "cloudCoverInOcta"
 
-    RAIN_PROBABILITY_IN_PERCENT = "rainProbabilityInPercent"
-    RAIN_AMOUNT_IN_MILLIMETER = "rainAmountInMillimeter"
+    PRECIPITATION_PROBABILITY_IN_PERCENT = "precipitationProbabilityInPercent"
+    PRECIPITATION_AMOUNT_IN_MILLIMETER = "precipitationAmountInMillimeter"
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     WEATHER_CODE = "weatherCode"
@@ -41,8 +41,8 @@ class CurrentFields(metaclass=__EnumBaseType__):
 
     CLOUD_COVER_IN_OCTA = "cloudCoverInOcta"
 
-    RAIN_PROBABILITY_IN_PERCENT = "rainProbabilityInPercent"
-    RAIN_AMOUNT_IN_MILLIMETER = "rainAmountInMillimeter"
+    PRECIPITATION_PROBABILITY_IN_PERCENT = "precipitationProbabilityInPercent"
+    PRECIPITATION_AMOUNT_IN_MILLIMETER = "precipitationAmountInMillimeter"
 
     UV_INDEX = "uvIndex"
 
@@ -52,9 +52,9 @@ class CurrentFields(metaclass=__EnumBaseType__):
     CLOUDS_AS_SVG = "cloudsAsSVG"
     DEW_POINT_IN_CELSIUS = "dewpointInCelsius"
     PRESSURE_IN_HECTOPASCAL = "pressureInHectopascals"
-    RAIN_DAILY_IN_MILLIMETER = "rainDailyInMillimeter"
-    RAIN_RATE_IN_MILLIMETER_PER_HOUR = "rainRateInMillimeterPerHour"
-    RAIN_LEVEL = "rainLevel"
+    PRECIPITATION_DAILY_IN_MILLIMETER = "precipitationDailyInMillimeter"
+    PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR = "precipitationRateInMillimeterPerHour"
+    PRECIPITATION_LEVEL = "precipitationLevel"
     SOLAR_RADIATION_IN_WATT = "solarRadiationInWatt"
     LIGHT_LEVEL_IN_LUX = "lightLevelInLux"
 
@@ -70,8 +70,8 @@ CurrentFieldFallbackMappings = {
 
     CurrentFields.CLOUD_COVER_IN_OCTA:               ForecastFields.CLOUD_COVER_IN_OCTA,
 
-    #CurrentFields.RAIN_PROBABILITY_IN_PERCENT:       ForecastFields.RAIN_PROBABILITY_IN_PERCENT, # calculated
-    CurrentFields.RAIN_AMOUNT_IN_MILLIMETER:         ForecastFields.RAIN_AMOUNT_IN_MILLIMETER,
+    #CurrentFields.PRECIPITATION_PROBABILITY_IN_PERCENT:       ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT, # calculated
+    CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER:         ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER,
 
     CurrentFields.UV_INDEX:                          ForecastFields.UV_INDEX
 
@@ -90,15 +90,15 @@ StationFieldToCurrentFieldMappings = {
 
     "cloudCoverInOcta": CurrentFields.CLOUD_COVER_IN_OCTA,
 
-    "rainAmountInMillimeter": CurrentFields.RAIN_AMOUNT_IN_MILLIMETER,
+    "rainAmountInMillimeter": CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER,
 
     "uvIndex": CurrentFields.UV_INDEX,
 
     "dewpointInCelsius": CurrentFields.DEW_POINT_IN_CELSIUS,
     "pressureInHectopascals": CurrentFields.PRESSURE_IN_HECTOPASCAL,
-    "rainDailyInMillimeter": CurrentFields.RAIN_DAILY_IN_MILLIMETER,
-    "rainRateInMillimeterPerHour": CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR,
-    "rainLevel": CurrentFields.RAIN_LEVEL,
+    "rainDailyInMillimeter": CurrentFields.PRECIPITATION_DAILY_IN_MILLIMETER,
+    "rainRateInMillimeterPerHour": CurrentFields.PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR,
+    "rainLevel": CurrentFields.PRECIPITATION_LEVEL,
     "solarRadiationInWatt": CurrentFields.SOLAR_RADIATION_IN_WATT,
     "lightLevelInLux": CurrentFields.LIGHT_LEVEL_IN_LUX
 }

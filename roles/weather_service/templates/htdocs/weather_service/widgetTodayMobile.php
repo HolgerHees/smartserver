@@ -133,7 +133,7 @@ body {
             <div class="perceived"><div class="value"><?php echo Ressources::getI18NString("Perceived", $i18n) . " " . round($data["current"]["feelsLikeTemperatureInCelsius"], 1); ?>°</div></div>
         </div>
         <div class="block">
-            <div class="rain_probability"><div class="icon"><?php echo getSVG('wind', 'rain_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["rainProbabilityInPercent"], 0); ?> %</div></div>
+            <div class="rain_probability"><div class="icon"><?php echo getSVG('wind', 'rain_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["precipitationProbabilityInPercent"], 0); ?> %</div></div>
             <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["sunshineDurationInMinutes"], 1); ?> min</div></div>
         </div>
         <div class="block">

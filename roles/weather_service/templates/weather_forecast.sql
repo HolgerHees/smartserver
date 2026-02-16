@@ -14,8 +14,8 @@ CREATE TABLE `weather_forecast` (
   `freezingRainProbabilityInPercent` tinyint(4) NOT NULL,
   `hailProbabilityInPercent` tinyint(4) NOT NULL,
   `snowfallProbabilityInPercent` tinyint(4) NOT NULL,
-  `rainProbabilityInPercent` tinyint(4) NOT NULL,
-  `rainAmountInMillimeter` double(10,1) NOT NULL,
+  `precipitationProbabilityInPercent` tinyint(4) NOT NULL,
+  `precipitationAmountInMillimeter` double(10,1) NOT NULL,
   `weatherCode` tinyint(4) NOT NULL,
   `uvIndex` tinyint(4) NOT NULL,
   `sunshineDurationInMinutes` smallint(6) NOT NULL

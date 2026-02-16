@@ -85,7 +85,7 @@ class WeatherBlock():
 
     def apply( self, hourlyData ):
         self.sunshineDurationInMinutes += hourlyData[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
-        self.precipitationAmountInMillimeter += hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
+        self.precipitationAmountInMillimeter += hourlyData[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
 
         if self.airTemperatureInCelsius < hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
             self.airTemperatureInCelsius = hourlyData[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
@@ -118,7 +118,7 @@ class WeatherBlock():
         if self.thunderstormProbabilityInPercent < hourlyData[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]:
             self.thunderstormProbabilityInPercent = hourlyData[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
 
-        if hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER] > 0:
+        if hourlyData[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER] > 0:
             if self.freezingRainProbabilityInPercent < hourlyData[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]:
                 self.freezingRainProbabilityInPercent = hourlyData[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]
 
@@ -128,13 +128,13 @@ class WeatherBlock():
             if self.snowfallProbabilityInPercent < hourlyData[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]:
                 self.snowfallProbabilityInPercent = hourlyData[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]
 
-            if self.precipitationProbabilityInPercent < hourlyData[ForecastFields.RAIN_PROBABILITY_IN_PERCENT]:
-                self.precipitationProbabilityInPercent = hourlyData[ForecastFields.RAIN_PROBABILITY_IN_PERCENT]
+            if self.precipitationProbabilityInPercent < hourlyData[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]:
+                self.precipitationProbabilityInPercent = hourlyData[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]
 
-            if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter <= hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]:
-                self.maxPrecipitationAmountInMillimeter = hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
+            if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter <= hourlyData[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]:
+                self.maxPrecipitationAmountInMillimeter = hourlyData[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
 
-            if self.checkRainProbability( hourlyData[ForecastFields.RAIN_PROBABILITY_IN_PERCENT], hourlyData[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER] ):
+            if self.checkRainProbability( hourlyData[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT], hourlyData[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER] ):
                 _isSnowing = hourlyData[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT] > 10 or hourlyData[ForecastFields.HAIL_PROBABILITY_IN_PERCENT] > 10 or hourlyData[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT] > 10
                 if not self.maxIsSnowing or _isSnowing:
                     if _isSnowing:
@@ -175,7 +175,7 @@ class WeatherHelper():
                 maxWindSpeed = entry[ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR]
 
             sumSunshine += entry[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
-            sumRain += entry[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
+            sumRain += entry[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
 
         return [ minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain ]
 

@@ -30,7 +30,7 @@ current_config = {
 
     ForecastFields.WEATHER_CODE: "weathercode",
 
-    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitation"
+    ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER: "precipitation"
     #ForecastFields.SUNSHINE_DURATION_IN_MINUTES: [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
 
@@ -51,8 +51,8 @@ forecast_config = {
     ForecastFields.HAIL_PROBABILITY_IN_PERCENT: [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["weathercode"] not in [96,99] else fetched_values["precipitation_probability"] ],
     ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT: [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: 0 if fetched_values["snowfall"] == 0 else fetched_values["precipitation_probability"] ],
 
-    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitation",
-    ForecastFields.RAIN_PROBABILITY_IN_PERCENT: "precipitation_probability",
+    ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER: "precipitation",
+    ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT: "precipitation_probability",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     ForecastFields.WEATHER_CODE: "weathercode",

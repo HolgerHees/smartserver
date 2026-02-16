@@ -142,12 +142,12 @@ mx.WeatherCore = (function( ret ) {
             mx.$(".current .summary .wind .value").innerHTML = wind + ' km/h';
         }
 
-        if( "current" in changed_data && ("rainRateInMillimeterPerHour" in changed_data["current"] || "rainDailyInMillimeter" in changed_data["current"]))
+        if( "current" in changed_data && ("precipitationRateInMillimeterPerHour" in changed_data["current"] || "precipitationDailyInMillimeter" in changed_data["current"]))
         {
-            let rainValue = mx.WeatherHelper.formatNumber(data["current"]["rainRateInMillimeterPerHour"]);
-            let rainDaily = mx.WeatherHelper.formatNumber(data["current"]["rainDailyInMillimeter"]);
+            let rainValue = mx.WeatherHelper.formatNumber(data["current"]["precipitationRateInMillimeterPerHour"]);
+            let rainDaily = mx.WeatherHelper.formatNumber(data["current"]["precipitationDailyInMillimeter"]);
             let rain = rainValue
-            if( rainValue != rainDaily && data["current"]["rainDailyInMillimeter"] > 0 )
+            if( rainValue != rainDaily && data["current"]["precipitationDailyInMillimeter"] > 0 )
             {
                 rain += ' (' + rainDaily + ')';
             }

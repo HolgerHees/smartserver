@@ -105,14 +105,14 @@ class CurrentValues():
 
                 mapped_current_field = CurrentFieldFallbackMappings[field] if field in CurrentFieldFallbackMappings else None
                 if mapped_current_field is None or mapped_current_field not in self.service_values:
-                    if field in [CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR, CurrentFields.RAIN_AMOUNT_IN_MILLIMETER, CurrentFields.RAIN_LEVEL]:
+                    if field in [CurrentFields.PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR, CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER, CurrentFields.PRECIPITATION_LEVEL]:
                         current_values[field] = 0
-                    elif field in [CurrentFields.RAIN_DAILY_IN_MILLIMETER]:
+                    elif field in [CurrentFields.PRECIPITATION_DAILY_IN_MILLIMETER]:
                         end = datetime.now()
                         start = end.replace(hour=0, minute=0, second=0, microsecond=0)
                         with self.db.open() as db:
-                            values = db.getRangeSum(start, end, [ForecastFields.RAIN_AMOUNT_IN_MILLIMETER])
-                        current_values[CurrentFields.RAIN_DAILY_IN_MILLIMETER] = values[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
+                            values = db.getRangeSum(start, end, [ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER])
+                        current_values[CurrentFields.PRECIPITATION_DAILY_IN_MILLIMETER] = values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
                     else:
                         current_values[field] = -1
                 else:
@@ -120,8 +120,8 @@ class CurrentValues():
 
             current_values[CurrentFields.CLOUDS_AS_SVG] = self._buildCloudSVG()
 
-            is_raining = current_values[CurrentFields.RAIN_LEVEL] > 0 or current_values[CurrentFields.RAIN_AMOUNT_IN_MILLIMETER] > 0
-            current_values[CurrentFields.RAIN_PROBABILITY_IN_PERCENT] = 0 if not self.service_values or not is_raining else self.service_values[ForecastFields.RAIN_PROBABILITY_IN_PERCENT]
+            is_raining = current_values[CurrentFields.PRECIPITATION_LEVEL] > 0 or current_values[CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER] > 0
+            current_values[CurrentFields.PRECIPITATION_PROBABILITY_IN_PERCENT] = 0 if not self.service_values or not is_raining else self.service_values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]
             current_values[CurrentFields.SUNSHINE_DURATION_IN_MINUTES] = 0 if not self.service_values else self.service_values[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
 
             changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
@@ -136,18 +136,18 @@ class CurrentValues():
         block.apply(self.service_values)
 
         skip_station_values = self._isStationOutdated()
-        if skip_station_values or CurrentFields.RAIN_LEVEL not in self.station_values or CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR not in self.station_values or CurrentFields.RAIN_AMOUNT_IN_MILLIMETER not in self.station_values:
-            currentRain = self.service_values[ForecastFields.RAIN_AMOUNT_IN_MILLIMETER]
+        if skip_station_values or CurrentFields.PRECIPITATION_LEVEL not in self.station_values or CurrentFields.PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR not in self.station_values or CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER not in self.station_values:
+            currentRain = self.service_values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
         else:
             currentRain = 0
-            currentRainLevel = self.station_values[CurrentFields.RAIN_LEVEL]
+            currentRainLevel = self.station_values[CurrentFields.PRECIPITATION_LEVEL]
             if (currentRainLevel > 0 and self.current_is_raining or currentRainLevel > 2):
                 currentRain = 0.1
-                currentRainRatePerHour = self.station_values[CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR]
+                currentRainRatePerHour = self.station_values[CurrentFields.PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR]
                 if currentRainRatePerHour > currentRain:
                     currentRain = currentRainRatePerHour
 
-                currentRain1Hour = self.station_values[CurrentFields.RAIN_AMOUNT_IN_MILLIMETER]
+                currentRain1Hour = self.station_values[CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
                 if currentRain1Hour > currentRain:
                     currentRain = currentRain1Hour
         self.current_is_raining = currentRain > 0

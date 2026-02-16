@@ -32,7 +32,7 @@ current_fields = {
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     ForecastFields.WEATHER_CODE: "weatherCodeTraditional",
 
-    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
+    ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
     ForecastFields.SUNSHINE_DURATION_IN_MINUTES: "sunshineDurationInMinutes"
 }
 
@@ -53,8 +53,8 @@ forecast_config = {
     ForecastFields.HAIL_PROBABILITY_IN_PERCENT: "hailProbabilityInPercent",
     ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT: "snowfallProbabilityInPercent",
 
-    ForecastFields.RAIN_PROBABILITY_IN_PERCENT: "precipitationProbabilityInPercent",
-    ForecastFields.RAIN_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
+    ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT: "precipitationProbabilityInPercent",
+    ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER: "precipitationAmountInMillimeter",
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     ForecastFields.WEATHER_CODE: "weatherCodeTraditional",
