@@ -70,25 +70,35 @@ CurrentFieldFallbackMappings = {
 
     CurrentFields.CLOUD_COVER_IN_OCTA:               ForecastFields.CLOUD_COVER_IN_OCTA,
 
+    #CurrentFields.RAIN_PROBABILITY_IN_PERCENT:       ForecastFields.RAIN_PROBABILITY_IN_PERCENT, # calculated
     CurrentFields.RAIN_AMOUNT_IN_MILLIMETER:         ForecastFields.RAIN_AMOUNT_IN_MILLIMETER,
+
     CurrentFields.UV_INDEX:                          ForecastFields.UV_INDEX
+
+    #CurrentFields.SUNSHINE_DURATION_IN_MINUTES:      ForecastFields.SUNSHINE_DURATION_IN_MINUTES # calculated
 }
 
 StationFieldToCurrentFieldMappings = {
-    "cloudCoverInOcta": CurrentFields.CLOUD_COVER_IN_OCTA,
-    "rainLevel": CurrentFields.RAIN_LEVEL,
-    "rainDailyInMillimeter": CurrentFields.RAIN_DAILY_IN_MILLIMETER,
-    "rainAmountInMillimeter": CurrentFields.RAIN_AMOUNT_IN_MILLIMETER,
-    "rainRateInMillimeterPerHour": CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR,
+    "airTemperatureInCelsius": CurrentFields.AIR_TEMPERATURE_IN_CELSIUS,
+    "feelsLikeTemperatureInCelsius": CurrentFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS,
+
+    "relativeHumidityInPercent": CurrentFields.RELATIVE_HUMIDITY_IN_PERCENT,
+
     "windDirectionInDegree": CurrentFields.WIND_DIRECTION_IN_DEGREE,
     "windSpeedInKilometerPerHour": CurrentFields.WIND_SPEED_IN_KILOMETER_PER_HOUR,
     "windGustInKilometerPerHour": CurrentFields.WIND_GUST_IN_KILOMETER_PER_HOUR,
+
+    "cloudCoverInOcta": CurrentFields.CLOUD_COVER_IN_OCTA,
+
+    "rainAmountInMillimeter": CurrentFields.RAIN_AMOUNT_IN_MILLIMETER,
+
+    "uvIndex": CurrentFields.UV_INDEX,
+
     "dewpointInCelsius": CurrentFields.DEW_POINT_IN_CELSIUS,
-    "airTemperatureInCelsius": CurrentFields.AIR_TEMPERATURE_IN_CELSIUS,
-    "relativeHumidityInPercent": CurrentFields.RELATIVE_HUMIDITY_IN_PERCENT,
-    "feelsLikeTemperatureInCelsius": CurrentFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS,
     "pressureInHectopascals": CurrentFields.PRESSURE_IN_HECTOPASCAL,
+    "rainDailyInMillimeter": CurrentFields.RAIN_DAILY_IN_MILLIMETER,
+    "rainRateInMillimeterPerHour": CurrentFields.RAIN_RATE_IN_MILLIMETER_PER_HOUR,
+    "rainLevel": CurrentFields.RAIN_LEVEL,
     "solarRadiationInWatt": CurrentFields.SOLAR_RADIATION_IN_WATT,
-    "lightLevelInLux": CurrentFields.LIGHT_LEVEL_IN_LUX,
-    "uvIndex": CurrentFields.UV_INDEX
+    "lightLevelInLux": CurrentFields.LIGHT_LEVEL_IN_LUX
 }
