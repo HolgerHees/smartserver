@@ -206,6 +206,8 @@ class Fetcher(object):
              for slot_pt0s in forecast_pt0s:
                 if slot_pt0s["validFrom"] < slot_ptxx["validUntil"] and slot_pt0s["validUntil"] > slot_ptxx["validFrom"]:
                     for k, v in slot_ptxx.items():
+                        if k in ["validFrom", "validUntil"]:
+                            continue
                         slot_pt0s[k] = v
 
         if len(forecast_pt0s[-1]) != len(fields) + 2:
