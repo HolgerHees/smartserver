@@ -171,8 +171,8 @@ class WeatherHelper():
                 minTemperature = entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
             if maxTemperature < entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
                 maxTemperature = entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
-            if maxWindSpeed < entry[ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR]:
-                maxWindSpeed = entry[ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR]
+            if maxWindSpeed < entry[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]:
+                maxWindSpeed = entry[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]
 
             sumSunshine += entry[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
             sumRain += entry[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
