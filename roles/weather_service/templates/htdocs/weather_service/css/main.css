@@ -441,6 +441,14 @@ body{
     width: 10%;
     padding-left: 1vw;
     font-weight: 300;
+    position: relative;
+}
+.forecast .hour .time .animatedTime {
+    color: gray;
+    font-size: 70%;
+    position: absolute;
+    bottom: 5px;
+    right: 3px;
 }
 .forecast .hour .cloud {
     vertical-align: middle;

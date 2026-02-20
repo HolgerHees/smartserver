@@ -24,8 +24,9 @@ mx.WeatherCore = (function( ret ) {
     {
         if( cloudAnimatorTimer == null ) return
 
-        cloud_slider = mx.$$(".forecast .today .hour .cloud > div.animated");
-        cloud_slider.forEach(function(slider){
+        cloud_times = mx.$$(".forecast .today .hour .time span.animatedTime");
+        cloud_slider = mx.$$(".forecast .today .hour .cloud > div.animatedCloud");
+        cloud_slider.forEach(function(slider, index){
             if( slider.lastChild.style.opacity == 0.0 )
             {
                 let node = slider.removeChild(slider.lastChild);
@@ -33,6 +34,8 @@ mx.WeatherCore = (function( ret ) {
                 node.style.transform = "";
                 slider.insertBefore(node, slider.firstChild);
             }
+
+            cloud_times[index].innerHTML = slider.lastChild.previousSibling.dataset.time ? '(' + slider.lastChild.previousSibling.dataset.time + ')' : '';
 
             if(slider.lastChild.id == slider.lastChild.previousSibling.id){
                 slider.lastChild.previousSibling.style.transition = "";
@@ -98,19 +101,25 @@ mx.WeatherCore = (function( ret ) {
         return 'O';
     }
 
-    function buildRow(id, time, cloudIconMap, cloudIconNames, maxTemperature, minTemperature, sunshineDuration, precipitationProbability, precipitationAmount, windSpeed, windDirection, clickDate)
+    function buildRow(id, start, time, cloudIconMap, cloudIconNames, maxTemperature, minTemperature, sunshineDuration, precipitationProbability, precipitationAmount, windSpeed, windDirection, clickDate)
     {
-        let row = '<div id="' + id + '" class="hour';
+        uniqueCloudIconNames = cloudIconNames.filter((value, index, array) => array.indexOf(value) === index);
+        animatedCloud = uniqueCloudIconNames.length > 1
+        if( !animatedCloud) cloudIconNames = uniqueCloudIconNames
+
+            let row = '<div id="' + id + '" class="hour';
         if( clickDate ) row += ' mvClickable" mv-date="' + clickDate + '"';
         else row += '"';
         row += '>';
-        row += '<div class="time">' + time + '</div>';
+        row += '<div class="time"><span>' + time + '</span>';
+        if( animatedCloud ) row += '<span class="animatedTime"></span>';
+        row += '</div>';
 
-        uniqueCloudIconNames = cloudIconNames.filter((value, index, array) => array.indexOf(value) === index);
-        if( uniqueCloudIconNames.length == 1) cloudIconNames = uniqueCloudIconNames
-        row += '<div class="cloud"><div' + ( uniqueCloudIconNames.length > 1 ? ' class="animated"' : '' ) + '>';
-        cloudIconNames.toReversed().forEach(function(icon_name){
-            row += "<svg id='" + icon_name + "' " + cloudIconMap[icon_name].split("<svg")[1];
+        row += '<div class="cloud"><div' + ( animatedCloud ? ' class="animatedCloud"' : '' ) + '>';
+        cloudIconNames.toReversed().forEach(function(icon_name, index){
+            row += "<svg id='" + icon_name + "'";
+            if(index < cloudIconNames.length - 1) row += " data-time='" + mx.WeatherHelper.formatHour(new Date(start.getTime() + (cloudIconNames.length - 1 - index) * 60 * 60 * 1000)) + "'";
+            row += " " + cloudIconMap[icon_name].split("<svg")[1];
         });
         row += '</div></div>';
 
@@ -328,6 +337,7 @@ mx.WeatherCore = (function( ret ) {
                 let time = '<div class="from">' + mx.WeatherHelper.formatHour(start) + '</div>';
                 let html_row = buildRow(
                     id,
+                    start,
                     time,
                     data["cloudIconMap"],
                     row["cloudIconNames"],
@@ -368,6 +378,7 @@ mx.WeatherCore = (function( ret ) {
                 let id = "week_" + clickDate;
                 let html_row = buildRow(
                     id,
+                    start,
                     time,
                     data["cloudIconMap"],
                     row["cloudIconNames"],

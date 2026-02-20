@@ -549,38 +549,31 @@ class WeatherBlock():
         self.start = start
         self.end = start
 
-        self.airTemperatureInCelsius = -100
-        self.feelsLikeTemperatureInCelsius = -100
+        self.precipitationAmountInMillimeter= 0
+        self.sunshineDurationInMinutes= 0
+
+        self.minAirTemperatureInCelsius = None
+        self.maxAirTemperatureInCelsius = None
 
         self.windDirectionInDegree= 0
         self.windSpeedInKilometerPerHour= 0
 
-        self.cloudCoverInOcta= 0
-
+        self.precipitationProbabilityInPercent= 0
         self.thunderstormProbabilityInPercent= 0
         self.freezingRainProbabilityInPercent= 0
         self.hailProbabilityInPercent= 0
         self.snowfallProbabilityInPercent= 0
 
-        self.precipitationProbabilityInPercent= 0
-        self.precipitationAmountInMillimeter= 0
-
-        self.weatherCode = -100
-        self.sunshineDurationInMinutes= 0
-
-        self.minAirTemperatureInCelsius = None
-        self.maxAirTemperatureInCelsius = None
-        self.minCloudCoverInOcta = None
-        self.maxCloudCoverInOcta = None
-        self.maxPrecipitationAmountInMillimeter = None
-
         self.cloudIconNames = []
-        self.hourlyData = []
+
+        self._maxCloudCoverInOcta = None
+        self._maxPrecipitationAmountInMillimeter = None
+        self._hourlyData = []
 
     def toDict(self):
         result = {}
         for key, value in self.__dict__.items():
-            if key in ("hourlyData"):
+            if key.startswith("_"): #key in ("hourlyData"):
                 continue
 
             if key in ["start", "end"]:
@@ -599,7 +592,7 @@ class WeatherBlock():
         icons = []
 
         if detailedIcons:
-            for date, values in self.hourlyData:
+            for date, values in self._hourlyData:
                 ref_date = date.replace(year=sunrise.year, month=sunrise.month, day=sunrise.day) + timedelta(minutes=30) # timedelta(minutes=30) => middle of this timeslot
                 icon_name = getCloudSVGCallback(
                     isNight = ( ref_date < sunrise or ref_date > sunset ),
@@ -613,16 +606,16 @@ class WeatherBlock():
                 )
                 icons.append(icon_name)
         else:
-            start = self.hourlyData[0][0]
-            end = self.hourlyData[-1][0]
+            start = self._hourlyData[0][0]
+            end = self._hourlyData[-1][0]
 
             timerange = int( ( end - start ).total_seconds() / 60 )
             ref_date = start + timedelta(minutes=timerange / 2)
 
             icon_name = getCloudSVGCallback(
                 isNight = ( ref_date < sunrise or ref_date > sunset ),
-                cloudCover = self.cloudCoverInOcta,
-                precipitationAmountInMillimeter = self.maxPrecipitationAmountInMillimeter,
+                cloudCover = self._maxCloudCoverInOcta,
+                precipitationAmountInMillimeter = self._maxPrecipitationAmountInMillimeter,
                 precipitationProbabilityInPercent = self.precipitationProbabilityInPercent,
                 freezingRainProbabilityInPercent = self.freezingRainProbabilityInPercent,
                 hailProbabilityInPercent = self.hailProbabilityInPercent,
@@ -636,16 +629,8 @@ class WeatherBlock():
         return self.cloudIconNames
 
     def apply( self, date, values ):
-        self.hourlyData.append([date, values])
-
         self.sunshineDurationInMinutes += values[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
         self.precipitationAmountInMillimeter += values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
-
-        if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter <= values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]:
-            self.maxPrecipitationAmountInMillimeter = values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
-
-        if self.airTemperatureInCelsius < values[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
-            self.airTemperatureInCelsius = values[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
 
         if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > values[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
             self.minAirTemperatureInCelsius = values[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
@@ -653,37 +638,29 @@ class WeatherBlock():
         if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < values[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
             self.maxAirTemperatureInCelsius = values[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
 
-        if self.feelsLikeTemperatureInCelsius < values[ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS]:
-            self.feelsLikeTemperatureInCelsius = values[ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS]
-
-        if self.cloudCoverInOcta < values[ForecastFields.CLOUD_COVER_IN_OCTA]:
-            self.cloudCoverInOcta = values[ForecastFields.CLOUD_COVER_IN_OCTA]
-
-        if self.minCloudCoverInOcta is None or self.minCloudCoverInOcta > values[ForecastFields.CLOUD_COVER_IN_OCTA]:
-            self.minCloudCoverInOcta = values[ForecastFields.CLOUD_COVER_IN_OCTA]
-
-        if self.maxCloudCoverInOcta is None or self.maxCloudCoverInOcta < values[ForecastFields.CLOUD_COVER_IN_OCTA]:
-            self.maxCloudCoverInOcta = values[ForecastFields.CLOUD_COVER_IN_OCTA]
-
         if self.windSpeedInKilometerPerHour < values[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]:
             self.windSpeedInKilometerPerHour = values[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]
             self.windDirectionInDegree = values[ForecastFields.WIND_DIRECTION_IN_DEGREE]
 
-        if self.weatherCode < values[ForecastFields.WEATHER_CODE]:
-            self.weatherCode = values[ForecastFields.WEATHER_CODE]
+        if self.precipitationProbabilityInPercent < values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]:
+            self.precipitationProbabilityInPercent = values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]
 
         if self.thunderstormProbabilityInPercent < values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]:
             self.thunderstormProbabilityInPercent = values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
 
-        if values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER] > 0:
-            if self.freezingRainProbabilityInPercent < values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]:
-                self.freezingRainProbabilityInPercent = values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]
+        if self.freezingRainProbabilityInPercent < values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]:
+            self.freezingRainProbabilityInPercent = values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]
 
-            if self.hailProbabilityInPercent < values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]:
-                self.hailProbabilityInPercent = values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]
+        if self.hailProbabilityInPercent < values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]:
+            self.hailProbabilityInPercent = values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]
 
-            if self.snowfallProbabilityInPercent < values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]:
-                self.snowfallProbabilityInPercent = values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]
+        if self.snowfallProbabilityInPercent < values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]:
+            self.snowfallProbabilityInPercent = values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]
 
-            if self.precipitationProbabilityInPercent < values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]:
-                self.precipitationProbabilityInPercent = values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]
+        if self._maxPrecipitationAmountInMillimeter is None or self._maxPrecipitationAmountInMillimeter <= values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]:
+            self._maxPrecipitationAmountInMillimeter = values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
+
+        if self._maxCloudCoverInOcta is None or self._maxCloudCoverInOcta < values[ForecastFields.CLOUD_COVER_IN_OCTA]:
+            self._maxCloudCoverInOcta = values[ForecastFields.CLOUD_COVER_IN_OCTA]
+
+        self._hourlyData.append([date, values])
