@@ -449,13 +449,20 @@ body{
 }
 .forecast .hour .cloud > div {
     display: inline-block;
+    position: relative;
     width:58px;
     height: 58px;
     overflow: hidden;
 }
-.forecast .hour .cloud > div > div {
-    width: fit-content;
-    white-space: nowrap;
+.forecast .hour .cloud > div > svg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+.forecast .today .hour .cloud > div > svg {
+    opacity: 0;
 }
 .forecast .hour .temperature > div {
     display: flex;

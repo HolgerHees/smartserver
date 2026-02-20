@@ -17,42 +17,52 @@ mx.WeatherCore = (function( ret ) {
     ret.active_day = null;
     var data = {};
 
+    startTime = endTime = null;
+
     var cloudAnimatorTimer = null
     function runCloudAnimator()
     {
         if( cloudAnimatorTimer == null ) return
 
-        cloud_slider = mx.$$(".forecast .hour .cloud > div");
-
+        cloud_slider = mx.$$(".forecast .today .hour .cloud > div");
         cloud_slider.forEach(function(slider){
-            if( slider.scrollWidth == slider.clientWidth ) return;
+            if( slider.childNodes.length <= 1) return;
 
-            if( slider.firstChild.style.transform )
+            if( slider.lastChild.style.opacity == 0.0 )
             {
-                slider.firstChild.style.transition = "";
-                slider.firstChild.style.transform = ""
-
-                let node = slider.firstChild.removeChild(slider.firstChild.firstChild);
-                slider.firstChild.appendChild(node);
+                let node = slider.removeChild(slider.lastChild);
+                node.style.opacity = "";
+                node.style.transform = "";
+                slider.insertBefore(node, slider.firstChild);
             }
 
+            slider.lastChild.style.transition = "all 0.4s ease-out";
+            slider.lastChild.previousSibling.style.transition = "all 0.5s ease-in";
             window.setTimeout(function(){
-                slider.firstChild.style.transition = "all 0.5s ease-out";
-                slider.firstChild.style.transform = "translateX(-" + slider.clientWidth + "px)";
+                slider.lastChild.previousSibling.style.opacity = 1.0;
+                //slider.firstChild.style.transition = "all 0.5s ease-out";
+                slider.lastChild.style.transform = "translateX(-58px)";
+                slider.lastChild.style.opacity = 0.0;
             }, 0);
-            //console.log(slider.firstChild.clientWidth, slider.clientWidth);
         });
 
         if( cloudAnimatorTimer == null ) return
 
-        cloudAnimatorTimer = window.setTimeout(runCloudAnimator, 2000)
+        cloudAnimatorTimer = window.setTimeout(runCloudAnimator, 1000)
     }
 
     function startCloudAnimator()
     {
         if( cloudAnimatorTimer == null )
         {
-            cloudAnimatorTimer = window.setTimeout(runCloudAnimator, 2000);
+            cloud_slider = mx.$$(".forecast .today .hour .cloud > div");
+            cloud_slider.forEach(function(slider){
+                slider.lastChild.style.transition = "none";
+                slider.lastChild.style.opacity = 1.0;
+                slider.lastChild.style.transition = "";
+                slider.lastChild.style.willChange = "transform, opacity";
+            });
+            cloudAnimatorTimer = window.setTimeout(runCloudAnimator, 1000);
         }
     }
 
@@ -88,13 +98,15 @@ mx.WeatherCore = (function( ret ) {
         else row += '"';
         row += '>';
         row += '<div class="time">' + time + '</div>';
-        row += '<div class="cloud"><div data-index="0"><div>';
+        row += '<div class="cloud"><div>';
 
         uniqueCloudIconNames = cloudIconNames.filter((value, index, array) => array.indexOf(value) === index);
-        uniqueCloudIconNames.forEach(function(icon_name){
+        if( uniqueCloudIconNames.length == 1) cloudIconNames = uniqueCloudIconNames
+        cloudIconNames.toReversed().forEach(function(icon_name){
             row += "<svg" + cloudIconMap[icon_name].split("<svg")[1];
         });
-        row += '</div></div></div>';
+
+        row += '</div></div>';
         row += '<div class="temperature"><div><div class="main"><span class="max">' + mx.WeatherHelper.formatNumber(maxTemperature) + '</span><span class="min">' + mx.WeatherHelper.formatNumber(minTemperature) + '</span></div><div class="sub">°C</div></div></div>';
         row += '<div class="info">';
         row += '  <div class="sunshineDuration"><div class="sun icon"><?php echo str_replace("'", "\\'", getSVG('sun', 'sun_grayscaled') ); ?></div><div>' + mx.WeatherHelper.formatDuration( sunshineDuration ) + '</div></div>';

@@ -595,7 +595,7 @@ class WeatherBlock():
     def setDuration(self, timedelta):
         self.end = self.start + timedelta
 
-    def initCloudIcons(self, sunrise, sunset, getCloudSVGCallback, withSubIcons ):
+    def initCloudIcons(self, sunrise, sunset, getCloudSVGCallback, detailedIcons ):
         icons = []
 
         start = self.hourlyData[0][0]
@@ -604,19 +604,7 @@ class WeatherBlock():
         timerange = int( ( end - start ).total_seconds() / 60 )
         ref_date = start + timedelta(minutes=timerange / 2)
 
-        icon_name = getCloudSVGCallback(
-            isNight = ( ref_date < sunrise or ref_date > sunset ),
-            cloudCover = self.cloudCoverInOcta,
-            precipitationAmountInMillimeter = self.maxPrecipitationAmountInMillimeter,
-            precipitationProbabilityInPercent = self.precipitationProbabilityInPercent,
-            freezingRainProbabilityInPercent = self.freezingRainProbabilityInPercent,
-            hailProbabilityInPercent = self.hailProbabilityInPercent,
-            snowfallProbabilityInPercent = self.snowfallProbabilityInPercent,
-            thunderstormProbabilityInPercent = self.thunderstormProbabilityInPercent
-        )
-        icons.append(icon_name)
-
-        if withSubIcons:
+        if detailedIcons:
             for date, values in self.hourlyData:
                 ref_date = date.replace(year=sunrise.year, month=sunrise.month, day=sunrise.day)
                 icon_name = getCloudSVGCallback(
@@ -630,6 +618,18 @@ class WeatherBlock():
                     thunderstormProbabilityInPercent = values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
                 )
                 icons.append(icon_name)
+        else:
+            icon_name = getCloudSVGCallback(
+                isNight = ( ref_date < sunrise or ref_date > sunset ),
+                cloudCover = self.cloudCoverInOcta,
+                precipitationAmountInMillimeter = self.maxPrecipitationAmountInMillimeter,
+                precipitationProbabilityInPercent = self.precipitationProbabilityInPercent,
+                freezingRainProbabilityInPercent = self.freezingRainProbabilityInPercent,
+                hailProbabilityInPercent = self.hailProbabilityInPercent,
+                snowfallProbabilityInPercent = self.snowfallProbabilityInPercent,
+                thunderstormProbabilityInPercent = self.thunderstormProbabilityInPercent
+            )
+            icons.append(icon_name)
         self.cloudIconNames = icons
 
     def getCloudIconNames(self):
