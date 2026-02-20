@@ -53,6 +53,7 @@ class Provider:
         schedule.every().hour.at("05:00").do(self.fetchInterval)
         if time.time() - self.last_fetch > 60 * 60:
             schedule.every(5).seconds.do(self.fetchOneTime)
+        #self.fetchOneTime()
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):
@@ -105,8 +106,12 @@ class Provider:
             if not self.is_running:
                 return False
 
+            now_timestamp = int(datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).timestamp())
+
             result = fetcher.fetchForecast(self.mqtt)
             for data in result:
+                if now_timestamp == data["timestamp"]:
+                    continue
                 self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_forecast_topic, data["field"], data["timestamp"]), payload=data["value"], qos=0, retain=False)
             logging.info("Forecast data published • Total: {}".format(len(result)))
             self.service_metrics["data_forecast"] = 1
@@ -115,9 +120,8 @@ class Provider:
             #    return False
 
             result = fetcher.fetchCurrent(self.mqtt)
-            timestamp = int(datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).timestamp())
             for data in result:
-                self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_forecast_topic, data["field"], timestamp), payload=data["value"], qos=0, retain=False)
+                self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_forecast_topic, data["field"], now_timestamp), payload=data["value"], qos=0, retain=False)
             logging.info("Current data published • Total: {}".format(len(result)))
 
             self.mqtt.publish("{}/refreshed".format(self.config.mqtt_forecast_topic), payload="1", qos=0, retain=False)

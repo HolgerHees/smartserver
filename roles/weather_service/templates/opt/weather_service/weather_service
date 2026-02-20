@@ -15,7 +15,6 @@ from lib.consumer.astro import AstroConsumer
 from lib.broker.mqtt import MQTT as MQTTBroker
 from lib.broker.dummy import Dummy as DummyBroker
 from lib.db import DB
-from lib.helper.forecast import WeatherBlock
 from lib.helper.fields import CurrentFields
 
 from smartserver.scheduler import Scheduler
@@ -51,7 +50,7 @@ class Handler(Server):
                 logging.error("Missing publish topic. Publishing disabled")
 
         self.astro_consumer = AstroConsumer(config, self)
-        self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self)
+        self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self.astro_consumer, self)
 
         if config.mqtt_station_topic:
             self.station_consumer = StationConsumer(config, self.mqtt, self.provider_consumer)
@@ -75,10 +74,11 @@ class Handler(Server):
         super().start()
 
     def lazyStart(self):
+        self.astro_consumer.start()
+
         self.provider_consumer.start()
         if self.station_consumer:
             self.station_consumer.start()
-        self.astro_consumer.start()
 
         if self.provider != None:
             self.provider.start()
@@ -139,6 +139,7 @@ class Handler(Server):
             astro_data = self.astro_consumer.getValues()
             latitude, longitude = config.location.split(",")
             location_data = {"locationLatitude": latitude, "locationLongitude": longitude}
+
             self.emitSocketData('details:data', {"current": current_data} | week_data | astro_data | location_data, room)
 
     def getWidgetData(self):

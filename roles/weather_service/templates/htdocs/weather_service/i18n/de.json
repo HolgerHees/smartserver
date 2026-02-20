@@ -12,6 +12,9 @@
     "Temperature": "Temperatur",
     "Perceived": "Gefühlt",
     "Wind": "Wind",
+    "Gust": "Böen",
+    "Pressure": "Luftdruck",
+    "Humidity": "Luftfeuchtigkeit",
     "Rain": "Regen",
     "Sunrise": "Sonnenaufgang",
     "Sunset": "Sonnenuntergang",
@@ -19,6 +22,7 @@
     "Night": "Nacht",
     "Evening": "Abend",
     "Lunch": "Mittag",
-    "Morning": "Morgen"
+    "Morning": "Morgen",
+    "until": "bis"
   }
 }

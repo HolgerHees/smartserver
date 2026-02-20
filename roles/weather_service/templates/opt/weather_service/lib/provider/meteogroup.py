@@ -172,7 +172,7 @@ class Fetcher(object):
 
         fields = self.collectFetchedFields(forecast_config)
 
-        end_date = start_date + timedelta(hours=170)
+        end_date = start_date + timedelta(hours=336)
         end_date_str = self._prepareDate(end_date)
         fetch_end_date_str = self._prepareDate(end_date + timedelta(hours=1)) # fetch on more hour
 
@@ -243,7 +243,6 @@ class Fetcher(object):
                     if field in ["index","validFrom"]:
                         continue
                     result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": forcastSlot[field] })
-
         return result
 
 class MeteoGroup(Provider):

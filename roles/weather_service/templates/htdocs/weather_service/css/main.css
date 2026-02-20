@@ -198,19 +198,8 @@ body{
     margin-left: 0.3vw;
     margin-right: 0.3vw;
     justify-content: space-between;
+    container-type: inline-size;
     flex-wrap: wrap;
-}
-.current .summary .column.wrap,
-.current .summary .column.dummy {
-    display: none;
-}
-.current .summary .column {
-    display: table;
-    width: 20%;
-}
-.current .summary .column.cloud {
-    width: min-content;
-    min-width: 58px;
 }
 .current .summary .separator {
     /*border-left: var(--widget-border);*/
@@ -235,47 +224,94 @@ body{
     white-space: nowrap;
     text-align: right;
 }
-@media only screen and (max-width: 800px) {
+.current .summary .column {
+    display: table;
+    width: 24%;
+}
+.current .summary .column.slot2 {
+    padding-left: 15px;
+}
+.current .summary .column.slot3 {
+    width: auto;
+    margin: auto 0;
+}
+.current .summary .column.slot4 {
+    padding-left: 15px;
+}
+.current .summary .column .cell.cloud svg {
+    display: block;
+    max-width: 100px;
+    min-width: 58px;
+    width: 10vw;
+    height: auto;
+    margin: 0 0 0 auto;
+}
+
+.current .summary .column .cell.wind .value > div {
+    display: flex;
+    justify-content: end;
+    flex-direction: row;
+}
+.current .summary .column .cell.wind .compass {
+    position: relative;
+    margin-right: 5px;
+}
+.current .summary .column .cell.wind .compass > div {
+    position: absolute;
+}
+.current .summary .column .cell.wind .compass,
+.current .summary .column .cell.wind svg {
+    width: 0.9vw;
+    height: 0.9vw;
+    min-width: 20px;
+    min-height: 20px;
+}
+.current .summary .column .cell.wind .compass .circle {
+    fill: var(--sub-icon-color);
+    stroke: none;
+}
+.current .summary .column .cell.wind .compass .needle {
+    fill: var(--sub-icon-color);
+}
+
+@container (max-width: 900px) {
+    .current .summary .column {
+        padding: 0;
+    }
+}
+
+@container (max-width: 800px) {
     .current {
         font-size: 95%;
         margin-bottom: 0px;
     }
-    .current .summary .column {
-        flex-basis: 40%;
-    }
-    .current .summary .column.dummy,
-    .current .summary .column.cloud {
-        flex-basis: auto;
-    }
-    .current .summary .column.wrap {
-        display: block;
-        flex-grow: 1;
-        flex-basis: 100%;
-    }
-    .current .summary .column.dummy {
-        display: block;
-        width: 58px;
-        height: 58px;
+    .current .summary .column.cloud svg {
+        min-width: 75px;
+        min-height: 75px;
     }
 }
-@media only screen and (max-width: 450px) {
+@container (max-width: 720px) {
+    .current .summary .column {
+        width: 50%;
+    }
+    .current .summary .column.slot1 {
+        order: 1;
+    }
+    .current .summary .column.slot2 {
+        order: 3;
+        padding-left: 0;
+    }
+    .current .summary .column.slot3 {
+        order: 4;
+        padding-left: 0;
+    }
+    .current .summary .column.slot4 {
+        order: 2;
+    }
+}
+@container (max-width: 450px) {
     .current .summary .cell > div {
         padding: 3px 3px 3px 0 !important;
-    }
-}
-@media only screen and (max-width: 400px) {
-    .current .summary .cloud svg {
-        height: 48px;
-        width: 48px;
-    }
-    .current .summary .column.dummy {
-        height: 48px;
-        width: 48px;
-    }
-    .current .summary .column.dummy {
-        height: 0;
-        width: 0;
-        flex-basis: 100%;
     }
 }
 
@@ -411,7 +447,15 @@ body{
     text-align: center;
     max-width: 100px;
 }
-.forecast .hour .temperature {
+.forecast .hour .cloud > div {
+    display: inline-block;
+    width:58px;
+    height: 58px;
+    overflow: hidden;
+}
+.forecast .hour .cloud > div > div {
+    width: fit-content;
+    white-space: nowrap;
 }
 .forecast .hour .temperature > div {
     display: flex;
@@ -527,7 +571,7 @@ body{
         margin-top: 10px;
         transform: translate3d(-100%, 0, 0);
         transition: transform 300ms ease;
-        bottom: 0;
+        /*bottom: 0;*/
         margin-top: 0;
     }
     .forecast .week.open {

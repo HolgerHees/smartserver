@@ -12,18 +12,69 @@ from smartserver.confighelper import ConfigHelper
 from smartserver.metric import Metric
 
 from lib.db import DBException
-from lib.helper.forecast import WeatherBlock, WeatherBlockList, WeatherHelper
+from lib.helper.forecast import WeatherBlock, WeatherBlockList
 from lib.helper.fields import CurrentFields, ForecastFields, CurrentFieldFallbackMappings
 
 
-class CurrentValues():
-    def __init__(self, db, latitude, longitude, icon_path, notify_callback):
-        self.db = db
-        self.latitude = latitude
-        self.longitude = longitude
+class CloudImageFactory():
+    sunConfig = {
+        'day': [ 'day', 'cloudy-day-0', 'cloudy-day-1', 'cloudy-day-2', 'cloudy' ],
+        'night': [ 'night', 'cloudy-night-0', 'cloudy-night-1', 'cloudy-night-2', 'cloudy' ]
+    }
 
+    def __init__(self, icon_path):
         self.icon_path = icon_path
         self.icon_cache = {}
+
+    def reset(self):
+        self.icon_cache = {}
+
+    def get(self, icon_name):
+        if icon_name not in self.icon_cache:
+            with open("{}{}".format(self.icon_path, icon_name)) as f:
+                self.icon_cache[icon_name] = f.read()
+        return self.icon_cache[icon_name]
+
+    def build(self, isNight, cloudCover, precipitationAmountInMillimeter, precipitationProbabilityInPercent, freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent, thunderstormProbabilityInPercent):
+        cloudIndex = 0
+        if cloudCover >= 6:
+            cloudIndex = 4
+        elif cloudCover >= 4.5:
+            cloudIndex = 3
+        elif cloudCover >= 3.0:
+            cloudIndex = 2
+        elif cloudCover >= 1.5:
+            cloudIndex = 1
+
+        if ( precipitationProbabilityInPercent >= 30 and precipitationAmountInMillimeter > 0 ) or ( precipitationProbabilityInPercent >= 25 and precipitationAmountInMillimeter > 0.5 ):
+            if precipitationAmountInMillimeter >= 1.3:
+                amount = 4
+            elif precipitationAmountInMillimeter >= 0.9:
+                amount = 3
+            elif precipitationAmountInMillimeter >= 0.5:
+                amount = 2
+            else:
+                amount = 1
+
+            rain_type = 'snowflake' if freezingRainProbabilityInPercent > 10 or hailProbabilityInPercent > 10 or snowfallProbabilityInPercent > 10 else 'raindrop'
+            rain_type = "{}{}".format(rain_type, amount)
+        else:
+            rain_type = 'none'
+
+        thunder_type = "thunder" if thunderstormProbabilityInPercent >= 15 else 'none'
+
+        if cloudIndex == 0 and ( rain_type != "none" or thunder_type != "none" ):
+            cloudIndex = 1
+
+        icon = self.sunConfig[ 'night' if isNight else 'day' ][cloudIndex];
+
+        return "{}_{}_{}_grayscaled.svg".format(icon, rain_type, thunder_type)
+
+class CurrentDataFactory():
+    def __init__(self, db, astro, image_factory, notify_callback):
+        self.db = db
+        self.astro = astro
+        self.image_factory = image_factory
 
         self.notify_callback = notify_callback
 
@@ -40,15 +91,6 @@ class CurrentValues():
         self.build_lock = threading.Lock()
 
         self._buildCurrentValues()
-
-    def resetIconCache(self):
-        self.icon_cache = {}
-
-    def getCachedIcon(self, icon_name):
-        if icon_name not in self.icon_cache:
-            with open("{}{}".format(self.icon_path, icon_name)) as f:
-                self.icon_cache[icon_name] = f.read()
-        return self.icon_cache[icon_name]
 
     def getCurrentValues(self):
         return self.current_values
@@ -69,8 +111,9 @@ class CurrentValues():
             self._buildCurrentValues()
 
     def checkSunriseSunset(self):
-        now = datetime.now()
-        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, now)
+        now = datetime.now().astimezone()
+        sunrise = self.astro.getSunrise()
+        sunset = self.astro.getSunset()
         current_is_night = ( now <= sunrise or now >= sunset )
         if current_is_night != self.current_is_night:
             self.current_is_night = current_is_night
@@ -126,14 +169,12 @@ class CurrentValues():
 
             changed_values = {k: current_values[k] for k in current_values if k not in self.current_values or current_values[k] != self.current_values[k]}
             self.current_values = current_values
+
         self.notify_callback(changed_values)
 
     def _buildCloudSVG(self):
         if not self.service_values:
             return None
-
-        block = WeatherBlock(datetime.now())
-        block.apply(self.service_values)
 
         skip_station_values = self._isStationOutdated()
         if skip_station_values or CurrentFields.PRECIPITATION_LEVEL not in self.station_values or CurrentFields.PRECIPITATION_RATE_IN_MILLIMETER_PER_HOUR not in self.station_values or CurrentFields.PRECIPITATION_AMOUNT_IN_MILLIMETER not in self.station_values:
@@ -151,26 +192,41 @@ class CurrentValues():
                 if currentRain1Hour > currentRain:
                     currentRain = currentRain1Hour
         self.current_is_raining = currentRain > 0
-        block.setPrecipitationAmountInMillimeter(currentRain)
 
         cloudCoverInOcta = self.service_values[ForecastFields.CLOUD_COVER_IN_OCTA] if not skip_station_values or CurrentFields.CLOUD_COVER_IN_OCTA not in self.station_values else self.station_values[CurrentFields.CLOUD_COVER_IN_OCTA]
-        block.setEffectiveCloudCover(cloudCoverInOcta)
 
-        return self.getCachedIcon(WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block))
+        #convertOctaToSVG(latitude, longitude, datetime, cloudCover, maxPrecipitationAmountInMillimeter, precipitationProbabilityInPercent, thunderstormProbabilityInPercent, isSnowing)
+        #block = WeatherBlock(datetime.now())
+        #block.apply(block_data)
+
+        #date, cloudCover, precipitationAmountInMillimeter, precipitationProbabilityInPercent, freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent, thunderstormProbabilityInPercent, isSnowing
+
+        now = datetime.now().astimezone()
+        icon_name = self.image_factory.build(
+            isNight = ( now < self.astro.getSunrise() or now > self.astro.getSunset() ),
+            cloudCover = cloudCoverInOcta,
+            precipitationAmountInMillimeter = currentRain,
+            precipitationProbabilityInPercent = 100 if self.current_is_raining > 0 else 0,
+            freezingRainProbabilityInPercent = self.service_values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT],
+            hailProbabilityInPercent = self.service_values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT],
+            snowfallProbabilityInPercent = self.service_values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT],
+            thunderstormProbabilityInPercent = self.service_values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
+        )
+
+        return self.image_factory.get(icon_name)
 
     def _isStationOutdated(self):
         return datetime.now().astimezone().timestamp() - self.station_values_last_modified > 60 * 60 * 1
 
 class ProviderConsumer():
-    def __init__(self, config, mqtt, db, handler ):
+    def __init__(self, config, mqtt, db, astro, handler ):
         latitude, longitude = config.location.split(",")
-        self.latitude = float(latitude)
-        self.longitude = float(longitude)
 
         self.mqtt = mqtt
         self.mqtt_forecast_topic = "{}/#".format(config.mqtt_forecast_topic)
 
         self.db = db
+        self.astro = astro
         self.handler = handler
 
         self.is_running = False
@@ -184,11 +240,8 @@ class ProviderConsumer():
         self.last_error = 0
         self.last_refreshed = 0
 
-        self.current_values = CurrentValues(self.db, self.latitude, self.longitude, config.icon_path, self._notifyCurrentValues)
-
-        with self.db.open() as db:
-            db_values = db.getOffset(0)
-            self.current_values.setServiceValues(db_values if db_values else {})
+        self.image_factory = CloudImageFactory(config.icon_path)
+        self.current_data_factory = CurrentDataFactory(self.db, self.astro, self.image_factory, self._notifyCurrentValues)
 
     def start(self):
         self._restore()
@@ -197,7 +250,11 @@ class ProviderConsumer():
 
         self.mqtt.subscribe(self.mqtt_forecast_topic, self.on_message)
 
-        self.current_values.checkSunriseSunset()
+        with self.db.open() as db:
+            db_values = db.getOffset(0)
+            self.current_data_factory.setServiceValues(db_values if db_values else {})
+
+        self.current_data_factory.checkSunriseSunset()
         self.is_running = True
 
     def terminate(self):
@@ -265,7 +322,7 @@ class ProviderConsumer():
                     if currentIsModified:
                         with self.db.open() as db:
                             db_values = db.getOffset(0)
-                            self.current_values.setServiceValues(db_values if db_values else {})
+                            self.current_data_factory.setServiceValues(db_values if db_values else {})
 
                     self.last_refreshed = now.timestamp()
                 else:
@@ -291,20 +348,39 @@ class ProviderConsumer():
             self.handler.notifyChangedCurrentData(field, value)
 
     def notifyStationValue(self, is_update, field, value, time):
-        self.current_values.setStationValue(field, value)
+        self.current_data_factory.setStationValue(field, value)
 
     def resetIconCache(self):
-        self.current_values.resetIconCache()
+        self.image_factory.reset()
 
     def getCurrentValues(self):
-        return self.current_values.getCurrentValues()
+        return self.current_data_factory.getCurrentValues()
 
-    def _applyWeekDay(self, current_value, weekValues):
-        current_value.setEnd((current_value.getStart() + timedelta(hours=24)).replace(hour=0, minute=0, second=0))
-        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-        #logging.info(">>>> _applyWeekDay: icon_name: {} - start: {} - end: {}".format(icon_name, current_value.start, current_value.end))
-        current_value.setSVG(self.current_values.getCachedIcon(icon_name))
-        weekValues.append(current_value)
+    def _applyCloudSVG(self, icons, icon_names):
+        for icon_name in icon_names:
+            if icon_name in icons:
+                continue
+            icons[icon_name] = self.image_factory.get(icon_name)
+
+    def _calculateSummary(self, dataList):
+        minTemperature = dataList[0][ForecastFields.AIR_TEMPERATURE_IN_CELSIUS];
+        maxTemperature = dataList[0][ForecastFields.AIR_TEMPERATURE_IN_CELSIUS];
+        maxWindSpeed = dataList[0][ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR];
+        sumSunshine = 0;
+        sumRain = 0;
+
+        for entry in dataList:
+            if minTemperature > entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
+                minTemperature = entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
+            if maxTemperature < entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]:
+                maxTemperature = entry[ForecastFields.AIR_TEMPERATURE_IN_CELSIUS]
+            if maxWindSpeed < entry[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]:
+                maxWindSpeed = entry[ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR]
+
+            sumSunshine += entry[ForecastFields.SUNSHINE_DURATION_IN_MINUTES]
+            sumRain += entry[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
+
+        return [ minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain ]
 
     def getWeekValues(self, requested_day = None):
         activeDay = datetime.now() if requested_day is None else datetime.strptime(requested_day, '%Y-%m-%d')
@@ -316,31 +392,31 @@ class ProviderConsumer():
             start = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
             end = activeDay.replace(hour=23, minute=59, second=59, microsecond=0)
 
+            cloudIcons = {}
+
             # DAY VALUES
             todayValues = WeatherBlockList()
             dayList = db.getRangeList(start, end)
             if len(dayList) > 0:
-                minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
+                minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = self._calculateSummary(dayList)
 
-                current_value = WeatherBlock( dayList[0]['datetime'] )
+                current_value = WeatherBlock(dayList[0]['datetime'].astimezone())
 
                 index = 0;
                 for hourlyData in dayList:
                     if index > 0 and index % 3 == 0:
                         #_datetime = hourlyData['datetime'].replace(minute=0, second=0);
-                        current_value.setEnd(hourlyData['datetime'])
-                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                        #logging.info(">>>> DayList: icon_name: {} - start: {} - end: {}".format(icon_name, current_value.start, current_value.end))
-                        current_value.setSVG(self.current_values.getCachedIcon(icon_name))
+                        current_value.setEnd(hourlyData['datetime'].astimezone())
+                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, True)
+                        self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                         todayValues.append( current_value )
-                        current_value = WeatherBlock( hourlyData['datetime'] )
-                    current_value.apply(hourlyData)
+                        current_value = WeatherBlock(hourlyData['datetime'].astimezone())
+                    current_value.apply(hourlyData['datetime'].astimezone(), hourlyData)
                     index += 1
 
-                current_value.setEnd(current_value.getStart() + timedelta(hours=3))
-                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                #logging.info(">>>> DayList: icon_name: {} - start: {} - end: {}".format(icon_name, current_value.start, current_value.end))
-                current_value.setSVG(self.current_values.getCachedIcon(icon_name))
+                current_value.setDuration(timedelta(hours=3))
+                current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, True)
+                self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                 todayValues.append(current_value)
 
             else:
@@ -360,23 +436,31 @@ class ProviderConsumer():
             weekFrom = datetime.now().replace(hour=0, minute=0, second=0)
             weekList = db.getWeekList(weekFrom)
             if len(weekList) > 0:
-                minTemperatureWeekly, maxTemperatureWeekly, maxWindSpeedWeekly, sumSunshineWeekly, sumRainWeekly = WeatherHelper.calculateSummary(weekList)
+                minTemperatureWeekly, maxTemperatureWeekly, maxWindSpeedWeekly, sumSunshineWeekly, sumRainWeekly = self._calculateSummary(weekList)
 
-                start = weekList[0]['datetime'].replace(hour=0, minute=0, second=0)
-                current_value = WeatherBlock( start )
+                current_start = weekList[0]['datetime'].astimezone().replace(hour=0, minute=0, second=0)
+                current_value = WeatherBlock(current_start)
                 index = 1
                 for hourlyData in weekList:
-                    _datetime = hourlyData['datetime'].replace(hour=0, minute=0, second=0);
-                    if _datetime != current_value.getStart():
-                        self._applyWeekDay(current_value, weekValues)
-                        current_value = WeatherBlock( _datetime )
-                    current_value.apply(hourlyData)
+                    _current_start = hourlyData['datetime'].astimezone().replace(hour=0, minute=0, second=0);
+                    if _current_start != current_start:
+                        current_value.setDuration(timedelta(hours=24))
+                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, False)
+                        self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
+                        weekValues.append(current_value)
+                        current_start = _current_start
+                        current_value = WeatherBlock(_current_start)
+                    current_value.apply(hourlyData['datetime'].astimezone(), hourlyData)
                     index += 1
 
-                self._applyWeekDay(current_value, weekValues)
+                current_value.setDuration(timedelta(hours=24))
+                current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, False)
+                self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
+                weekValues.append(current_value)
             else:
                 minTemperatureWeekly = maxTemperatureWeekly = maxWindSpeedWeekly = sumSunshineWeekly = sumRainWeekly = None
 
+            values["cloudIconMap"] = cloudIcons
             values["weekList"] = weekValues.toDictList()
             values["weekMinTemperature"] = minTemperatureWeekly
             values["weekMaxTemperature"] = maxTemperatureWeekly
@@ -392,6 +476,8 @@ class ProviderConsumer():
             start = start.replace(minute=0, second=0, microsecond=0)
             end = start + timedelta(hours=24)
 
+            cloudIcons = {}
+
             dayList = db.getRangeList(start, end)
             values = {}
             todayValues = WeatherBlockList()
@@ -401,28 +487,29 @@ class ProviderConsumer():
                 current_value = None;
                 hour_count = 0
                 for hourlyData in dayList:
-                    hour = hourlyData['datetime'].hour;
+                    hour = hourlyData['datetime'].astimezone().hour;
                     if hour_count >= 5:
-                        current_value.setEnd(hourlyData['datetime'])
-                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                        current_value.setSVG(self.current_values.getCachedIcon(icon_name))
+                        current_value.setEnd(hourlyData['datetime'].astimezone())
+                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, False)
+                        self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                         todayValues.append(current_value)
                         current_value = None
                         hour_count = 0
 
                     if current_value is None:
-                        current_value = WeatherBlock( hourlyData['datetime'] )
+                        current_value = WeatherBlock(hourlyData['datetime'].astimezone())
 
-                    current_value.apply(hourlyData)
+                    current_value.apply(hourlyData['datetime'].astimezone(), hourlyData)
                     if todayValues.getSize() == 4:
                         break
 
                     hour_count += 1
 
-                minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
+                minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = self._calculateSummary(dayList)
             else:
                 minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = None
 
+            values["cloudIconMap"] = cloudIcons
             values["dayList"] = todayValues.toDictList()
             values["dayMinTemperature"] = minTemperature
             values["dayMaxTemperature"] = maxTemperature

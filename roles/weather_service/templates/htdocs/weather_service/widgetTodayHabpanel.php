@@ -24,8 +24,8 @@ $blockConfigs = array(
 $blockHours = [];
 foreach( $values["dayList"] as $blockData )
 {
-    $start_hour = DateTime::createFromFormat("Y-m-d\TH:i:s",$blockData["start"])->format("H");
-    $end_hour = DateTime::createFromFormat("Y-m-d\TH:i:s",$blockData["end"])->format("H");
+    $start_hour = DateTime::createFromFormat("Y-m-d\TH:i:sP",$blockData["start"])->format("H");
+    $end_hour = DateTime::createFromFormat("Y-m-d\TH:i:sP",$blockData["end"])->format("H");
 
     $diff = ( $end_hour - $start_hour );
     if( $diff < 0 ) $diff += 24;
@@ -65,8 +65,8 @@ function formatNumber($number, $precission = 1)
 	<div class="details">
 <?php
     foreach( $values["dayList"] as $blockData ){
-        $start = DateTime::createFromFormat("Y-m-d\TH:i:s",$blockData["start"]);
-        $end = DateTime::createFromFormat("Y-m-d\TH:i:s",$blockData["end"]);
+        $start = DateTime::createFromFormat("Y-m-d\TH:i:sP",$blockData["start"]);
+        $end = DateTime::createFromFormat("Y-m-d\TH:i:sP",$blockData["end"]);
 ?>
         <div class="block">
             <div class="cell title"><?php echo $start->format("H:i") . ' • ' . $blockConfigs[$blockHours[$blockData["start"]]]['title']; ?></div>
@@ -79,7 +79,7 @@ function formatNumber($number, $precission = 1)
             </div>
             <div class="cell">
                 <div class="value bottom">
-                    <div class="sun"><?php echo $blockData["svg"]; ?>
+                    <div class="sun"><?php echo $values["cloudIconMap"][$blockData["cloudIconNames"][0]]; ?>
                     </div>
                     <div class="value precipitationProbability">
                         <?php echo getSVG('rain', 'rain_grayscaled') . "<div class=\"main\">" . formatNumber($blockData["precipitationProbabilityInPercent"], 0); ?></div><div class="sub">&nbsp;%</div>

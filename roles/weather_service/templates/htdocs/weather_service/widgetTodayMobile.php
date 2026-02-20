@@ -137,7 +137,7 @@ body {
             <div class="sunshine"><div class="icon"><?php echo getSVG('rain', 'sun_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["sunshineDurationInMinutes"], 1); ?> min</div></div>
         </div>
         <div class="block">
-            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["rainAmountInMillimeter"], 0); ?> mm</div></div>
+            <div class="rain_ammount"><div class="icon"><?php echo getSVG('raindrop', 'raindrop_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["precipitationAmountInMillimeter"], 0); ?> mm</div></div>
             <div class="wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><?php echo round($data["current"]["windSpeedInKilometerPerHour"], 1); ?> km/h</div></div>
         </div>
     </div>
@@ -145,9 +145,9 @@ body {
 <?php foreach( $data["forecast"]["dayList"] as $day ) {?>
         <div class="block">
             <div class="name"><div><?php echo date_create($day["start"])->format("H:i"); ?></div></div>
-            <div class="cloud"><?php echo $day["svg"]; ?></div>
+            <div class="cloud"><?php echo $data["forecast"]["cloudIconMap"][$day["cloudIconNames"][0]]; ?></div>
             <div class="temperature"><div class="real"><?php echo round($day["minAirTemperatureInCelsius"], 0); ?>°</div><?php if( round($day["minAirTemperatureInCelsius"], 0) != round($day["maxAirTemperatureInCelsius"], 0) ) { ?><div class="perceived"><?php echo round($day["maxAirTemperatureInCelsius"], 0); ?>°</div><?php } ?></div>
-            <div class="rain"><div class="perceived"><?php echo round($day["rainProbabilityInPercent"], 0); ?>%</div><div class="amount">, <?php echo round($day["rainAmountInMillimeter"], 1); ?>mm</div></div>
+            <div class="rain"><div class="perceived"><?php echo round($day["precipitationProbabilityInPercent"], 0); ?>%</div><div class="amount">, <?php echo round($day["precipitationAmountInMillimeter"], 1); ?>mm</div></div>
         </div>
 <?php } ?>
     </div>

@@ -34,7 +34,7 @@ current_config = {
     #ForecastFields.SUNSHINE_DURATION_IN_MINUTES: [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
 
-forecast_url = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&forecast_days=7&past_days=0&hourly={fields}";
+forecast_url = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&forecast_days=14&past_days=0&hourly={fields}";
 forecast_config = {
     ForecastFields.AIR_TEMPERATURE_IN_CELSIUS: "temperature_2m",
     ForecastFields.FEELS_LIKE_TEMPERATURE_IN_CELSIUS: "apparent_temperature",
@@ -88,7 +88,6 @@ class Fetcher(object):
 
         fields = self.collectFetchedFields(current_config)
 
-        #"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current={fields}"
         url = current_url.format(latitude=latitude,longitude=longitude,timezone=self.config.timezone,fields=",".join(fields))
         data = self.get(url)
         if data == None or "current" not in data:
@@ -114,7 +113,6 @@ class Fetcher(object):
 
         fields = self.collectFetchedFields(forecast_config)
 
-        #https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly={fields}&forecast_days=14
         url = forecast_url.format(latitude=latitude,longitude=longitude,timezone=self.config.timezone,fields=",".join(fields))
         data = self.get(url)
         if data == None or "hourly" not in data or "minutely_15" not in data:

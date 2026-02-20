@@ -81,7 +81,7 @@ mx.Tooltip = (function( ret ) {
         tooltipDataSets.forEach(function(element)
         {
             element.addEventListener("mouseenter", function( event ) {
-                
+
                 mx.Tooltip.setText(element.dataset.tooltip);
                 
                 let elementParentRect = element.parentNode.getBoundingClientRect();
@@ -98,7 +98,7 @@ mx.Tooltip = (function( ret ) {
 
                 window.setTimeout(function(){ tooltip.style.opacity="1"; },0);
             });
-            element.addEventListener("mouseout", function( event ) {
+            element.addEventListener("mouseleave", function( event ) {
                 tooltip.style.opacity="0";
                 mx.Tooltip.hide();
             });

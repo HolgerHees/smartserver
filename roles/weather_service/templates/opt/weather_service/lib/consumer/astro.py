@@ -1,10 +1,10 @@
-import logging
 from datetime import datetime, timedelta
+from suntime import Sun
+
+import logging
 import schedule
 
 from smartserver.metric import Metric
-
-from lib.helper.forecast import WeatherHelper
 
 
 class AstroConsumer():
@@ -18,36 +18,41 @@ class AstroConsumer():
         self.latitude = float(location[0])
         self.longitude = float(location[1])
 
-        self.astroSunrise = None;
-        self.astroSunset = None;
+        self.sunrise = None;
+        self.sunset = None;
 
     def start(self):
         self.is_running = True
 
-        self._initData()
-
+        self.refresh()
         schedule.every().hour.at("00:00").do(self.refresh)
 
     def terminate(self):
         self.is_running = False
 
-    def _initData(self):
-        activeDay = datetime.now()
-        activeDay = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
-        activeTimestamp = datetime.timestamp(activeDay)
-
-        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude, activeDay)
-        self.astroSunrise = sunrise.isoformat()
-        self.astroSunset = sunset.isoformat()
-
     def refresh(self):
-        self._initData()
+        activeDay = datetime.now().astimezone()
+        #activeTimestamp = datetime.timestamp(activeDay)
 
-        self.handler.notifyChangedAstroData("astroSunrise", self.astroSunrise)
-        self.handler.notifyChangedAstroData("astroSunset", self.astroSunset)
+        sun = Sun(self.latitude, self.longitude)
+        sunrise = sun.get_sunrise_time(activeDay, time_zone=activeDay.tzinfo).replace(year=activeDay.year, month=activeDay.month, day=activeDay.day)
+        sunset = sun.get_sunset_time(activeDay, time_zone=activeDay.tzinfo).replace(year=activeDay.year, month=activeDay.month, day=activeDay.day)
+
+        if self.sunrise != sunrise:
+            self.sunrise = sunrise
+            self.handler.notifyChangedAstroData("astroSunrise", self.sunrise.isoformat())
+        if self.sunset != sunset:
+            self.sunset = sunset
+            self.handler.notifyChangedAstroData("astroSunset", self.sunset.isoformat())
+
+    def getSunset(self):
+        return self.sunset
+
+    def getSunrise(self):
+        return self.sunrise
 
     def getValues(self):
-        return { "astroSunrise": self.astroSunrise, "astroSunset": self.astroSunset }
+        return { "astroSunrise": self.sunrise.isoformat(), "astroSunset": self.sunset.isoformat() }
 
     def getStateMetrics(self):
         return [
