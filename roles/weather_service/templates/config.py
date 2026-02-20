@@ -5,9 +5,11 @@ api_password    = {% if weather_api_password is defined %}"{{weather_api_passwor
 
 mosquitto_host  = "{{weather_mqtt_server}}"
 
-mqtt_forecast_topic = {% if weather_mqtt_publish_provider_topic is defined %}"{{weather_mqtt_publish_provider_topic}}/weather/provider/forecast"{% else %}False{% endif %}
+mqtt_publish_provider_topic = {% if weather_mqtt_publish_provider_topic is defined %}"{{weather_mqtt_publish_provider_topic}}/weather/provider/forecast"{% else %}False{% endif %}
 
-mqtt_station_topic = {% if weather_mqtt_station_consumer_topic is defined %}"{{weather_mqtt_station_consumer_topic}}/weather/station"{% else %}False{% endif %}
+mqtt_consume_provider_topic = {% if weather_mqtt_consume_provider_topic is defined %}"{{weather_mqtt_consume_provider_topic}}/weather/provider/forecast"{% else %}False{% endif %}
+
+mqtt_station_topic = {% if weather_mqtt_consume_station_topic is defined %}"{{weather_mqtt_consume_station_topic}}/weather/station"{% else %}False{% endif %}
 
 
 db_host         = "mariadb"

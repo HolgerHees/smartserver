@@ -39,7 +39,7 @@ class Handler(Server):
         if config.api_provider == 'listener':
             logging.info("Publishing disabled")
         else:
-            if config.mqtt_forecast_topic:
+            if config.mqtt_publish_provider_topic:
                 if config.api_provider == 'meteogroup':
                     self.provider = MeteoGroup(config, self.db, self.mqtt)
                 elif config.api_provider == 'openmeteo':

@@ -112,7 +112,7 @@ class Provider:
             for data in result:
                 if now_timestamp == data["timestamp"]:
                     continue
-                self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_forecast_topic, data["field"], data["timestamp"]), payload=data["value"], qos=0, retain=False)
+                self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_publish_provider_topic, data["field"], data["timestamp"]), payload=data["value"], qos=0, retain=False)
             logging.info("Forecast data published • Total: {}".format(len(result)))
             self.service_metrics["data_forecast"] = 1
 
@@ -121,10 +121,10 @@ class Provider:
 
             result = fetcher.fetchCurrent(self.mqtt)
             for data in result:
-                self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_forecast_topic, data["field"], now_timestamp), payload=data["value"], qos=0, retain=False)
+                self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_publish_provider_topic, data["field"], now_timestamp), payload=data["value"], qos=0, retain=False)
             logging.info("Current data published • Total: {}".format(len(result)))
 
-            self.mqtt.publish("{}/refreshed".format(self.config.mqtt_forecast_topic), payload="1", qos=0, retain=False)
+            self.mqtt.publish("{}/refreshed".format(self.config.mqtt_publish_provider_topic), payload="1", qos=0, retain=False)
             self.service_metrics["data_current"] = 1
 
             if not self.is_running:

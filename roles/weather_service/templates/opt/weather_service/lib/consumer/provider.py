@@ -223,7 +223,7 @@ class ProviderConsumer():
         latitude, longitude = config.location.split(",")
 
         self.mqtt = mqtt
-        self.mqtt_forecast_topic = "{}/#".format(config.mqtt_forecast_topic)
+        self.mqtt_provider_topic = "{}/#".format(config.mqtt_consume_provider_topic)
 
         self.db = db
         self.astro = astro
@@ -248,7 +248,7 @@ class ProviderConsumer():
         if not os.path.exists(self.dump_path):
             self._dump()
 
-        self.mqtt.subscribe(self.mqtt_forecast_topic, self.on_message)
+        self.mqtt.subscribe(self.mqtt_provider_topic, self.on_message)
 
         with self.db.open() as db:
             db_values = db.getOffset(0)
