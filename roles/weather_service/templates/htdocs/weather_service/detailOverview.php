@@ -24,10 +24,8 @@ mx.WeatherCore = (function( ret ) {
     {
         if( cloudAnimatorTimer == null ) return
 
-        cloud_slider = mx.$$(".forecast .today .hour .cloud > div");
+        cloud_slider = mx.$$(".forecast .today .hour .cloud > div.animated");
         cloud_slider.forEach(function(slider){
-            if( slider.childNodes.length <= 1) return;
-
             if( slider.lastChild.style.opacity == 0.0 )
             {
                 let node = slider.removeChild(slider.lastChild);
@@ -107,15 +105,15 @@ mx.WeatherCore = (function( ret ) {
         else row += '"';
         row += '>';
         row += '<div class="time">' + time + '</div>';
-        row += '<div class="cloud"><div>';
 
         uniqueCloudIconNames = cloudIconNames.filter((value, index, array) => array.indexOf(value) === index);
         if( uniqueCloudIconNames.length == 1) cloudIconNames = uniqueCloudIconNames
+        row += '<div class="cloud"><div' + ( uniqueCloudIconNames.length > 1 ? ' class="animated"' : '' ) + '>';
         cloudIconNames.toReversed().forEach(function(icon_name){
             row += "<svg id='" + icon_name + "' " + cloudIconMap[icon_name].split("<svg")[1];
         });
-
         row += '</div></div>';
+
         row += '<div class="temperature"><div><div class="main"><span class="max">' + mx.WeatherHelper.formatNumber(maxTemperature) + '</span><span class="min">' + mx.WeatherHelper.formatNumber(minTemperature) + '</span></div><div class="sub">°C</div></div></div>';
         row += '<div class="info">';
         row += '  <div class="sunshineDuration"><div class="sun icon"><?php echo str_replace("'", "\\'", getSVG('sun', 'sun_grayscaled') ); ?></div><div>' + mx.WeatherHelper.formatDuration( sunshineDuration ) + '</div></div>';
