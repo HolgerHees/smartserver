@@ -36,14 +36,23 @@ mx.WeatherCore = (function( ret ) {
                 slider.insertBefore(node, slider.firstChild);
             }
 
-            slider.lastChild.style.transition = "all 0.4s ease-out";
-            slider.lastChild.previousSibling.style.transition = "all 0.5s ease-in";
-            window.setTimeout(function(){
+            if(slider.lastChild.id == slider.lastChild.previousSibling.id){
+                slider.lastChild.previousSibling.style.transition = "";
                 slider.lastChild.previousSibling.style.opacity = 1.0;
-                //slider.firstChild.style.transition = "all 0.5s ease-out";
-                slider.lastChild.style.transform = "translateX(-58px)";
+                slider.lastChild.style.transition = "";
                 slider.lastChild.style.opacity = 0.0;
-            }, 0);
+            }
+            else
+            {
+                slider.lastChild.style.transition = "all 0.4s ease-out";
+                slider.lastChild.previousSibling.style.transition = "all 0.5s ease-in";
+                window.setTimeout(function(){
+                    slider.lastChild.previousSibling.style.opacity = 1.0;
+                    //slider.firstChild.style.transition = "all 0.5s ease-out";
+                    slider.lastChild.style.transform = "translateX(-58px)";
+                    slider.lastChild.style.opacity = 0.0;
+                }, 0);
+            }
         });
 
         if( cloudAnimatorTimer == null ) return
@@ -103,7 +112,7 @@ mx.WeatherCore = (function( ret ) {
         uniqueCloudIconNames = cloudIconNames.filter((value, index, array) => array.indexOf(value) === index);
         if( uniqueCloudIconNames.length == 1) cloudIconNames = uniqueCloudIconNames
         cloudIconNames.toReversed().forEach(function(icon_name){
-            row += "<svg" + cloudIconMap[icon_name].split("<svg")[1];
+            row += "<svg id='" + icon_name + "' " + cloudIconMap[icon_name].split("<svg")[1];
         });
 
         row += '</div></div>';
