@@ -598,15 +598,9 @@ class WeatherBlock():
     def initCloudIcons(self, sunrise, sunset, getCloudSVGCallback, detailedIcons ):
         icons = []
 
-        start = self.hourlyData[0][0]
-        end = self.hourlyData[-1][0]
-
-        timerange = int( ( end - start ).total_seconds() / 60 )
-        ref_date = start + timedelta(minutes=timerange / 2)
-
         if detailedIcons:
             for date, values in self.hourlyData:
-                ref_date = date.replace(year=sunrise.year, month=sunrise.month, day=sunrise.day)
+                ref_date = date.replace(year=sunrise.year, month=sunrise.month, day=sunrise.day) + timedelta(minutes=30) # timedelta(minutes=30) => middle of this timeslot
                 icon_name = getCloudSVGCallback(
                     isNight = ( ref_date < sunrise or ref_date > sunset ),
                     cloudCover = values[ForecastFields.CLOUD_COVER_IN_OCTA],
@@ -619,6 +613,12 @@ class WeatherBlock():
                 )
                 icons.append(icon_name)
         else:
+            start = self.hourlyData[0][0]
+            end = self.hourlyData[-1][0]
+
+            timerange = int( ( end - start ).total_seconds() / 60 )
+            ref_date = start + timedelta(minutes=timerange / 2)
+
             icon_name = getCloudSVGCallback(
                 isNight = ( ref_date < sunrise or ref_date > sunset ),
                 cloudCover = self.cloudCoverInOcta,
