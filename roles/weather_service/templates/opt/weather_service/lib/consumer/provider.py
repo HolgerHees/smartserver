@@ -204,7 +204,7 @@ class ProviderConsumer():
                     if index > 0 and index % 3 == 0:
                         #_datetime = hourlyData['datetime'].replace(minute=0, second=0);
                         current_value.setEnd(hourlyData['datetime'].astimezone())
-                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, True)
+                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), True)
                         self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                         todayValues.append( current_value )
                         current_value = WeatherBlock(hourlyData['datetime'].astimezone())
@@ -212,7 +212,7 @@ class ProviderConsumer():
                     index += 1
 
                 current_value.setDuration(timedelta(hours=3))
-                current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, True)
+                current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), True)
                 self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                 todayValues.append(current_value)
 
@@ -242,7 +242,7 @@ class ProviderConsumer():
                     _current_start = hourlyData['datetime'].astimezone().replace(hour=0, minute=0, second=0);
                     if _current_start != current_start:
                         current_value.setDuration(timedelta(hours=24))
-                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, False)
+                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), False)
                         self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                         weekValues.append(current_value)
                         current_start = _current_start
@@ -251,7 +251,7 @@ class ProviderConsumer():
                     index += 1
 
                 current_value.setDuration(timedelta(hours=24))
-                current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, False)
+                current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), False)
                 self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                 weekValues.append(current_value)
             else:
@@ -287,7 +287,7 @@ class ProviderConsumer():
                     hour = hourlyData['datetime'].astimezone().hour;
                     if hour_count >= 5:
                         current_value.setEnd(hourlyData['datetime'].astimezone())
-                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), self.image_factory.build, False)
+                        current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), False)
                         self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
                         todayValues.append(current_value)
                         current_value = None
@@ -325,60 +325,6 @@ class ProviderConsumer():
             Metric.buildStateMetric("weather_service", "consumer_provider", "cache_file", "1" if self.valid_cache_file else "0"),
             Metric.buildStateMetric("weather_service", "consumer_provider", "not_outdatet", "1" if has_any_update else "0")
         ]
-
-class CloudImageFactory():
-    sunConfig = {
-        'day': [ 'day', 'cloudy-day-0', 'cloudy-day-1', 'cloudy-day-2', 'cloudy' ],
-        'night': [ 'night', 'cloudy-night-0', 'cloudy-night-1', 'cloudy-night-2', 'cloudy' ]
-    }
-
-    def __init__(self, icon_path):
-        self.icon_path = icon_path
-        self.icon_cache = {}
-
-    def reset(self):
-        self.icon_cache = {}
-
-    def get(self, icon_name):
-        if icon_name not in self.icon_cache:
-            with open("{}{}".format(self.icon_path, icon_name)) as f:
-                self.icon_cache[icon_name] = f.read()
-        return self.icon_cache[icon_name]
-
-    def build(self, isNight, cloudCover, precipitationAmountInMillimeter, precipitationProbabilityInPercent, freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent, thunderstormProbabilityInPercent):
-        cloudIndex = 0
-        if cloudCover >= 6:
-            cloudIndex = 4
-        elif cloudCover >= 4.5:
-            cloudIndex = 3
-        elif cloudCover >= 3.0:
-            cloudIndex = 2
-        elif cloudCover >= 1.5:
-            cloudIndex = 1
-
-        if ( precipitationProbabilityInPercent >= 30 and precipitationAmountInMillimeter > 0 ) or ( precipitationProbabilityInPercent >= 25 and precipitationAmountInMillimeter > 0.5 ):
-            if precipitationAmountInMillimeter >= 1.3:
-                amount = 4
-            elif precipitationAmountInMillimeter >= 0.9:
-                amount = 3
-            elif precipitationAmountInMillimeter >= 0.5:
-                amount = 2
-            else:
-                amount = 1
-
-            rain_type = 'snowflake' if freezingRainProbabilityInPercent > 10 or hailProbabilityInPercent > 10 or snowfallProbabilityInPercent > 10 else 'raindrop'
-            rain_type = "{}{}".format(rain_type, amount)
-        else:
-            rain_type = 'none'
-
-        thunder_type = "thunder" if thunderstormProbabilityInPercent >= 15 else 'none'
-
-        if cloudIndex == 0 and ( rain_type != "none" or thunder_type != "none" ):
-            cloudIndex = 1
-
-        icon = self.sunConfig[ 'night' if isNight else 'day' ][cloudIndex];
-
-        return "{}_{}_{}_grayscaled.svg".format(icon, rain_type, thunder_type)
 
 class CurrentDataFactory():
     def __init__(self, db, astro, image_factory, notify_callback):
@@ -512,15 +458,15 @@ class CurrentDataFactory():
         #date, cloudCover, precipitationAmountInMillimeter, precipitationProbabilityInPercent, freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent, thunderstormProbabilityInPercent, isSnowing
 
         now = datetime.now().astimezone()
-        icon_name = self.image_factory.build(
+        icon_name = CloudImageFactory.build(
             isNight = ( now < self.astro.getSunrise() or now > self.astro.getSunset() ),
             cloudCover = cloudCoverInOcta,
             precipitationAmountInMillimeter = currentRain,
             precipitationProbabilityInPercent = 100 if self.current_is_raining > 0 else 0,
+            thunderstormProbabilityInPercent = self.service_values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT],
             freezingRainProbabilityInPercent = self.service_values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT],
             hailProbabilityInPercent = self.service_values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT],
-            snowfallProbabilityInPercent = self.service_values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT],
-            thunderstormProbabilityInPercent = self.service_values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
+            snowfallProbabilityInPercent = self.service_values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]
         )
 
         return self.image_factory.get(icon_name)
@@ -549,6 +495,8 @@ class WeatherBlock():
         self.start = start
         self.end = start
 
+        self.cloudIconNames = []
+
         self.precipitationAmountInMillimeter= 0
         self.sunshineDurationInMinutes= 0
 
@@ -559,21 +507,18 @@ class WeatherBlock():
         self.windSpeedInKilometerPerHour= 0
 
         self.precipitationProbabilityInPercent= 0
-        self.thunderstormProbabilityInPercent= 0
-        self.freezingRainProbabilityInPercent= 0
-        self.hailProbabilityInPercent= 0
-        self.snowfallProbabilityInPercent= 0
 
-        self.cloudIconNames = []
+        self._thunderstormProbabilityInPercent= 0
 
-        self._maxCloudCoverInOcta = None
-        self._maxPrecipitationAmountInMillimeter = None
+        self._maxCloudCoverInOcta = 0
+        self._maxPrecipitationAmountInMillimeter = 0
         self._hourlyData = []
+        self._isSnowing = False
 
     def toDict(self):
         result = {}
         for key, value in self.__dict__.items():
-            if key.startswith("_"): #key in ("hourlyData"):
+            if key.startswith("_"):
                 continue
 
             if key in ["start", "end"]:
@@ -588,21 +533,21 @@ class WeatherBlock():
     def setDuration(self, timedelta):
         self.end = self.start + timedelta
 
-    def initCloudIcons(self, sunrise, sunset, getCloudSVGCallback, detailedIcons ):
+    def initCloudIcons(self, sunrise, sunset, detailedIcons ):
         icons = []
 
         if detailedIcons:
             for date, values in self._hourlyData:
                 ref_date = date.replace(year=sunrise.year, month=sunrise.month, day=sunrise.day) + timedelta(minutes=30) # timedelta(minutes=30) => middle of this timeslot
-                icon_name = getCloudSVGCallback(
+                icon_name = CloudImageFactory.build(
                     isNight = ( ref_date < sunrise or ref_date > sunset ),
                     cloudCover = values[ForecastFields.CLOUD_COVER_IN_OCTA],
                     precipitationAmountInMillimeter = values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER],
                     precipitationProbabilityInPercent = values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT],
+                    thunderstormProbabilityInPercent = values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT],
                     freezingRainProbabilityInPercent = values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT],
                     hailProbabilityInPercent = values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT],
-                    snowfallProbabilityInPercent = values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT],
-                    thunderstormProbabilityInPercent = values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
+                    snowfallProbabilityInPercent = values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]
                 )
                 icons.append(icon_name)
         else:
@@ -612,15 +557,13 @@ class WeatherBlock():
             timerange = int( ( end - start ).total_seconds() / 60 )
             ref_date = start + timedelta(minutes=timerange / 2)
 
-            icon_name = getCloudSVGCallback(
+            icon_name = CloudImageFactory.buildWithSnowFlag(
                 isNight = ( ref_date < sunrise or ref_date > sunset ),
                 cloudCover = self._maxCloudCoverInOcta,
                 precipitationAmountInMillimeter = self._maxPrecipitationAmountInMillimeter,
                 precipitationProbabilityInPercent = self.precipitationProbabilityInPercent,
-                freezingRainProbabilityInPercent = self.freezingRainProbabilityInPercent,
-                hailProbabilityInPercent = self.hailProbabilityInPercent,
-                snowfallProbabilityInPercent = self.snowfallProbabilityInPercent,
-                thunderstormProbabilityInPercent = self.thunderstormProbabilityInPercent
+                thunderstormProbabilityInPercent = self._thunderstormProbabilityInPercent,
+                isSnowing = self._isSnowing
             )
             icons.append(icon_name)
         self.cloudIconNames = icons
@@ -645,22 +588,93 @@ class WeatherBlock():
         if self.precipitationProbabilityInPercent < values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]:
             self.precipitationProbabilityInPercent = values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT]
 
-        if self.thunderstormProbabilityInPercent < values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]:
-            self.thunderstormProbabilityInPercent = values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
+        if self._thunderstormProbabilityInPercent < values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]:
+            self._thunderstormProbabilityInPercent = values[ForecastFields.THUNDERSTORM_PROBABILITY_IN_PERCENT]
 
-        if self.freezingRainProbabilityInPercent < values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]:
-            self.freezingRainProbabilityInPercent = values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT]
+        # snowing check only if it is raing during this timeslow and keep this flag during the complete block
+        if CloudImageFactory.isRaining(values[ForecastFields.PRECIPITATION_PROBABILITY_IN_PERCENT], values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]):
+            _isSnowing = CloudImageFactory.isSnowing(values[ForecastFields.FREEZING_RAIN_PROBABILITY_IN_PERCENT], values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT], values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT])
+            if not self._isSnowing or _isSnowing:
+                self._isSnowing = _isSnowing
 
-        if self.hailProbabilityInPercent < values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]:
-            self.hailProbabilityInPercent = values[ForecastFields.HAIL_PROBABILITY_IN_PERCENT]
-
-        if self.snowfallProbabilityInPercent < values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]:
-            self.snowfallProbabilityInPercent = values[ForecastFields.SNOWFALL_PROBABILITY_IN_PERCENT]
-
-        if self._maxPrecipitationAmountInMillimeter is None or self._maxPrecipitationAmountInMillimeter <= values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]:
+        if self._maxPrecipitationAmountInMillimeter <= values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]:
             self._maxPrecipitationAmountInMillimeter = values[ForecastFields.PRECIPITATION_AMOUNT_IN_MILLIMETER]
 
-        if self._maxCloudCoverInOcta is None or self._maxCloudCoverInOcta < values[ForecastFields.CLOUD_COVER_IN_OCTA]:
+        if self._maxCloudCoverInOcta < values[ForecastFields.CLOUD_COVER_IN_OCTA]:
             self._maxCloudCoverInOcta = values[ForecastFields.CLOUD_COVER_IN_OCTA]
 
         self._hourlyData.append([date, values])
+
+class CloudImageFactory():
+    sunConfig = {
+        'day': [ 'day', 'cloudy-day-0', 'cloudy-day-1', 'cloudy-day-2', 'cloudy' ],
+        'night': [ 'night', 'cloudy-night-0', 'cloudy-night-1', 'cloudy-night-2', 'cloudy' ]
+    }
+
+    def __init__(self, icon_path):
+        self.icon_path = icon_path
+        self.icon_cache = {}
+
+    def reset(self):
+        self.icon_cache = {}
+
+    def get(self, icon_name):
+        if icon_name not in self.icon_cache:
+            with open("{}{}".format(self.icon_path, icon_name)) as f:
+                self.icon_cache[icon_name] = f.read()
+        return self.icon_cache[icon_name]
+
+    @staticmethod
+    def build(isNight, cloudCover, precipitationAmountInMillimeter, precipitationProbabilityInPercent, thunderstormProbabilityInPercent, freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent):
+        return CloudImageFactory.buildWithSnowFlag(
+            isNight = isNight,
+            cloudCover = cloudCover,
+            precipitationAmountInMillimeter = precipitationAmountInMillimeter,
+            precipitationProbabilityInPercent = precipitationProbabilityInPercent,
+            thunderstormProbabilityInPercent = thunderstormProbabilityInPercent,
+            isSnowing = CloudImageFactory.isSnowing(freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent)
+        )
+
+    @staticmethod
+    def buildWithSnowFlag(isNight, cloudCover, precipitationAmountInMillimeter, precipitationProbabilityInPercent, thunderstormProbabilityInPercent, isSnowing):
+        cloudIndex = 0
+        if cloudCover >= 6:
+            cloudIndex = 4
+        elif cloudCover >= 4.5:
+            cloudIndex = 3
+        elif cloudCover >= 3.0:
+            cloudIndex = 2
+        elif cloudCover >= 1.5:
+            cloudIndex = 1
+
+        if CloudImageFactory.isRaining(precipitationProbabilityInPercent, precipitationAmountInMillimeter):
+            if precipitationAmountInMillimeter >= 1.3:
+                amount = 4
+            elif precipitationAmountInMillimeter >= 0.9:
+                amount = 3
+            elif precipitationAmountInMillimeter >= 0.5:
+                amount = 2
+            else:
+                amount = 1
+
+            rain_type = 'snowflake' if isSnowing else 'raindrop'
+            rain_type = "{}{}".format(rain_type, amount)
+        else:
+            rain_type = 'none'
+
+        thunder_type = "thunder" if thunderstormProbabilityInPercent >= 15 else 'none'
+
+        if cloudIndex == 0 and ( rain_type != "none" or thunder_type != "none" ):
+            cloudIndex = 1
+
+        icon = CloudImageFactory.sunConfig[ 'night' if isNight else 'day' ][cloudIndex];
+
+        return "{}_{}_{}_grayscaled.svg".format(icon, rain_type, thunder_type)
+
+    @staticmethod
+    def isRaining(precipitationProbabilityInPercent, precipitationAmountInMillimeter):
+        return ( precipitationProbabilityInPercent >= 30 and precipitationAmountInMillimeter > 0 ) or ( precipitationProbabilityInPercent >= 25 and precipitationAmountInMillimeter > 0.5 )
+
+    @staticmethod
+    def isSnowing(freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent):
+        return freezingRainProbabilityInPercent > 10 or hailProbabilityInPercent > 10 or snowfallProbabilityInPercent > 10
