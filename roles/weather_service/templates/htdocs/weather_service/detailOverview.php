@@ -37,20 +37,30 @@ mx.WeatherCore = (function( ret ) {
 
             cloud_times[index].innerHTML = slider.lastChild.previousSibling.dataset.time ? '(' + slider.lastChild.previousSibling.dataset.time + ')' : '';
 
+            // next cloud is equal to the current one
             if(slider.lastChild.id == slider.lastChild.previousSibling.id){
                 slider.lastChild.previousSibling.style.transition = "";
                 slider.lastChild.previousSibling.style.opacity = 1.0;
                 slider.lastChild.style.transition = "";
                 slider.lastChild.style.opacity = 0.0;
             }
-            else
+            // next cloud is similar to the current one (same cloud group)
+            else if( slider.lastChild.id.split("_")[0] != slider.lastChild.previousSibling.id.split("_")[0] )
             {
                 slider.lastChild.style.transition = "all 0.4s ease-out";
                 slider.lastChild.previousSibling.style.transition = "all 0.5s ease-in";
                 window.setTimeout(function(){
                     slider.lastChild.previousSibling.style.opacity = 1.0;
-                    //slider.firstChild.style.transition = "all 0.5s ease-out";
                     slider.lastChild.style.transform = "translateX(-58px)";
+                    slider.lastChild.style.opacity = 0.0;
+                }, 0);
+            }
+            else
+            {
+                slider.lastChild.style.transition = "all 0.3s ease-out";
+                slider.lastChild.previousSibling.style.transition = "all 0.2s ease-out";
+                window.setTimeout(function(){
+                    slider.lastChild.previousSibling.style.opacity = 1.0;
                     slider.lastChild.style.opacity = 0.0;
                 }, 0);
             }
@@ -67,10 +77,11 @@ mx.WeatherCore = (function( ret ) {
         {
             cloud_slider = mx.$$(".forecast .today .hour .cloud > div");
             cloud_slider.forEach(function(slider){
-                slider.lastChild.style.transition = "none";
                 slider.lastChild.style.opacity = 1.0;
-                slider.lastChild.style.transition = "";
-                slider.lastChild.style.willChange = "transform, opacity";
+                slider.childNodes.forEach(function(node)
+                {
+                    node.style.willChange = "transform, opacity";
+                });
             });
             cloudAnimatorTimer = window.setTimeout(runCloudAnimator, 1000);
         }
@@ -115,8 +126,10 @@ mx.WeatherCore = (function( ret ) {
         if( animatedCloud ) row += '<span class="animatedTime"></span>';
         row += '</div>';
 
+        console.log("----");
         row += '<div class="cloud"><div' + ( animatedCloud ? ' class="animatedCloud"' : '' ) + '>';
         cloudIconNames.toReversed().forEach(function(icon_name, index){
+            console.log(icon_name);
             row += "<svg id='" + icon_name + "'";
             if(index < cloudIconNames.length - 1) row += " data-time='" + mx.WeatherHelper.formatHour(new Date(start.getTime() + (cloudIconNames.length - 1 - index) * 60 * 60 * 1000)) + "'";
             row += " " + cloudIconMap[icon_name].split("<svg")[1];
