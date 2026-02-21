@@ -119,10 +119,15 @@ class Provider:
             #if not self.is_running:
             #    return False
 
+            weatherCodeSkipped = False
             result = fetcher.fetchCurrent(self.mqtt)
             for data in result:
+                # weather_code == 0 means not observed
+                if data["field"] == ForecastFields.WEATHER_CODE and data["value"] == 0:
+                    weatherCodeSkipped = True
+                    continue
                 self.mqtt.publish("{}/{}/{}".format(self.config.mqtt_publish_provider_topic, data["field"], now_timestamp), payload=data["value"], qos=0, retain=False)
-            logging.info("Current data published • Total: {}".format(len(result)))
+            logging.info("Current data published • Total: {}{}".format(len(result), " • Weather code skipped)" if weatherCodeSkipped else ""))
 
             self.mqtt.publish("{}/refreshed".format(self.config.mqtt_publish_provider_topic), payload="1", qos=0, retain=False)
             self.service_metrics["data_current"] = 1
