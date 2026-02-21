@@ -58,6 +58,9 @@ forecast_config = {
     ForecastFields.WEATHER_CODE: "weathercode",
     ForecastFields.UV_INDEX: "uv_index",
 
+    ForecastFields.DIRECT_RADIATION_IN_WATT: "direct_radiation_instant",
+    ForecastFields.DIFFUSE_RADIATION_IN_WATT: "diffuse_radiation_instant",
+
     ForecastFields.SUNSHINE_DURATION_IN_MINUTES: [ [ "sunshine_duration" ], lambda self, fetched_values: int(round(fetched_values["sunshine_duration"] / 60,0)) ]
 }
     

@@ -23,7 +23,6 @@ current_fields = {
     ForecastFields.RELATIVE_HUMIDITY_IN_PERCENT: "relativeHumidityInPercent",
 
     ForecastFields.WIND_DIRECTION_IN_DEGREE: "windDirectionInDegree",
-    #ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: [ ["windSpeedInMeterPerSecond"], lambda self, fetched_values: round(fetched_values["windSpeedInMeterPerSecond"] / 1000.0 * 60 * 60, 2) ],
     ForecastFields.WIND_SPEED_IN_KILOMETER_PER_HOUR: "windSpeedInKilometerPerHour",
     ForecastFields.WIND_GUST_IN_KILOMETER_PER_HOUR: "maxWindGustInKilometerPerHour",
 
@@ -59,6 +58,9 @@ forecast_config = {
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     ForecastFields.WEATHER_CODE: "weatherCodeTraditional",
     ForecastFields.UV_INDEX: "uvIndexWithClouds",
+
+    ForecastFields.DIRECT_RADIATION_IN_WATT: [ ["directRadiationInJoulePerSquareCentimeter"], lambda self, values: round(values["directRadiationInJoulePerSquareCentimeter"] * 10000 / 3600, 2) ],
+    ForecastFields.DIFFUSE_RADIATION_IN_WATT: [ ["directRadiationInJoulePerSquareCentimeter", "globalRadiationInJoulePerSquareCentimeter"], lambda self, values: round((values["globalRadiationInJoulePerSquareCentimeter"] - values["directRadiationInJoulePerSquareCentimeter"]) * 10000 / 3600, 2) ],
 
 	ForecastFields.SUNSHINE_DURATION_IN_MINUTES: "sunshineDurationInMinutes"
 }
@@ -161,7 +163,7 @@ class Fetcher(object):
         date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
         date = date.replace(minute=0, second=0,microsecond=0)
 
-        #date = date.replace(hour=1, minute=0, second=0,microsecond=0)
+        #date = date.replace(hour=0, minute=0, second=0,microsecond=0) - timedelta(days=14)
 
         start_date = date + timedelta(hours=1)
         start_date_str = self._prepareDate(start_date)

@@ -20,6 +20,9 @@ class ForecastFields(metaclass=__EnumBaseType__):
     WEATHER_CODE = "weatherCode"
     UV_INDEX = "uvIndex"
 
+    DIRECT_RADIATION_IN_WATT = "directRadiationInWatt"
+    DIFFUSE_RADIATION_IN_WATT = "diffuseRadiationInWatt"
+
     SUNSHINE_DURATION_IN_MINUTES = "sunshineDurationInMinutes"
 
     # --------------------------
