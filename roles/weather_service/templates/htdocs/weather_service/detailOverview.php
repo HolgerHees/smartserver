@@ -126,10 +126,8 @@ mx.WeatherCore = (function( ret ) {
         if( animatedCloud ) row += '<span class="animatedTime"></span>';
         row += '</div>';
 
-        console.log("----");
         row += '<div class="cloud"><div' + ( animatedCloud ? ' class="animatedCloud"' : '' ) + '>';
         cloudIconNames.toReversed().forEach(function(icon_name, index){
-            console.log(icon_name);
             row += "<svg id='" + icon_name + "'";
             if(index < cloudIconNames.length - 1) row += " data-time='" + mx.WeatherHelper.formatHour(new Date(start.getTime() + (cloudIconNames.length - 1 - index) * 60 * 60 * 1000)) + "'";
             row += " " + cloudIconMap[icon_name].split("<svg")[1];
