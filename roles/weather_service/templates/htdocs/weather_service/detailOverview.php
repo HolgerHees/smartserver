@@ -45,22 +45,22 @@ mx.WeatherCore = (function( ret ) {
                 slider.lastChild.style.opacity = 0.0;
             }
             // next cloud is similar to the current one (same cloud group)
-            else if( slider.lastChild.id.split("_")[0] != slider.lastChild.previousSibling.id.split("_")[0] )
+            else if( slider.lastChild.id.split("_")[0] == slider.lastChild.previousSibling.id.split("_")[0] )
+            {
+                slider.lastChild.style.transition = "all 0.2s ease-out";
+                slider.lastChild.previousSibling.style.transition = "all 0.2s ease-out";
+                window.setTimeout(function(){
+                    slider.lastChild.previousSibling.style.opacity = 1.0;
+                    slider.lastChild.style.opacity = 0.0;
+                }, 0);
+            }
+            else
             {
                 slider.lastChild.style.transition = "all 0.4s ease-out";
                 slider.lastChild.previousSibling.style.transition = "all 0.5s ease-in";
                 window.setTimeout(function(){
                     slider.lastChild.previousSibling.style.opacity = 1.0;
                     slider.lastChild.style.transform = "translateX(-58px)";
-                    slider.lastChild.style.opacity = 0.0;
-                }, 0);
-            }
-            else
-            {
-                slider.lastChild.style.transition = "all 0.3s ease-out";
-                slider.lastChild.previousSibling.style.transition = "all 0.2s ease-out";
-                window.setTimeout(function(){
-                    slider.lastChild.previousSibling.style.opacity = 1.0;
                     slider.lastChild.style.opacity = 0.0;
                 }, 0);
             }
