@@ -47,8 +47,8 @@ mx.WeatherCore = (function( ret ) {
             // next cloud is similar to the current one (same cloud group)
             else if( slider.lastChild.id.split("_")[0] == slider.lastChild.previousSibling.id.split("_")[0] )
             {
-                slider.lastChild.style.transition = "all 0.2s ease-out";
-                slider.lastChild.previousSibling.style.transition = "all 0.2s ease-out";
+                slider.lastChild.style.transition = "all 0.2s ease-in";
+                slider.lastChild.previousSibling.style.transition = "all 0.2s ease-in";
                 window.setTimeout(function(){
                     slider.lastChild.previousSibling.style.opacity = 1.0;
                     slider.lastChild.style.opacity = 0.0;
@@ -56,11 +56,11 @@ mx.WeatherCore = (function( ret ) {
             }
             else
             {
-                slider.lastChild.style.transition = "all 0.4s ease-out";
-                slider.lastChild.previousSibling.style.transition = "all 0.5s ease-in";
+                slider.lastChild.style.transition = "all 0.6s ease-out";
+                slider.lastChild.previousSibling.style.transition = "all 0.6s ease-in";
                 window.setTimeout(function(){
                     slider.lastChild.previousSibling.style.opacity = 1.0;
-                    slider.lastChild.style.transform = "translateX(-58px)";
+                    slider.lastChild.style.transform = "translateX(-30px)";
                     slider.lastChild.style.opacity = 0.0;
                 }, 0);
             }
@@ -411,6 +411,8 @@ mx.WeatherCore = (function( ret ) {
             {
                 var day = this.getAttribute("mv-date");
                 refreshWeek(day);
+
+                if( mx.$(".week").classList.contains("open") ) document.getElementById("weekButton").click();
             }
 
             var elements = document.querySelectorAll('div[mv-date]');
@@ -429,8 +431,6 @@ mx.WeatherCore = (function( ret ) {
         });
 
         if( mx.WeatherCore.active_day ) mx.$("#week_" + mx.WeatherCore.active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(mx.WeatherCore.active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(mx.WeatherCore.active_day.getDate()) ).classList.add("active");
-
-        if( mx.$(".week").classList.contains("open") ) document.getElementById("weekButton").click();
 
         mx.Tooltip.init();
     }
