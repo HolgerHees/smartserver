@@ -47,8 +47,8 @@ mx.WeatherCore = (function( ret ) {
             // next cloud is similar to the current one (same cloud group)
             else if( slider.lastChild.id.split("_")[0] == slider.lastChild.previousSibling.id.split("_")[0] )
             {
-                slider.lastChild.style.transition = "all 0.2s ease-in";
-                slider.lastChild.previousSibling.style.transition = "all 0.2s ease-in";
+                slider.lastChild.style.transition = "all 0.3s ease-in";
+                slider.lastChild.previousSibling.style.transition = "all 0.3s ease-in";
                 window.setTimeout(function(){
                     slider.lastChild.previousSibling.style.opacity = 1.0;
                     slider.lastChild.style.opacity = 0.0;
