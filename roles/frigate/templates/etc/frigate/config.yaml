@@ -13,6 +13,11 @@ proxy:
   header_map:
     user: x-forwarded-user
     role: x-forwarded-usergroup
+    role_map:
+      admin:
+        - admin
+      viewer:
+        - user
   default_role: viewer
 
 auth:
@@ -23,11 +28,6 @@ auth:
 record:
   enabled: true
   sync_recordings: true
-#  pre_capture: 5
-#  post_capture: 15
-  retain:
-    days: 0
-    mode: all
   alerts:
     retain:
       days: 7
