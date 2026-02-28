@@ -555,7 +555,7 @@ class WeatherBlock():
             end = self._hourlyData[-1][0]
 
             timerange = int( ( end - start ).total_seconds() / 60 )
-            ref_date = start + timedelta(minutes=timerange / 2)
+            ref_date = start.replace(year=sunrise.year, month=sunrise.month, day=sunrise.day) + timedelta(minutes=timerange / 2)
 
             icon_name = CloudImageFactory.buildWithSnowFlag(
                 isNight = ( ref_date < sunrise or ref_date > sunset ),
