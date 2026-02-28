@@ -67,7 +67,7 @@ Example: vagrant --config=demo --os=suse up
         elsif arg == "alma" then
             setup_os = "alma"
             image_box = "almalinux/10"
-            image_version = "10.1.20251125" #"9.1.20221117"
+            image_version = "10.1.20260110" #"10.1.20251125" #"9.1.20221117"
             #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
             ansible_version = "11.12.0" #8.7.0"
         end
