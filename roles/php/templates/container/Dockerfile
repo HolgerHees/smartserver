@@ -30,7 +30,6 @@ RUN apt-get update && \
 # used for pecl install
   export MAKEFLAGS="-j $(nproc)" && \
 
-  docker-php-ext-enable opcache && \
   docker-php-ext-install -j$(nproc) pcntl && \
   docker-php-ext-install -j$(nproc) exif && \
   docker-php-ext-install -j$(nproc) bcmath && \
