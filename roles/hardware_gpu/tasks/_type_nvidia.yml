@@ -71,7 +71,9 @@
       [
         'nvidia-compute-G07',
         'nvidia-compute-utils-G07',
-        {% if not is_suse_16 %}
+        {% if is_suse_16 %}
+        'nvidia-driver-G07',
+        {% else %}
         'nvidia-container-toolkit',
         {% endif %}
         'nvtop'
@@ -103,7 +105,7 @@
     mode: 0644
   notify: "restart nvidia-uvm-init"
 
-- name: "nvidia : enable nvidia-persistanced" # temporary => missing libnvidia-cfg.so.1 on suse
+- name: "nvidia : enable nvidia-persistenced" # temporary => missing libnvidia-cfg.so.1 on suse
   systemd:
     name: nvidia-persistenced
     state: started
