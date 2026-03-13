@@ -1,6 +1,7 @@
 - name: set version
   set_fact:
     netdata_version: "2.9.0"
+    nvidia_enabled: "{{(gpu_enabled and gpu_device == 'nvidia') or (cuda_enabled and cuda_device == 'nvidia')}}"
   tags: [ 'update_notifier_config' ]
 
 - name: prepare needed directories
@@ -64,12 +65,12 @@
     #  VIRTUALIZATION: "kvm"
 #      DOCKER_USR: "root"
 #      DOCKER_GRP: "root"
-      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools{{ ' nvidia-smi' if gpu_enabled and gpu_type == 'nvidia' else '' }}"
+      NETDATA_EXTRA_DEB_PACKAGES: "apcupsd lm-sensors smartmontools{{ ' nvidia-smi' if nvidia_enabled else '' }}"
       DISABLE_TELEMETRY: "1"
       DO_NOT_TRACK: "1"
     container_devices: |
       [
-          {% if gpu_enabled and gpu_type == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
+          {% if nvidia_enabled %}"nvidia.com/gpu=all"{% endif %}
       ]
     container_volumes: |
       [

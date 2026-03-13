@@ -72,10 +72,12 @@ default_variables: {
     #     testuser1: "<sambapassword>"
     # }
 
-    tpu_enabled:                              { default: "{{ true if tpu_type is defined else false}}" },
-    tpu_type:                                 { optional: yes },                                                    # currently only "coral_pci", "coral_usb", "hailo" and "intel" is supported
-    gpu_enabled:                              { default: "{{ true if gpu_type is defined else false}}" },
-    gpu_type:                                 { optional: yes },                                                    # currently only "nvidia" and "intel" are supported
+    tpu_enabled:                              { default: "{{ true if tpu_device is defined else false}}" },
+    tpu_device:                               { optional: yes },                                                    # currently only "coral_pci", "coral_usb", "hailo" and "intel" is supported
+    gpu_enabled:                              { default: "{{ true if gpu_device is defined else false}}" },
+    gpu_device:                               { optional: yes },                                                    # currently only "nvidia" and "intel" are supported
+    cuda_enabled:                             { default: "{{ true if cuda_device is defined else false}}" },
+    cuda_device:                              { optional: yes },                                                    # currently only "nvidia" supported
 
     usv_enabled:                              { default: no },
 
@@ -734,14 +736,16 @@ podman_samba_ip:                  "172.16.0.116"
 podman_imaginary_ip:              "172.16.0.117"
 podman_nextcloud_service_ip:      "172.16.0.118"
 
+podman_openclaw_ip:               "172.16.0.150"
+podman_ollama_ip:                 "172.16.0.151"
+
 podman_weather_service_ip:        "172.16.0.201"
 podman_cloud_check_ip:            "172.16.0.202"
-podman_camera_ftp_ip:             "172.16.0.203"
-podman_camera_service_ip:         "172.16.0.204"
+#podman_camera_ftp_ip:             "172.16.0.203"
+#podman_camera_service_ip:         "172.16.0.204"
 podman_ci_service_ip:             "172.16.0.205"
 podman_frigate_ip:                "172.16.0.206"
 
-podman_vcontrold_ip:              "172.16.0.230"
 podman_optolink_splitter_ip:      "172.16.0.231"
 
 netgroup:                         "{{default_server_ip.split('.')[2]}}"
