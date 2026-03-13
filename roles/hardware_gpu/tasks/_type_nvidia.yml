@@ -68,10 +68,14 @@
 - name: "nvidia : install required packages => is_suse"
   zypper:
     name: |
-#      - nvidia-container-toolkit
-      - nvidia-compute-G07
-      - nvidia-compute-utils-G07
-      - nvtop
+      [
+        'nvidia-compute-G07',
+        'nvidia-compute-utils-G07',
+        {% if not is_suse_16 %}
+        'nvidia-container-toolkit',
+        {% endif %}
+        'nvtop'
+     ]
     state: present
   when: "is_suse"
 
