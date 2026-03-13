@@ -115,8 +115,8 @@
         { "app": "recognize"            , "name": "movinet.enabled"                     , "value": "false" },
         { "app": "recognize"            , "name": "musicnn.enabled"                     , "value": "false" },
         { "app": "recognize"            , "name": "concurrency.enabled"                 , "value": "true" },
-        { "app": "recognize"            , "name": "tensorflow.gpu"                      , "value": "{{'true' if gpu_enabled and gpu_type == 'nvidia' else 'false'}}" },
-        { "app": "recognize"            , "name": "tensorflow.purejs"                   , "value": "{{'false' if gpu_enabled and gpu_type == 'nvidia' else 'true'}}" },
+        { "app": "recognize"            , "name": "tensorflow.gpu"                      , "value": "{{'true' if cuda_enabled and cuda_device == 'nvidia' else 'false'}}" },
+        { "app": "recognize"            , "name": "tensorflow.purejs"                   , "value": "{{'false' if cuda_enabled and cuda_device == 'nvidia' else 'true'}}" },
         { "app": "recognize"            , "name": "node_binary"                         , "value": "{{htdocs_path}}nextcloud/apps/recognize/bin/node" },
       {% endif %}
       ]
