@@ -67,12 +67,10 @@
 
 - name: "nvidia : install required packages => is_suse"
   zypper:
-    name:
-      - nvidia-compute-G06
-#      - nvidia-compute-G06-32bit # used to mount frigate
-      - nvidia-compute-utils-G06
-      - nvidia-container-toolkit
-#      - nvidia-utils-G06
+    name: |
+      - nvidia-compute-G07
+      - nvidia-compute-utils-G07
+#      - nvidia-container-toolkit
       - nvtop
     state: present
   when: "is_suse"
