@@ -68,9 +68,9 @@
 - name: "nvidia : install required packages => is_suse"
   zypper:
     name: |
+#      - nvidia-container-toolkit
       - nvidia-compute-G07
       - nvidia-compute-utils-G07
-#      - nvidia-container-toolkit
       - nvtop
     state: present
   when: "is_suse"
