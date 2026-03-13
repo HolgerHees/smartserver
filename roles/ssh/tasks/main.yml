@@ -5,6 +5,10 @@
     line: '{{item.field}} {{item.value}}'
     create: '{{is_suse_16}}'
   with_items:
+    - { field: 'PermitRootLogin', value: "yes"}
+    - { field: 'AuthorizedKeysFile', value: ".ssh/authorized_keys" }
+    - { field: 'UsePAM', value: "yes" }
+    - { field: 'Subsystem', value: "sftp /usr/lib/ssh/sftp-server" }
     - { field: 'AllowUsers', value: "*@{{intern_networks | join(' *@')}} *@{{vpn_mobile_network}}/24" }
   notify: "restart sshd"
 
