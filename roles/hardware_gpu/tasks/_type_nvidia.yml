@@ -75,7 +75,7 @@
         'nvidia-container-toolkit',
         {% endif %}
         'nvtop'
-     ]
+      ]
     state: present
   when: "is_suse"
 
