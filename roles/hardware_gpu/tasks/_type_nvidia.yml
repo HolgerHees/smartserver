@@ -63,7 +63,7 @@
     state: present
   with_items:
     - { name: "NVIDIA", url: "https://developer.download.nvidia.com/compute/cuda/repos/{{'' if is_suse_16 else 'open'}}suse{{ansible_distribution_major_version}}/{{ansible_architecture}}/" }
-  when: "is_suse and not is_suse_16"
+  when: "is_suse"
 
 - name: "nvidia : install required packages => is_suse"
   zypper:
