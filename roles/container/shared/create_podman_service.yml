@@ -38,6 +38,9 @@
       {% for value in container_capabilities | default([]) %}
         "--cap-add {{value}}",
       {% endfor %}
+      {% for value in container_capabilities_drop | default([]) %}
+        "--cap-drop {{value}}",
+      {% endfor %}
       {% if container_shm_size is defined %}
         "--shm-size {{container_shm_size}}",
       {% endif %}
