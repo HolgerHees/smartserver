@@ -6,7 +6,7 @@
     group: root
     mode: "{{item.mode}}"
   with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/10-ansible-nvidia.conf" } # block iptables
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/modprobe.d/10-ansible-nvidia.conf" }
     - { mode: "u=rwx,g=rx,o=", path: "/etc/modules-load.d/10-ansible-nvidia.conf" }
 
 # https://docs.nvidia.com/cuda/pdf/CUDA_Installation_Guide_Linux.pdf
@@ -59,27 +59,44 @@
     name: "{{item.name}}"
     repo: "{{item.url}}"
     auto_import_keys: yes
+    disable_gpg_check: yes
     priority: "100"
     state: present
   with_items:
-    - { name: "NVIDIA", url: "https://developer.download.nvidia.com/compute/cuda/repos/{{'' if is_suse_16 else 'open'}}suse{{ansible_distribution_major_version}}/{{ansible_architecture}}/" }
+    - { name: "NVIDIA CUDA", url: "https://developer.download.nvidia.com/compute/cuda/repos/{{'' if is_suse_16 else 'open'}}suse{{ansible_distribution_major_version}}/{{ansible_architecture}}/" }
+    - { name: "NVIDIA Container Toolkit", url: "https://nvidia.github.io/libnvidia-container/stable/rpm/{{ansible_architecture}}/" }
   when: "is_suse"
 
 - name: "nvidia : install required packages => is_suse"
   zypper:
     name: |
       [
+        {% if is_suse_16 %}
+        'cuda-drivers',
+        {% else %}
         'nvidia-compute-G07',
         'nvidia-compute-utils-G07',
-        {% if is_suse_16 %}
-        'nvidia-driver-G07',
-        {% else %}
-        'nvidia-container-toolkit',
         {% endif %}
+        'nvidia-container-toolkit',
         'nvtop'
       ]
     state: present
+  register: cuda_suse_package_install
   when: "is_suse"
+
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#linux-distributions
+#
+
+- name: "nvidia : compile => is_suse_16"
+  shell: "dkms autoinstall"
+  changed_when: "cuda_suse_package_install.changed"
+  when: "is_suse_16"
+
+- name: prepare cdi directory
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "/etc/cdi/" }
+  include_tasks: roles/_shared/create_directories.yml
 
 - name: "nvidia : prepare cdi config"
   shell: "[ ! -f /etc/cdi/nvidia.yaml ] && nvidia-ctk cdi generate 2> /dev/null 1> /etc/cdi/nvidia.yaml && echo 'created'"
