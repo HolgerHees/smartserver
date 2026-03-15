@@ -26,7 +26,7 @@
 - name: install needed python packages
   pip:
     name:
-      - flask
+      - flask=={{flask_version}}
       - flask-socketio=={{flask_socketio_version}}
       - simple-websocket
       - pexpect
