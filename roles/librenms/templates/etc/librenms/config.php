@@ -3,7 +3,7 @@ $config['snmp']['community'] = array();
 $config['nets'] = array("{{intern_networks | join('\", \"')}}");
 
 $config['auth_mechanism'] = "http-auth";
-$config['http_auth_header'] = "HTTP_X_REMOTE_USER";
+$config['http_auth_header'] = "HTTP_X_FORWARDED_USER";
 
 $config['mac_oui.enabled'] = false; # 'true' will fail, because internet connections are not allowed
 

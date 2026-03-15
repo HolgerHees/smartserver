@@ -121,29 +121,30 @@ class Prometheus extends BaseDatastore
 
             $devices[$device->device_id] = $device;
 
-            $data_r = [];
-            foreach( $device_ports[$device->device_id] as $device_port_ifIndex => $port )
-            {
-                $_tags = [];
-                $_tags['ifIndex'] = $port->ifIndex;
-                $_tags['ifAlias'] = $port->ifAlias;
-                $_tags['ifName'] = $port->ifName;
-
-                $_tags_r = $this->applyGroups( $device_group_devices, $device_group_names, $device, $_tags );
-
-                $measurements = [];
-                $measurements['ifOperational'] = $port->ifOperStatus == 'down' ? 0 : 1;
-                $measurements['ifSpeed'] = $port->ifSpeed;
-                $measurements['alerting'] = !$alertingEnabled || $port->ignore ? 0 : 1;
-
-                foreach( $_tags_r as $_tags )
+            if( array_key_exists($device->device_id , $device_ports) ){
+                foreach( $device_ports[$device->device_id] as $device_port_ifIndex => $port )
                 {
-                    foreach( $measurements as $_name => $_value )
-                    {
-                        [$messurement, $labels, $value] = $this->processMeasurement('ports', $_name, $_value, $_tags);
-                        if( $value === null ) continue;
+                    $_tags = [];
+                    $_tags['ifIndex'] = $port->ifIndex;
+                    $_tags['ifAlias'] = $port->ifAlias;
+                    $_tags['ifName'] = $port->ifName;
 
-                        $this->printMeasurement($time, $device, $messurement, $labels, $value);
+                    $_tags_r = $this->applyGroups( $device_group_devices, $device_group_names, $device, $_tags );
+
+                    $measurements = [];
+                    $measurements['ifOperational'] = $port->ifOperStatus == 'down' ? 0 : 1;
+                    $measurements['ifSpeed'] = $port->ifSpeed;
+                    $measurements['alerting'] = !$alertingEnabled || $port->ignore ? 0 : 1;
+
+                    foreach( $_tags_r as $_tags )
+                    {
+                        foreach( $measurements as $_name => $_value )
+                        {
+                            [$messurement, $labels, $value] = $this->processMeasurement('ports', $_name, $_value, $_tags);
+                            if( $value === null ) continue;
+
+                            $this->printMeasurement($time, $device, $messurement, $labels, $value);
+                        }
                     }
                 }
             }

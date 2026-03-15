@@ -11,9 +11,38 @@
 #  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO api_tokens (user_id,token_hash,description,disabled) VALUES (1,'{{librenms_api_token | replace('$', '\\$') }}','web app usage',0);\""
   changed_when: no
   
+#- name: "set http user"
+#  shell: "podman exec librenms lnms user:add --no-interaction --role=\"admin\" --email=\"{{userdata[item].email}}\" --full-name=\"{{userdata[item].name}}\" {{item}}"
+#  changed_when: no
+#  when: "'admin' in userdata[item].groups"
+#  loop_control:
+#    label: "{{item}}"
+#    index_var: index
+#  with_items: "{{userdata}}"
+
 - name: "set http user"
-  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO users (user_id, auth_type, auth_id, username, password, realname, email, descr, can_modify_passwd, remember_token, enabled) VALUES (46, 'http-auth', '46', 'librenms', NULL, '', '{{root_email}}', '', 1, NULL, 1);\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO users (user_id, auth_id, auth_type, username, password, realname, email, descr, can_modify_passwd, remember_token, enabled) VALUES ({{index + 1}}, '{{index + 1}}', 'http-auth', '{{item}}', NULL, '{{userdata[item].name}}', '{{userdata[item].email}}', '', 0, NULL, 1);\""
   changed_when: no
+  when: "'admin' in userdata[item].groups"
+  loop_control:
+    label: "{{item}}"
+    index_var: index
+  register: test
+  with_items: "{{userdata}}"
+
+- name: "set http user roles"
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id) VALUES (1, 'App\\\\\\\\Models\\\\\\\\User', '{{index + 1}}');\""
+  changed_when: no
+  when: "'admin' in userdata[item].groups"
+  loop_control:
+    label: "{{item}}"
+    index_var: index
+  register: test
+  with_items: "{{userdata}}"
+
+- name: debug
+  debug:
+    msg: "{{test}}"
 
 - name: "create discovery all cron job"
   vars:

@@ -35,7 +35,7 @@
     mode: 0640
   notify: "restart librenms"
 
-- name: copy config files
+- name: copy patches files
   copy:
     src: "templates/etc/librenms/{{item}}"
     dest: "{{global_etc}}librenms/{{item}}"
@@ -135,6 +135,7 @@
   vars:
     sub_domain: "librenms"
     usergroup: "admin"
+    additional_env: yes
     include: "templates/etc/apache2/_.ansible.vhost.d/librenms.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
   tags: ['apache_config']
