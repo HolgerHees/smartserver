@@ -240,7 +240,7 @@ class ProviderConsumer():
                 index = 1
                 for hourlyData in weekList:
                     _current_start = hourlyData['datetime'].astimezone().replace(hour=0, minute=0, second=0);
-                    if _current_start != current_start:
+                    if _current_start.timetuple().tm_yday != current_start.timetuple().tm_yday: # day of the year to fix summer/winter time change
                         current_value.setDuration(timedelta(hours=24))
                         current_value.initCloudIcons(self.astro.getSunrise(), self.astro.getSunset(), False)
                         self._applyCloudSVG(cloudIcons, current_value.getCloudIconNames())
