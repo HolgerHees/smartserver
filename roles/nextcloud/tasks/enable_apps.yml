@@ -1,7 +1,10 @@
 - name: set version
   set_fact:
-    nextcloud_keeweb_version: '0.6.13'
+#    nextcloud_keeweb_version: '0.6.13'
+#    nextcloud_keeweb_version: '0.6.13'
 #    nextcloud_keeweb_version: '0.6.15'
+#        "notes",
+    nextcloud_notes_version: '4.13.1'
     nextcloud_default_apps: |
       [
         "files_notify_redis",
@@ -17,7 +20,6 @@
         "bookmarks",
         "contacts",
         "calendar",
-        "notes",
         "news",
         "deck",
         "tasks",
@@ -207,6 +209,66 @@
 
 # maybe cleanup
 # UPDATE `oc_jobs` SET `reserved_at` = 0 WHERE `class` = 'OCA\\News\\Cron\\Updater'
+
+
+
+
+
+
+
+
+
+
+
+
+# ***** INSTALL NOTES *****
+- name: check for outdated notes version
+  shell: "grep --invert \"<version>{{nextcloud_notes_version}}<\\/version>\" {{htdocs_path}}nextcloud/apps/notes/appinfo/info.xml | grep \"<version>.*<\\/version>\""
+  register: notes_result
+  changed_when: "notes_result.rc == 0"
+  failed_when: False
+
+- name: uninstall outdated notes version => old version was detected
+  file:
+    state: absent
+    path: "{{htdocs_path}}nextcloud/apps/notes/"
+  when: "notes_result.rc == 0"
+
+- name: install notes app => app does not exists
+  unarchive:
+    src: "https://github.com/nextcloud-releases/notes/releases/download/v{{nextcloud_notes_version}}/notes-v{{nextcloud_notes_version}}.tar.gz"
+    dest: "{{htdocs_path}}nextcloud/apps/"
+    remote_src: yes
+    creates: "{{htdocs_path}}nextcloud/apps/notes/"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+  register: notes_installation
+
+- name: check notes max version
+  lineinfile:
+    path: "{{htdocs_path}}nextcloud/apps/notes/appinfo/info.xml"
+    regexp: '(.*php.*?max-version)="[0-9\\.]+"(.*)'
+    line: '\1="8.5"\2'
+    backrefs: yes
+  when: notes_installation.changed
+
+- name: enable notes apps
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app:enable notes --force"
+  register: app_enable_result
+  failed_when: "'enabled' not in app_enable_result.stdout"
+  when: notes_installation.changed
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ***** CHECK FOR DISABLED APPS *****
 - name: get final app status
