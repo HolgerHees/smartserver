@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "2.9.0"
+    netdata_version: "2.10.2"
     nvidia_enabled: "{{(gpu_enabled and gpu_device == 'nvidia') or (cuda_enabled and cuda_device == 'nvidia')}}"
   tags: [ 'update_notifier_config' ]
 
