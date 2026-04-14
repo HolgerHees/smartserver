@@ -1,16 +1,5 @@
 FROM php:{{php_version}}-fpm-{{php_container_os}}
 
-{% if cuda_enabled and cuda_device == 'nvidia' %}# ai computing
-RUN echo "deb http://deb.debian.org/debian/ {{php_container_os}} main contrib non-free" > /etc/apt/sources.list && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends \
-  nvidia-cuda-toolkit \
-  nvidia-cudnn \
-  nvidia-smi && \
-
-  /usr/sbin/update-nvidia-cudnn -u
-
-{% endif %}
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
 
@@ -109,3 +98,46 @@ RUN apt-get update && \
 #  sed -i '1 a /bin/ln -sf /proc/$$/fd/2 /tmp/stderr' /usr/local/bin/docker-php-entrypoint
 
 # https://stitcher.io/blog/php-8-jit-setup
+
+# Should be at the end to run "update-glx" at last
+{% if cuda_enabled and cuda_device == 'nvidia' %}# ai computing
+#RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+#    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+#    --mount=type=tmpfs,target=/tmp/ \
+#    --mount=type=tmpfs,target=/root/.cache \
+#    . /etc/os-release && \
+#    export OS="${ID}${VERSION_ID}" && \
+#    apt-get update && \
+#    apt-get install -y --no-install-recommends wget pip && \
+#    wget https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run && \
+#    chmod 770 cuda_11.8.0_520.61.05_linux.run
+#    ./cuda_11.8.0_520.61.05_linux.run
+
+#RUN pip install --break-system-packages --upgrade nvidia-cudnn
+
+#https://gazioglu.medium.com/running-nextcloud-with-recognize-on-docker-with-gpu-support-c58b39e689cd
+
+#ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1.7.0 /usr/lib/x86_64-linux-gnu/libGL.so.1
+#  ldconfig
+
+RUN echo "deb http://deb.debian.org/debian/ {{php_container_os}} main contrib non-free" > /etc/apt/sources.list && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+  nvidia-cuda-toolkit \
+  nvidia-cudnn \
+  nvidia-smi && \
+
+  /usr/sbin/update-nvidia-cudnn -u && \
+
+  ln -sf /usr/lib/x86_64-linux-gnu/libcublas.so.12 /usr/lib/x86_64-linux-gnu/libcublas.so.11 && \
+  ln -sf /usr/lib/x86_64-linux-gnu/libcublasLt.so.12 /usr/lib/x86_64-linux-gnu/libcublasLt.so.11 && \
+  ln -sf /usr/lib/x86_64-linux-gnu/libcufft.so.11 /usr/lib/x86_64-linux-gnu/libcufft.so.10 && \
+  ln -sf /usr/lib/x86_64-linux-gnu/libcurand.so.10 /usr/lib/x86_64-linux-gnu/libcurand.so.10 && \
+  ln -sf /usr/lib/x86_64-linux-gnu/libcusolver.so.11 /usr/lib/x86_64-linux-gnu/libcusolver.so.11 && \
+  ln -sf /usr/lib/x86_64-linux-gnu/libcusparse.so.12 /usr/lib/x86_64-linux-gnu/libcusparse.so.11 && \
+  ln -sf /usr/lib/x86_64-linux-gnu/libcudart.so.12 /usr/lib/x86_64-linux-gnu/libcudart.so.11.0 && \
+
+  ln -sf /usr/lib/x86_64-linux-gnu/libcudnn.so.9 /usr/lib/x86_64-linux-gnu/libcudnn.so.8 && \
+
+  update-glx --config nvidia --skip-auto
+{% endif %}
