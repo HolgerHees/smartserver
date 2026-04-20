@@ -52,7 +52,7 @@ class Helper():
 
         handle_r = []
         for row in cmd_result.split("\n"):
-            if ip not in row:
+            if "ip saddr {} drop".format(ip) not in row:
                 continue
             handle = row.split(" ")[-1]
             if not handle.isnumeric():
