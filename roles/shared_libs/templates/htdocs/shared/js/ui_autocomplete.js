@@ -207,12 +207,6 @@ mx.Autocomplete = (function( ret ) {
     }
     
     
-    function onInput(event, options)
-    {
-        // must be handled in onInput => https://gitlab.freedesktop.org/wayland/wayland/-/issues/582
-        buildValues(options,false);
-    }
-
     function onKeyUp(event, options)
     {
         //console.log(event.keyCode);
@@ -222,6 +216,8 @@ mx.Autocomplete = (function( ret ) {
             options.isDownKeyDown = false;
             return;
         }
+
+        buildValues(options,false);
     }
     
     function onKeyDown(event, options)
@@ -332,9 +328,6 @@ mx.Autocomplete = (function( ret ) {
 
         options.onFocus = function(event) { onFocus(event, options); }
         options.elements.input.addEventListener("focus",options.onFocus);
-
-        options.onInput = function(event) { onInput(event, options); }
-        options.elements.input.addEventListener("input",options.onInput);
 
         options.onKeyUp = function(event) { onKeyUp(event, options); }
         options.elements.input.addEventListener("keyup",options.onKeyUp);

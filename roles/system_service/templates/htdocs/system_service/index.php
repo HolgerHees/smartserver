@@ -546,18 +546,17 @@ mx.UNCore = (function( ret ) {
 
                 processSearch("", "input");
             }
-        });
-        
-        searchInputField.addEventListener("input",function(event)
-        {
-            var _term = searchInputField.value.toLowerCase();
-            if( _term == activeTerm ) return;
+            else
+            {
+                var _term = searchInputField.value.toLowerCase();
+                if( _term == activeTerm ) return;
 
-            activeTerm = _term;
+                activeTerm = _term;
 
-            searchInputClear.style.visibility = _term == "" ? "hidden" : "visible";
+                searchInputClear.style.visibility = _term == "" ? "hidden" : "visible";
 
-            processSearch(_term.toLowerCase(), "input");
+                processSearch(_term.toLowerCase(), "input");
+            }
         });
 
         searchInputField.addEventListener("focus",function(event)
