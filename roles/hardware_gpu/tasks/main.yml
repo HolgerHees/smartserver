@@ -1,4 +1,4 @@
 - name: "process 'nvidia'"
   include_tasks: "_type_nvidia.yml"
-  when: "gpu_device=='nvidia' or cuda_device=='nvidia'"
+  when: "(gpu_enabled and gpu_device=='nvidia') or (cuda_enabled and cuda_device=='nvidia')"
   tags: ["update_system_config"]
