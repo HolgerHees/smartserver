@@ -1,0 +1,91 @@
+- name: set ollama version
+  set_fact:
+    ollama_version: '0.17.5'
+  tags: [ 'update_notifier_config' ]
+
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_etc}}ollama" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}ollama" }
+      - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{global_lib}}ollama/models" }
+  include_tasks: roles/_shared/create_directories.yml
+
+- name: collect gpu devices
+  shell: |
+      {% if cuda_enabled and cuda_device=='nvidia' %}
+          echo 'nvidia.com/gpu=all'
+      {% endif %}
+  register: "ollama_gpu_devices"
+  changed_when: no
+  failed_when: no
+  when: "cuda_enabled and cuda_device in ['nvidia']"
+
+- name: create container service
+  vars:
+    container_name: "ollama"
+    container_image: "ollama/ollama:{{ollama_version}}"
+    #container_capabilities:
+    #  - CAP_NET_RAW
+    #  - CAP_NET_ADMIN
+    #container_capabilities_drop:
+    #  - ALL
+    #container_security_opt:
+    #  - no-new-privileges:true
+    container_env:
+       OLLAMA_FLASH_ATTENTION: 1
+    #  OLLAMA_DEBUG: 2
+    container_network: "isolated"
+    container_ip: "{{podman_ollama_ip}}"
+    container_exposed_ports:
+      - "11434/tcp"
+    container_devices: |
+      [
+          {% if ollama_gpu_devices.stdout_lines is defined %}
+              {% for device in ollama_gpu_devices.stdout_lines %}
+                "{{device}}",
+              {% endfor %}
+          {% endif %}
+      ]
+    container_volumes:
+      - '{{global_etc}}ollama:/root/.ollama/:rw'
+      - '{{global_lib}}ollama/models:/root/.ollama/models:rw'
+    container_readyness: { "type": "port_check", "ip": "ollama", "port": "11434" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+- name: allow container service
+  vars:
+    service_name: "ollama"
+    container_to_outside_rules:
+      - { "oif": "{{default_network_interface}}", saddr: "{{podman_ollama_ip}}", comment: "ollama => intern networks" }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
+
+- name: add service name
+  vars:
+    host_name: "ollama"
+    host_ip_address: "{{podman_ollama_ip}}"
+  include_tasks: roles/_shared/add_to_hosts.yml
+
+#- name: copy apache vhost
+#  vars:
+#    sub_domain: "ollama"
+#    usergroup: "admin"
+#    include: "templates/etc/apache2/_.ansible.vhost.d/ollama.inc"
+#  include_tasks: roles/apache/shared/add_vhost.yml
+#  tags: ['apache_config']
+
+#- name: register update notifier
+#  vars:
+#    name: "librenms"
+#    type: "docker"
+#    url: "https://github.com/librenms/librenms/releases"
+#    config: {
+#      repository: "librenms/librenms",
+#      pattern: "^([0-9\\.]+)$"
+#    }
+#  include_tasks: roles/update_service/shared/add_software.yml
+#  tags: ['update_notifier_config']
+#  when: "update_service_software_check_enabled"
+

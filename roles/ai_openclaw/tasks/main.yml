@@ -1,0 +1,74 @@
+- name: set openclaw version
+  set_fact:
+    openclaw_version: '2026.3.2'
+  tags: [ 'update_notifier_config' ]
+
+#- name: "create user and group => user or group does not exists"
+#  vars:
+#    user: { name: "openclaw", system: true, home: "{{global_etc}}openclaw" }
+#    group: { name: "openclaw", system: true }
+#  include_tasks: roles/user/shared/add_system_user.yml
+#  when: "'librenms' not in system_users or 'librenms' not in system_groups"
+
+- name: prepare needed directories
+  vars:
+    directories:
+      - { mode: "u=rwx,g=rx,o=", owner: "1000", group: "1000", path: "{{global_etc}}openclaw" }
+  include_tasks: roles/_shared/create_directories.yml
+
+- name: create container service
+  vars:
+    container_name: "openclaw"
+    container_image: "alpine/openclaw:{{openclaw_version}}"
+    container_capabilities_drop:
+      - ALL
+    container_security_opt:
+      - no-new-privileges:true
+    container_network: "isolated"
+    container_ip: "{{podman_openclaw_ip}}"
+    container_exposed_ports:
+      - "18789/tcp"
+    container_volumes:
+      - '{{global_etc}}openclaw:/home/node/.openclaw/:rw'
+    container_readyness: { "type": "port_check", "ip": "openclaw", "port": "18789" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+- name: allow container service
+  vars:
+    service_name: "openclaw"
+    container_to_container_rules:
+      - { saddr: "{{podman_openclaw_ip}}", daddr: "{{podman_ollama_ip}}", protocol: "tcp", dport: "11434", comment: "openclaw => ollama" }
+    container_to_outside_rules:
+      - { saddr: "{{podman_openclaw_ip}}", "daddr": "{{trusted_subnets}}", "type": "drop", comment: "openclaw => trusted networks" }
+      - { "oif": "{{default_network_interface}}", saddr: "{{podman_openclaw_ip}}", "protocol": "tcp", comment: "openclaw => outside networks" }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
+
+- name: add service name
+  vars:
+    host_name: "openclaw"
+    host_ip_address: "{{podman_openclaw_ip}}"
+  include_tasks: roles/_shared/add_to_hosts.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "openclaw"
+    usergroup: "admin"
+    include: "templates/etc/apache2/_.ansible.vhost.d/openclaw.inc"
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
+
+#- name: register update notifier
+#  vars:
+#    name: "librenms"
+#    type: "docker"
+#    url: "https://github.com/librenms/librenms/releases"
+#    config: {
+#      repository: "librenms/librenms",
+#      pattern: "^([0-9\\.]+)$"
+#    }
+#  include_tasks: roles/update_service/shared/add_software.yml
+#  tags: ['update_notifier_config']
+#  when: "update_service_software_check_enabled"
+

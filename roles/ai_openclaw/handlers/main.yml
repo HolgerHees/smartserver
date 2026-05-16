@@ -1,0 +1,8 @@
+- name: restart openclaw
+  systemd:
+    name: openclaw
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart openclaw"

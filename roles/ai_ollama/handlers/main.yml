@@ -1,0 +1,8 @@
+- name: restart ollama
+  systemd:
+    name: ollama
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart ollama"
