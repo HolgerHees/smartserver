@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 import sys
 import time
+import ipaddress
+import logging
 
 from smartserver import command
 
@@ -63,6 +65,14 @@ class Helper():
         match = re.search(r"({}) .*{}.*".format("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}",mac), result)
         if match:
             return match[1]
+        return None
+
+    def getInterfaceForIp(networks, ip):
+        for network in networks.values():
+            if network["interface"] and ipaddress.ip_address(ip) in ipaddress.ip_network(network["subnet"]):
+                #logging.info("DEBUG > FOUND {} {}".format(network["interface"], ip))
+                return network["interface"]
+        #logging.info("DEBUG NOT FOUND {}".format(ip))
         return None
 
     def arpscan(interface, network, is_running_callback = None):

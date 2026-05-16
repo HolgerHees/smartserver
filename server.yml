@@ -34,7 +34,7 @@
           - "mode:       {{inventory_hostname}}"
           - "server:     {{default_server_ip}}{{ ( ', ' + default_server_ipv6 ) if default_server_ipv6 is defined else '' }}"
           - "gateway:    {{default_server_gateway}}{{ ( ', ' + default_server_gateway_ipv6 ) if default_server_gateway_ipv6 is defined else ''}}"
-          - "network:    {{intern_networks | join(', ') }}"
+          - "network:    {{trusted_subnets | join(', ') }}"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'None'}}"
           - "arpa:       {{default_server_arpa}}"
           - "interface:  {{default_network_interface}}"

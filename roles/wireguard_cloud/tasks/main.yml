@@ -123,15 +123,18 @@
     container_to_outside_rules: |
       [
       {% for peer in cloud_vpn.peers %}
-        { "saddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.peers[peer].port}}", "oif": "{{default_network_interface}}", "comment": "wireguard_cloud => external wireguard_cloud's" },
+        { "oif": "{{default_network_interface}}", "saddr": "{{vpn_cloud_services.local.gateway}}", "protocol": "udp", "dport": "{{cloud_vpn.peers[peer].port}}", "comment": "wireguard_cloud => external wireguard_cloud's" },
       {% endfor %}
-        { "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "iif": "{{default_network_interface}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
+        { "iif": "{{default_network_interface}}", "protocol": "udp", "dport": "{{cloud_vpn.interface.port}}", "comment": "external wireguard_cloud's => wireguard_cloud" }
       ]
-#            { "saddr": "{{cloud_vpn['interface']['network']}}", "oif": "{{default_network_interface}}" }
     masquerading_rules: |
         [
-            { "saddr": "{{vpn_cloud_services.local.gateway}}", "oif": "{{default_network_interface}}" }
+            { "saddr": "{{vpn_cloud_services.local.gateway}}" }
         ]
+    #masquerading_rules: |
+    #    [
+    #        { "saddr": "{{vpn_cloud_services.local.gateway}}", "oif": "{{default_network_interface}}" }
+    #    ]
     nat_rules: { ip: "{{vpn_cloud_services.local.gateway}}", ports: "{{wireguard_cloud_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']

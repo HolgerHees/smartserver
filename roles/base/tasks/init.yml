@@ -195,7 +195,25 @@
 #     - "{{fetched_user}}"
 #     - "{{fetched_groups}}"
 
-- name: collect intern_networks & nobody/nogroup user
+- name: prepare networks & nobody/nogroup user
+  set_fact:
+    networks: |
+        {
+            {% set ns = namespace(default=False,host=False) %}
+            {% for network in networks %}{% if networks[network].subnet is defined %}
+                {% if networks[network].subnet == default_server_network %}{% set ns.default = True %}{% endif %}
+                {% if networks[network].subnet == host_server_network %}{% set ns.host = True %}{% endif %}
+                "{{network}}": { "subnet": "{{networks[network].subnet}}", "vlan": {{networks[network].vlan | default(1)}}, "trusted": {{networks[network].trusted | default(False)}} },
+            {% endif %}{% endfor %}
+            {% if not ns.default %}
+                "default": { "subnet": "{{default_server_network}}", "vlan": 1, "trusted": True },
+            {% endif %}
+            {% if not ns.host and host_server_network != default_server_network %}
+                "host": { "subnet": "{{host_server_network}}", "vlan": 1, "trusted": True },
+            {% endif %}
+        }
+
+- name: collect networks & nobody/nogroup user
   set_fact:
     system_users: |
       {
@@ -209,13 +227,24 @@
           "{{ group_key_maps[data | split(':') | first] | default(data | split(':') | first) }}": { "name": "{{data | split(':') | first }}", "id": {{data | split(':') | last }} },
         {% endfor %}
       }
-    intern_networks: |
+    trusted_subnets: |
         [
-            "{{default_server_network}}",
-            {% if default_server_network != host_server_network %}
-                "{{host_server_network}}",
-            {% endif %}
-            {% for network in intern_networks %}
-                "{{network}}",
+            {% for subnet in networks.values() | selectattr('trusted', 'equalto', true) | map(attribute='subnet') | list %}
+                "{{subnet}}",
             {% endfor %}
         ]
+    all_networks: |
+        {
+            {% for network in networks %}{% if networks[network].subnet is defined %}
+                {% set ns = namespace(interface='') %}
+                {% for interface in ansible_facts['interfaces'] %}
+                    {% if 'ipv4' in ansible_facts[interface] and networks[network].subnet == ansible_facts[interface]['ipv4']['network'] + '/24' %}
+                        {% set ns.interface = interface %}
+                {% endif %}{% endfor %}
+                "{{network}}": { "subnet": "{{networks[network].subnet}}", "interface": "{{ns.interface}}", "vlan": {{networks[network].vlan}}, "trusted": {{networks[network].trusted}} },
+            {% endif %}{% endfor %}
+        }
+
+#- name:
+#  debug:
+#    msg: "{{trusted_networks}}"

@@ -111,7 +111,7 @@
     container_to_host_rules:
       - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", comment: "apache access" }
     container_to_outside_rules:
-      - { saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", oif: "{{default_network_interface}}", comment: "ci_service => 'github'" }
+      - { oif: "{{default_network_interface}}", saddr: "{{podman_ci_service_ip}}", protocol: "tcp", dport: "443", comment: "ci_service => 'github'" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
   

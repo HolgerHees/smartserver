@@ -169,7 +169,7 @@
     container_to_outside_rules: |
       [
           { "saddr": {{ vpn_admin_ips | to_json}}, "comment": "admin clients" },
-          { "saddr": "{{vpn_mobile_network}}/24", "daddr": "!= { {{ intern_networks | join(',') }} }", "comment": "all clients => internet" },
+          { "saddr": "{{vpn_mobile_network}}/24", "daddr": "!= { {{ trusted_subnets | join(',') }} }", "comment": "all clients => internet" },
           {% if macvlan_range | length > 0 %}
             { "saddr": "{{vpn_mobile_network}}/24", "daddr": "{{macvlan_range}}", "comment": "all clients => pihole" }
           {% endif %}
@@ -177,13 +177,15 @@
     container_to_host_rules:
       - { saddr: "{{vpn_mobile_network}}/24", comment: "all clients => host" }
     network_to_host_rules:
-      - { protocol: "udp", dport: "{{mobile_vpn_internal_port}}", comment: "open port" }
-    masquerading_rules: |
-        [
-            { "saddr": "{{vpn_mobile_network}}/24", "oif": "{{default_network_interface}}" }
-            {% if macvlan_range | length > 0 %}
-              , { "saddr": "{{vpn_mobile_network}}/24", "oifname": "mac0" }
-            {% endif %}
-        ]
+      - { "iif": "{{default_network_interface}}", protocol: "udp", dport: "{{mobile_vpn_internal_port}}", comment: "open port" }
+    masquerading_rules:
+      - { saddr: "{{vpn_mobile_network}}/24" }
+    #masquerading_rules: |
+    #    [
+    #        { "saddr": "{{vpn_mobile_network}}/24", "oif": "{{default_network_interface}}" }
+    #        {% if macvlan_range | length > 0 %}
+    #          , { "saddr": "{{vpn_mobile_network}}/24", "oifname": "mac0" }
+    #        {% endif %}
+    #    ]
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']

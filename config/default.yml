@@ -35,8 +35,14 @@ default_variables: {
 
     ipv6_enabled:                             { default: no },
 
-    intern_networks:                          { default: [] },                                                      # e.g. intern (trusted) ipv4 & ipv6 address ranges. Networks, based on production/staging ip and ansible server ip, be added additionally.
-    public_networks:                          { default: [] },                                                      # e.g. public ipv6 address ranges
+    networks:                                 { default: {} },                                                      # all local available networks. server network will be added by default with vlan 1 and trusted: yes
+    # networks: {
+    #     lan:            {
+    #          subnet: "192.168.0.0/24",
+    #          vlan: 1,                                                                                             # optional vlanid '[1]'
+    #          trusted: no                                                                                          # optional type 'yes|no [no]'
+    #     }
+    # }
 
     base_path:                                { default: "/smartserver/" },                                         # path for smartserver related service data
     data_path:                                { default: "{{base_path}}data/" },                                    # path for smartserver related user data
@@ -587,11 +593,11 @@ default_variables: {
     # This generates a webui menu entry which shows a barcode, to make it easy for your guests to connect
     # Roles:
     # - 'weather_service'
-    guest_wifi_enabled:                       { default: "{{wifi_networks is defined and wifi_networks | length > 0}}" },
-    wifi_networks:                            { optional: yes },
-    # wifi_networks: {
-    #     test1: { password: "1234", type: "public" },
-    #     test2: { password: "3456", type: "intern" }
+    guest_wifi_enabled:                       { default: "{{guest_wifi_networks is defined and guest_wifi_networks | length > 0}}" },
+    guest_wifi_networks:                      { optional: yes },
+    # guest_wifi_enabled: {
+    #     test1: { password: "1234" },
+    #     test2: { password: "3456" }
     # }
     # **** END GUEST WIFI BARCODE GENERATOR                                            ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -747,6 +753,7 @@ podman_ci_service_ip:             "172.16.0.205"
 podman_frigate_ip:                "172.16.0.206"
 
 podman_optolink_splitter_ip:      "172.16.0.231"
+podman_ebusd_ip:                  "172.16.0.232"
 
 netgroup:                         "{{default_server_ip.split('.')[2]}}"
 

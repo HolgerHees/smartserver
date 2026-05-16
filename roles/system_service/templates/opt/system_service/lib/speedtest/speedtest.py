@@ -36,7 +36,7 @@ class Speedtest():
     def start(self):
         self.is_running = True
 
-        schedule.every().hour.at("00:00").do(self.startSpeedtest)
+        schedule.every().hour.at("05:00").do(self.startSpeedtest)
         self.influxdb.register(self.getMessurements)
 
     def _isRunning(self):

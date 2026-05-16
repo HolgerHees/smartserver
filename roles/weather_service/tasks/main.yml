@@ -82,7 +82,7 @@
       ]
     container_to_outside_rules: |
       [
-        { "saddr": "{{podman_weather_service_ip}}", "protocol": "tcp", "dport": "443", "oif": "{{default_network_interface}}", "comment": "weather_service => external weather provider" }, 
+        { "oif": "{{default_network_interface}}", "saddr": "{{podman_weather_service_ip}}", "protocol": "tcp", "dport": "443", "comment": "weather_service => external weather provider" },
         {% if weather_mqtt_server == 'cloud_mosquitto' %}
             { "saddr": "{{podman_weather_service_ip}}", "daddr": "{{vpn_cloud_services['local']['mosquitto']}}", "protocol": "tcp", "dport": [ "1883", "9001" ], "comment": "weather_service => cloud mosquitto" }
         {% endif %}

@@ -21,16 +21,8 @@ class IPCache(threading.Thread):
     TYPE_UNKNOWN = "Unknown"
     TYPE_PRIVATE = "Private"
 
-    public_networks = []
-
     def __init__(self, config):
         threading.Thread.__init__(self)
-
-        for network in config.public_networks:
-            network = ipaddress.ip_network(network)
-            #if network.is_private:
-            #    continue
-            self.public_networks.append(network)
 
         self.max_location_cache_age = 60 * 60 * 24 * 7
         self.max_hostname_cache_age = 60 * 60 * 24 * 1
@@ -62,15 +54,7 @@ class IPCache(threading.Thread):
         self._restore()
 
     def isExternal(self, address):
-        if address.is_global:
-            if not self.public_networks:
-                return True
-            for network in self.public_networks:
-                if address in network:
-                    return False
-            return True
-
-        return False
+        return address.is_global
 
     def start(self):
         self.is_running = True

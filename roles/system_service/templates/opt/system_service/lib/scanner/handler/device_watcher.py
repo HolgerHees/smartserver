@@ -235,8 +235,13 @@ class DeviceWatcher(_handler.Handler):
                                 self.cache.unlock(self)
 
                             user_config = self.config.user_devices[device.getIP()]
-                            self.jobs[mac] = DeviceWatcherJob(self, self.cache, device, stat, self.config.main_interface, user_config["type"], user_config["timeout"])
-                            self.jobs[mac].start()
+
+                            interface = Helper.getInterfaceForIp(self.config.networks, device.getIP())
+                            if interface:
+                                self.jobs[mac] = DeviceWatcherJob(self, self.cache, device, stat, interface, user_config["type"], user_config["timeout"])
+                                self.jobs[mac].start()
+                            else:
+                                logging.error("Unable to detect interface for IP {}".format(device.getIP()))
                     continue
 
                 if device.getIP() not in self.config.user_devices:

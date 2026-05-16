@@ -52,7 +52,7 @@
     container_to_container_rules:
       - { saddr: "{{podman_prometheus_ip}}", daddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "80", comment: "prometheus => postfix" }
     container_to_outside_rules:
-      - { saddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "{{mailserver_port}}", oif: "{{default_network_interface}}", comment: "postfix => extern mailserver" }
+      - { oif: "{{default_network_interface}}", saddr: "{{podman_postfix_ip}}", protocol: "tcp", dport: "{{mailserver_port}}", comment: "postfix => extern mailserver" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 

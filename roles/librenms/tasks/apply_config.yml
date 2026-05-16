@@ -21,7 +21,7 @@
 #  with_items: "{{userdata}}"
 
 - name: "set http user"
-  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO users (user_id, auth_id, auth_type, username, password, realname, email, descr, can_modify_passwd, remember_token, enabled) VALUES ({{index + 1}}, '{{index + 1}}', 'http-auth', '{{item}}', NULL, '{{userdata[item].name}}', '{{userdata[item].email}}', '', 0, NULL, 1);\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO users (user_id, auth_id, auth_type, username, password, realname, email, descr, can_modify_passwd, remember_token, enabled) VALUES ({{index + 100}}, '{{index + 100}}', 'http-auth', '{{item}}', NULL, '{{userdata[item].name}}', '{{userdata[item].email}}', '', 0, NULL, 1);\""
   changed_when: no
   when: "'admin' in userdata[item].groups"
   loop_control:
@@ -30,8 +30,12 @@
   register: test
   with_items: "{{userdata}}"
 
+- name: debug
+  debug:
+    msg: "{{test}}"
+
 - name: "set http user roles"
-  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id) VALUES (1, 'App\\\\\\\\Models\\\\\\\\User', '{{index + 1}}');\""
+  shell: "podman exec mariadb mariadb -u root -h 127.0.0.1 librenms -e \"INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id) VALUES (1, 'App\\\\\\\\Models\\\\\\\\User', '{{index + 100}}');\""
   changed_when: no
   when: "'admin' in userdata[item].groups"
   loop_control:

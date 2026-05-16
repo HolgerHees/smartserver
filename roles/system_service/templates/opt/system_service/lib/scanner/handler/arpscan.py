@@ -30,10 +30,10 @@ class DHCPListener(threading.Thread):
         self.dhcpListenerProcess = None
 
     def run(self):
-        logging.info("DHCP listener started")
+        logging.info("DHCP listener started on interface {}".format(self.interface))
         self.dhcpListenerProcess = Helper.dhcplisten(self.interface)
         if self.dhcpListenerProcess.returncode is not None:
-            raise Exception("DHCP Listener not started")
+            raise Exception("DHCP Listener not started on interface {}".format(self.interface))
 
         client_mac = None
         client_ip = None
@@ -41,7 +41,7 @@ class DHCPListener(threading.Thread):
         
         while self.is_running:
             if is_supended:
-                logging.warning("Resume DHCPListener")
+                logging.warning("Resume DHCPListener on interface {}".format(self.interface))
                 is_supended = False
 
             output = self.dhcpListenerProcess.stdout.readline()
@@ -50,7 +50,7 @@ class DHCPListener(threading.Thread):
                 if not self.is_running:
                     break
                 if self.dhcpListenerProcess.poll() is not None:
-                    raise Exception("DHCP Listener stopped")
+                    raise Exception("DHCP Listener stopped on interface {}".format(self.interface))
             else:
                 line = output.strip()
                 if "BOOTP/DHCP" in line:
@@ -105,7 +105,7 @@ class DHCPListener(threading.Thread):
                             
         rc = self.dhcpListenerProcess.poll()
         
-        logging.info("DHCP listener stopped")
+        logging.info("DHCP listener stopped on interface {}".format(self.interface))
 
     def terminate(self):
         self.is_running = False
@@ -120,28 +120,38 @@ class ArpScanner(_handler.Handler):
         
         self.last_cleanup = {}
 
-        self.dhcp_listener = DHCPListener(self, self.cache, self.config.main_interface)
+        self.dhcp_listener = []
+        for network in self.config.networks.values():
+            if not network["interface"]:
+                continue
+            self.dhcp_listener.append(DHCPListener(self, self.cache, network["interface"]))
 
     def start(self):
-        self.dhcp_listener.start()
+        for dhcp_listener in self.dhcp_listener:
+            dhcp_listener.start()
         
         super().start()
 
     def terminate(self):
-        self.dhcp_listener.terminate()
+        for dhcp_listener in self.dhcp_listener:
+            dhcp_listener.terminate()
+
         super().terminate()
 
     def _run(self):
         server_mac = "00:00:00:00:00:00"
+        interface = Helper.getInterfaceForIp(self.config.networks, self.config.server_ip)
         try:
-            with open("/sys/class/net/{}/address".format(self.config.main_interface), 'r') as f:
+            with open("/sys/class/net/{}/address".format(interface), 'r') as f:
                 server_mac = f.read().strip()
         except (IOError, OSError) as e:
             pass
 
         ipv4_networks = []
-        for network in self.config.internal_networks:
-            match = re.match(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/.*", network)
+        for network in self.config.networks.values():
+            if not network["interface"]:
+                continue
+            match = re.match(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/.*", network["subnet"])
             if match:
                ipv4_networks.append(network)
 
@@ -150,7 +160,10 @@ class ArpScanner(_handler.Handler):
                 try:
                     collected_arps = []
                     for network in ipv4_networks:
-                        arp_result = Helper.arpscan(self.config.main_interface, network, self._isRunning)
+                        startTime = datetime.now()
+                        arp_result = Helper.arpscan(network["interface"], network["subnet"], self._isRunning)
+                        duration = round((datetime.now() - startTime).total_seconds(),2)
+                        logging.info("Found {} devices in network {} ({}) after {} seconds.".format(len(arp_result), network["subnet"], network["interface"], duration))
                         for arp_data in arp_result:
                             ip = arp_data["ip"]
                             mac = arp_data["mac"]
@@ -272,8 +285,16 @@ class ArpScanner(_handler.Handler):
         try:
             startTime = datetime.now()
 
-            methods = ["arping"]
-            answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 20 if long_check else 10, self._isRunning)
+            methods = []
+
+            answering_mac = None
+            interface = Helper.getInterfaceForIp(self.config.networks, device.getIP())
+            if interface:
+                methods.append("arping")
+                answering_mac = Helper.getMacFromArpPing(device.getIP(), interface, 20 if long_check else 10, self._isRunning)
+            else:
+                logging.error("Unable to detect interface for IP {}".format(device.getIP()))
+
             if answering_mac is None:
                 methods.append("ping")
                 answering_mac = Helper.getMacFromPing(device.getIP(), 20 if long_check else 10, self._isRunning)

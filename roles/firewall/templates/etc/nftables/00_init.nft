@@ -84,11 +84,11 @@ table inet filter {
     }
 
     chain SMARTSERVER_INPUT {
-        ip saddr { {{ intern_networks | join(', ')}} } accept                                       comment "trusted networks: internal networks => host"
+        ip saddr { {{ trusted_subnets | join(', ')}} } accept                                      comment "trusted networks: internal networks => host"
     }
 
     chain SMARTSERVER_FORWARD {
-        ip saddr { {{ intern_networks | join(', ')}} } accept                                       comment "trusted networks: internal networks => container ports (nat)"
+        ip saddr { {{ trusted_subnets | join(', ')}} } accept                                      comment "trusted networks: internal networks => container ports (nat)"
     }
 }
 
@@ -124,7 +124,7 @@ table ip nat {
     chain HOSTPORT_MASQ {
         mark and 0x2000 == 0x2000 masquerade
 
-        ip saddr {{podman_base_network}} oif "{{default_network_interface}}" masquerade
+        ip saddr {{podman_base_network}} masquerade
 
         jump SMARTSERVER_MASQ
     }

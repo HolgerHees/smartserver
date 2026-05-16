@@ -50,13 +50,11 @@ class Scanner(threading.Thread):
         self._register(ArpScanner(config, self.cache ))
         self._register(DeviceWatcher(config, self.cache ))
 
-        network = ipaddress.ip_network(config.default_server_network)#.hosts()
-
-        openwrt_devices = self._filterLocalIPs(network, config.openwrt_devices)
+        openwrt_devices = self._filterLocalIPs(config.openwrt_devices)
         if len(openwrt_devices) > 0:
             self._register(OpenWRT(config, self.cache, openwrt_devices ))
 
-        fritzbox_devices = self._filterLocalIPs(network, config.fritzbox_devices)
+        fritzbox_devices = self._filterLocalIPs(config.fritzbox_devices)
         if len(fritzbox_devices) > 0:
             self._register(Fritzbox(config, self.cache, fritzbox_devices ))
 
@@ -67,12 +65,12 @@ class Scanner(threading.Thread):
         self._register(MQTTPublisher(config, self.cache, mqtt ))
         self._register(InfluxDBPublisher(config, self.cache, influxdb ))
 
-    def _filterLocalIPs(self, network, devices):
+    def _filterLocalIPs(self, devices):
         _devices = {}
         for ip, data in devices.items():
-            if ipaddress.ip_address(ip) not in network:
-                continue
-            _devices[ip] = data
+            _ip = ipaddress.ip_address(ip)
+            if not _ip.is_global:
+                _devices[ip] = data
         return _devices
 
     def _register(self, handler):

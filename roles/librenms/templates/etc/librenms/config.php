@@ -1,6 +1,6 @@
 <?php
 $config['snmp']['community'] = array();
-$config['nets'] = array("{{intern_networks | join('\", \"')}}");
+$config['nets'] = array("{{trusted_subnets | join('\", \"')}}");
 
 $config['auth_mechanism'] = "http-auth";
 $config['http_auth_header'] = "HTTP_X_FORWARDED_USER";

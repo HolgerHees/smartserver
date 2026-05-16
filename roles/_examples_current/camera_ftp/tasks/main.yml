@@ -100,7 +100,7 @@
   vars:
     service_name: "vsftpd"
     container_to_outside_rules:
-      - { saddr: "{{podman_camera_ftp_ip}}", sport: "20", daddr: "{{intern_networks}}", protocol: "tcp", comment: "camera_ftp => internal networks" }
+      - { saddr: "{{podman_camera_ftp_ip}}", sport: "20", daddr: "{{trusted_subnets}}", protocol: "tcp", comment: "camera_ftp => internal networks" }
     nat_rules: { ip: "{{podman_camera_ftp_ip}}", ports: "{{vsftpd_published_ports}}" }
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
@@ -108,7 +108,7 @@
 - name: prepare firewall rules
   set_fact:
     ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + podman_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
-  with_items: "{{ intern_networks }}"
+  with_items: "{{ trusted_subnets }}"
   tags: ['firewall_config']
 
 # ***** DEPENDENCY CONFIGS *****
