@@ -69,6 +69,9 @@ class Image:
         return self.id == other.id
 
     def __lt__(self, other):
+        if len(self.references) == 0 or len(other.references) == 0:
+            return self.created < other.created
+
         return self.references[0] < other.references[0] or ( self.references[0] == other.references[0] and self.created < other.created )
 
 def sortImages(item1, item2):
@@ -199,7 +202,7 @@ for image in sorted(images.values(),key=cmp_to_key(sortImages)):
 
     cleaned = True
 
-    command.exec(["podman", "image", "rm", "{}".format(image.id)])
+    command.exec(["podman", "image", "rm", "--force", "{}".format(image.id)])
 
 if is_quite and not cleaned:
     print(u"No images deleted")
