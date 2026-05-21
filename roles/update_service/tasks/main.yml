@@ -33,7 +33,7 @@
       - requests
       - packaging
     virtualenv: /opt/update_service/env
-    virtualenv_command: "python3 -m venv"
+    virtualenv_command: "python3{{'.11' if is_suse and not is_suse_16 else '' }} -m venv"
   register: installer_state
 
 - name: install python libs
