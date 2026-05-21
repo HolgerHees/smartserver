@@ -37,11 +37,14 @@
 - name: allow container service
   vars:
     service_name: "openclaw"
+    container_to_host_rules:
+      - { saddr: "{{podman_openclaw_ip}}", "type": "drop", comment: "openclaw => host" } # to hide logs
     container_to_container_rules:
       - { saddr: "{{podman_openclaw_ip}}", daddr: "{{podman_ollama_ip}}", protocol: "tcp", dport: "11434", comment: "openclaw => ollama" }
+      - { saddr: "{{podman_openclaw_ip}}", "type": "drop", comment: "openclaw => other container" } # to hide logs
     container_to_outside_rules:
-      - { saddr: "{{podman_openclaw_ip}}", "daddr": "{{trusted_subnets}}", "type": "drop", comment: "openclaw => trusted networks" }
       - { "oif": "{{default_network_interface}}", saddr: "{{podman_openclaw_ip}}", "protocol": "tcp", comment: "openclaw => outside networks" }
+      - { saddr: "{{podman_openclaw_ip}}", "type": "drop", comment: "openclaw => other networks" } # to hide logs
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: ['firewall_config']
 
