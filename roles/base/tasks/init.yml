@@ -233,6 +233,12 @@
                 "{{subnet}}",
             {% endfor %}
         ]
+    all_subnets: |
+        [
+            {% for subnet in networks.values() | map(attribute='subnet') | list %}
+                "{{subnet}}",
+            {% endfor %}
+        ]
     all_networks: |
         {
             {% for network in networks %}{% if networks[network].subnet is defined %}
