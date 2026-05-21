@@ -251,7 +251,9 @@
 
     # Increase number of incoming connections backlog
     # 8333 should be enough for 1GBit => https://cromwell-intl.com/open-source/performance-tuning/ethernet.html
-    - { regex: "net\\.core\\.netdev_max_backlog", line: "net.core.netdev_max_backlog = 8333" }
+    # 20833 should be enough for 2.5GBit
+    # networkspeed in mb * bytes per megabyte / frame size => needed backlog size
+    - { regex: "net\\.core\\.netdev_max_backlog", line: "net.core.netdev_max_backlog = {{ ((ansible_facts[default_network_interface]['speed'] * 125000) / ansible_facts[default_network_interface]['mtu']) | int }}" }
 
     - { regex: "net\\.core\\.optmem_max", line: "net.core.optmem_max = 65536" }
 
