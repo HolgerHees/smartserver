@@ -159,6 +159,15 @@ default_variables: {
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # *** BEGIN COCKPIT                                                                ***
+    # Roles:
+    # - 'cockpit'
+    cockpit_enabled:                          { default: no },                                                      # disabled by default, because it allowes root access to the server
+    # *** END COCKPIT                                                                  ***
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN SAMBA                                                                  ***
     # Roles:
     # - 'samba'
@@ -186,7 +195,6 @@ default_variables: {
     grafana_enabled:                          { default: yes },                                                     # enabled by default
     grafana_app_username:                     { default: "admin",
                                                 dependency: "{{grafana_enabled}}" },
-
 
     # Roles:
     # - 'netdata'

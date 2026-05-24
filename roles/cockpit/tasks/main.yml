@@ -1,0 +1,84 @@
+- name: "install required packages => is_rhel"
+  zypper:
+    name: [
+        cockpit,
+        cockpit-selinux,
+        cockpit-podman,
+        cockpit-networkmanager,
+        cockpit-storaged,
+        cockpit-repos
+    ]
+    state: present
+  when: "is_rhel"
+
+- name: "install required packages => is_ubuntu"
+  zypper:
+    name: [
+        cockpit,
+        cockpit-selinux,
+        cockpit-podman,
+        cockpit-networkmanager,
+        cockpit-storaged,
+        cockpit-repos
+    ]
+    state: present
+  when: "is_ubuntu"
+
+- name: "install required packages => is_suse"
+  zypper:
+    name: [
+        cockpit,
+        cockpit-selinux,
+        cockpit-podman,
+        cockpit-networkmanager,
+        cockpit-storaged,
+        cockpit-repos
+    ]
+    state: present
+  when: "is_suse and not is_suse_15"
+
+- name: copy config
+  template:
+    src: "templates/etc/cockpit/{{item}}"
+    dest: "/etc/cockpit/{{item}}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - cockpit.conf
+    - disallowed-users
+  notify: "restart cockpit service"
+
+- name: "change bind address of cockpit"
+  lineinfile:
+    path: /usr/lib/systemd/system/cockpit.socket
+    regexp: '^{{item.regex}}\s*='
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "ListenStream", line: "ListenStream=127.0.0.1:9090" }
+  notify: "restart cockpit_socket"
+
+- name: "enable cockpit socket"
+  systemd:
+    name: cockpit
+    state: started
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "cockpit"
+    usergroup: "admin"
+    include: "templates/etc/apache2/_.ansible.vhost.d/cockpit.inc"
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
+
+- name: register webui
+  vars:
+    name: "cockpit"
+    js_file: "templates/webui/cockpit.js"
+    i18n_files: [ { language: "de", file: "templates/webui/cockpit.de.json" } ]
+    icons: [ 'templates/webui/icons/cockpit_logo.svg' ]
+  include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']

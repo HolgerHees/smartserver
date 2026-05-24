@@ -3,7 +3,7 @@
     path: /etc/ssh/sshd_config
     regexp: '^{{item.field}} '
     line: '{{item.field}} {{item.value}}'
-    create: '{{is_suse_16}}'
+    create: '{{is_suse and not is_suse_15}}'
   with_items:
     - { field: 'PermitRootLogin', value: "yes"}
     - { field: 'AuthorizedKeysFile', value: ".ssh/authorized_keys" }

@@ -1,0 +1,17 @@
+- name: restart cockpit service
+  systemd:
+    name: cockpit.service
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart cockpit service"
+
+- name: restart cockpit socket
+  systemd:
+    name: cockpit.socket
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart cockpit socket"

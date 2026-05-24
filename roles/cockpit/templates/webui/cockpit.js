@@ -1,0 +1,1 @@
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('cockpit', ['admin'], '//cockpit.{host}/', { 'order': 160, 'title': '{i18n_Cockpit}', 'info': '{i18n_Cockpit Web Console}', 'icon': 'cockpit_logo.svg' });

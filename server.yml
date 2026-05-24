@@ -161,6 +161,8 @@
 
     - { import_role: { name: netdata },                                                      tags: [ 'netdata' ],                                            when: "netdata_enabled" }                          # server monitoring
 
+    - { import_role: { name: cockpit },                                                      tags: [ 'cockpit' ],                                            when: "cockpit_enabled" }                          # server monitoring
+
     - { import_role: { name: librenms },                                                     tags: [ 'librenms' ],                                           when: "librenms_enabled" }                         # network monitoring
     
     - { import_role: { name: system_service },                                               tags: [ 'system_service', 'alpine' ],                           when: "system_service_enabled" }                   # system monitoring
