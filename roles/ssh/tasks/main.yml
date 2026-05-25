@@ -2,14 +2,14 @@
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^{{item.field}} '
-    line: '{{item.field}} {{item.value}}'
+    line: '{{item.value}}'
     create: '{{is_suse and not is_suse_15}}'
   with_items:
-    - { field: 'PermitRootLogin', value: "yes"}
-    - { field: 'AuthorizedKeysFile', value: ".ssh/authorized_keys" }
-    - { field: 'UsePAM', value: "yes" }
-    - { field: 'Subsystem', value: "sftp /usr/lib/ssh/sftp-server" }
-    - { field: 'AllowUsers', value: "*@{{trusted_subnets | join(' *@')}} *@{{vpn_mobile_network}}/24" }
+    - { field: 'PermitRootLogin', value: "PermitRootLogin yes"}
+    - { field: 'AuthorizedKeysFile', value: "AuthorizedKeysFile .ssh/authorized_keys" }
+    - { field: 'UsePAM', value: "UsePAM yes" }
+    - { field: 'Subsystem\s*sftp', value: "Subsystem sftp {{'/usr/libexec/ssh/sftp-server' if is_suse and not is_suse_15 else '/usr/lib/ssh/sftp-server'}}" }
+    - { field: 'AllowUsers', value: "AllowUsers *@{{trusted_subnets | join(' *@')}} *@{{vpn_mobile_network}}/24" }
   notify: "restart sshd"
 
 # ***** FINALIZE *****
