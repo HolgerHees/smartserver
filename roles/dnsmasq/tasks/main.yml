@@ -4,13 +4,14 @@
       - { mode: "u=rwx,g=rx,o=", owner: "root", group: "root", path: "{{ global_etc }}dnsmasq" }
   include_tasks: roles/_shared/create_directories.yml
 
-- name: install required packages => is_suse and not is_suse_15
+# FIXME, maybe not needed (is deprecated since leap 16)
+- name: install required packages => is_suse
   zypper:
     name: [
         sysconfig-netconfig
     ]
     state: present
-  when: "is_suse and not is_suse_15"
+  when: "is_suse"
 
 - name: copy config
   template:

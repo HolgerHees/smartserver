@@ -32,9 +32,8 @@ vagrant [OPTION] ... CMD
 --os <suse|alma|ubuntu>:
   Used linux distribution.
 
-  <suse>      : openSUSE Leap 15.6 (opensuse/Leap-15.6.x86_64)
-  <suse16>    : openSUSE Leap 16.0 (bento/opensuse-leap-16.0)
-  <alma>      : AlmaLinux 10.0 (almalinux/10)
+  <suse>    : openSUSE Leap 16.0 (bento/opensuse-leap-16.0)
+  <alma>      : AlmaLinux 10.1 (bento/almalinux-10.1)
   <ubuntu>    : Ubuntu 24.04 (bento/ubuntu-24.04)
 
 --ansible [-vvv]:
@@ -49,16 +48,11 @@ Example: vagrant --config=demo --os=suse up
       when '--config'
         setup_config=arg
       when '--os'
-        if arg == "suse16" then
+        if arg == "suse" then
             setup_os = "suse"
             image_box = "bento/opensuse-leap-16.0"
             image_version = "202510.26.0"
             ansible_version = "11.12.0"
-        elsif arg == "suse" then
-            setup_os = "suse"
-            image_box = "opensuse/Leap-15.6.x86_64"
-            image_version = "15.6.13.356"
-            ansible_version = "4.10.0"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
             image_box = "bento/ubuntu-24.04"
@@ -175,7 +169,7 @@ Vagrant.configure(2) do |config|
     timezone_suffix = offset < 0 ? "#{offset.to_s}" : "+#{offset.to_s}"
     timezone = 'Etc/GMT' + timezone_suffix
 
-    if image_box == 'bento/opensuse-leap-16.0' then
+    if setup_os == 'suse' then
         setup.vm.network "private_network", ip: $env_ip, auto_config: false
         setup.vm.provision "shell", inline: <<-SHELL
         CONN_UUID=$(nmcli -t -f uuid con show | sed -n '2 p')

@@ -35,7 +35,7 @@
         cockpit-repos
     ]
     state: present
-  when: "is_suse and not is_suse_15"
+  when: "is_suse"
 
 - name: copy config
   template:

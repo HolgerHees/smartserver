@@ -63,7 +63,7 @@
     priority: "100"
     state: present
   with_items:
-    - { name: "NVIDIA CUDA", url: "https://developer.download.nvidia.com/compute/cuda/repos/{{'open' if is_suse_15 else ''}}suse{{ansible_distribution_major_version}}/{{ansible_architecture}}/" }
+    - { name: "NVIDIA CUDA", url: "https://developer.download.nvidia.com/compute/cuda/repos/suse{{ansible_distribution_major_version}}/{{ansible_architecture}}/" }
     - { name: "NVIDIA Container Toolkit", url: "https://nvidia.github.io/libnvidia-container/stable/rpm/{{ansible_architecture}}/" }
   when: "is_suse"
 
@@ -71,12 +71,7 @@
   zypper:
     name: |
       [
-        {% if is_suse_15 %}
-        'nvidia-compute-G07',
-        'nvidia-compute-utils-G07',
-        {% else %}
         'cuda-drivers',
-        {% endif %}
         'nvidia-container-toolkit',
         'nvtop'
       ]
@@ -87,10 +82,10 @@
 # https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#linux-distributions
 #
 
-- name: "nvidia : compile => is_suse and not is_suse_15"
+- name: "nvidia : compile => is_suse"
   shell: "dkms autoinstall"
   changed_when: "cuda_suse_package_install.changed"
-  when: "is_suse and not is_suse_15"
+  when: "is_suse"
 
 - name: prepare cdi directory
   vars:

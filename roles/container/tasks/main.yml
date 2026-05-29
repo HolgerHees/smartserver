@@ -27,14 +27,14 @@
   shell: "wget -O - https://github.com/containers/netavark/releases/download/v1.11.0/netavark.gz | gzip -d > /usr/lib/podman/netavark && chown root:root /usr/lib/podman/netavark && chmod 755 /usr/lib/podman/netavark"
   when: "is_ubuntu and netavark_version.stdout != '1.11.0'"
 
-- name: add zypper repository => is_suse and not is_suse_15
+- name: add zypper repository => is_suse
   zypper_repository:
     name: Virtualization (crun)
     repo: "https://download.opensuse.org/repositories/Virtualization:/containers/$releasever/"
     auto_import_keys: yes
     priority: "100"
     state: present
-  when: "is_suse and not is_suse_15"
+  when: "is_suse"
 
 - name: install required packages => is_suse
   zypper:
@@ -75,15 +75,15 @@
 # https://www.findbugzero.com/operational-defect-database/vendors/rh/defects/RHEL-25605
 - name: fix systemd-notify "permission denied" problem
   shell: "semanage permissive -a systemd_notify_t"
-  when: is_rhel # or "is_suse and not is_suse_15"
+  when: is_rhel # or "is_suse"
 
 # e.g. frigate
 # Error importing detector runtime: /usr/local/lib/python3.11/dist-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-311-x86_64-linux-gnu.so: cannot enable executable stack as shared object requires: Permission denied
 - name: fix executable "permission denied" problem
   shell: "semanage boolean --modify --on selinuxuser_execstack"
-  when: "is_suse and not is_suse_15"
+  when: "is_suse"
 
-- name: set container selinux configuration => is_rhel
+- name: set container selinux configuration => is_rhel or is_suse
   sefcontext:
     target: "{{item}}"
     ftype: "a"
@@ -94,14 +94,14 @@
  #   - "{{global_lib}}libpod/storage(/.*)?"
     - "{{global_lib}}containers/storage(/.*)?"
   register: sefcontext_result
-  when: is_rhel or (is_suse and not is_suse_15)
+  when: is_rhel or is_suse
 
-- name: reload selinux configuration => (is_rhel or (is_suse and not is_suse_15)) and sefcontext changed
+- name: reload selinux configuration => (is_rhel or is_suse) and sefcontext changed
   shell: "restorecon -irv {{item}}"
   with_items:
 #    - "{{global_lib}}libpod/storage/"
     - "{{global_lib}}containers/storage/"
-  when: (is_rhel or (is_suse and not is_suse_15)) and sefcontext_result.changed
+  when: (is_rhel or is_suse) and sefcontext_result.changed
 
 # ***** NESSECARRY UNTIL PODMAN 5 ********
 # because "firewall_driver" setting in containers.conf is ignored
@@ -112,7 +112,7 @@
     path: /etc/environment
     regexp: '^NETAVARK_FW\s*='
     line: 'NETAVARK_FW=none'
-    create: '{{is_suse and not is_suse_15}}'
+    create: '{{is_suse}}'
 
 - name: copy podman config
   template:
