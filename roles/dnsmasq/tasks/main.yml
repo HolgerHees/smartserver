@@ -5,13 +5,13 @@
   include_tasks: roles/_shared/create_directories.yml
 
 # FIXME, maybe not needed (is deprecated since leap 16)
-- name: install required packages => is_suse
-  zypper:
-    name: [
-        sysconfig-netconfig
-    ]
-    state: present
-  when: "is_suse"
+#- name: install required packages => is_suse
+#  zypper:
+#    name: [
+#        sysconfig-netconfig
+#    ]
+#    state: present
+#  when: "is_suse"
 
 - name: copy config
   template:
