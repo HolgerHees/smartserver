@@ -11,4 +11,4 @@ auth_token = "{{github_auth_token if github_auth_token is defined else ''}}"
 
 branch = "master"
 
-deployments = [ { "config": "demo", "os": "suse16" }, { "config": "demo", "os": "alma" }, { "config": "demo", "os": "ubuntu" } ]
+deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "alma" }, { "config": "demo", "os": "ubuntu" } ]
