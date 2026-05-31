@@ -6,31 +6,18 @@
     name: systemd-resolved
   when: "is_rhel or is_ubuntu"
 
-- name: "enable : disable NetworkManager dns handling => is_rhel"
+- name: "enable : disable NetworkManager dns handling => is_rhel or is_suse"
   lineinfile:
     path: /etc/NetworkManager/NetworkManager.conf
     insertafter: '^\[main\]'
     regexp: '^{{item.field}}\s*='
     line: '{{item.field}}={{item.value}}'
+    create: "{{is_suse}}"
   register: netconfig_status
   with_items:
     - { field: "dns", value: "none" }
-  when: is_rhel
+  when: "is_rhel or is_suse"
 
-#- name: "enable : disable netconfig dns handling => is_suse"
-#  lineinfile:
-#    path: /etc/sysconfig/network/config
-#    regexp: '^{{item.field}}\s*='
-#    line: '{{item.field}}="{{item.value}}"'
-#  register: netconfig_status
-#  with_items:
-#    - { field: "NETCONFIG_DNS_POLICY", value: "" }
-#  when: is_suse
-
-#- name: "enable : netconfig update => is_suse and netconfig changed"
-#  shell: "netconfig update -f"
-#  when: "is_suse and netconfig_status.changed"
-  
 - name: "enable : copy resolv.conf (127.0.0.1)"
   vars:
     local_resolv_server: "127.0.0.1"
