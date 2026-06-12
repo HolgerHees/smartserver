@@ -92,12 +92,16 @@ class Processlist():
 
         for line in groups:
             line = line.replace('\n', '')
-            hid, hsub, cgroup = line.split(':')
-            if cgroup.startswith("/system.slice/"):
-                name = cgroup[14:]
-                service_index = name.find('.service')
-                if service_index != -1:
-                    return name[:service_index]
+            parts = line.split(':')
+            if len(parts) == 3:
+                hid, hsub, cgroup = parts
+                if cgroup.startswith("/system.slice/"):
+                    name = cgroup[14:]
+                    service_index = name.find('.service')
+                    if service_index != -1:
+                        return name[:service_index]
+            else:
+                logging.error("Unexpected process data '{}'".format(line))
         return None
 
     @staticmethod
