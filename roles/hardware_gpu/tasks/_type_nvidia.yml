@@ -69,12 +69,10 @@
 
 - name: "nvidia : install required packages => is_suse"
   zypper:
-    name: |
-      [
-        'cuda-drivers',
-        'nvidia-container-toolkit',
-        'nvtop'
-      ]
+    name:
+      - cuda-drivers
+      - nvidia-container-toolkit
+      - nvtop
     state: present
   register: cuda_suse_package_install
   when: "is_suse"
