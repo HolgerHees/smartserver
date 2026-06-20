@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    alertmanager_version: '0.32.1'
+    alertmanager_version: '0.33.0'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed directories
