@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    redis_version: '8.6.4'
+    redis_version: '8.8.0'
   tags: [ 'update_notifier_config' ]
   
 - name: create container service
