@@ -118,7 +118,7 @@ class Fetcher(object):
 
         url = forecast_url.format(latitude=latitude,longitude=longitude,timezone=self.config.timezone,fields=",".join(fields))
         data = self.get(url)
-        if data == None or "hourly" not in data or "minutely_15" not in data:
+        if data is None or "hourly" not in data: # and "minutely_15" not in data):
             raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
 
         forecasts = {}
@@ -142,7 +142,7 @@ class Fetcher(object):
         result = []
         for validFrom, forcastSlot in forecasts.items():
             for field, value in forcastSlot.items():
-                if field.startswith("index", "validFrom"):
+                if field.startswith(("index", "validFrom")):
                     continue
                 result.append({"field": field, "timestamp": int(forcastSlot["validFrom"].timestamp()), "value": value })
         return result
