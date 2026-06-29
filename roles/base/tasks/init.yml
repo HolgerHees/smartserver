@@ -18,7 +18,7 @@
 
 - name: check if vault is encrypted
   shell: "head -1 {{config_path}}vault/vault.yml | grep \"\\$ANSIBLE_VAULT\""
-  changed_when: False
+  changed_when: no
   failed_when: no
   register: "vault_check_result"
 
@@ -40,9 +40,10 @@
   register: mdraid_check
 
 - name: Check live kernel mdstat as fallback
-  ansible.builtin.command: cat /proc/mdstat
+  command: cat /proc/mdstat
   register: mdstat_check
-  changed_when: false
+  changed_when: no
+  failed_when: no
   when: not mdraid_check.stat.exists
 
 # set environment specific variables [pre]
