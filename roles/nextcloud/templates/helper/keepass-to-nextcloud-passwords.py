@@ -182,9 +182,9 @@ def export(kp):
         "id": folder_uuid,
         "label": root_folder_label,
         "parent": "00000000-0000-0000-0000-000000000000"
-   }]
-#    for g in kp.groups:
-#        folders.append(group_to_bw_folder_json(g))
+    }]
+    for g in kp.groups:
+        folders.append(group_to_bw_folder_json(g))
 
     items = []
     for i in kp.entries:
