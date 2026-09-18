@@ -81,9 +81,8 @@
 #
 
 - name: "nvidia : compile => is_suse"
-  shell: "dkms autoinstall"
-  changed_when: "cuda_suse_package_install.changed"
-  when: "is_suse"
+  shell: "dkms autoinstall --force"
+  when: "is_suse and cuda_suse_package_install.changed"
 
 - name: prepare cdi directory
   vars:
