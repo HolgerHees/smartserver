@@ -31,7 +31,6 @@ auth:
 {% if "record" not in frigate_config %}
 record:
   enabled: true
-  sync_recordings: true
   alerts:
     retain:
       days: 7
