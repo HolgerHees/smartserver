@@ -276,7 +276,7 @@ body{
 
 @container (max-width: 900px) {
     .current .summary .column {
-        padding: 0;
+        padding: 0 !important;
     }
 }
 
@@ -291,19 +291,21 @@ body{
     }
 }
 @container (max-width: 720px) {
+    .current .summary {
+        margin: 0px;
+    }
     .current .summary .column {
-        width: 50%;
+        width: 50% !important;
     }
     .current .summary .column.slot1 {
         order: 1;
     }
     .current .summary .column.slot2 {
         order: 3;
-        padding-left: 0;
     }
     .current .summary .column.slot3 {
         order: 4;
-        padding-left: 0;
+        width: auto !important;
     }
     .current .summary .column.slot4 {
         order: 2;
