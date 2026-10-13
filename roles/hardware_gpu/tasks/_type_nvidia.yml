@@ -114,12 +114,12 @@
     mode: 0644
   notify: "restart nvidia-uvm-init"
 
-- name: "nvidia : enable nvidia-persistenced" # temporary => missing libnvidia-cfg.so.1 on suse
+- name: "nvidia : disable nvidia-persistenced" # prevents lower power state , temporary => missing libnvidia-cfg.so.1 on suse
   systemd:
     name: nvidia-persistenced
-    state: started
+    state: stopped
     daemon_reload: yes
-    enabled: yes
+    enabled: no
     masked: no
 
 #- name: "nvidia : register system package dependency"
