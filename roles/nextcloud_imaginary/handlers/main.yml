@@ -1,8 +1,8 @@
-- name: restart imaginary
+- name: restart nextcloud_imaginary
   systemd:
-    name: imaginary
+    name: nextcloud_imaginary
     state: restarted
     daemon_reload: yes
     enabled: yes
     masked: no
-  listen: "restart imaginary"
+  listen: "restart nextcloud_imaginary"

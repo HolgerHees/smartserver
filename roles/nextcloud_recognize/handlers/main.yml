@@ -1,0 +1,8 @@
+- name: restart nextcloud_recognize
+  systemd:
+    name: nextcloud_recognize
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart nextcloud_recognize"

@@ -1,0 +1,74 @@
+- name: "set version"
+  set_fact:
+    recognize_version: "1.0.5"
+    register_config:
+      "id": "recognize_backend"
+      "name": "Recognize Backend"
+      "daemon_config_name": "manual_install"
+      "version": "1.0.5"
+      "secret": "ofiujhwqpierjm21prjfj9324"
+      "host": "nextcloud_recognize"
+      "port": "9000"
+  tags: [ 'update_notifier_config' ]
+
+- name: "clone git"
+  vars:
+    git_clone_name: "nextcloud_recognize"
+    git_clone_path: "{{global_build}}nextcloud_recognize"
+    git_clone_url: "https://github.com/nextcloud/recognize_backend.git"
+    git_clone_version: "v{{recognize_version}}"
+    git_owner:  "root"
+    git_group:  "root"
+    git_mode:  "u=rwX,g=rwX,o="
+  include_tasks: roles/_shared/git_clone.yml
+
+- name: build container image
+  vars:
+    container_name: "nextcloud_recognize"
+    image_name: "custom_nextcloud_recognize:{{recognize_version}}"
+    image_files: []
+  include_tasks: roles/container/shared/build_podman_image.yml
+  tags: ['container_entrypoint_config']
+
+- name: create container service
+  vars:
+    container_name: "nextcloud_recognize"
+    container_image: "custom_nextcloud_recognize:{{recognize_version}}"
+    container_network: "isolated"
+    container_ip: "{{podman_nextcloud_recognize_ip}}"
+    container_exposed_ports:
+      - "{{register_config['port']}}"
+    container_env:
+      "APP_PORT": "{{register_config['port']}}"
+      "APP_HOST": "0.0.0.0"
+      "APP_ID": "{{register_config['id']}}"
+      "APP_VERSION": "{{recognize_version}}"
+      "APP_SECRET": "{{register_config['secret']}}"
+      "NEXTCLOUD_URL": "https://nextcloud.{{server_domain}}/"
+    container_devices: |
+      [
+          {% if cuda_enabled and cuda_device == 'nvidia' %}"nvidia.com/gpu=all"{% endif %}
+      ]
+    container_readyness: { "type": "port_check", "ip": "{{podman_nextcloud_recognize_ip}}", "port": "{{register_config['port']}}" }
+  include_tasks: roles/container/shared/create_podman_service.yml
+  tags: ['podman_container','systemd_watcher_config','systemd_service_config']
+
+- name: allow container service
+  vars:
+    service_name: "nextcloud_recognize"
+    container_to_host_rules:
+      - { saddr: "{{podman_nextcloud_recognize_ip}}", protocol: "tcp", dport: "443", comment: "=> apache (nextcloud)" }
+    container_to_container_rules:
+      - { saddr: "{{podman_php_ip}}", daddr: "{{podman_nextcloud_recognize_ip}}", protocol: "tcp", dport: "{{register_config['port']}}", comment: "php => nextcloud_recognize" }
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
+
+- name: register
+  shell: "podman exec php php {{htdocs_path}}nextcloud/occ app_api:app:register nextcloud_recognize manual_install --json-info '{{register_config | to_json}}' --wait-finish"
+  register: app_register_result
+  changed_when: "'disabled' in app_register_result.stdout"
+#  failed_when: "'disabled' not in app_disable_result.stdout and 'such app enabled' not in app_disable_result.stdout"
+
+- name: debug
+  debug:
+    msg: "{{app_register_result}}"
