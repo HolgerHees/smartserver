@@ -120,14 +120,14 @@ RUN apt-get update && \
 #ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1.7.0 /usr/lib/x86_64-linux-gnu/libGL.so.1
 #  ldconfig
 
+#  /usr/sbin/update-nvidia-cudnn -u
+
 RUN echo "deb http://deb.debian.org/debian/ {{php_container_os}} main contrib non-free" > /etc/apt/sources.list && \
   apt-get update && \
   apt-get install -y --no-install-recommends \
+  pip \
   nvidia-cuda-toolkit \
-  nvidia-cudnn \
   nvidia-smi && \
-
-  /usr/sbin/update-nvidia-cudnn -u && \
 
   ln -sf /usr/lib/x86_64-linux-gnu/libcublas.so.12 /usr/lib/x86_64-linux-gnu/libcublas.so.11 && \
   ln -sf /usr/lib/x86_64-linux-gnu/libcublasLt.so.12 /usr/lib/x86_64-linux-gnu/libcublasLt.so.11 && \
@@ -137,7 +137,15 @@ RUN echo "deb http://deb.debian.org/debian/ {{php_container_os}} main contrib no
   ln -sf /usr/lib/x86_64-linux-gnu/libcusparse.so.12 /usr/lib/x86_64-linux-gnu/libcusparse.so.11 && \
   ln -sf /usr/lib/x86_64-linux-gnu/libcudart.so.12 /usr/lib/x86_64-linux-gnu/libcudart.so.11.0 && \
 
-  ln -sf /usr/lib/x86_64-linux-gnu/libcudnn.so.9 /usr/lib/x86_64-linux-gnu/libcudnn.so.8 && \
+  pip install --break-system-packages nvidia-cudnn-cu12==8.9.7.29 && \
+
+  ln -sf /usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn.so.8 /usr/lib/x86_64-linux-gnu/libcudnn.so.8 && \
+  ln -sf /usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn_adv_infer.so.8 /usr/lib/x86_64-linux-gnu/libcudnn_adv_infer.so.8 && \
+  ln -sf /usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn_adv_train.so.8 /usr/lib/x86_64-linux-gnu/libcudnn_adv_train.so.8 && \
+  ln -sf /usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn_cnn_infer.so.8 /usr/lib/x86_64-linux-gnu/libcudnn_cnn_infer.so.8 && \
+  ln -sf /usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn_cnn_train.so.8 /usr/lib/x86_64-linux-gnu/libcudnn_cnn_train.so.8 && \
+  ln -sf /usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn_ops_infer.so.8 /usr/lib/x86_64-linux-gnu/libcudnn_ops_infer.so.8 && \
+  ln -sf /usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn_ops_train.so.8 /usr/lib/x86_64-linux-gnu/libcudnn_ops_train.so.8 && \
 
   update-glx --config nvidia --skip-auto
 {% endif %}
