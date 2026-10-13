@@ -21,6 +21,16 @@
     ]
     state: present
   when: is_suse
+
+- name: enable drivetemp module
+  template:
+    src: "templates{{item.path}}"
+    dest: "{{item.path}}"
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/modules-load.d/10-ansible-sensors.conf" }
        
 - name: detect sensors
   shell: "[ -f \"/etc/sysconfig/lm_sensors\" ] || sensors-detect --auto"
