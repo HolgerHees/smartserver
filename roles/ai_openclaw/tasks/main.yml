@@ -1,6 +1,6 @@
 - name: set openclaw version
   set_fact:
-    openclaw_version: '2026.3.2'
+    openclaw_version: '2026.6.9'
   tags: [ 'update_notifier_config' ]
 
 #- name: "create user and group => user or group does not exists"

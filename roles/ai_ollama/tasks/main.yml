@@ -1,6 +1,6 @@
 - name: set ollama version
   set_fact:
-    ollama_version: '0.17.5'
+    ollama_version: '0.40.4'
   tags: [ 'update_notifier_config' ]
 
 - name: prepare needed directories
