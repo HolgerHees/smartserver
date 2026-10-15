@@ -1,6 +1,6 @@
 - name: set openclaw version
   set_fact:
-    openclaw_version: '2026.6.9'
+    openclaw_version: '2026.10.3'
   tags: [ 'update_notifier_config' ]
 
 #- name: "create user and group => user or group does not exists"
@@ -19,7 +19,7 @@
 - name: create container service
   vars:
     container_name: "openclaw"
-    container_image: "alpine/openclaw:{{openclaw_version}}"
+    container_image: "openclaw/openclaw:{{openclaw_version}}"
     container_capabilities_drop:
       - ALL
     container_security_opt:
